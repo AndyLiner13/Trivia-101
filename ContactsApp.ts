@@ -165,15 +165,45 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 paddingHorizontal: 12,
-                paddingVertical: 8
+                paddingVertical: 8,
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 10
               },
               children: [
-                ui.Text({
-                  text: '🏠',
+                ui.View({
                   style: {
-                    fontSize: 16,
-                    color: '#9CA3AF'
-                  }
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                  },
+                  children: [
+                    ui.Text({
+                      text: '🏠',
+                      style: {
+                        fontSize: 16,
+                        color: '#9CA3AF'
+                      }
+                    }),
+                    ui.Pressable({
+                      style: {
+                        marginLeft: 8
+                      },
+                      onPress: () => {
+                        this.selectedContactBinding.set(null);
+                      },
+                      children: [
+                        ui.Text({
+                          text: '⬅️',
+                          style: {
+                            fontSize: 18,
+                            color: '#3B82F6'
+                          }
+                        })
+                      ]
+                    })
+                  ]
                 }),
                 ui.Text({
                   text: 'Contact',
@@ -186,14 +216,15 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
               ]
             }),
             
-            // Contact Info - Centered
+            // Contact Info - Top aligned
             ui.View({
               style: {
                 flex: 1,
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 alignItems: 'center',
                 paddingHorizontal: 16,
-                paddingVertical: 10
+                paddingVertical: 16,
+                marginTop: 36 // Account for fixed header
               },
               children: [
                 // Avatar
@@ -609,32 +640,38 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
         ui.View({
           style: {
             flex: 1,
-            marginTop: 32,
+            marginTop: 36,
             backgroundColor: '#FFFFFF'
           },
           children: [
-            // Use a simple scrollable view approach
-            ui.View({
+            // Scrollable contacts list
+            ui.ScrollView({
               style: {
-                flex: 1,
-                paddingBottom: 20
+                flex: 1
               },
-              children: sortedLetters.map(letter => 
+              children: [
                 ui.View({
                   style: {
-                    width: '100%'
+                    paddingBottom: 20
                   },
-                  children: [
-                    // Section header
-                    this.createSectionHeader(letter),
-                    
-                    // Contacts in this section
-                    ...groupedContacts[letter].map(contact =>
-                      this.createListItem(contact)
-                    )
-                  ]
+                  children: sortedLetters.map(letter => 
+                    ui.View({
+                      style: {
+                        width: '100%'
+                      },
+                      children: [
+                        // Section header
+                        this.createSectionHeader(letter),
+                        
+                        // Contacts in this section
+                        ...groupedContacts[letter].map(contact =>
+                          this.createListItem(contact)
+                        )
+                      ]
+                    })
+                  )
                 })
-              )
+              ]
             })
           ]
         })
@@ -648,7 +685,7 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
       style: {
         backgroundColor: '#F9FAFB', // gray-50
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 4,
         width: '100%'
       },
       children: [

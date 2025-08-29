@@ -147,7 +147,7 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
             alignItems: 'center',
             paddingHorizontal: 20,
             paddingVertical: 20,
-            marginTop: 32, // Account for fixed header
+            marginTop: 36, // Account for fixed header
             minHeight: 80
           },
           children: [
@@ -211,7 +211,7 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
                   },
                   children: [
                     ui.Text({
-                      text: '⌫',
+                      text: '↩️',
                       style: {
                         fontSize: 18,
                         color: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>

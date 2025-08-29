@@ -142,8 +142,8 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
         // App icon background
         ui.View({
           style: {
-            width: 80,
-            height: 80,
+            width: 65,
+            height: 65,
             backgroundColor: color,
             borderRadius: 18,
             justifyContent: 'center',
@@ -156,7 +156,7 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
               text: iconSymbol,
               style: {
                 color: '#FFFFFF',
-                fontSize: 32,
+                fontSize: 26,
                 fontWeight: 'bold',
                 textAlign: 'center'
               }

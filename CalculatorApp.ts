@@ -127,7 +127,7 @@ class CalculatorApp extends ui.UIComponent<typeof CalculatorApp> {
             alignItems: 'flex-end',
             paddingHorizontal: 20,
             paddingVertical: 20,
-            marginTop: 32, // Account for header
+            marginTop: 36, // Account for header
             minHeight: 80
           },
           children: [
