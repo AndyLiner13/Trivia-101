@@ -1,32 +1,76 @@
 import * as ui from 'horizon/ui';
-import { ScreenType } from '../index';
-import { Contact, sampleContacts, groupContactsByLetter } from '../utils/contactsUtils';
-import { ListItem } from '../components/shared/ListItem';
-import { SectionHeader } from '../components/shared/SectionHeader';
 
-interface ContactsAppProps {
-  onNavigateToScreen: (screen: ScreenType) => void;
-  onNavigateToPhone?: (contactData: { name: string; phone: string; avatar: string }) => void;
+export interface ContactsAppProps {
+  onBack: () => void;
+  onHome: () => void;
+  onNavigateToApp?: (app: string, data?: any) => void;
 }
 
+interface Contact {
+  id: number;
+  name: string;
+  phone: string;
+  email?: string;
+  avatar: string;
+  company?: string;
+  address?: string;
+  website?: string;
+  lastContact?: string;
+}
+
+/**
+ * ContactsApp - Contact management interface
+ * Refactored from root ContactsApp.ts
+ */
 export class ContactsApp {
-  // Internal state
-  private contacts = sampleContacts;
-  private selectedContact: Contact | null = null;
-  private favorites = new Set<number>(); // Simple favorites tracking
+  private static selectedContactBinding = new ui.Binding<Contact | null>(null);
+  private static favoritesBinding = new ui.Binding<Set<number>>(new Set());
 
-  constructor(private props: ContactsAppProps) {}
-
-  render(): ui.UINode {
-    if (this.selectedContact) {
-      return this.renderContactDetail();
+  // Sample contacts data
+  private static contacts: Contact[] = [
+    {
+      id: 1,
+      name: "Alice Johnson",
+      phone: "(555) 123-4567",
+      email: "alice.johnson@email.com",
+      avatar: "👩‍💼",
+      company: "Tech Solutions Inc.",
+      address: "123 Main St, San Francisco, CA 94102",
+      lastContact: "2 days ago"
+    },
+    {
+      id: 2,
+      name: "Bob Smith",
+      phone: "(555) 234-5678",
+      email: "bob.smith@email.com",
+      avatar: "👨‍💻",
+      company: "Digital Innovations",
+      address: "456 Oak Ave, San Francisco, CA 94103",
+      lastContact: "1 week ago"
+    },
+    {
+      id: 3,
+      name: "Carol Davis",
+      phone: "(555) 345-6789",
+      email: "carol.davis@email.com",
+      avatar: "👩‍🎨",
+      company: "Creative Studios",
+      address: "789 Pine St, San Francisco, CA 94104",
+      lastContact: "3 days ago"
+    },
+    {
+      id: 4,
+      name: "David Wilson",
+      phone: "(555) 456-7890",
+      email: "david.wilson@email.com",
+      avatar: "👨‍🔬",
+      company: "Research Labs",
+      address: "321 Elm St, San Francisco, CA 94105",
+      lastContact: "5 days ago"
     }
-    return this.renderContactsList();
-  }
+  ];
 
-  private renderContactDetail(): ui.UINode {
-    const contact = this.selectedContact!;
-    
+  static render(props: ContactsAppProps): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
@@ -35,254 +79,35 @@ export class ContactsApp {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                padding: 4,
-                borderRadius: 8
-              },
-              onPress: () => {
-                this.props.onNavigateToScreen('home');
-              },
-              children: [
-                ui.Text({
-                  text: '🏠',
-                  style: {
-                    fontSize: 20
-                  }
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Contact',
-              style: {
-                fontSize: 18,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            }),
-            ui.Pressable({
-              style: {
-                padding: 4,
-                borderRadius: 8
-              },
-              onPress: () => {
-                this.selectedContact = null;
-                // Note: In a real implementation, we'd need to trigger a re-render
-                // For now, we'll need to navigate back to contacts list differently
-                this.props.onNavigateToScreen('contacts');
-              },
-              children: [
-                ui.Text({
-                  text: '← Back',
-                  style: {
-                    fontSize: 16,
-                    color: '#3B82F6'
-                  }
-                })
-              ]
-            })
-          ]
-        }),
-        
-        // Contact Info - Centered
+        this.renderHeader(props),
+        // Contact List
         ui.View({
           style: {
             flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingTop: 54,
-            paddingHorizontal: 20
+            width: '100%'
           },
           children: [
-            // Avatar
-            ui.View({
-              style: {
-                width: 100,
-                height: 100,
-                backgroundColor: '#3B82F6',
-                borderRadius: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 20
-              },
-              children: [
-                ui.Text({
-                  text: contact.avatar,
-                  style: {
-                    fontSize: 48
-                  }
-                })
-              ]
-            }),
-            
-            // Name
-            ui.Text({
-              text: contact.name,
-              style: {
-                fontSize: 24,
-                fontWeight: '500',
-                color: '#111827',
-                textAlign: 'center',
-                marginBottom: 24
-              }
-            }),
-            
-            // Action buttons row
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 30
-              },
-              children: [
-                // Call button
-                ui.Pressable({
-                  style: {
-                    backgroundColor: '#10B981',
-                    borderRadius: 20,
-                    width: 60,
-                    height: 60,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginHorizontal: 10
-                  },
-                  onPress: () => {
-                    // Navigate to phone app with contact data
-                    this.props.onNavigateToPhone?.({
-                      name: contact.name,
-                      phone: contact.phone,
-                      avatar: contact.avatar
-                    });
-                  },
-                  children: [
-                    ui.Text({
-                      text: '📞',
-                      style: {
-                        fontSize: 24
-                      }
-                    })
-                  ]
-                }),
-                
-                // Email button
-                ui.Pressable({
-                  style: {
-                    backgroundColor: '#3B82F6',
-                    borderRadius: 20,
-                    width: 60,
-                    height: 60,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginHorizontal: 10
-                  },
-                  onPress: () => {
-                    console.log(`Send email to ${contact.email}`);
-                  },
-                  children: [
-                    ui.Text({
-                      text: '📧',
-                      style: {
-                        fontSize: 24
-                      }
-                    })
-                  ]
-                }),
-                
-                // Favorite button
-                ui.Pressable({
-                  style: {
-                    backgroundColor: this.favorites.has(contact.id) ? '#F59E0B' : '#E5E7EB',
-                    borderRadius: 20,
-                    width: 60,
-                    height: 60,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginHorizontal: 10
-                  },
-                  onPress: () => {
-                    if (this.favorites.has(contact.id)) {
-                      this.favorites.delete(contact.id);
-                    } else {
-                      this.favorites.add(contact.id);
-                    }
-                    // In a real implementation, we'd trigger a re-render here
-                  },
-                  children: [
-                    ui.Text({
-                      text: this.favorites.has(contact.id) ? '⭐' : '☆',
-                      style: {
-                        fontSize: 24,
-                        color: this.favorites.has(contact.id) ? '#FFFFFF' : '#6B7280'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Contact details
+            // Contact detail view
             ui.View({
               style: {
                 width: '100%',
-                backgroundColor: '#F9FAFB',
-                borderRadius: 12,
-                padding: 16
+                height: '100%',
+                display: ui.Binding.derive([this.selectedContactBinding], (contact) => 
+                  contact ? 'flex' : 'none'
+                )
               },
-              children: [
-                ui.Text({
-                  text: `Phone: ${contact.phone}`,
-                  style: {
-                    fontSize: 16,
-                    color: '#111827',
-                    marginBottom: 8
-                  }
-                }),
-                ...(contact.email ? [
-                  ui.Text({
-                    text: `Email: ${contact.email}`,
-                    style: {
-                      fontSize: 16,
-                      color: '#111827',
-                      marginBottom: 8
-                    }
-                  })
-                ] : []),
-                ...(contact.company ? [
-                  ui.Text({
-                    text: `Company: ${contact.company}`,
-                    style: {
-                      fontSize: 16,
-                      color: '#111827',
-                      marginBottom: 8
-                    }
-                  })
-                ] : []),
-                ...(contact.lastContact ? [
-                  ui.Text({
-                    text: `Last contact: ${contact.lastContact}`,
-                    style: {
-                      fontSize: 14,
-                      color: '#6B7280'
-                    }
-                  })
-                ] : [])
-              ]
+              children: [this.renderContactDetail(props)]
+            }),
+            // Contact list view
+            ui.View({
+              style: {
+                width: '100%',
+                height: '100%',
+                display: ui.Binding.derive([this.selectedContactBinding], (contact) => 
+                  !contact ? 'flex' : 'none'
+                )
+              },
+              children: [this.renderContactsList()]
             })
           ]
         })
@@ -290,123 +115,396 @@ export class ContactsApp {
     });
   }
 
-  private renderContactsList(): ui.UINode {
-    const groupedContacts = groupContactsByLetter(this.contacts);
-    const sortedLetters = Object.keys(groupedContacts).sort();
-    
+  private static renderHeader(props: ContactsAppProps): ui.UINode {
     return ui.View({
       style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#FFFFFF'
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderColor: '#E5E7EB',
+        backgroundColor: '#F9FAFB'
       },
       children: [
-        // Header
-        ui.View({
+        // Back button
+        ui.Pressable({
           style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+            padding: 8,
+            borderRadius: 8
+          },
+          onPress: () => {
+            // Check if viewing contact detail, if so go back to list
+            this.selectedContactBinding.set(null);
           },
           children: [
-            ui.Pressable({
-              style: {
-                padding: 4,
-                borderRadius: 8
-              },
-              onPress: () => {
-                this.props.onNavigateToScreen('home');
-              },
-              children: [
-                ui.Text({
-                  text: '🏠',
-                  style: {
-                    fontSize: 20
-                  }
-                })
-              ]
-            }),
             ui.Text({
-              text: 'Contacts',
+              text: '←',
               style: {
                 fontSize: 18,
-                fontWeight: '500',
-                color: '#111827'
+                color: '#000000',
+                fontWeight: 'bold'
+              }
+            })
+          ]
+        }),
+        // App title and icon
+        ui.View({
+          style: {
+            flexDirection: 'row',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '👥',
+              style: {
+                fontSize: 18,
+                marginRight: 8
               }
             }),
-            ui.View({ style: { width: 28 } }) // Spacer
+            ui.Text({
+              text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
+                contact ? contact.name : 'Contacts'
+              ),
+              style: {
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#000000'
+              }
+            })
+          ]
+        }),
+        // Home button
+        ui.Pressable({
+          style: {
+            padding: 8,
+            borderRadius: 8
+          },
+          onPress: props.onHome,
+          children: [
+            ui.Text({
+              text: '🏠',
+              style: {
+                fontSize: 16
+              }
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private static renderContactsList(): ui.UINode {
+    return ui.View({
+      style: {
+        flex: 1,
+        padding: 8
+      },
+      children: [
+        // Search bar placeholder
+        ui.View({
+          style: {
+            backgroundColor: '#F3F4F6',
+            borderRadius: 8,
+            padding: 12,
+            marginBottom: 16
+          },
+          children: [
+            ui.Text({
+              text: '🔍 Search contacts...',
+              style: {
+                color: '#9CA3AF',
+                fontSize: 16
+              }
+            })
           ]
         }),
         
-        // Contacts List
+        // Favorites section
+        this.renderSectionHeader('⭐ Favorites'),
+        ...this.contacts.slice(0, 2).map(contact => this.renderContactItem(contact, true)),
+        
+        // All contacts section  
+        this.renderSectionHeader('📇 All Contacts'),
+        ...this.contacts.map(contact => this.renderContactItem(contact, false))
+      ]
+    });
+  }
+
+  private static renderSectionHeader(title: string): ui.UINode {
+    return ui.View({
+      style: {
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        marginTop: 8
+      },
+      children: [
+        ui.Text({
+          text: title,
+          style: {
+            fontSize: 14,
+            fontWeight: '600',
+            color: '#6B7280'
+          }
+        })
+      ]
+    });
+  }
+
+  private static renderContactItem(contact: Contact, isFavorite: boolean): ui.UINode {
+    return ui.Pressable({
+      style: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 8,
+        marginVertical: 2,
+        borderBottomWidth: 1,
+        borderColor: '#F3F4F6'
+      },
+      onPress: () => this.selectedContactBinding.set(contact),
+      children: [
+        // Avatar
         ui.View({
           style: {
-            flex: 1,
-            marginTop: 54,
-            backgroundColor: '#FFFFFF'
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            backgroundColor: '#E5E7EB',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 12
           },
           children: [
-            // Use a simple scrollable view approach
-            ui.View({
+            ui.Text({
+              text: contact.avatar,
               style: {
-                flex: 1,
-                paddingBottom: 20
-              },
-              children: sortedLetters.map(letter => 
-                ui.View({
-                  style: {
-                    width: '100%'
-                  },
-                  children: [
-                    // Section header
-                    new SectionHeader({ title: letter }).render(),
-                    
-                    // Contacts in this section
-                    ...groupedContacts[letter].map(contact =>
-                      new ListItem({
-                        leftContent: contact.avatar,
-                        title: contact.name,
-                        subtitle: contact.company || contact.phone,
-                        rightContent: ui.Pressable({
-                          style: {
-                            padding: 8,
-                            borderRadius: 8
-                          },
-                          onPress: () => {
-                            if (this.favorites.has(contact.id)) {
-                              this.favorites.delete(contact.id);
-                            } else {
-                              this.favorites.add(contact.id);
-                            }
-                          },
-                          children: [
-                            ui.Text({
-                              text: this.favorites.has(contact.id) ? '⭐' : '☆',
-                              style: {
-                                fontSize: 20,
-                                color: this.favorites.has(contact.id) ? '#F59E0B' : '#9CA3AF'
-                              }
-                            })
-                          ]
-                        }),
-                        onClick: () => {
-                          this.selectedContact = contact;
-                          // Note: In a real reactive system, this would trigger a re-render
-                          // For now, we'll work with the current navigation system
+                fontSize: 24
+              }
+            })
+          ]
+        }),
+        
+        // Contact info
+        ui.View({
+          style: {
+            flex: 1
+          },
+          children: [
+            ui.Text({
+              text: contact.name,
+              style: {
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#1F2937',
+                marginBottom: 2
+              }
+            }),
+            ui.Text({
+              text: contact.phone,
+              style: {
+                fontSize: 14,
+                color: '#6B7280'
+              }
+            })
+          ]
+        }),
+        
+        // Arrow
+        ui.Text({
+          text: '›',
+          style: {
+            fontSize: 18,
+            color: '#9CA3AF'
+          }
+        })
+      ]
+    });
+  }
+
+  private static renderContactDetail(props: ContactsAppProps): ui.UINode {
+    return ui.View({
+      style: {
+        flex: 1,
+        padding: 16
+      },
+      children: [
+        ui.Binding.derive([this.selectedContactBinding], (contact) => {
+          if (!contact) return ui.View({});
+          
+          return ui.View({
+            style: {
+              flex: 1
+            },
+            children: [
+              // Contact header
+              ui.View({
+                style: {
+                  alignItems: 'center',
+                  paddingVertical: 20,
+                  borderBottomWidth: 1,
+                  borderColor: '#E5E7EB',
+                  marginBottom: 20
+                },
+                children: [
+                  // Large avatar
+                  ui.View({
+                    style: {
+                      width: 100,
+                      height: 100,
+                      borderRadius: 50,
+                      backgroundColor: '#E5E7EB',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginBottom: 16
+                    },
+                    children: [
+                      ui.Text({
+                        text: contact.avatar,
+                        style: {
+                          fontSize: 48
                         }
-                      }).render()
-                    )
-                  ]
-                })
-              )
+                      })
+                    ]
+                  }),
+                  
+                  // Name
+                  ui.Text({
+                    text: contact.name,
+                    style: {
+                      fontSize: 24,
+                      fontWeight: 'bold',
+                      color: '#1F2937',
+                      marginBottom: 4
+                    }
+                  }),
+                  
+                  // Company
+                  ui.Text({
+                    text: contact.company || '',
+                    style: {
+                      fontSize: 16,
+                      color: '#6B7280'
+                    }
+                  })
+                ]
+              }),
+              
+              // Contact actions
+              ui.View({
+                style: {
+                  flexDirection: 'row',
+                  justifyContent: 'space-evenly',
+                  marginBottom: 30
+                },
+                children: [
+                  this.renderActionButton('📞', 'Call', '#10B981', () => {
+                    if (props.onNavigateToApp) {
+                      props.onNavigateToApp('phone', {
+                        contactId: contact.id,
+                        contactName: contact.name,
+                        contactPhone: contact.phone,
+                        contactAvatar: contact.avatar,
+                        returnTo: 'contacts'
+                      });
+                    }
+                  }),
+                  this.renderActionButton('💬', 'Message', '#3B82F6', () => {}),
+                  this.renderActionButton('📧', 'Email', '#EF4444', () => {})
+                ]
+              }),
+              
+              // Contact details
+              this.renderDetailItem('📞', 'Phone', contact.phone),
+              this.renderDetailItem('📧', 'Email', contact.email || 'No email'),
+              this.renderDetailItem('🏢', 'Company', contact.company || 'No company'),
+              this.renderDetailItem('📍', 'Address', contact.address || 'No address'),
+              this.renderDetailItem('🕒', 'Last Contact', contact.lastContact || 'Never')
+            ]
+          });
+        })
+      ]
+    });
+  }
+
+  private static renderActionButton(icon: string, label: string, color: string, onPress: () => void): ui.UINode {
+    return ui.Pressable({
+      style: {
+        alignItems: 'center',
+        padding: 8
+      },
+      onPress: onPress,
+      children: [
+        ui.View({
+          style: {
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            backgroundColor: color,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 8
+          },
+          children: [
+            ui.Text({
+              text: icon,
+              style: {
+                fontSize: 24
+              }
+            })
+          ]
+        }),
+        ui.Text({
+          text: label,
+          style: {
+            fontSize: 12,
+            color: '#6B7280',
+            textAlign: 'center'
+          }
+        })
+      ]
+    });
+  }
+
+  private static renderDetailItem(icon: string, label: string, value: string): ui.UINode {
+    return ui.View({
+      style: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+        borderBottomWidth: 1,
+        borderColor: '#F3F4F6'
+      },
+      children: [
+        ui.Text({
+          text: icon,
+          style: {
+            fontSize: 20,
+            marginRight: 12,
+            width: 30
+          }
+        }),
+        ui.View({
+          style: {
+            flex: 1
+          },
+          children: [
+            ui.Text({
+              text: label,
+              style: {
+                fontSize: 12,
+                color: '#6B7280',
+                marginBottom: 2
+              }
+            }),
+            ui.Text({
+              text: value,
+              style: {
+                fontSize: 16,
+                color: '#1F2937'
+              }
             })
           ]
         })

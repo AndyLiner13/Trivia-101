@@ -1,135 +1,174 @@
 import * as ui from 'horizon/ui';
-import { ScreenType } from '../index';
-import { formatPhoneNumber } from '../utils/phoneUtils';
 
-interface PhoneAppProps {
-  phoneNumberBinding: ui.Binding<string>;
-  isDialingBinding: ui.Binding<boolean>;
-  onNavigateToScreen: (screen: ScreenType) => void;
+export interface PhoneAppProps {
+  onBack: () => void;
+  onHome: () => void;
 }
 
+/**
+ * PhoneApp - Dialer interface for making calls
+ * Refactored from root PhoneApp.ts
+ */
 export class PhoneApp {
-  constructor(private props: PhoneAppProps) {}
+  private static phoneNumberBinding = new ui.Binding('');
+  private static isDialingBinding = new ui.Binding(false);
 
-  render(): ui.UINode {
+  static render(props: PhoneAppProps): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
-        height: '100%'
+        height: '100%',
+        backgroundColor: '#F3F4F6'
       },
       children: [
-        // Dialer Screen
+        // Header
+        this.renderHeader(props),
+        // Content
         ui.View({
           style: {
+            flex: 1,
             width: '100%',
-            height: '100%',
-            display: ui.Binding.derive([this.props.isDialingBinding], (isDialing) => 
-              !isDialing ? 'flex' : 'none'
-            )
+            height: '100%'
           },
-          children: [this.renderDialerScreen()]
-        }),
-        // Dialing Screen
-        ui.View({
-          style: {
-            width: '100%',
-            height: '100%',
-            display: ui.Binding.derive([this.props.isDialingBinding], (isDialing) => 
-              isDialing ? 'flex' : 'none'
-            )
-          },
-          children: [this.renderDialingScreen()]
+          children: [
+            // Dialer Screen
+            ui.View({
+              style: {
+                width: '100%',
+                height: '100%',
+                display: ui.Binding.derive([this.isDialingBinding], (isDialing) => 
+                  !isDialing ? 'flex' : 'none'
+                )
+              },
+              children: [this.renderDialerScreen()]
+            }),
+            // Dialing Screen
+            ui.View({
+              style: {
+                width: '100%',
+                height: '100%',
+                display: ui.Binding.derive([this.isDialingBinding], (isDialing) => 
+                  isDialing ? 'flex' : 'none'
+                )
+              },
+              children: [this.renderDialingScreen()]
+            })
+          ]
         })
       ]
     });
   }
 
-  private renderDialerScreen(): ui.UINode {
+  private static renderHeader(props: PhoneAppProps): ui.UINode {
+    return ui.View({
+      style: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderColor: '#E5E7EB',
+        backgroundColor: '#F9FAFB'
+      },
+      children: [
+        // Back button
+        ui.Pressable({
+          style: {
+            padding: 8,
+            borderRadius: 8
+          },
+          onPress: props.onBack,
+          children: [
+            ui.Text({
+              text: '←',
+              style: {
+                fontSize: 18,
+                color: '#000000',
+                fontWeight: 'bold'
+              }
+            })
+          ]
+        }),
+        // App title and icon
+        ui.View({
+          style: {
+            flexDirection: 'row',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '📞',
+              style: {
+                fontSize: 18,
+                marginRight: 8
+              }
+            }),
+            ui.Text({
+              text: 'Phone',
+              style: {
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#000000'
+              }
+            })
+          ]
+        }),
+        // Home button
+        ui.Pressable({
+          style: {
+            padding: 8,
+            borderRadius: 8
+          },
+          onPress: props.onHome,
+          children: [
+            ui.Text({
+              text: '🏠',
+              style: {
+                fontSize: 16
+              }
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private static renderDialerScreen(): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#F3F4F6', // gray-100
+        backgroundColor: '#F3F4F6',
         flexDirection: 'column'
       },
       children: [
-        // Header - fixed at top
+        // Phone number display
         ui.View({
           style: {
-            backgroundColor: '#F9FAFB', // gray-50
-            flexDirection: 'row',
-            justifyContent: 'space-between',
+            backgroundColor: '#FFFFFF',
+            padding: 20,
             alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
-          },
-          children: [
-            // Home button
-            ui.Pressable({
-              style: {
-                padding: 4,
-                borderRadius: 8
-              },
-              onPress: () => {
-                this.props.onNavigateToScreen('home');
-              },
-              children: [
-                ui.Text({
-                  text: '🏠',
-                  style: {
-                    fontSize: 20
-                  }
-                })
-              ]
-            }),
-            // Title
-            ui.Text({
-              text: 'Phone',
-              style: {
-                fontSize: 18,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            }),
-            // Spacer (empty view to balance layout)
-            ui.View({ style: { width: 28 } })
-          ]
-        }),
-        
-        // Number Display - larger and more prominent
-        ui.View({
-          style: {
-            backgroundColor: '#000000',
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 20,
-            paddingVertical: 20,
-            marginTop: 54, // Account for fixed header
-            minHeight: 80
+            marginBottom: 10
           },
           children: [
             ui.Text({
-              text: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) => 
-                phoneNumber ? formatPhoneNumber(phoneNumber) : 'Enter phone number'
+              text: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
+                phoneNumber || 'Enter phone number'
               ),
               style: {
-                color: '#FFFFFF',
-                fontSize: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) => 
-                  phoneNumber ? 20 : 14
+                fontSize: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
+                  phoneNumber ? 24 : 18
                 ),
-                fontWeight: '300',
+                color: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
+                  phoneNumber ? '#000000' : '#9CA3AF'
+                ),
                 textAlign: 'center'
               }
             })
           ]
         }),
         
-        // Dial Pad - improved spacing and sizing
+        // Dial Pad
         ui.View({
           style: {
             flex: 1,
@@ -158,7 +197,7 @@ export class PhoneApp {
                 // Delete button
                 ui.Pressable({
                   style: {
-                    backgroundColor: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) =>
+                    backgroundColor: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
                       phoneNumber ? '#D1D5DB' : '#F3F4F6'
                     ),
                     borderRadius: 8,
@@ -169,14 +208,14 @@ export class PhoneApp {
                     alignItems: 'center'
                   },
                   onPress: () => {
-                    this.props.phoneNumberBinding.set(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
+                    this.phoneNumberBinding.set(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
                   },
                   children: [
                     ui.Text({
-                      text: '⌫',
+                      text: '↩️',
                       style: {
                         fontSize: 18,
-                        color: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) =>
+                        color: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
                           phoneNumber ? '#374151' : '#9CA3AF'
                         )
                       }
@@ -186,8 +225,8 @@ export class PhoneApp {
                 // Call button
                 ui.Pressable({
                   style: {
-                    backgroundColor: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) =>
-                      phoneNumber ? '#10B981' : '#D1FAE5'
+                    backgroundColor: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
+                      phoneNumber ? '#10B981' : '#D1D5DB'
                     ),
                     borderRadius: 8,
                     flex: 1,
@@ -196,16 +235,14 @@ export class PhoneApp {
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
-                  onPress: () => {
-                    this.handleCallPress();
-                  },
+                  onPress: () => this.handleCallPress(),
                   children: [
                     ui.Text({
                       text: '📞',
                       style: {
                         fontSize: 18,
-                        color: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) =>
-                          phoneNumber ? '#FFFFFF' : '#10B981'
+                        color: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
+                          phoneNumber ? '#FFFFFF' : '#9CA3AF'
                         )
                       }
                     })
@@ -219,12 +256,51 @@ export class PhoneApp {
     });
   }
 
-  private renderDialingScreen(): ui.UINode {
+  private static createDialPadRow(digits: string[]): ui.UINode {
+    return ui.View({
+      style: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        marginVertical: 4
+      },
+      children: digits.map((digit) => 
+        ui.Pressable({
+          style: {
+            backgroundColor: '#FFFFFF',
+            borderRadius: 35,
+            width: 65,
+            height: 65,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: '#000000',
+            shadowOffset: [0, 2],
+            shadowOpacity: 0.1,
+            shadowRadius: 4
+          },
+          onPress: () => {
+            this.phoneNumberBinding.set(prev => prev + digit);
+          },
+          children: [
+            ui.Text({
+              text: digit,
+              style: {
+                fontSize: 24,
+                fontWeight: 'bold',
+                color: '#1F2937'
+              }
+            })
+          ]
+        })
+      )
+    });
+  }
+
+  private static renderDialingScreen(): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#10B981', // green-500
+        backgroundColor: '#10B981',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 32
@@ -256,31 +332,30 @@ export class PhoneApp {
           text: 'Calling...',
           style: {
             color: '#FFFFFF',
-            fontSize: 28,
-            fontWeight: '500',
-            marginBottom: 8,
-            textAlign: 'center'
+            fontSize: 24,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 16
           }
         }),
         
-        // Phone number
+        // Phone number display
         ui.Text({
-          text: ui.Binding.derive([this.props.phoneNumberBinding], (phoneNumber) => 
-            formatPhoneNumber(phoneNumber)
+          text: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
+            this.formatPhoneNumber(phoneNumber) || 'Unknown'
           ),
           style: {
-            color: '#FFFFFF',
-            fontSize: 20,
-            opacity: 0.9,
-            marginBottom: 48,
-            textAlign: 'center'
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: 18,
+            textAlign: 'center',
+            marginBottom: 40
           }
         }),
         
         // End call button
         ui.Pressable({
           style: {
-            backgroundColor: '#EF4444', // red-500
+            backgroundColor: '#EF4444',
             borderRadius: 32,
             width: 80,
             height: 80,
@@ -288,15 +363,14 @@ export class PhoneApp {
             alignItems: 'center'
           },
           onPress: () => {
-            this.props.isDialingBinding.set(false);
-            this.props.phoneNumberBinding.set('');
+            this.isDialingBinding.set(false);
+            this.phoneNumberBinding.set('');
           },
           children: [
             ui.Text({
-              text: '❌',
+              text: '📵',
               style: {
-                fontSize: 28,
-                color: '#FFFFFF'
+                fontSize: 32
               }
             })
           ]
@@ -305,46 +379,16 @@ export class PhoneApp {
     });
   }
 
-  private createDialPadRow(digits: string[]): ui.UINode {
-    return ui.View({
-      style: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 4,
-        marginVertical: 1
-      },
-      children: digits.map(digit => 
-        ui.Pressable({
-          style: {
-            backgroundColor: '#FFFFFF',
-            borderRadius: 8,
-            flex: 1,
-            marginHorizontal: 1,
-            minHeight: 45,
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          onPress: () => {
-            this.props.phoneNumberBinding.set(prev => 
-              prev.length < 10 ? prev + digit : prev
-            );
-          },
-          children: [
-            ui.Text({
-              text: digit,
-              style: {
-                fontSize: 22,
-                color: '#374151',
-                fontWeight: '400'
-              }
-            })
-          ]
-        })
-      )
-    });
+  private static handleCallPress(): void {
+    // Get current phone number value and simulate calling
+    this.isDialingBinding.set(true);
+    // Note: In Horizon Worlds, we'd use event-driven patterns instead of setTimeout
+    // For demo purposes, we'll just show the dialing screen
   }
 
-  private handleCallPress(): void {
-    this.props.isDialingBinding.set(true);
+  private static formatPhoneNumber(num: string): string {
+    if (num.length <= 3) return num;
+    if (num.length <= 6) return `${num.slice(0, 3)}-${num.slice(3)}`;
+    return `${num.slice(0, 3)}-${num.slice(3, 6)}-${num.slice(6)}`;
   }
 }

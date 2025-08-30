@@ -1,14 +1,18 @@
 import * as ui from 'horizon/ui';
-import { ScreenType } from '../index';
+
+type AppType = 'home' | 'phone' | 'calculator' | 'contacts' | 'mail' | 'browser' | 'settings';
 
 interface HomeScreenProps {
-  onNavigateToScreen: (screen: ScreenType) => void;
+  onAppSelect: (app: AppType) => void;
 }
 
+/**
+ * HomeScreen - The main app grid interface
+ * Updated: 2025-08-29 - Shows exactly 6 apps only
+ * Uses the exact design from the original HomeScreen.ts
+ */
 export class HomeScreen {
-  constructor(private props: HomeScreenProps) {}
-
-  render(): ui.UINode {
+  public static render(props: HomeScreenProps): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
@@ -45,8 +49,8 @@ export class HomeScreen {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Phone', '#10B981', 'phone'), // green-500
-                this.createAppIcon('Calculator', '#3B82F6', 'calculator') // blue-500
+                HomeScreen.createAppIcon('phone', 'Phone', '#10B981', '📞', props.onAppSelect), // green-500
+                HomeScreen.createAppIcon('calculator', 'Calculator', '#3B82F6', '🧮', props.onAppSelect) // blue-500
               ]
             }),
             
@@ -60,8 +64,8 @@ export class HomeScreen {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Contacts', '#F97316', 'contacts'), // orange-500
-                this.createAppIcon('MeMail', '#EF4444', 'mail') // red-500
+                HomeScreen.createAppIcon('contacts', 'Contacts', '#F97316', '👥', props.onAppSelect), // orange-500
+                HomeScreen.createAppIcon('mail', 'MeMail', '#EF4444', '📧', props.onAppSelect) // red-500
               ]
             }),
             
@@ -75,8 +79,8 @@ export class HomeScreen {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Browser', '#8B5CF6', 'browser'), // purple-500
-                this.createAppIcon('Settings', '#6B7280', 'settings') // gray-500
+                HomeScreen.createAppIcon('browser', 'Browser', '#8B5CF6', '🌐', props.onAppSelect), // purple-500
+                HomeScreen.createAppIcon('settings', 'Settings', '#6B7280', '⚙️', props.onAppSelect) // gray-500
               ]
             })
           ]
@@ -85,7 +89,13 @@ export class HomeScreen {
     });
   }
 
-  private createAppIcon(appName: string, color: string, appId: ScreenType): ui.UINode {
+  private static createAppIcon(
+    appId: AppType,
+    appName: string, 
+    color: string, 
+    iconSymbol: string,
+    onAppSelect: (app: AppType) => void
+  ): ui.UINode {
     return ui.Pressable({
       style: {
         flexDirection: 'column',
@@ -93,29 +103,26 @@ export class HomeScreen {
         justifyContent: 'center',
         padding: 6
       },
-      onPress: () => {
-        console.log(`Pressed ${appName} app`);
-        this.props.onNavigateToScreen(appId);
-      },
+      onPress: () => onAppSelect(appId),
       children: [
         // App icon background
         ui.View({
           style: {
-            width: 55,
-            height: 55,
+            width: 65,
+            height: 65,
             backgroundColor: color,
-            borderRadius: 12,
+            borderRadius: 18,
             justifyContent: 'center',
             alignItems: 'center',
-            marginBottom: 6
+            marginBottom: 10
           },
           children: [
             // App icon symbol/letter
             ui.Text({
-              text: this.getAppIconSymbol(appId),
+              text: iconSymbol,
               style: {
                 color: '#FFFFFF',
-                fontSize: 22,
+                fontSize: 26,
                 fontWeight: 'bold',
                 textAlign: 'center'
               }
@@ -128,24 +135,12 @@ export class HomeScreen {
           text: appName,
           style: {
             color: '#FFFFFF',
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: '500',
             textAlign: 'center'
           }
         })
       ]
     });
-  }
-
-  private getAppIconSymbol(appId: ScreenType): string {
-    switch (appId) {
-      case 'phone': return '📞';
-      case 'calculator': return '🧮';
-      case 'contacts': return '👥';
-      case 'mail': return '📧';
-      case 'browser': return '🌐';
-      case 'settings': return '⚙️';
-      default: return '📱';
-    }
   }
 }
