@@ -101,11 +101,12 @@ class CalculatorApp extends ui.UIComponent<typeof CalculatorApp> {
             zIndex: 10
           },
           children: [
-            ui.Text({
-              text: '🏠',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
               style: {
-                fontSize: 16,
-                color: '#9CA3AF'
+                width: 16,
+                height: 16,
+                tintColor: '#9CA3AF'
               }
             }),
             ui.Text({
@@ -289,14 +290,23 @@ class CalculatorApp extends ui.UIComponent<typeof CalculatorApp> {
           },
           onPress: button.action,
           children: [
-            ui.Text({
-              text: button.label,
-              style: {
-                fontSize: 22,
-                color: button.bg === '#FFFFFF' ? '#374151' : '#FFFFFF',
-                fontWeight: '400'
-              }
-            })
+            button.label === '⌫' ? 
+              ui.Image({
+                source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("645495034835211"))),
+                style: {
+                  width: 22,
+                  height: 22,
+                  tintColor: button.bg === '#FFFFFF' ? '#374151' : '#FFFFFF'
+                }
+              }) :
+              ui.Text({
+                text: button.label,
+                style: {
+                  fontSize: 22,
+                  color: button.bg === '#FFFFFF' ? '#374151' : '#FFFFFF',
+                  fontWeight: '400'
+                }
+              })
           ]
         })
       )

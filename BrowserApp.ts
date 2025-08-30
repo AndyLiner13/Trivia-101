@@ -1,3 +1,4 @@
+import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 
 class BrowserApp extends ui.UIComponent<typeof BrowserApp> {
@@ -84,10 +85,12 @@ class BrowserApp extends ui.UIComponent<typeof BrowserApp> {
                     marginRight: 6
                   },
                   children: [
-                    ui.Text({
-                      text: '🏠',
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
                       style: {
-                        fontSize: 16
+                        width: 16,
+                        height: 16,
+                        tintColor: '#000000'
                       }
                     })
                   ]

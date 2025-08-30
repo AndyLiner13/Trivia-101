@@ -141,11 +141,12 @@ class SettingsApp extends ui.UIComponent<typeof SettingsApp> {
             zIndex: 10
           },
           children: [
-            ui.Text({
-              text: '🏠',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
               style: {
-                fontSize: 16,
-                color: '#9CA3AF'
+                width: 16,
+                height: 16,
+                tintColor: '#9CA3AF'
               }
             }),
             ui.Text({
@@ -240,11 +241,12 @@ class SettingsApp extends ui.UIComponent<typeof SettingsApp> {
                 alignItems: 'center'
               },
               children: [
-                ui.Text({
-                  text: '🏠',
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
                   style: {
-                    fontSize: 16,
-                    color: '#9CA3AF'
+                    width: 16,
+                    height: 16,
+                    tintColor: '#9CA3AF'
                   }
                 }),
                 ui.Pressable({
@@ -489,11 +491,12 @@ class SettingsApp extends ui.UIComponent<typeof SettingsApp> {
             marginRight: 8
           },
           children: [
-            ui.Text({
-              text: isCurrent ? '🔊' : '🎵',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1288271619346253"))),
               style: {
-                fontSize: 9,
-                color: '#FFFFFF'
+                width: 9,
+                height: 9,
+                tintColor: '#FFFFFF'
               }
             })
           ]

@@ -121,11 +121,12 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
             zIndex: 10
           },
           children: [
-            ui.Text({
-              text: '🏠',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
               style: {
-                fontSize: 16,
-                color: '#9CA3AF'
+                width: 16,
+                height: 16,
+                tintColor: '#9CA3AF'
               }
             }),
             ui.Text({
@@ -210,11 +211,12 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
                     this.phoneNumberBinding.set(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
                   },
                   children: [
-                    ui.Text({
-                      text: '↩️',
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))),
                       style: {
-                        fontSize: 18,
-                        color: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
+                        width: 18,
+                        height: 18,
+                        tintColor: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
                           phoneNumber ? '#374151' : '#9CA3AF'
                         )
                       }
@@ -238,11 +240,12 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
                     this.handleCallPress();
                   },
                   children: [
-                    ui.Text({
-                      text: '📞',
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1127859349222459"))),
                       style: {
-                        fontSize: 18,
-                        color: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
+                        width: 18,
+                        height: 18,
+                        tintColor: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) =>
                           phoneNumber ? '#FFFFFF' : '#10B981'
                         )
                       }
@@ -280,10 +283,12 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
             marginBottom: 32
           },
           children: [
-            ui.Text({
-              text: '📞',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24322726084045822"))),
               style: {
-                fontSize: 48
+                width: 48,
+                height: 48,
+                tintColor: '#FFFFFF'
               }
             })
           ]
@@ -330,11 +335,12 @@ class PhoneApp extends ui.UIComponent<typeof PhoneApp> {
             this.phoneNumberBinding.set('');
           },
           children: [
-            ui.Text({
-              text: '❌',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("619686277659622"))),
               style: {
-                fontSize: 28,
-                color: '#FFFFFF'
+                width: 28,
+                height: 28,
+                tintColor: '#FFFFFF'
               }
             })
           ]

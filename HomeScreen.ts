@@ -90,8 +90,8 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Phone', '#10B981', '📞'), // green-500
-                this.createAppIcon('Calculator', '#3B82F6', '🧮') // blue-500
+                this.createAppIcon('Phone', '#10B981', BigInt("24322726084045822")), // green-500
+                this.createAppIcon('Calculator', '#3B82F6', BigInt("2175040452971461")) // blue-500
               ]
             }),
             
@@ -105,8 +105,8 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Contacts', '#F97316', '👥'), // orange-500
-                this.createAppIcon('MeMail', '#EF4444', '📧') // red-500
+                this.createAppIcon('Contacts', '#F97316', BigInt("1328787472168292")), // orange-500
+                this.createAppIcon('MeMail', '#EF4444', BigInt("2571486876541221")) // red-500
               ]
             }),
             
@@ -120,8 +120,8 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Browser', '#8B5CF6', '🌐'), // purple-500
-                this.createAppIcon('Settings', '#6B7280', '⚙️') // gray-500
+                this.createAppIcon('Browser', '#8B5CF6', BigInt("592774970456232")), // purple-500
+                this.createAppIcon('Settings', '#6B7280', BigInt("1342398257464986")) // gray-500
               ]
             })
           ]
@@ -130,7 +130,7 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
     });
   }
 
-  private createAppIcon(appName: string, color: string, iconSymbol: string): ui.UINode {
+  private createAppIcon(appName: string, color: string, assetId: bigint): ui.UINode {
     return ui.View({
       style: {
         flexDirection: 'column',
@@ -151,14 +151,13 @@ class HomeScreen extends ui.UIComponent<typeof HomeScreen> {
             marginBottom: 10
           },
           children: [
-            // App icon symbol/letter
-            ui.Text({
-              text: iconSymbol,
+            // App icon symbol
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(assetId)),
               style: {
-                color: '#FFFFFF',
-                fontSize: 26,
-                fontWeight: 'bold',
-                textAlign: 'center'
+                width: 26,
+                height: 26,
+                tintColor: '#FFFFFF'
               }
             })
           ]

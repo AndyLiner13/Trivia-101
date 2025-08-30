@@ -179,11 +179,12 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
                     alignItems: 'center'
                   },
                   children: [
-                    ui.Text({
-                      text: '🏠',
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
                       style: {
-                        fontSize: 16,
-                        color: '#9CA3AF'
+                        width: 16,
+                        height: 16,
+                        tintColor: '#9CA3AF'
                       }
                     }),
                     ui.Pressable({
@@ -288,10 +289,12 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
                         console.log('Call button pressed');
                       },
                       children: [
-                        ui.Text({
-                          text: '📞',
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1127859349222459"))),
                           style: {
-                            fontSize: 16
+                            width: 16,
+                            height: 16,
+                            tintColor: '#FFFFFF'
                           }
                         })
                       ]
@@ -336,11 +339,12 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
                         console.log('Favorite button pressed');
                       },
                       children: [
-                        ui.Text({
-                          text: '⭐',
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("787034810502774"))),
                           style: {
-                            fontSize: 16,
-                            color: '#6B7280'
+                            width: 16,
+                            height: 16,
+                            tintColor: '#6B7280'
                           }
                         })
                       ]
@@ -618,11 +622,12 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
             zIndex: 10
           },
           children: [
-            ui.Text({
-              text: '🏠',
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
               style: {
-                fontSize: 16,
-                color: '#9CA3AF'
+                width: 16,
+                height: 16,
+                tintColor: '#9CA3AF'
               }
             }),
             ui.Text({
@@ -766,11 +771,16 @@ class ContactsApp extends ui.UIComponent<typeof ContactsApp> {
             });
           },
           children: [
-            ui.Text({
-              text: '⭐',
+            ui.Image({
+              source: ui.Binding.derive([this.favoritesBinding], (favorites) => 
+                favorites.has(contact.id) 
+                  ? ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24150527294650016")))
+                  : ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("787034810502774")))
+              ),
               style: {
-                fontSize: 14,
-                color: ui.Binding.derive([this.favoritesBinding], (favorites) => 
+                width: 14,
+                height: 14,
+                tintColor: ui.Binding.derive([this.favoritesBinding], (favorites) => 
                   favorites.has(contact.id) ? '#F59E0B' : '#9CA3AF'
                 )
               }

@@ -1,3 +1,4 @@
+import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 
 type ShopPage = 'main' | 'product' | 'checkout';
@@ -95,11 +96,12 @@ class MeShop extends ui.UIComponent<typeof MeShop> {
                 alignItems: 'center'
               },
               children: [
-                ui.Text({
-                  text: '🏠',
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
                   style: {
-                    fontSize: 16,
-                    color: '#9CA3AF',
+                    width: 16,
+                    height: 16,
+                    tintColor: '#9CA3AF',
                     marginRight: 8
                   }
                 }),
