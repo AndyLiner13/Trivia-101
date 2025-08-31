@@ -208,6 +208,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isContactsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'contacts');
   private isMemailAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'memail');
   private isSettingsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'settings');
+  private isBrowserAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'browser');
   private isDialerBinding = ui.Binding.derive([this.isDialingBinding], (isDialing) => !isDialing);
 
   initializeUI(): ui.UINode {
@@ -256,7 +257,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 ui.UINode.if(this.isCalculatorAppBinding, this.renderCalculatorApp()),
                 ui.UINode.if(this.isContactsAppBinding, this.renderContactsApp()),
                 ui.UINode.if(this.isMemailAppBinding, this.renderMemailApp()),
-                ui.UINode.if(this.isSettingsAppBinding, this.renderSettingsApp())
+                ui.UINode.if(this.isSettingsAppBinding, this.renderSettingsApp()),
+                ui.UINode.if(this.isBrowserAppBinding, this.renderBrowserApp())
               ]
             })
           ]
@@ -2430,6 +2432,223 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               selected === ringtone.id ? '#00c951' : '#9CA3AF'
             )
           }
+        })
+      ]
+    });
+  }
+
+  private renderBrowserApp(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#FFFFFF'
+      },
+      children: [
+        // Header
+        this.createAppHeader({
+          appName: 'Browser',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+          },
+          showBackButton: false
+        }),
+
+        // Address Bar
+        ui.View({
+          style: {
+            backgroundColor: '#F9FAFB',
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderBottomWidth: 1,
+            marginTop: 36
+          },
+          children: [
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: '#D1D5DB',
+                paddingHorizontal: 10,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: '🔍',
+                  style: {
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    marginRight: 8
+                  }
+                }),
+                ui.Text({
+                  text: 'https://www.browser.com',
+                  style: {
+                    fontSize: 9,
+                    color: '#111827',
+                    flex: 1
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Browser Content - Search Results
+        ui.ScrollView({
+          style: {
+            flex: 1,
+            backgroundColor: '#FAF5FF'
+          },
+          children: [
+            ui.View({
+              style: {
+                padding: 16,
+                paddingTop: 24
+              },
+              children: [
+                // MeBank Link (non-functional placeholder)
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderWidth: 2,
+                    borderColor: '#2563EB',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    opacity: 0.6
+                  },
+                  children: [
+                    ui.Text({
+                      text: '🏦 MeBank - Secure Banking',
+                      style: {
+                        fontSize: 11,
+                        fontWeight: '600',
+                        color: '#1E3A8A',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: 'https://www.mebank.com',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#059669',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Manage accounts, transfer money, and pay bills securely online.',
+                      style: {
+                        fontSize: 8,
+                        color: '#374151'
+                      }
+                    })
+                  ]
+                }),
+
+                // MeShop Link (non-functional placeholder)
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderWidth: 2,
+                    borderColor: '#EA580C',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    opacity: 0.6
+                  },
+                  children: [
+                    ui.Text({
+                      text: '🛒 MeShop - Electronics Store',
+                      style: {
+                        fontSize: 11,
+                        fontWeight: '600',
+                        color: '#9A3412',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: 'https://www.meshop.com',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#059669',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Latest electronics and accessories with fast shipping.',
+                      style: {
+                        fontSize: 8,
+                        color: '#374151'
+                      }
+                    })
+                  ]
+                }),
+
+                // MeNews Link (non-functional placeholder)
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderWidth: 2,
+                    borderColor: '#2563EB',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    opacity: 0.6
+                  },
+                  children: [
+                    ui.Text({
+                      text: '📰 MeNews - Breaking News',
+                      style: {
+                        fontSize: 11,
+                        fontWeight: '600',
+                        color: '#1E3A8A',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: 'https://www.menews.com',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#059669',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Latest breaking news and current events from around the world.',
+                      style: {
+                        fontSize: 8,
+                        color: '#374151'
+                      }
+                    })
+                  ]
+                }),
+
+                // Footer
+                ui.View({
+                  style: {
+                    alignItems: 'center',
+                    marginTop: 12
+                  },
+                  children: [
+                    ui.Text({
+                      text: "that's all folks! 😳",
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
         })
       ]
     });
