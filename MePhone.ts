@@ -1317,7 +1317,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                       style: {
                         width: 16,
                         height: 16,
-                        tintColor: '#9CA3AF'
+                        tintColor: '#FFFFFF'
                       }
                     })
                   ]
