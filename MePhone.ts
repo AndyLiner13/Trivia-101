@@ -92,6 +92,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private selectedBillBinding = new ui.Binding<string>('');
   private paidBillsBinding = new ui.Binding<string[]>([]);
 
+  // Browser navigation history
+  private browserNavigationHistory: string[] = [];
+  private currentBrowserPage: string = 'search';
+
   // Internal MeBank state tracking
   private currentBankPage: BankPage = 'home';
   private selectedBill = '';
@@ -379,6 +383,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       onPress: () => {
         this.currentAppBinding.set(appId);
+        // Reset browser page to search when browser app is opened
+        if (appId === 'browser') {
+          this.currentBrowserPage = 'search';
+          this.currentBrowserPageBinding.set('search');
+          this.currentBankPageBinding.set('home');
+          this.browserNavigationHistory = []; // Clear navigation history
+        }
       },
       children: [
         // App icon background
@@ -2467,13 +2478,82 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         backgroundColor: '#FFFFFF'
       },
       children: [
-        // Header
-        this.createAppHeader({
-          appName: 'Browser',
-          onHomePress: () => {
-            this.currentAppBinding.set('home');
+        // Header with conditional back button
+        ui.View({
+          style: {
+            backgroundColor: '#F9FAFB',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            height: 36,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10
           },
-          showBackButton: false
+          children: [
+            ui.View({
+              style: {
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                // Home button
+                ui.Pressable({
+                  style: {
+                    padding: 4
+                  },
+                  onPress: () => {
+                    this.currentAppBinding.set('home');
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
+                      style: {
+                        width: 20,
+                        height: 20,
+                        tintColor: '#9CA3AF'
+                      }
+                    })
+                  ]
+                }),
+                // Back button (conditional - only when not on search page)
+                ui.UINode.if(
+                  ui.Binding.derive([this.currentBrowserPageBinding], (page) => page !== 'search'),
+                  ui.Pressable({
+                    style: {
+                      marginLeft: 8,
+                      padding: 4
+                    },
+                    onPress: () => {
+                      this.navigateBack();
+                    },
+                    children: [
+                      ui.Image({
+                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))), // arrow-left icon
+                        style: {
+                          width: 20,
+                          height: 20,
+                          tintColor: '#9CA3AF'
+                        }
+                      })
+                    ]
+                  })
+                )
+              ]
+            }),
+            // App title
+            ui.Text({
+              text: 'Browser',
+              style: {
+                fontSize: 14,
+                fontWeight: '500',
+                color: '#111827'
+              }
+            })
+          ]
         }),
 
         // Address Bar
@@ -2585,7 +2665,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 marginBottom: 12
               },
               onPress: () => {
-                this.currentBrowserPageBinding.set('mebank');
+                this.navigateToBrowserPage('mebank');
               },
               children: [
                 ui.Text({
@@ -2731,32 +2811,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             paddingTop: 16
           },
           children: [
-            // Back button to search results
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 12
-              },
-              children: [
-                ui.Pressable({
-                  onPress: () => {
-                    this.currentBrowserPageBinding.set('search');
-                  },
-                  children: [
-                    ui.Text({
-                      text: '⬅️ Back to Search',
-                      style: {
-                        fontSize: 11,
-                        color: '#3B82F6',
-                        fontWeight: '600'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-
             // Home Page
             ui.View({
               style: {
@@ -2808,6 +2862,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private navigateToBankPage(page: BankPage): void {
+    // Add current page to navigation history before navigating
+    const currentState = `${this.currentBrowserPage}-${this.currentBankPage}`;
+    if (this.browserNavigationHistory.length === 0 || this.browserNavigationHistory[this.browserNavigationHistory.length - 1] !== currentState) {
+      this.browserNavigationHistory.push(currentState);
+    }
+
     // Reset pay-bills state when navigating away from that page
     if (this.currentBankPage === 'pay-bills' && page !== 'pay-bills') {
       this.selectedBill = '';
@@ -2818,6 +2878,60 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     
     this.currentBankPage = page;
     this.currentBankPageBinding.set(page);
+  }
+
+  private navigateToBrowserPage(page: string): void {
+    // Add current page to navigation history before navigating
+    const currentState = this.currentBrowserPage;
+    if (currentState === 'mebank') {
+      // If we're currently in MeBank, include the bank page in the state
+      const fullCurrentState = `${currentState}-${this.currentBankPage}`;
+      if (this.browserNavigationHistory.length === 0 || this.browserNavigationHistory[this.browserNavigationHistory.length - 1] !== fullCurrentState) {
+        this.browserNavigationHistory.push(fullCurrentState);
+      }
+    } else {
+      // For other pages, just use the page name
+      if (this.browserNavigationHistory.length === 0 || this.browserNavigationHistory[this.browserNavigationHistory.length - 1] !== currentState) {
+        this.browserNavigationHistory.push(currentState);
+      }
+    }
+
+    this.currentBrowserPage = page;
+    this.currentBrowserPageBinding.set(page);
+    
+    // Reset bank page to home when navigating to MeBank
+    if (page === 'mebank') {
+      this.currentBankPage = 'home';
+      this.currentBankPageBinding.set('home');
+    }
+  }
+
+  private navigateBack(): void {
+    if (this.browserNavigationHistory.length > 0) {
+      // Get the last page from history
+      const previousState = this.browserNavigationHistory.pop()!;
+      
+      if (previousState.includes('-')) {
+        // State includes both browser page and bank page
+        const [browserPage, bankPage] = previousState.split('-');
+        this.currentBrowserPage = browserPage;
+        this.currentBrowserPageBinding.set(browserPage);
+        if (browserPage === 'mebank' && bankPage) {
+          this.currentBankPage = bankPage as BankPage;
+          this.currentBankPageBinding.set(bankPage as BankPage);
+        }
+      } else {
+        // Simple browser page
+        this.currentBrowserPage = previousState;
+        this.currentBrowserPageBinding.set(previousState);
+      }
+    } else {
+      // No history, go back to search
+      this.currentBrowserPage = 'search';
+      this.currentBrowserPageBinding.set('search');
+      this.currentBankPage = 'home';
+      this.currentBankPageBinding.set('home');
+    }
   }
 
   private renderBankHeader(): ui.UINode {
