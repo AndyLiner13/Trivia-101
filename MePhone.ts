@@ -482,16 +482,32 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             ] : [])
           ]
         }),
-        ui.Text({
-          text: props.appName,
+        // Right side container with text and optional right element
+        ui.View({
           style: {
-            fontSize: 14,
-            fontWeight: '500',
-            color: '#111827'
-          }
-        }),
-        // Right element (if provided)
-        props.rightElement || ui.View({})
+            flexDirection: 'row',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: props.appName,
+              style: {
+                fontSize: 14,
+                fontWeight: '500',
+                color: '#111827'
+              }
+            }),
+            // Right element (if provided)
+            ...(props.rightElement ? [
+              ui.View({
+                style: {
+                  marginLeft: 8
+                },
+                children: [props.rightElement]
+              })
+            ] : [])
+          ]
+        })
       ]
     });
   }
