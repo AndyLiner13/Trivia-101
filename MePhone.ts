@@ -481,7 +481,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             // Home button
             ui.Pressable({
               style: {
-                padding: 4
+                padding: 2
               },
               onPress: props.onHomePress,
               children: [
@@ -499,8 +499,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             ...(props.showBackButton && props.onBackPress ? [
               ui.Pressable({
                 style: {
-                  marginLeft: 2,
-                  padding: 4
+                  marginLeft: 0,
+                  padding: 2
                 },
                 onPress: props.onBackPress,
                 children: [
@@ -2503,7 +2503,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 // Home button
                 ui.Pressable({
                   style: {
-                    padding: 4
+                    padding: 2
                   },
                   onPress: () => {
                     this.currentAppBinding.set('home');
@@ -2524,8 +2524,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   ui.Binding.derive([this.currentBrowserPageBinding], (page) => page !== 'search'),
                   ui.Pressable({
                     style: {
-                      marginLeft: 8,
-                      padding: 4
+                      marginLeft: 0,
+                      padding: 2
                     },
                     onPress: () => {
                       this.navigateBack();
