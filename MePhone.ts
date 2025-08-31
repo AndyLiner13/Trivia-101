@@ -1312,10 +1312,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     console.log('Email button pressed');
                   },
                   children: [
-                    ui.Text({
-                      text: '📧',
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("2571486876541221"))), // mail icon
                       style: {
-                        fontSize: 16
+                        width: 16,
+                        height: 16,
+                        tintColor: '#9CA3AF'
                       }
                     })
                   ]
@@ -1356,62 +1358,61 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               ]
             }),
             
-            // Contact Details
+            // Uber Button - replacing contact details
             ui.View({
               style: {
                 width: '100%',
-                backgroundColor: '#F9FAFB',
-                borderRadius: 12,
-                padding: 16
+                alignItems: 'center'
               },
               children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                    contact ? `Phone: ${contact.phone}` : ''
-                  ),
+                ui.View({
                   style: {
-                    fontSize: 14,
-                    color: '#111827',
-                    marginBottom: 8
-                  }
-                }),
-                ui.Text({
-                  text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                    contact && contact.email ? `Email: ${contact.email}` : ''
-                  ),
-                  style: {
-                    fontSize: 14,
-                    color: '#111827',
-                    marginBottom: 8,
-                    display: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                      contact && contact.email ? 'flex' : 'none'
-                    )
-                  }
-                }),
-                ui.Text({
-                  text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                    contact && contact.company ? `Company: ${contact.company}` : ''
-                  ),
-                  style: {
-                    fontSize: 14,
-                    color: '#111827',
-                    marginBottom: 8,
-                    display: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                      contact && contact.company ? 'flex' : 'none'
-                    )
-                  }
-                }),
-                ui.Text({
-                  text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                    contact && contact.lastContact ? `Last contact: ${contact.lastContact}` : ''
-                  ),
-                  style: {
-                    fontSize: 12,
-                    color: '#6B7280',
-                    display: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                      contact && contact.lastContact ? 'flex' : 'none'
-                    )
-                  }
+                    width: '100%',
+                    maxWidth: 300
+                  },
+                  children: [
+                    ui.Pressable({
+                      style: {
+                        width: '100%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: '#000000',
+                        borderRadius: 12,
+                        padding: 12
+                      },
+                      onPress: () => {
+                        // In a real app, this would open the Uber app or teleport to the contact
+                        console.log('Opening Uber to contact');
+                      },
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("662001530262929"))), // car icon
+                          style: {
+                            width: 20,
+                            height: 20,
+                            tintColor: '#FFFFFF',
+                            marginRight: 8
+                          }
+                        }),
+                        ui.View({
+                          style: {
+                            flex: 1,
+                            alignItems: 'flex-start'
+                          },
+                          children: [
+                            ui.Text({
+                              text: 'Uber to Contact',
+                              style: {
+                                fontSize: 14,
+                                fontWeight: 'bold',
+                                color: '#FFFFFF'
+                              }
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
                 })
               ]
             })
