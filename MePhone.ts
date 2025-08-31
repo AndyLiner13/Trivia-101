@@ -304,8 +304,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Phone', '#10B981', BigInt("24322726084045822"), 'phone'), // green-500 matching reference
-                this.createAppIcon('Calculator', '#3B82F6', BigInt("2175040452971461"), 'calculator') // blue-500
+                this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone'), // Updated green color
+                this.createAppIcon('Calculator', '#2b7fff', BigInt("2175040452971461"), 'calculator') // Updated blue color
               ]
             }),
             
@@ -319,8 +319,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Contacts', '#F97316', BigInt("1328787472168292"), 'contacts'), // orange-500
-                this.createAppIcon('MeMail', '#EF4444', BigInt("2571486876541221"), 'memail') // red-500
+                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts'), // Updated orange color
+                this.createAppIcon('MeMail', '#fb2c36', BigInt("2571486876541221"), 'memail') // Updated red color
               ]
             }),
             
@@ -334,8 +334,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Browser', '#8B5CF6', BigInt("592774970456232"), 'browser'), // purple-500 matching reference
-                this.createAppIcon('Settings', '#6B7280', BigInt("1342398257464986"), 'settings') // gray-500 matching reference
+                this.createAppIcon('Browser', '#ad46ff', BigInt("592774970456232"), 'browser'), // Updated purple color
+                this.createAppIcon('Settings', '#6a7282', BigInt("1342398257464986"), 'settings') // Updated gray color
               ]
             })
           ]
