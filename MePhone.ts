@@ -302,7 +302,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Phone', '#10B981', BigInt("24322726084045822"), 'phone'), // green-500
+                this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone'), // green-500
                 this.createAppIcon('Calculator', '#3B82F6', BigInt("2175040452971461"), 'calculator') // blue-500
               ]
             }),
@@ -512,7 +512,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               ),
               style: {
                 color: '#FFFFFF',
-                fontSize: 18, // Static size for better performance
+                fontSize: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
+                  phoneNumber === '' ? 14 : 18
+                ), // Smaller font for placeholder
                 fontWeight: '300',
                 textAlign: 'center'
               }
@@ -562,7 +564,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))),
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("802575082453612"))),
                       style: {
                         width: 18,
                         height: 18,
@@ -574,7 +576,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 // Call button - static styling for performance
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#10B981', // Static green
+                    backgroundColor: '#00c951', // Static green
                     borderRadius: 8,
                     flex: 1,
                     marginLeft: 1,
@@ -609,29 +611,29 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#10B981', // green-500
+        backgroundColor: '#00c951', // green-500
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 32
+        padding: 16
       },
       children: [
         // Phone icon container
         ui.View({
           style: {
             backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: 32,
-            width: 120,
-            height: 120,
+            borderRadius: 20,
+            width: 60,
+            height: 60,
             justifyContent: 'center',
             alignItems: 'center',
-            marginBottom: 32
+            marginBottom: 16
           },
           children: [
             ui.Image({
               source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24322726084045822"))),
               style: {
-                width: 48,
-                height: 48,
+                width: 24,
+                height: 24,
                 tintColor: '#FFFFFF'
               }
             })
@@ -643,9 +645,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           text: 'Calling...',
           style: {
             color: '#FFFFFF',
-            fontSize: 28,
+            fontSize: 18,
             fontWeight: '500',
-            marginBottom: 8,
+            marginBottom: 4,
             textAlign: 'center'
           }
         }),
@@ -657,9 +659,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           ),
           style: {
             color: '#FFFFFF',
-            fontSize: 20,
+            fontSize: 14,
             opacity: 0.9,
-            marginBottom: 48,
+            marginBottom: 24,
             textAlign: 'center'
           }
         }),
@@ -667,10 +669,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         // End call button
         ui.Pressable({
           style: {
-            backgroundColor: '#EF4444', // red-500
-            borderRadius: 32,
-            width: 80,
-            height: 80,
+            backgroundColor: '#fb2c36', // red-500
+            borderRadius: 20,
+            width: 50,
+            height: 50,
             justifyContent: 'center',
             alignItems: 'center'
           },
@@ -680,11 +682,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           },
           children: [
             ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("619686277659622"))),
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24322726084045822"))),
               style: {
-                width: 28,
-                height: 28,
-                tintColor: '#FFFFFF'
+                width: 20,
+                height: 20,
+                tintColor: '#FFFFFF',
+                transform: [{ rotate: '135deg' }] // Rotate phone icon to face down at proper angle
               }
             })
           ]
@@ -1253,7 +1256,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 // Call button
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#10B981',
+                    backgroundColor: '#00c951',
                     borderRadius: 15,
                     width: 40,
                     height: 40,
@@ -1994,7 +1997,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             }),
             ui.Pressable({
               style: {
-                backgroundColor: '#10B981',
+                backgroundColor: '#00c951',
                 borderRadius: 8,
                 paddingHorizontal: 8,
                 paddingVertical: 4
@@ -2693,7 +2696,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           style: {
             width: 22,
             height: 22,
-            backgroundColor: isCurrent ? '#10B981' : '#3B82F6',
+            backgroundColor: isCurrent ? '#00c951' : '#3B82F6',
             borderRadius: 11,
             justifyContent: 'center',
             alignItems: 'center',
@@ -2743,7 +2746,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           style: {
             fontSize: 10,
             color: ui.Binding.derive([this.selectedRingtoneBinding], (selected) => 
-              selected === ringtone.id ? '#10B981' : '#9CA3AF'
+              selected === ringtone.id ? '#00c951' : '#9CA3AF'
             )
           }
         })
