@@ -1625,23 +1625,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             this.composeSubjectBinding.set('');
             this.composeBodyBinding.set('');
           },
-          showBackButton: false,
-          rightElement: ui.Pressable({
-            style: {
-              padding: 4
-            },
-            onPress: () => {
-              this.isComposingBinding.set(true);
-            },
-            children: [
-              ui.Text({
-                text: '✏️',
-                style: {
-                  fontSize: 16
-                }
-              })
-            ]
-          })
+          showBackButton: false
         }),
         
         // Section Header
