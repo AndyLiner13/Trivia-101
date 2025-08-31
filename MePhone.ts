@@ -429,7 +429,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 12,
-        paddingVertical: 8,
+        height: 36, // Fixed height, smaller than before
         position: 'absolute',
         top: 0,
         left: 0,
@@ -453,8 +453,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 ui.Image({
                   source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
                   style: {
-                    width: 16,
-                    height: 16,
+                    width: 20,
+                    height: 20,
                     tintColor: '#9CA3AF'
                   }
                 })
@@ -472,8 +472,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   ui.Image({
                     source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))), // arrow-left icon
                     style: {
-                      width: 16,
-                      height: 16,
+                      width: 20,
+                      height: 20,
                       tintColor: '#9CA3AF'
                     }
                   })
