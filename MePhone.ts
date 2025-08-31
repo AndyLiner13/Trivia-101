@@ -24,6 +24,17 @@ interface Email {
   isRead: boolean;
 }
 
+// Banking interfaces
+type BankPage = 'home' | 'send-money' | 'request-money' | 'pay-bills';
+
+interface Bill {
+  id: string;
+  name: string;
+  amount: number;
+  emoji: string;
+  description: string;
+}
+
 // Settings interfaces
 interface SettingItem {
   id: string;
@@ -74,6 +85,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private composeToBinding = new ui.Binding<string>('');
   private composeSubjectBinding = new ui.Binding<string>('');
   private composeBodyBinding = new ui.Binding<string>('');
+
+  // Browser app state for MeBank
+  private currentBrowserPageBinding = new ui.Binding<string>('search');
+  private currentBankPageBinding = new ui.Binding<BankPage>('home');
+  private selectedBillBinding = new ui.Binding<string>('');
+  private paidBillsBinding = new ui.Binding<string[]>([]);
+
+  // Internal MeBank state tracking
+  private currentBankPage: BankPage = 'home';
+  private selectedBill = '';
+  private paidBills: string[] = [];
 
   // Sample emails data
   private emails: Email[] = [
@@ -2485,7 +2507,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   }
                 }),
                 ui.Text({
-                  text: 'https://www.browser.com',
+                  text: ui.Binding.derive([this.currentBrowserPageBinding], (page) => {
+                    switch (page) {
+                      case 'mebank': return 'https://www.mebank.com';
+                      default: return 'https://www.browser.com';
+                    }
+                  }),
                   style: {
                     fontSize: 9,
                     color: '#111827',
@@ -2497,151 +2524,943 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           ]
         }),
 
-        // Browser Content - Search Results
-        ui.ScrollView({
+        // Browser Content - Conditional rendering
+        ui.View({
           style: {
-            flex: 1,
-            backgroundColor: '#FAF5FF'
+            flex: 1
+          },
+          children: [
+            // Search Results Page
+            ui.View({
+              style: {
+                display: ui.Binding.derive([this.currentBrowserPageBinding], (page) => 
+                  page === 'search' ? 'flex' : 'none'
+                ),
+                flex: 1
+              },
+              children: [
+                this.renderBrowserSearchResults()
+              ]
+            }),
+            
+            // MeBank Page
+            ui.View({
+              style: {
+                display: ui.Binding.derive([this.currentBrowserPageBinding], (page) => 
+                  page === 'mebank' ? 'flex' : 'none'
+                ),
+                flex: 1
+              },
+              children: [
+                this.renderMeBank()
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderBrowserSearchResults(): ui.UINode {
+    return ui.ScrollView({
+      style: {
+        flex: 1,
+        backgroundColor: '#FAF5FF'
+      },
+      children: [
+        ui.View({
+          style: {
+            padding: 16,
+            paddingTop: 24
+          },
+          children: [
+            // MeBank Link (functional)
+            ui.Pressable({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#2563EB',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 12
+              },
+              onPress: () => {
+                this.currentBrowserPageBinding.set('mebank');
+              },
+              children: [
+                ui.Text({
+                  text: '🏦 MeBank - Secure Banking',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#1E3A8A',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: 'https://www.mebank.com',
+                  style: {
+                    fontSize: 9,
+                    fontWeight: '600',
+                    color: '#059669',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: 'Manage accounts, transfer money, and pay bills securely online.',
+                  style: {
+                    fontSize: 8,
+                    color: '#374151'
+                  }
+                })
+              ]
+            }),
+
+            // MeShop Link (non-functional placeholder)
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#EA580C',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 12,
+                opacity: 0.6
+              },
+              children: [
+                ui.Text({
+                  text: '🛒 MeShop - Electronics Store',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#9A3412',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: 'https://www.meshop.com',
+                  style: {
+                    fontSize: 9,
+                    fontWeight: '600',
+                    color: '#059669',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: 'Latest electronics and accessories with fast shipping.',
+                  style: {
+                    fontSize: 8,
+                    color: '#374151'
+                  }
+                })
+              ]
+            }),
+
+            // MeNews Link (non-functional placeholder)
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#2563EB',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 12,
+                opacity: 0.6
+              },
+              children: [
+                ui.Text({
+                  text: '📰 MeNews - Breaking News',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#1E3A8A',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: 'https://www.menews.com',
+                  style: {
+                    fontSize: 9,
+                    fontWeight: '600',
+                    color: '#059669',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: 'Stay informed with the latest news and current events.',
+                  style: {
+                    fontSize: 8,
+                    color: '#374151'
+                  }
+                })
+              ]
+            }),
+
+            // Footer
+            ui.View({
+              style: {
+                alignItems: 'center',
+                marginTop: 12
+              },
+              children: [
+                ui.Text({
+                  text: "that's all folks! 😳",
+                  style: {
+                    fontSize: 9,
+                    color: '#6B7280'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderMeBank(): ui.UINode {
+    return ui.ScrollView({
+      style: {
+        flex: 1,
+        backgroundColor: '#DBEAFE'
+      },
+      children: [
+        ui.View({
+          style: {
+            padding: 12,
+            paddingTop: 16
+          },
+          children: [
+            // Back button to search results
+            ui.View({
+              style: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 12
+              },
+              children: [
+                ui.Pressable({
+                  onPress: () => {
+                    this.currentBrowserPageBinding.set('search');
+                  },
+                  children: [
+                    ui.Text({
+                      text: '⬅️ Back to Search',
+                      style: {
+                        fontSize: 11,
+                        color: '#3B82F6',
+                        fontWeight: '600'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Home Page
+            ui.View({
+              style: {
+                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
+                  page === 'home' ? 'flex' : 'none'
+                )
+              },
+              children: [
+                this.renderBankHomePage()
+              ]
+            }),
+            // Send Money Page
+            ui.View({
+              style: {
+                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
+                  page === 'send-money' ? 'flex' : 'none'
+                )
+              },
+              children: [
+                this.renderBankSendMoneyPage()
+              ]
+            }),
+            // Request Money Page
+            ui.View({
+              style: {
+                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
+                  page === 'request-money' ? 'flex' : 'none'
+                )
+              },
+              children: [
+                this.renderBankRequestMoneyPage()
+              ]
+            }),
+            // Pay Bills Page
+            ui.View({
+              style: {
+                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
+                  page === 'pay-bills' ? 'flex' : 'none'
+                )
+              },
+              children: [
+                this.renderBankPayBillsPage()
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private navigateToBankPage(page: BankPage): void {
+    // Reset pay-bills state when navigating away from that page
+    if (this.currentBankPage === 'pay-bills' && page !== 'pay-bills') {
+      this.selectedBill = '';
+      this.selectedBillBinding.set('');
+      this.paidBills = [];
+      this.paidBillsBinding.set([]);
+    }
+    
+    this.currentBankPage = page;
+    this.currentBankPageBinding.set(page);
+  }
+
+  private renderBankHeader(): ui.UINode {
+    return ui.View({
+      style: {
+        backgroundColor: '#2563EB',
+        padding: 12,
+        borderRadius: 6,
+        marginBottom: 12,
+        borderWidth: 2,
+        borderColor: '#1E40AF'
+      },
+      children: [
+        ui.Text({
+          text: '🏦 MeBank',
+          style: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#FFFFFF',
+            marginBottom: 2
+          }
+        }),
+        ui.Text({
+          text: 'Secure Online Banking',
+          style: {
+            fontSize: 10,
+            color: '#BFDBFE'
+          }
+        })
+      ]
+    });
+  }
+
+  private renderBankAccountBalance(): ui.UINode {
+    return ui.View({
+      style: {
+        backgroundColor: '#FFFFFF',
+        padding: 12,
+        borderRadius: 6,
+        marginBottom: 12,
+        borderWidth: 2,
+        borderColor: '#059669'
+      },
+      children: [
+        ui.Text({
+          text: 'Account Balance:',
+          style: {
+            fontSize: 11,
+            fontWeight: '600',
+            color: '#065F46',
+            marginBottom: 4
+          }
+        }),
+        ui.Text({
+          text: '$12,847.92',
+          style: {
+            fontSize: 18,
+            fontWeight: '700',
+            color: '#059669'
+          }
+        })
+      ]
+    });
+  }
+
+  private renderBankHomePage(): ui.UINode {
+    return ui.View({
+      style: {
+        flex: 1
+      },
+      children: [
+        this.renderBankHeader(),
+        this.renderBankAccountBalance(),
+        
+        // Quick Actions
+        ui.View({
+          style: {
+            marginBottom: 12
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#2563EB',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              onPress: () => {
+                this.navigateToBankPage('send-money');
+              },
+              children: [
+                ui.Text({
+                  text: 'SEND MONEY',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#1E40AF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+            
+            ui.Pressable({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#059669',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              onPress: () => {
+                this.navigateToBankPage('request-money');
+              },
+              children: [
+                ui.Text({
+                  text: 'REQUEST MONEY',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#065F46',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+            
+            ui.Pressable({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#7C3AED',
+                borderRadius: 6,
+                padding: 12
+              },
+              onPress: () => {
+                this.navigateToBankPage('pay-bills');
+              },
+              children: [
+                ui.Text({
+                  text: 'PAY BILLS',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#5B21B6',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderBankSendMoneyPage(): ui.UINode {
+    return ui.View({
+      style: {
+        flex: 1
+      },
+      children: [
+        this.renderBankHeader(),
+        this.renderBankAccountBalance(),
+        
+        // Send Money Form
+        ui.View({
+          children: [
+            // Recipient
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#2563EB',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              children: [
+                ui.Text({
+                  text: 'TO:',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#1E40AF',
+                    marginBottom: 6
+                  }
+                }),
+                ui.View({
+                  style: {
+                    backgroundColor: '#F3F4F6',
+                    borderWidth: 2,
+                    borderColor: '#9CA3AF',
+                    borderRadius: 4,
+                    padding: 8
+                  },
+                  children: [
+                    ui.Text({
+                      text: "Enter recipient's email or phone",
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Amount
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#059669',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              children: [
+                ui.Text({
+                  text: 'AMOUNT:',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#065F46',
+                    marginBottom: 6
+                  }
+                }),
+                ui.View({
+                  style: {
+                    backgroundColor: '#F3F4F6',
+                    borderWidth: 2,
+                    borderColor: '#9CA3AF',
+                    borderRadius: 4,
+                    padding: 8
+                  },
+                  children: [
+                    ui.Text({
+                      text: '$0.00',
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Note
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#7C3AED',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              children: [
+                ui.Text({
+                  text: 'NOTE (Optional):',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#5B21B6',
+                    marginBottom: 6
+                  }
+                }),
+                ui.View({
+                  style: {
+                    backgroundColor: '#F3F4F6',
+                    borderWidth: 2,
+                    borderColor: '#9CA3AF',
+                    borderRadius: 4,
+                    padding: 8,
+                    minHeight: 40
+                  },
+                  children: [
+                    ui.Text({
+                      text: "What's this for?",
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Send Button
+            ui.Pressable({
+              style: {
+                backgroundColor: '#2563EB',
+                borderWidth: 2,
+                borderColor: '#1E40AF',
+                borderRadius: 6,
+                padding: 12
+              },
+              children: [
+                ui.Text({
+                  text: 'SEND MONEY',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderBankRequestMoneyPage(): ui.UINode {
+    return ui.View({
+      style: {
+        flex: 1
+      },
+      children: [
+        this.renderBankHeader(),
+        this.renderBankAccountBalance(),
+        
+        // Request Money Form
+        ui.View({
+          children: [
+            // From
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#059669',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              children: [
+                ui.Text({
+                  text: 'FROM:',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#065F46',
+                    marginBottom: 6
+                  }
+                }),
+                ui.View({
+                  style: {
+                    backgroundColor: '#F3F4F6',
+                    borderWidth: 2,
+                    borderColor: '#9CA3AF',
+                    borderRadius: 4,
+                    padding: 8
+                  },
+                  children: [
+                    ui.Text({
+                      text: "Enter sender's email or phone",
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Amount
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#2563EB',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              children: [
+                ui.Text({
+                  text: 'AMOUNT:',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#1E40AF',
+                    marginBottom: 6
+                  }
+                }),
+                ui.View({
+                  style: {
+                    backgroundColor: '#F3F4F6',
+                    borderWidth: 2,
+                    borderColor: '#9CA3AF',
+                    borderRadius: 4,
+                    padding: 8
+                  },
+                  children: [
+                    ui.Text({
+                      text: '$0.00',
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Note
+            ui.View({
+              style: {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 2,
+                borderColor: '#7C3AED',
+                borderRadius: 6,
+                padding: 12,
+                marginBottom: 8
+              },
+              children: [
+                ui.Text({
+                  text: 'NOTE (Optional):',
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#5B21B6',
+                    marginBottom: 6
+                  }
+                }),
+                ui.View({
+                  style: {
+                    backgroundColor: '#F3F4F6',
+                    borderWidth: 2,
+                    borderColor: '#9CA3AF',
+                    borderRadius: 4,
+                    padding: 8,
+                    minHeight: 40
+                  },
+                  children: [
+                    ui.Text({
+                      text: "What's this for?",
+                      style: {
+                        fontSize: 9,
+                        color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Request Button
+            ui.Pressable({
+              style: {
+                backgroundColor: '#059669',
+                borderWidth: 2,
+                borderColor: '#065F46',
+                borderRadius: 6,
+                padding: 12
+              },
+              children: [
+                ui.Text({
+                  text: 'REQUEST MONEY',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderBankPayBillsPage(): ui.UINode {
+    const bills = this.getBills();
+    
+    return ui.View({
+      style: {
+        flex: 1
+      },
+      children: [
+        this.renderBankHeader(),
+        this.renderBankAccountBalance(),
+        
+        // Bills List
+        ui.View({
+          children: [
+            ...bills.map(bill => this.renderBillItem(bill)),
+            
+            // Pay Button
+            ui.Pressable({
+              style: {
+                backgroundColor: ui.Binding.derive([this.selectedBillBinding], (selected) => 
+                  selected ? '#7C3AED' : '#9CA3AF'
+                ),
+                borderWidth: 2,
+                borderColor: ui.Binding.derive([this.selectedBillBinding], (selected) => 
+                  selected ? '#5B21B6' : '#6B7280'
+                ),
+                borderRadius: 6,
+                padding: 12,
+                marginTop: 8
+              },
+              onPress: () => {
+                this.handlePayBill();
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.selectedBillBinding], (selected) => {
+                    if (selected) {
+                      const bill = bills.find(b => b.id === selected);
+                      return bill ? `PAY ${bill.name.toUpperCase()} - $${bill.amount.toFixed(2)}` : 'SELECT A BILL TO PAY';
+                    }
+                    return 'SELECT A BILL TO PAY';
+                  }),
+                  style: {
+                    fontSize: 10,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderBillItem(bill: Bill): ui.UINode {
+    return ui.Pressable({
+      style: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 2,
+        borderColor: ui.Binding.derive([this.selectedBillBinding, this.paidBillsBinding], (selected, paid) => {
+          if (paid.includes(bill.id)) return '#059669';
+          if (selected === bill.id) return '#7C3AED';
+          return '#D1D5DB';
+        }),
+        borderRadius: 6,
+        padding: 12,
+        marginBottom: 6
+      },
+      onPress: () => {
+        if (!this.paidBills.includes(bill.id)) {
+          this.selectedBill = this.selectedBill === bill.id ? '' : bill.id;
+          this.selectedBillBinding.set(this.selectedBill);
+        }
+      },
+      children: [
+        ui.View({
+          style: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           },
           children: [
             ui.View({
               style: {
-                padding: 16,
-                paddingTop: 24
+                flexDirection: 'row',
+                alignItems: 'center',
+                flex: 1
               },
               children: [
-                // MeBank Link (non-functional placeholder)
+                ui.Text({
+                  text: bill.emoji,
+                  style: {
+                    fontSize: 14,
+                    marginRight: 8
+                  }
+                }),
                 ui.View({
                   style: {
-                    backgroundColor: '#FFFFFF',
-                    borderWidth: 2,
-                    borderColor: '#2563EB',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 12,
-                    opacity: 0.6
+                    flex: 1
                   },
                   children: [
                     ui.Text({
-                      text: '🏦 MeBank - Secure Banking',
+                      text: bill.name,
                       style: {
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: '600',
-                        color: '#1E3A8A',
-                        marginBottom: 4
+                        color: ui.Binding.derive([this.selectedBillBinding, this.paidBillsBinding], (selected, paid) => {
+                          if (paid.includes(bill.id)) return '#065F46';
+                          if (selected === bill.id) return '#5B21B6';
+                          return '#374151';
+                        }),
+                        marginBottom: 2
                       }
                     }),
                     ui.Text({
-                      text: 'https://www.mebank.com',
-                      style: {
-                        fontSize: 9,
-                        fontWeight: '600',
-                        color: '#059669',
-                        marginBottom: 4
-                      }
-                    }),
-                    ui.Text({
-                      text: 'Manage accounts, transfer money, and pay bills securely online.',
+                      text: bill.description,
                       style: {
                         fontSize: 8,
-                        color: '#374151'
-                      }
-                    })
-                  ]
-                }),
-
-                // MeShop Link (non-functional placeholder)
-                ui.View({
-                  style: {
-                    backgroundColor: '#FFFFFF',
-                    borderWidth: 2,
-                    borderColor: '#EA580C',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 12,
-                    opacity: 0.6
-                  },
-                  children: [
-                    ui.Text({
-                      text: '🛒 MeShop - Electronics Store',
-                      style: {
-                        fontSize: 11,
-                        fontWeight: '600',
-                        color: '#9A3412',
-                        marginBottom: 4
-                      }
-                    }),
-                    ui.Text({
-                      text: 'https://www.meshop.com',
-                      style: {
-                        fontSize: 9,
-                        fontWeight: '600',
-                        color: '#059669',
-                        marginBottom: 4
-                      }
-                    }),
-                    ui.Text({
-                      text: 'Latest electronics and accessories with fast shipping.',
-                      style: {
-                        fontSize: 8,
-                        color: '#374151'
-                      }
-                    })
-                  ]
-                }),
-
-                // MeNews Link (non-functional placeholder)
-                ui.View({
-                  style: {
-                    backgroundColor: '#FFFFFF',
-                    borderWidth: 2,
-                    borderColor: '#2563EB',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 12,
-                    opacity: 0.6
-                  },
-                  children: [
-                    ui.Text({
-                      text: '📰 MeNews - Breaking News',
-                      style: {
-                        fontSize: 11,
-                        fontWeight: '600',
-                        color: '#1E3A8A',
-                        marginBottom: 4
-                      }
-                    }),
-                    ui.Text({
-                      text: 'https://www.menews.com',
-                      style: {
-                        fontSize: 9,
-                        fontWeight: '600',
-                        color: '#059669',
-                        marginBottom: 4
-                      }
-                    }),
-                    ui.Text({
-                      text: 'Latest breaking news and current events from around the world.',
-                      style: {
-                        fontSize: 8,
-                        color: '#374151'
-                      }
-                    })
-                  ]
-                }),
-
-                // Footer
-                ui.View({
-                  style: {
-                    alignItems: 'center',
-                    marginTop: 12
-                  },
-                  children: [
-                    ui.Text({
-                      text: "that's all folks! 😳",
-                      style: {
-                        fontSize: 9,
                         color: '#6B7280'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+            ui.View({
+              style: {
+                alignItems: 'flex-end'
+              },
+              children: [
+                ui.Text({
+                  text: `$${bill.amount.toFixed(2)}`,
+                  style: {
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: ui.Binding.derive([this.selectedBillBinding, this.paidBillsBinding], (selected, paid) => {
+                      if (paid.includes(bill.id)) return '#059669';
+                      if (selected === bill.id) return '#7C3AED';
+                      return '#DC2626';
+                    })
+                  }
+                }),
+                ui.View({
+                  style: {
+                    display: ui.Binding.derive([this.paidBillsBinding], (paid) => 
+                      paid.includes(bill.id) ? 'flex' : 'none'
+                    )
+                  },
+                  children: [
+                    ui.Text({
+                      text: 'PAID ✓',
+                      style: {
+                        fontSize: 7,
+                        fontWeight: '600',
+                        color: '#059669'
                       }
                     })
                   ]
@@ -2653,6 +3472,28 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       ]
     });
   }
+
+  private handlePayBill(): void {
+    if (this.selectedBill && !this.paidBills.includes(this.selectedBill)) {
+      this.paidBills.push(this.selectedBill);
+      this.paidBillsBinding.set([...this.paidBills]);
+      this.selectedBill = '';
+      this.selectedBillBinding.set('');
+    }
+  }
+
+  private getBills(): Bill[] {
+    return [
+      { id: 'electric', name: 'Electric Company', amount: 89.47, emoji: '⚡', description: 'Monthly electricity usage' },
+      { id: 'gas', name: 'Gas Company', amount: 156.23, emoji: '🔥', description: 'Natural gas service' },
+      { id: 'water', name: 'Water Utility', amount: 67.89, emoji: '💧', description: 'Water & sewer services' },
+      { id: 'internet', name: 'Internet Provider', amount: 79.99, emoji: '🌐', description: 'High-speed internet' },
+      { id: 'credit-card', name: 'Credit Card Payment', amount: 324.56, emoji: '💳', description: 'Monthly minimum payment' },
+      { id: 'phone', name: 'Phone Service', amount: 45.00, emoji: '📱', description: 'Mobile phone plan' }
+    ];
+  }
 }
+
+hz.Component.register(MePhone);
 
 hz.Component.register(MePhone);
