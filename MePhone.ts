@@ -414,6 +414,88 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     return value;
   }
 
+  // Standardized Header Component
+  private createAppHeader(props: {
+    appName: string;
+    onHomePress: () => void;
+    onBackPress?: () => void;
+    showBackButton?: boolean;
+    rightElement?: ui.UINode;
+  }): ui.UINode {
+    return ui.View({
+      style: {
+        backgroundColor: '#F9FAFB',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10
+      },
+      children: [
+        ui.View({
+          style: {
+            flexDirection: 'row',
+            alignItems: 'center'
+          },
+          children: [
+            // Home button
+            ui.Pressable({
+              style: {
+                padding: 4
+              },
+              onPress: props.onHomePress,
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
+                  style: {
+                    width: 16,
+                    height: 16,
+                    tintColor: '#9CA3AF'
+                  }
+                })
+              ]
+            }),
+            // Back button (conditional)
+            ...(props.showBackButton && props.onBackPress ? [
+              ui.Pressable({
+                style: {
+                  marginLeft: 8,
+                  padding: 4
+                },
+                onPress: props.onBackPress,
+                children: [
+                  ui.Image({
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))), // arrow-left icon
+                    style: {
+                      width: 16,
+                      height: 16,
+                      tintColor: '#9CA3AF'
+                    }
+                  })
+                ]
+              })
+            ] : [])
+          ]
+        }),
+        ui.Text({
+          text: props.appName,
+          style: {
+            fontSize: 14,
+            fontWeight: '500',
+            color: '#111827'
+          }
+        }),
+        // Right element (if provided)
+        props.rightElement || ui.View({})
+      ]
+    });
+  }
+
   // Contacts utility function
   private groupContactsByLetter(contacts: Contact[]): Record<string, Contact[]> {
     return contacts.reduce((groups, contact) => {
@@ -449,52 +531,15 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         flexDirection: 'column'
       },
       children: [
-        // Header - fixed at top
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                padding: 4
-              },
-              onPress: () => {
-                this.currentAppBinding.set('home');
-                // Reset phone state
-                this.phoneNumberBinding.set('');
-                this.isDialingBinding.set(false);
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 16,
-                    height: 16,
-                    tintColor: '#9CA3AF'
-                  }
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Phone',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+        // Header - standardized
+        this.createAppHeader({
+          appName: 'Phone',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            // Reset phone state
+            this.phoneNumberBinding.set('');
+            this.isDialingBinding.set(false);
+          }
         }),
         
         // Number Display - larger and more prominent
@@ -751,51 +796,14 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         flexDirection: 'column'
       },
       children: [
-        // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                padding: 4
-              },
-              onPress: () => {
-                this.currentAppBinding.set('home');
-                // Reset calculator state
-                this.calcClear();
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 16,
-                    height: 16,
-                    tintColor: '#9CA3AF'
-                  }
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Calculator',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+        // Header - standardized
+        this.createAppHeader({
+          appName: 'Calculator',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            // Reset calculator state
+            this.calcClear();
+          }
         }),
         
         // Display
@@ -1139,75 +1147,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         backgroundColor: '#FFFFFF'
       },
       children: [
-        // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        // Header - standardized
+        this.createAppHeader({
+          appName: 'Contact',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            this.selectedContactBinding.set(null);
           },
-          children: [
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    padding: 4
-                  },
-                  onPress: () => {
-                    this.currentAppBinding.set('home');
-                    this.selectedContactBinding.set(null);
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                      style: {
-                        width: 16,
-                        height: 16,
-                        tintColor: '#9CA3AF'
-                      }
-                    })
-                  ]
-                }),
-                ui.Pressable({
-                  style: {
-                    marginLeft: 8
-                  },
-                  onPress: () => {
-                    this.selectedContactBinding.set(null);
-                  },
-                  children: [
-                    ui.Text({
-                      text: '⬅️',
-                      style: {
-                        fontSize: 18,
-                        color: '#3B82F6'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Contact',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+          onBackPress: () => {
+            this.selectedContactBinding.set(null);
+          },
+          showBackButton: true
         }),
         
         // Contact Info - Top aligned
@@ -1433,49 +1383,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        this.createAppHeader({
+          appName: 'Contacts',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            this.selectedContactBinding.set(null);
           },
-          children: [
-            ui.Pressable({
-              style: {
-                padding: 4
-              },
-              onPress: () => {
-                this.currentAppBinding.set('home');
-                this.selectedContactBinding.set(null);
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 16,
-                    height: 16,
-                    tintColor: '#9CA3AF'
-                  }
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Contacts',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+          showBackButton: false
         }),
         
         // Contacts List
@@ -1685,70 +1599,34 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        this.createAppHeader({
+          appName: 'MeMail',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            // Reset email state
+            this.selectedEmailBinding.set(null);
+            this.isComposingBinding.set(false);
+            this.composeToBinding.set('');
+            this.composeSubjectBinding.set('');
+            this.composeBodyBinding.set('');
           },
-          children: [
-            ui.Pressable({
-              style: {
-                padding: 4
-              },
-              onPress: () => {
-                this.currentAppBinding.set('home');
-                // Reset email state
-                this.selectedEmailBinding.set(null);
-                this.isComposingBinding.set(false);
-                this.composeToBinding.set('');
-                this.composeSubjectBinding.set('');
-                this.composeBodyBinding.set('');
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 16,
-                    height: 16,
-                    tintColor: '#9CA3AF'
-                  }
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'MeMail',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            }),
-            ui.Pressable({
-              style: {
-                padding: 4
-              },
-              onPress: () => {
-                this.isComposingBinding.set(true);
-              },
-              children: [
-                ui.Text({
-                  text: '✏️',
-                  style: {
-                    fontSize: 16
-                  }
-                })
-              ]
-            })
-          ]
+          showBackButton: false,
+          rightElement: ui.Pressable({
+            style: {
+              padding: 4
+            },
+            onPress: () => {
+              this.isComposingBinding.set(true);
+            },
+            children: [
+              ui.Text({
+                text: '✏️',
+                style: {
+                  fontSize: 16
+                }
+              })
+            ]
+          })
         }),
         
         // Section Header
@@ -1807,74 +1685,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        this.createAppHeader({
+          appName: 'Email',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            this.selectedEmailBinding.set(null);
           },
-          children: [
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    padding: 4
-                  },
-                  onPress: () => {
-                    this.currentAppBinding.set('home');
-                    this.selectedEmailBinding.set(null);
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                      style: {
-                        width: 16,
-                        height: 16,
-                        tintColor: '#9CA3AF'
-                      }
-                    })
-                  ]
-                }),
-                ui.Pressable({
-                  style: {
-                    marginLeft: 8
-                  },
-                  onPress: () => {
-                    this.selectedEmailBinding.set(null);
-                  },
-                  children: [
-                    ui.Text({
-                      text: '⬅️',
-                      style: {
-                        fontSize: 18,
-                        color: '#3B82F6'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Email',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+          onBackPress: () => {
+            this.selectedEmailBinding.set(null);
+          },
+          showBackButton: true
         }),
         
         // Email Content
@@ -1936,105 +1756,47 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        this.createAppHeader({
+          appName: 'Compose',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            this.isComposingBinding.set(false);
+            this.composeToBinding.set('');
+            this.composeSubjectBinding.set('');
+            this.composeBodyBinding.set('');
           },
-          children: [
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    padding: 4
-                  },
-                  onPress: () => {
-                    this.currentAppBinding.set('home');
-                    this.isComposingBinding.set(false);
-                    this.composeToBinding.set('');
-                    this.composeSubjectBinding.set('');
-                    this.composeBodyBinding.set('');
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                      style: {
-                        width: 16,
-                        height: 16,
-                        tintColor: '#9CA3AF'
-                      }
-                    })
-                  ]
-                }),
-                ui.Pressable({
-                  style: {
-                    marginLeft: 8
-                  },
-                  onPress: () => {
-                    this.isComposingBinding.set(false);
-                    this.composeToBinding.set('');
-                    this.composeSubjectBinding.set('');
-                    this.composeBodyBinding.set('');
-                  },
-                  children: [
-                    ui.Text({
-                      text: '⬅️',
-                      style: {
-                        fontSize: 18,
-                        color: '#3B82F6'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Compose',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            }),
-            ui.Pressable({
-              style: {
-                backgroundColor: '#00c951',
-                borderRadius: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 4
-              },
-              onPress: () => {
-                console.log('Email sent!');
-                this.isComposingBinding.set(false);
-                this.composeToBinding.set('');
-                this.composeSubjectBinding.set('');
-                this.composeBodyBinding.set('');
-              },
-              children: [
-                ui.Text({
-                  text: 'Send',
-                  style: {
-                    fontSize: 12,
-                    color: '#FFFFFF',
-                    fontWeight: '500'
-                  }
-                })
-              ]
-            })
-          ]
+          onBackPress: () => {
+            this.isComposingBinding.set(false);
+            this.composeToBinding.set('');
+            this.composeSubjectBinding.set('');
+            this.composeBodyBinding.set('');
+          },
+          showBackButton: true,
+          rightElement: ui.Pressable({
+            style: {
+              backgroundColor: '#00c951',
+              borderRadius: 8,
+              paddingHorizontal: 8,
+              paddingVertical: 4
+            },
+            onPress: () => {
+              console.log('Email sent!');
+              this.isComposingBinding.set(false);
+              this.composeToBinding.set('');
+              this.composeSubjectBinding.set('');
+              this.composeBodyBinding.set('');
+            },
+            children: [
+              ui.Text({
+                text: 'Send',
+                style: {
+                  fontSize: 12,
+                  color: '#FFFFFF',
+                  fontWeight: '500'
+                }
+              })
+            ]
+          })
         }),
         
         // Compose Form
@@ -2333,50 +2095,14 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        this.createAppHeader({
+          appName: 'Settings',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            // Reset settings state
+            this.currentSettingsViewBinding.set('main');
           },
-          children: [
-            ui.Pressable({
-              style: {
-                padding: 4
-              },
-              onPress: () => {
-                this.currentAppBinding.set('home');
-                // Reset settings state
-                this.currentSettingsViewBinding.set('main');
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 16,
-                    height: 16,
-                    tintColor: '#9CA3AF'
-                  }
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Settings',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+          showBackButton: false
         }),
 
         // Device Section
@@ -2439,74 +2165,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       children: [
         // Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+        this.createAppHeader({
+          appName: 'Ringtones',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+            this.currentSettingsViewBinding.set('main');
           },
-          children: [
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    padding: 4
-                  },
-                  onPress: () => {
-                    this.currentAppBinding.set('home');
-                    this.currentSettingsViewBinding.set('main');
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                      style: {
-                        width: 16,
-                        height: 16,
-                        tintColor: '#9CA3AF'
-                      }
-                    })
-                  ]
-                }),
-                ui.Pressable({
-                  style: {
-                    marginLeft: 8
-                  },
-                  onPress: () => {
-                    this.currentSettingsViewBinding.set('main');
-                  },
-                  children: [
-                    ui.Text({
-                      text: '⬅️',
-                      style: {
-                        fontSize: 18,
-                        color: '#3B82F6'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            ui.Text({
-              text: 'Ringtones',
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            })
-          ]
+          onBackPress: () => {
+            this.currentSettingsViewBinding.set('main');
+          },
+          showBackButton: true
         }),
 
         // Content
