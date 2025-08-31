@@ -801,10 +801,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             backgroundColor: '#000000',
             justifyContent: 'flex-end',
             alignItems: 'flex-end',
-            paddingHorizontal: 20,
-            paddingVertical: 20,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             marginTop: 36, // Account for header
-            minHeight: 80
+            minHeight: 60
           },
           children: [
             ui.Text({
@@ -825,16 +825,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         ui.View({
           style: {
             flex: 1,
-            padding: 8,
+            padding: 6,
             flexDirection: 'column',
             justifyContent: 'space-evenly'
           },
           children: [
-            // Row 1: C, CE, ⌫, ÷
+            // Row 1: C, ±, ⌫, ÷
             this.createCalculatorRow([
-              { label: 'C', type: 'function', action: () => this.calcClear(), bg: '#D1D5DB' },
-              { label: 'CE', type: 'function', action: () => this.calcClearEntry(), bg: '#D1D5DB' },
-              { label: '⌫', type: 'function', action: () => this.calcDeleteDigit(), bg: '#D1D5DB' },
+              { label: 'C', type: 'function', action: () => this.calcClear(), bg: '#d1d5dc' },
+              { label: '±', type: 'function', action: () => this.calcToggleSign(), bg: '#d1d5dc' },
+              { label: '⌫', type: 'function', action: () => this.calcDeleteDigit(), bg: '#d1d5dc' },
               { label: '÷', type: 'operation', action: () => this.calcInputOperation('÷'), bg: '#F97316' }
             ]),
             // Row 2: 7, 8, 9, ×
@@ -863,8 +863,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               style: {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                paddingHorizontal: 4,
-                marginVertical: 1
+                paddingHorizontal: 0,
+                marginVertical: 3
               },
               children: [
                 // 0 button (double width)
@@ -873,8 +873,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     backgroundColor: '#FFFFFF',
                     borderRadius: 8,
                     flex: 2,
-                    marginHorizontal: 1,
-                    minHeight: 45,
+                    marginHorizontal: 3,
+                    minHeight: 46,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -896,8 +896,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     backgroundColor: '#FFFFFF',
                     borderRadius: 8,
                     flex: 1,
-                    marginHorizontal: 1,
-                    minHeight: 45,
+                    marginHorizontal: 3,
+                    minHeight: 46,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -919,8 +919,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     backgroundColor: '#F97316', // orange-500
                     borderRadius: 8,
                     flex: 1,
-                    marginHorizontal: 1,
-                    minHeight: 45,
+                    marginHorizontal: 3,
+                    minHeight: 46,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -949,8 +949,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       style: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: 4,
-        marginVertical: 1
+        paddingHorizontal: 0,
+        marginVertical: 3
       },
       children: buttons.map(button => 
         ui.Pressable({
@@ -958,8 +958,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             backgroundColor: button.bg,
             borderRadius: 8,
             flex: 1,
-            marginHorizontal: 1,
-            minHeight: 45,
+            marginHorizontal: 3,
+            minHeight: 46,
             justifyContent: 'center',
             alignItems: 'center'
           },
@@ -977,7 +977,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               ui.Text({
                 text: button.label,
                 style: {
-                  fontSize: 22,
+                  fontSize: button.label === '-' ? 28 : 22, // Make minus symbol bigger
                   color: button.bg === '#FFFFFF' ? '#374151' : '#FFFFFF',
                   fontWeight: '400'
                 }
@@ -1072,6 +1072,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     
     this.calcDisplayBinding.set(this.calcDisplay);
     this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand);
+  }
+
+  private calcToggleSign(): void {
+    if (this.calcDisplay !== '0') {
+      if (this.calcDisplay.startsWith('-')) {
+        this.calcDisplay = this.calcDisplay.slice(1);
+      } else {
+        this.calcDisplay = '-' + this.calcDisplay;
+      }
+      this.calcDisplayBinding.set(this.calcDisplay);
+    }
   }
 
   private calcInputDecimal(): void {
