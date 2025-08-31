@@ -506,7 +506,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             paddingHorizontal: 20,
             paddingVertical: 20,
             marginTop: 36, // Account for fixed header
-            minHeight: 80
+            minHeight: 60
           },
           children: [
             ui.Text({
@@ -557,8 +557,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     backgroundColor: '#E5E7EB', // Static gray
                     borderRadius: 8,
                     flex: 1,
-                    marginRight: 1,
-                    minHeight: 45,
+                    marginRight: 3,
+                    minHeight: 46,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -582,8 +582,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     backgroundColor: '#00c951', // Static green
                     borderRadius: 8,
                     flex: 1,
-                    marginLeft: 1,
-                    minHeight: 45,
+                    marginLeft: 3,
+                    minHeight: 46,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -705,7 +705,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 4,
-        marginVertical: 1
+        marginVertical: 3
       },
       children: digits.map(digit => 
         ui.Pressable({
@@ -713,8 +713,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             backgroundColor: '#FFFFFF',
             borderRadius: 8,
             flex: 1,
-            marginHorizontal: 1,
-            minHeight: 45,
+            marginHorizontal: 3,
+            minHeight: 46,
             justifyContent: 'center',
             alignItems: 'center'
           },
