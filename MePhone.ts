@@ -2561,9 +2561,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         ui.View({
           style: {
             backgroundColor: '#F9FAFB',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderBottomWidth: 1,
+            paddingHorizontal: 6,
+            paddingVertical: 6,
             marginTop: 36
           },
           children: [
@@ -2574,7 +2573,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 borderWidth: 1,
                 borderColor: '#D1D5DB',
                 paddingHorizontal: 10,
-                paddingVertical: 8,
+                paddingVertical: 4,
                 flexDirection: 'row',
                 alignItems: 'center'
               },
@@ -2652,8 +2651,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       children: [
         ui.View({
           style: {
-            padding: 16,
-            paddingTop: 24
+            padding: 8,
+            paddingTop: 12
           },
           children: [
             // MeBank Link (functional)
@@ -2671,7 +2670,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 ui.Text({
-                  text: '🏦 MeBank - Secure Banking',
+                  text: '🏦\MeBank - Banking',
                   style: {
                     fontSize: 11,
                     fontWeight: '600',
@@ -2711,7 +2710,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 ui.Text({
-                  text: '🛒 MeShop - Electronics Store',
+                  text: '🛒 MeShop - Retail',
                   style: {
                     fontSize: 11,
                     fontWeight: '600',
@@ -2751,7 +2750,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 ui.Text({
-                  text: '📰 MeNews - Breaking News',
+                  text: '📰 MeNews - Breaking',
                   style: {
                     fontSize: 11,
                     fontWeight: '600',
@@ -2782,7 +2781,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             ui.View({
               style: {
                 alignItems: 'center',
-                marginTop: 12
+                marginTop: 0
               },
               children: [
                 ui.Text({
