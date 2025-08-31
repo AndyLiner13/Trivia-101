@@ -499,7 +499,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             ...(props.showBackButton && props.onBackPress ? [
               ui.Pressable({
                 style: {
-                  marginLeft: 8,
+                  marginLeft: 2,
                   padding: 4
                 },
                 onPress: props.onBackPress,
@@ -2578,11 +2578,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 alignItems: 'center'
               },
               children: [
-                ui.Text({
-                  text: '🔍',
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1244678270792808"))), // search icon
                   style: {
-                    fontSize: 12,
-                    color: '#9CA3AF',
+                    width: 12,
+                    height: 12,
+                    tintColor: '#9CA3AF',
                     marginRight: 8
                   }
                 }),
