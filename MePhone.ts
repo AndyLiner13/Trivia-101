@@ -276,11 +276,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         borderRadius: 14, // Match the screen border radius
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '3%',
+        paddingLeft: '10%',
+        paddingRight: '10%',
         overflow: 'hidden' // Ensure gradient doesn't bleed
       },
       children: [
-        // App Grid Container
+        // App Grid Container - 2x3 grid layout like reference
         ui.View({
           style: {
             width: '100%',
@@ -289,7 +290,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             flexDirection: 'column',
             justifyContent: 'space-evenly',
             alignItems: 'center',
-            padding: '8%'
+            paddingTop: 16,
+            paddingBottom: 16
           },
           children: [
             // First row of apps
@@ -302,7 +304,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone'), // green-500
+                this.createAppIcon('Phone', '#10B981', BigInt("24322726084045822"), 'phone'), // green-500 matching reference
                 this.createAppIcon('Calculator', '#3B82F6', BigInt("2175040452971461"), 'calculator') // blue-500
               ]
             }),
@@ -332,8 +334,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Browser', '#8B5CF6', BigInt("592774970456232"), 'browser'), // purple-500
-                this.createAppIcon('Settings', '#6B7280', BigInt("1342398257464986"), 'settings') // gray-500
+                this.createAppIcon('Browser', '#8B5CF6', BigInt("592774970456232"), 'browser'), // purple-500 matching reference
+                this.createAppIcon('Settings', '#6B7280', BigInt("1342398257464986"), 'settings') // gray-500 matching reference
               ]
             })
           ]
@@ -348,7 +350,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 6
+        flex: 1,
+        height: '100%'
       },
       onPress: () => {
         this.currentAppBinding.set(appId);
@@ -357,21 +360,21 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         // App icon background
         ui.View({
           style: {
-            width: 65,
-            height: 65,
+            width: 68,
+            height: 68,
             backgroundColor: color,
             borderRadius: 18,
             justifyContent: 'center',
             alignItems: 'center',
-            marginBottom: 10
+            marginBottom: 4
           },
           children: [
             // App icon symbol
             ui.Image({
               source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(assetId)),
               style: {
-                width: 26,
-                height: 26,
+                width: 34,
+                height: 34,
                 tintColor: '#FFFFFF'
               }
             })
@@ -383,7 +386,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           text: appName,
           style: {
             color: '#FFFFFF',
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: '500',
             textAlign: 'center'
           }
