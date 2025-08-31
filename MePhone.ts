@@ -556,13 +556,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           children: [
             ui.Text({
               text: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
-                phoneNumber ? this.formatPhoneNumber(phoneNumber) : 'Enter phone number'
+                phoneNumber ? this.formatPhoneNumber(phoneNumber) : 'Enter phone #'
               ),
+              numberOfLines: 1, // Prevent text wrapping
               style: {
                 color: '#FFFFFF',
-                fontSize: ui.Binding.derive([this.phoneNumberBinding], (phoneNumber) => 
-                  phoneNumber === '' ? 14 : 18
-                ), // Smaller font for placeholder
+                fontSize: 18, // Match the size of the numbers
                 fontWeight: '300',
                 textAlign: 'center'
               }
