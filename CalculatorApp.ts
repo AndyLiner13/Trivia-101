@@ -1,7 +1,7 @@
 import * as ui from 'horizon/ui';
 import * as hz from 'horizon/core';
 
-export class CalculatorApp {
+export class CalculatorApp extends ui.UIComponent {
   // Calculator app state bindings
   private calcDisplayBinding = new ui.Binding('0');
   private calcPreviousValueBinding = new ui.Binding('');
@@ -14,11 +14,49 @@ export class CalculatorApp {
   private calcOperation = '';
   private calcWaitingForOperand = false;
 
-  // Callback for navigation
-  private onHomePress: () => void;
+  initializeUI(): ui.UINode {
+    return this.renderPhoneFrame();
+  }
 
-  constructor(onHomePress: () => void) {
-    this.onHomePress = onHomePress;
+  private renderPhoneFrame(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40
+      },
+      children: [
+        // Phone container
+        ui.View({
+          style: {
+            width: 200,
+            height: 400,
+            backgroundColor: '#000000', // Black phone frame
+            borderRadius: 20,
+            padding: 6,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            // Phone screen content area
+            ui.View({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 14,
+                overflow: 'hidden'
+              },
+              children: [
+                this.render()
+              ]
+            })
+          ]
+        })
+      ]
+    });
   }
 
   // Calculator display formatting utility
@@ -36,7 +74,6 @@ export class CalculatorApp {
   // Standardized Header Component
   private createAppHeader(props: {
     appName: string;
-    onHomePress: () => void;
     onBackPress?: () => void;
     showBackButton?: boolean;
     rightElement?: ui.UINode;
@@ -45,7 +82,7 @@ export class CalculatorApp {
       style: {
         backgroundColor: '#F9FAFB',
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 12,
         height: 36, // Fixed height, smaller than before
@@ -56,39 +93,9 @@ export class CalculatorApp {
         zIndex: 10
       },
       children: [
-        // Left side - Back button (conditionally rendered)
-        ui.View({
-          style: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            flex: 1
-          },
-          children: [
-            props.showBackButton ? ui.Pressable({
-              style: {
-                padding: 4,
-                borderRadius: 6,
-                marginRight: 8
-              },
-              onPress: props.onBackPress || (() => {}),
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))),
-                  style: {
-                    width: 12,
-                    height: 12,
-                    tintColor: '#6B7280'
-                  }
-                })
-              ]
-            }) : ui.View({}),
-          ]
-        }),
-
         // Center - App name
         ui.View({
           style: {
-            flex: 2,
             alignItems: 'center'
           },
           children: [
@@ -100,41 +107,6 @@ export class CalculatorApp {
                 color: '#374151',
                 textAlign: 'center'
               }
-            })
-          ]
-        }),
-
-        // Right side - Home button and optional right element
-        ui.View({
-          style: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            flex: 1
-          },
-          children: [
-            props.rightElement || ui.View({}),
-            ui.Pressable({
-              style: {
-                backgroundColor: '#E5E7EB',
-                borderRadius: 10,
-                width: 20,
-                height: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginLeft: 6
-              },
-              onPress: props.onHomePress,
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 8,
-                    height: 8,
-                    tintColor: '#6B7280'
-                  }
-                })
-              ]
             })
           ]
         })
@@ -153,12 +125,7 @@ export class CalculatorApp {
       children: [
         // Header - standardized
         this.createAppHeader({
-          appName: 'Calculator',
-          onHomePress: () => {
-            this.onHomePress();
-            // Reset calculator state
-            this.calcClear();
-          }
+          appName: 'Calculator'
         }),
         
         // Display
@@ -473,3 +440,6 @@ export class CalculatorApp {
     this.calcDisplayBinding.set(this.calcDisplay);
   }
 }
+
+// Register the component for Horizon Worlds
+ui.UIComponent.register(CalculatorApp);

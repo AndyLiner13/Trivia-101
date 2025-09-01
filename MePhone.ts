@@ -101,15 +101,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private selectedMessageTemplateBinding = new ui.Binding<string | null>(null);
   private currentConversation: Conversation | null = null; // Track current conversation
 
-  // Browser app state for MeBank
-  private currentBrowserPageBinding = new ui.Binding<string>('search');
+  // Bank app state
   private currentBankPageBinding = new ui.Binding<BankPage>('home');
   private selectedBillBinding = new ui.Binding<string>('');
   private paidBillsBinding = new ui.Binding<string[]>([]);
-
-  // Browser navigation history
-  private browserNavigationHistory: string[] = [];
-  private currentBrowserPage: string = 'search';
 
   // Internal MeBank state tracking
   private currentBankPage: BankPage = 'home';
@@ -388,7 +383,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone'), // Updated green color
-                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts') // Updated orange color
+                this.createAppIcon('Messages', '#fb2c36', BigInt("1480228839964364"), 'messages') // Updated to Messages app
               ]
             }),
             
@@ -402,7 +397,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Messages', '#fb2c36', BigInt("1480228839964364"), 'messages'), // Updated to Messages app
+                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts'), // Updated orange color
                 this.createAppIcon('Browser', '#ad46ff', BigInt("592774970456232"), 'browser') // Updated purple color
               ]
             }),
@@ -438,13 +433,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       },
       onPress: () => {
         this.currentAppBinding.set(appId);
-        // Reset browser page to search when browser app is opened
-        if (appId === 'browser') {
-          this.currentBrowserPage = 'search';
-          this.currentBrowserPageBinding.set('search');
-          this.currentBankPageBinding.set('home');
-          this.browserNavigationHistory = []; // Clear navigation history
-        }
       },
       children: [
         // App icon background
@@ -2626,385 +2614,49 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#FFFFFF'
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center'
       },
       children: [
-        // Header with conditional back button
+        // Header
+        this.createAppHeader({
+          appName: 'Browser',
+          onHomePress: () => {
+            this.currentAppBinding.set('home');
+          }
+        }),
+        
+        // Simple placeholder content
         ui.View({
           style: {
-            backgroundColor: '#F9FAFB',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 12,
-            height: 36,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10
+            padding: 20
           },
           children: [
-            ui.View({
+            ui.Text({
+              text: '🌐',
               style: {
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                // Home button
-                ui.Pressable({
-                  style: {
-                    padding: 2
-                  },
-                  onPress: () => {
-                    this.currentAppBinding.set('home');
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                      style: {
-                        width: 20,
-                        height: 20,
-                        tintColor: '#9CA3AF'
-                      }
-                    })
-                  ]
-                }),
-                // Back button (conditional - only when not on search page)
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentBrowserPageBinding], (page) => page !== 'search'),
-                  ui.Pressable({
-                    style: {
-                      marginLeft: 0,
-                      padding: 2
-                    },
-                    onPress: () => {
-                      this.navigateBack();
-                    },
-                    children: [
-                      ui.Image({
-                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))), // arrow-left icon
-                        style: {
-                          width: 20,
-                          height: 20,
-                          tintColor: '#9CA3AF'
-                        }
-                      })
-                    ]
-                  })
-                )
-              ]
+                fontSize: 48,
+                marginBottom: 16
+              }
             }),
-            // App title
             ui.Text({
               text: 'Browser',
               style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
+                fontSize: 18,
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: 8
               }
-            })
-          ]
-        }),
-
-        // Address Bar
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            paddingHorizontal: 6,
-            paddingVertical: 6,
-            marginTop: 36
-          },
-          children: [
-            ui.View({
-              style: {
-                backgroundColor: '#FFFFFF',
-                borderRadius: 6,
-                borderWidth: 1,
-                borderColor: '#D1D5DB',
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1244678270792808"))), // search icon
-                  style: {
-                    width: 12,
-                    height: 12,
-                    tintColor: '#9CA3AF',
-                    marginRight: 8
-                  }
-                }),
-                ui.Text({
-                  text: ui.Binding.derive([this.currentBrowserPageBinding], (page) => {
-                    switch (page) {
-                      case 'mebank': return 'https://www.mebank.com';
-                      default: return 'https://www.browser.com';
-                    }
-                  }),
-                  style: {
-                    fontSize: 9,
-                    color: '#111827',
-                    flex: 1
-                  }
-                })
-              ]
-            })
-          ]
-        }),
-
-        // Browser Content - Conditional rendering
-        ui.View({
-          style: {
-            flex: 1
-          },
-          children: [
-            // Search Results Page
-            ui.View({
-              style: {
-                display: ui.Binding.derive([this.currentBrowserPageBinding], (page) => 
-                  page === 'search' ? 'flex' : 'none'
-                ),
-                flex: 1
-              },
-              children: [
-                this.renderBrowserSearchResults()
-              ]
             }),
-            
-            // MeBank Page
-            ui.View({
+            ui.Text({
+              text: 'Coming Soon',
               style: {
-                display: ui.Binding.derive([this.currentBrowserPageBinding], (page) => 
-                  page === 'mebank' ? 'flex' : 'none'
-                ),
-                flex: 1
-              },
-              children: [
-                this.renderMeBank()
-              ]
-            })
-          ]
-        })
-      ]
-    });
-  }
-
-  private renderBrowserSearchResults(): ui.UINode {
-    return ui.ScrollView({
-      style: {
-        flex: 1,
-        backgroundColor: '#FAF5FF'
-      },
-      children: [
-        ui.View({
-          style: {
-            padding: 8,
-            paddingTop: 12
-          },
-          children: [
-            // MeBank Link (functional)
-            ui.Pressable({
-              style: {
-                backgroundColor: '#FFFFFF',
-                borderWidth: 2,
-                borderColor: '#2563EB',
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 12
-              },
-              onPress: () => {
-                this.navigateToBrowserPage('mebank');
-              },
-              children: [
-                ui.Text({
-                  text: '🏦\MeBank - Banking',
-                  style: {
-                    fontSize: 11,
-                    fontWeight: '600',
-                    color: '#1E3A8A',
-                    marginBottom: 4
-                  }
-                }),
-                ui.Text({
-                  text: 'https://www.mebank.com',
-                  style: {
-                    fontSize: 9,
-                    fontWeight: '600',
-                    color: '#059669',
-                    marginBottom: 4
-                  }
-                }),
-                ui.Text({
-                  text: 'Manage accounts, transfer money, and pay bills securely online.',
-                  style: {
-                    fontSize: 8,
-                    color: '#374151'
-                  }
-                })
-              ]
-            }),
-
-            // MeShop Link (non-functional placeholder)
-            ui.View({
-              style: {
-                backgroundColor: '#FFFFFF',
-                borderWidth: 2,
-                borderColor: '#EA580C',
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 12,
-                opacity: 0.6
-              },
-              children: [
-                ui.Text({
-                  text: '🛒 MeShop - Retail',
-                  style: {
-                    fontSize: 11,
-                    fontWeight: '600',
-                    color: '#9A3412',
-                    marginBottom: 4
-                  }
-                }),
-                ui.Text({
-                  text: 'https://www.meshop.com',
-                  style: {
-                    fontSize: 9,
-                    fontWeight: '600',
-                    color: '#059669',
-                    marginBottom: 4
-                  }
-                }),
-                ui.Text({
-                  text: 'Latest electronics and accessories with fast shipping.',
-                  style: {
-                    fontSize: 8,
-                    color: '#374151'
-                  }
-                })
-              ]
-            }),
-
-            // MeNews Link (non-functional placeholder)
-            ui.View({
-              style: {
-                backgroundColor: '#FFFFFF',
-                borderWidth: 2,
-                borderColor: '#2563EB',
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 12,
-                opacity: 0.6
-              },
-              children: [
-                ui.Text({
-                  text: '📰 MeNews - Breaking',
-                  style: {
-                    fontSize: 11,
-                    fontWeight: '600',
-                    color: '#1E3A8A',
-                    marginBottom: 4
-                  }
-                }),
-                ui.Text({
-                  text: 'https://www.menews.com',
-                  style: {
-                    fontSize: 9,
-                    fontWeight: '600',
-                    color: '#059669',
-                    marginBottom: 4
-                  }
-                }),
-                ui.Text({
-                  text: 'Stay informed with the latest news and current events.',
-                  style: {
-                    fontSize: 8,
-                    color: '#374151'
-                  }
-                })
-              ]
-            }),
-
-            // Footer
-            ui.View({
-              style: {
-                alignItems: 'center',
-                marginTop: 0
-              },
-              children: [
-                ui.Text({
-                  text: "that's all folks! 😳",
-                  style: {
-                    fontSize: 9,
-                    color: '#6B7280'
-                  }
-                })
-              ]
-            })
-          ]
-        })
-      ]
-    });
-  }
-
-  private renderMeBank(): ui.UINode {
-    return ui.ScrollView({
-      style: {
-        flex: 1,
-        backgroundColor: '#DBEAFE'
-      },
-      children: [
-        ui.View({
-          style: {
-            padding: 12,
-            paddingTop: 16
-          },
-          children: [
-            // Home Page
-            ui.View({
-              style: {
-                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
-                  page === 'home' ? 'flex' : 'none'
-                )
-              },
-              children: [
-                this.renderBankHomePage()
-              ]
-            }),
-            // Send Money Page
-            ui.View({
-              style: {
-                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
-                  page === 'send-money' ? 'flex' : 'none'
-                )
-              },
-              children: [
-                this.renderBankSendMoneyPage()
-              ]
-            }),
-            // Request Money Page
-            ui.View({
-              style: {
-                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
-                  page === 'request-money' ? 'flex' : 'none'
-                )
-              },
-              children: [
-                this.renderBankRequestMoneyPage()
-              ]
-            }),
-            // Pay Bills Page
-            ui.View({
-              style: {
-                display: ui.Binding.derive([this.currentBankPageBinding], (page) => 
-                  page === 'pay-bills' ? 'flex' : 'none'
-                )
-              },
-              children: [
-                this.renderBankPayBillsPage()
-              ]
+                fontSize: 14,
+                color: '#6B7280'
+              }
             })
           ]
         })
@@ -3013,12 +2665,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private navigateToBankPage(page: BankPage): void {
-    // Add current page to navigation history before navigating
-    const currentState = `${this.currentBrowserPage}-${this.currentBankPage}`;
-    if (this.browserNavigationHistory.length === 0 || this.browserNavigationHistory[this.browserNavigationHistory.length - 1] !== currentState) {
-      this.browserNavigationHistory.push(currentState);
-    }
-
     // Reset pay-bills state when navigating away from that page
     if (this.currentBankPage === 'pay-bills' && page !== 'pay-bills') {
       this.selectedBill = '';
@@ -3029,60 +2675,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     
     this.currentBankPage = page;
     this.currentBankPageBinding.set(page);
-  }
-
-  private navigateToBrowserPage(page: string): void {
-    // Add current page to navigation history before navigating
-    const currentState = this.currentBrowserPage;
-    if (currentState === 'mebank') {
-      // If we're currently in MeBank, include the bank page in the state
-      const fullCurrentState = `${currentState}-${this.currentBankPage}`;
-      if (this.browserNavigationHistory.length === 0 || this.browserNavigationHistory[this.browserNavigationHistory.length - 1] !== fullCurrentState) {
-        this.browserNavigationHistory.push(fullCurrentState);
-      }
-    } else {
-      // For other pages, just use the page name
-      if (this.browserNavigationHistory.length === 0 || this.browserNavigationHistory[this.browserNavigationHistory.length - 1] !== currentState) {
-        this.browserNavigationHistory.push(currentState);
-      }
-    }
-
-    this.currentBrowserPage = page;
-    this.currentBrowserPageBinding.set(page);
-    
-    // Reset bank page to home when navigating to MeBank
-    if (page === 'mebank') {
-      this.currentBankPage = 'home';
-      this.currentBankPageBinding.set('home');
-    }
-  }
-
-  private navigateBack(): void {
-    if (this.browserNavigationHistory.length > 0) {
-      // Get the last page from history
-      const previousState = this.browserNavigationHistory.pop()!;
-      
-      if (previousState.includes('-')) {
-        // State includes both browser page and bank page
-        const [browserPage, bankPage] = previousState.split('-');
-        this.currentBrowserPage = browserPage;
-        this.currentBrowserPageBinding.set(browserPage);
-        if (browserPage === 'mebank' && bankPage) {
-          this.currentBankPage = bankPage as BankPage;
-          this.currentBankPageBinding.set(bankPage as BankPage);
-        }
-      } else {
-        // Simple browser page
-        this.currentBrowserPage = previousState;
-        this.currentBrowserPageBinding.set(previousState);
-      }
-    } else {
-      // No history, go back to search
-      this.currentBrowserPage = 'search';
-      this.currentBrowserPageBinding.set('search');
-      this.currentBankPage = 'home';
-      this.currentBankPageBinding.set('home');
-    }
   }
 
   private renderBankHeader(): ui.UINode {
