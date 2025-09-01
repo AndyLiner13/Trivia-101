@@ -51,7 +51,7 @@ interface Bill {
 interface SettingItem {
   id: string;
   label: string;
-  icon: string;
+  icon: BigInt;
   hasToggle?: boolean;
   toggleValue?: boolean;
   hasArrow?: boolean;
@@ -1340,10 +1340,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   ]
                 }),
                 
-                // Email button
+                // Message button
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#3B82F6',
+                    backgroundColor: '#fb2c36',
                     borderRadius: 15,
                     width: 40,
                     height: 40,
@@ -1352,11 +1352,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     marginHorizontal: 6
                   },
                   onPress: () => {
-                    console.log('Email button pressed');
+                    console.log('Message button pressed');
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("2571486876541221"))), // mail icon
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1480228839964364"))), // message-bubble icon
                       style: {
                         width: 16,
                         height: 16,
@@ -2096,14 +2096,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             justifyContent: 'center'
           },
           children: [
-            ui.Text({
-              text: conversation.timestamp,
-              style: {
-                fontSize: 10,
-                color: '#9CA3AF',
-                marginBottom: conversation.unread > 0 ? 4 : 0
-              }
-            }),
             ...(conversation.unread > 0 ? [
               ui.View({
                 style: {
@@ -2253,7 +2245,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 this.createSettingItem({
                   id: 'ringtones',
                   label: 'Ringtones',
-                  icon: '🔊',
+                  icon: BigInt("1288271619346253"),
                   hasArrow: true
                 })
               ]
@@ -2276,7 +2268,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 this.createSettingItem({
                   id: 'notifications',
                   label: 'Notifications',
-                  icon: '🔔',
+                  icon: BigInt("1060423696117146"),
                   hasToggle: true
                 })
               ]
@@ -2422,11 +2414,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             flexShrink: 0
           },
           children: [
-            ui.Text({
-              text: item.icon,
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(item.icon.toString()))),
               style: {
-                fontSize: 12,
-                color: '#FFFFFF'
+                width: 14,
+                height: 14,
+                tintColor: '#FFFFFF'
               }
             })
           ]
