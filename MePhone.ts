@@ -159,6 +159,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private showRequestNumpad = false;
   private selectedSendNote = '';
   private selectedRequestNote = '';
+  
+  // Dropdown states
+  private isContactDropdownOpen = false;
+  private isRequestContactDropdownOpen = false;
+  private isSendNoteDropdownOpen = false;
+  private isRequestNoteDropdownOpen = false;
+  
   private lastTransaction: {
     type: 'sent' | 'requested';
     amount: string;
@@ -3039,6 +3046,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   (contact) => {
                     this.selectedMePayContact = contact;
                     this.selectedMePayContactBinding.set(contact);
+                  },
+                  this.isContactDropdownOpen,
+                  () => {
+                    this.isContactDropdownOpen = !this.isContactDropdownOpen;
                   }
                 ),
 
@@ -3076,10 +3087,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                       children: [
                         ui.Text({
                           text: ui.Binding.derive([this.sendAmountBinding], (amount) => 
-                            amount ? this.formatMePayAmount(amount) : '0'
+                            amount ? `$${this.formatMePayAmount(amount)}` : '$0'
                           ),
                           style: {
-                            fontSize: 18,
+                            fontSize: 32,
+                            fontWeight: '600',
                             color: '#111827',
                             textAlign: 'center'
                           }
@@ -3097,6 +3109,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     (note) => {
                       this.selectedSendNote = note;
                       this.selectedSendNoteBinding.set(note);
+                    },
+                    this.isSendNoteDropdownOpen,
+                    () => {
+                      this.isSendNoteDropdownOpen = !this.isSendNoteDropdownOpen;
                     }
                   )
                 ])
@@ -3183,6 +3199,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   (contact) => {
                     this.selectedRequestContact = contact;
                     this.selectedRequestContactBinding.set(contact);
+                  },
+                  this.isRequestContactDropdownOpen,
+                  () => {
+                    this.isRequestContactDropdownOpen = !this.isRequestContactDropdownOpen;
                   }
                 ),
 
@@ -3220,10 +3240,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                       children: [
                         ui.Text({
                           text: ui.Binding.derive([this.requestAmountBinding], (amount) => 
-                            amount ? this.formatMePayAmount(amount) : '0'
+                            amount ? `$${this.formatMePayAmount(amount)}` : '$0'
                           ),
                           style: {
-                            fontSize: 18,
+                            fontSize: 32,
+                            fontWeight: '600',
                             color: '#111827',
                             textAlign: 'center'
                           }
@@ -3241,6 +3262,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     (note) => {
                       this.selectedRequestNote = note;
                       this.selectedRequestNoteBinding.set(note);
+                    },
+                    this.isRequestNoteDropdownOpen,
+                    () => {
+                      this.isRequestNoteDropdownOpen = !this.isRequestNoteDropdownOpen;
                     }
                   )
                 ])
@@ -3996,6 +4021,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     this.selectedRequestNoteBinding.set('');
     this.lastTransaction = null;
     this.lastTransactionBinding.set(null);
+    
+    // Reset dropdown states
+    this.isContactDropdownOpen = false;
+    this.isRequestContactDropdownOpen = false;
+    this.isSendNoteDropdownOpen = false;
+    this.isRequestNoteDropdownOpen = false;
   }
 
   private formatMePayAmount(amount: string): string {
@@ -4091,7 +4122,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     label: string,
     selectedContact: MePayContact | null,
     contacts: MePayContact[],
-    onSelect: (contact: MePayContact | null) => void
+    onSelect: (contact: MePayContact | null) => void,
+    isOpen: boolean,
+    onToggle: () => void
   ): ui.UINode {
     return ui.View({
       style: {
@@ -4121,12 +4154,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             alignItems: 'center',
             justifyContent: 'space-between'
           },
-          onPress: () => {
-            // For now, just select the first contact as a demo
-            if (contacts.length > 0) {
-              onSelect(contacts[0]);
-            }
-          },
+          onPress: onToggle,
           children: [
             selectedContact ? ui.View({
               style: {
@@ -4177,7 +4205,79 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               }
             })
           ]
-        })
+        }),
+        
+        // Dropdown list
+        ...(isOpen ? [ui.ScrollView({
+          style: {
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1,
+            borderColor: '#D1D5DB',
+            borderRadius: 8,
+            marginTop: 4,
+            maxHeight: 200
+          },
+          children: contacts.map((contact, index) => 
+            ui.Pressable({
+              style: {
+                padding: 12,
+                borderBottomWidth: index < contacts.length - 1 ? 1 : 0,
+                borderColor: '#F3F4F6',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              },
+              onPress: () => {
+                onSelect(contact);
+                onToggle();
+              },
+              children: [
+                ui.View({
+                  style: {
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                  },
+                  children: [
+                    ui.Text({
+                      text: contact.avatar,
+                      style: {
+                        fontSize: 16,
+                        marginRight: 8
+                      }
+                    }),
+                    ui.View({
+                      children: [
+                        ui.Text({
+                          text: contact.name,
+                          style: {
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: '#111827'
+                          }
+                        }),
+                        ui.Text({
+                          text: contact.phone,
+                          style: {
+                            fontSize: 12,
+                            color: '#6B7280'
+                          }
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                ...(selectedContact?.id === contact.id ? [ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24270584229301990"))), // check
+                  style: {
+                    width: 16,
+                    height: 16,
+                    tintColor: '#10B981'
+                  }
+                })] : [])
+              ]
+            })
+          )
+        })] : [])
       ]
     });
   }
@@ -4185,7 +4285,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private createMePayNoteField(
     label: string,
     selectedNote: string,
-    onSelect: (note: string) => void
+    onSelect: (note: string) => void,
+    isOpen: boolean,
+    onToggle: () => void
   ): ui.UINode {
     return ui.View({
       style: {
@@ -4215,12 +4317,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             alignItems: 'center',
             justifyContent: 'space-between'
           },
-          onPress: () => {
-            // For now, just select the first note as a demo
-            if (this.mePayNoteReasons.length > 0) {
-              onSelect(this.mePayNoteReasons[0]);
-            }
-          },
+          onPress: onToggle,
           children: [
             ui.Text({
               text: selectedNote || 'Select a reason',
@@ -4238,7 +4335,52 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               }
             })
           ]
-        })
+        }),
+        
+        // Dropdown list
+        ...(isOpen ? [ui.ScrollView({
+          style: {
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1,
+            borderColor: '#D1D5DB',
+            borderRadius: 8,
+            marginTop: 4,
+            maxHeight: 160
+          },
+          children: this.mePayNoteReasons.map((reason, index) => 
+            ui.Pressable({
+              style: {
+                padding: 12,
+                borderBottomWidth: index < this.mePayNoteReasons.length - 1 ? 1 : 0,
+                borderColor: '#F3F4F6',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              },
+              onPress: () => {
+                onSelect(reason);
+                onToggle();
+              },
+              children: [
+                ui.Text({
+                  text: reason,
+                  style: {
+                    fontSize: 14,
+                    color: '#111827'
+                  }
+                }),
+                ...(selectedNote === reason ? [ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24270584229301990"))), // check
+                  style: {
+                    width: 16,
+                    height: 16,
+                    tintColor: '#10B981'
+                  }
+                })] : [])
+              ]
+            })
+          )
+        })] : [])
       ]
     });
   }
