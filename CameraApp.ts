@@ -39,8 +39,11 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
   initializeUI(): ui.UINode {
     return ui.View({
       style: { 
-        width: "100%", 
-        height: "100%" 
+        width: "100vw", 
+        height: "100vh",
+        backgroundColor: 'transparent',
+        margin: 0,
+        padding: 0
       },
       children: [
         ui.UINode.if(this.isCameraAppBinding, this.renderFullScreenCameraApp()),
@@ -576,9 +579,11 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
   private renderFullScreenCameraApp(): ui.UINode {
     return ui.View({
       style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'transparent'
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'transparent',
+        margin: 0,
+        padding: 0
       },
       children: [
         // Top controls bar
@@ -745,7 +750,7 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
                     bottom: 110,
                     left: 0,
                     right: 0,
-                    width: '100%',
+                    width: '100vw',
                     alignItems: 'center'
                   },
                   children: [
@@ -771,95 +776,20 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
                   ]
                 }),
 
-                // Debug indicator to show viewport coverage (temporary - remove when working)
-                ui.View({
-                  style: {
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: 4,
-                    height: '100%',
-                    backgroundColor: 'rgba(255, 0, 0, 0.8)', // Thick red line on left edge
-                    zIndex: 100
-                  }
-                }),
-                ui.View({
-                  style: {
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: 4,
-                    height: '100%',
-                    backgroundColor: 'rgba(255, 0, 0, 0.8)', // Thick red line on right edge
-                    zIndex: 100
-                  }
-                }),
-                ui.View({
-                  style: {
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 4,
-                    backgroundColor: 'rgba(0, 255, 0, 0.8)', // Green line on top edge
-                    zIndex: 100
-                  }
-                }),
-                ui.View({
-                  style: {
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 4,
-                    backgroundColor: 'rgba(0, 255, 0, 0.8)' // Green line on bottom edge
-                  }
-                }),
-
-        // Debug indicator to show viewport coverage (temporary - remove when working)
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 4,
-            height: '100%',
-            backgroundColor: 'rgba(255, 0, 0, 0.8)',
-            zIndex: 100
-          }
-        }),
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: 4,
-            height: '100%',
-            backgroundColor: 'rgba(255, 0, 0, 0.8)',
-            zIndex: 100
-          }
-        }),
+        // Debug border to show exact UI boundaries
         ui.View({
           style: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: 4,
-            backgroundColor: 'rgba(0, 255, 0, 0.8)',
-            zIndex: 100
-          }
-        }),
-        ui.View({
-          style: {
-            position: 'absolute',
             bottom: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            backgroundColor: 'rgba(0, 255, 0, 0.8)'
+            borderWidth: 4,
+            borderColor: 'rgba(255, 0, 0, 0.9)',
+            backgroundColor: 'transparent'
           }
         })
+
       ]
     });
   }

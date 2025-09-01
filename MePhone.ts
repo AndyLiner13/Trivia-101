@@ -14,14 +14,26 @@ interface Contact {
   lastContact?: string;
 }
 
-// Email interface
-interface Email {
-  id: string;
-  from: string;
-  subject: string;
-  preview: string;
+// Message interfaces
+interface Message {
+  id: number;
+  text: string;
+  sender: 'user' | 'contact';
   timestamp: string;
-  isRead: boolean;
+}
+
+interface Conversation {
+  id: number;
+  name: string;
+  lastMessage: string;
+  timestamp: string;
+  unread: number;
+  avatar: string;
+}
+
+interface MessageTemplate {
+  category: string;
+  messages: string[];
 }
 
 // Banking interfaces
@@ -79,12 +91,15 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private selectedContactBinding = new ui.Binding<Contact | null>(null);
   private favoritesBinding = new ui.Binding<Set<number>>(new Set());
 
-  // MeMail app state
-  private selectedEmailBinding = new ui.Binding<Email | null>(null);
-  private isComposingBinding = new ui.Binding<boolean>(false);
-  private composeToBinding = new ui.Binding<string>('');
-  private composeSubjectBinding = new ui.Binding<string>('');
-  private composeBodyBinding = new ui.Binding<string>('');
+  // Internal tracking for current messages
+  private currentMessages: Message[] = [];
+
+  // Messages app state
+  private selectedConversationBinding = new ui.Binding<Conversation | null>(null);
+  private currentMessagesViewBinding = new ui.Binding<'list' | 'chat'>('list');
+  private messagesBinding = new ui.Binding<Message[]>([]);
+  private selectedMessageTemplateBinding = new ui.Binding<string | null>(null);
+  private currentConversation: Conversation | null = null; // Track current conversation
 
   // Browser app state for MeBank
   private currentBrowserPageBinding = new ui.Binding<string>('search');
@@ -101,55 +116,95 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private selectedBill = '';
   private paidBills: string[] = [];
 
-  // Sample emails data
-  private emails: Email[] = [
+  // Sample conversations data
+  private conversations: Conversation[] = [
     {
-      id: '1',
-      from: 'Sarah Wilson',
-      subject: 'Project Update - Q4 Review',
-      preview: 'Hi team, I wanted to share the latest updates on our Q4 review process...',
-      timestamp: '10:30 AM',
-      isRead: false
+      id: 1,
+      name: 'Mom',
+      lastMessage: 'Don\'t forget dinner tonight!',
+      timestamp: '2:30 PM',
+      unread: 2,
+      avatar: '👩'
     },
     {
-      id: '2',
-      from: 'Alex Chen',
-      subject: 'Design System Documentation',
-      preview: 'Hey! I have finished updating the design system docs. The new components...',
-      timestamp: '9:15 AM',
-      isRead: false
+      id: 2,
+      name: 'Alex',
+      lastMessage: 'See you at the meeting',
+      timestamp: '1:15 PM',
+      unread: 0,
+      avatar: '👨'
     },
     {
-      id: '3',
-      from: 'Netflix',
-      subject: 'New shows added to your list',
-      preview: 'Check out the latest additions to Netflix. We think you will love these...',
+      id: 3,
+      name: 'Sarah',
+      lastMessage: 'Thanks for helping!',
+      timestamp: '12:45 PM',
+      unread: 1,
+      avatar: '👩'
+    },
+    {
+      id: 4,
+      name: 'David',
+      lastMessage: 'Project update attached',
+      timestamp: '11:20 AM',
+      unread: 0,
+      avatar: '👨'
+    },
+    {
+      id: 5,
+      name: 'Emma',
+      lastMessage: 'Coffee later?',
+      timestamp: '10:05 AM',
+      unread: 3,
+      avatar: '👩'
+    },
+    {
+      id: 6,
+      name: 'Work Group',
+      lastMessage: 'Meeting moved to 3 PM',
       timestamp: 'Yesterday',
-      isRead: true
+      unread: 0,
+      avatar: '👥'
+    }
+  ];
+
+  // Message threads for each conversation
+  private messageThreads: Record<number, Message[]> = {
+    1: [ // Mom
+      { id: 1, text: 'Hi honey! How was your day?', sender: 'contact', timestamp: '2:25 PM' },
+      { id: 2, text: 'It was good! Just finished work', sender: 'user', timestamp: '2:26 PM' },
+      { id: 3, text: 'That\'s great! Don\'t forget we have dinner tonight at 7', sender: 'contact', timestamp: '2:28 PM' },
+      { id: 4, text: 'Don\'t forget dinner tonight!', sender: 'contact', timestamp: '2:30 PM' }
+    ],
+    2: [ // Alex
+      { id: 1, text: 'Hey, are you ready for tomorrow\'s presentation?', sender: 'contact', timestamp: '1:10 PM' },
+      { id: 2, text: 'Yes, just finished the slides', sender: 'user', timestamp: '1:12 PM' },
+      { id: 3, text: 'Awesome! See you at the meeting', sender: 'contact', timestamp: '1:15 PM' }
+    ],
+    3: [ // Sarah
+      { id: 1, text: 'Could you help me with the design review?', sender: 'contact', timestamp: '12:40 PM' },
+      { id: 2, text: 'Of course! I\'ll take a look now', sender: 'user', timestamp: '12:42 PM' },
+      { id: 3, text: 'Thanks for helping!', sender: 'contact', timestamp: '12:45 PM' }
+    ]
+  };
+
+  // Pre-written message templates
+  private messageTemplates: MessageTemplate[] = [
+    {
+      category: 'Quick Responses',
+      messages: ['Yes', 'No', 'Thanks!', 'You too!', 'Sounds good', 'On my way', 'Running late', 'Almost there']
     },
     {
-      id: '4',
-      from: 'Mom',
-      subject: 'Dinner this Sunday?',
-      preview: 'Hi honey! Are you free for dinner this Sunday? Dad and I were thinking...',
-      timestamp: 'Yesterday',
-      isRead: true
+      category: 'Greetings',
+      messages: ['Hello!', 'Good morning', 'Good evening', 'How are you?', 'Hope you are well', 'Long time no see!']
     },
     {
-      id: '5',
-      from: 'GitHub',
-      subject: '[Security] New sign-in from MacBook Pro',
-      preview: 'We noticed a new sign-in to your account from a MacBook Pro...',
-      timestamp: '2 days ago',
-      isRead: false
+      category: 'Plans & Meet Up',
+      messages: ['What time works for you?', 'Let us meet up soon', 'See you later', 'Are you free today?', 'Rain check?', 'Can we reschedule?']
     },
     {
-      id: '6',
-      from: 'John Davis',
-      subject: 'Meeting Rescheduled',
-      preview: 'Hope you are doing well! I need to reschedule our meeting...',
-      timestamp: '3 days ago',
-      isRead: true
+      category: 'Work & Business',
+      messages: ['Got it, thanks', 'Will get back to you', 'In a meeting, call later', 'Checking now', 'Please send details', 'Meeting confirmed']
     }
   ];
 
@@ -232,7 +287,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isPhoneAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'phone');
   private isCalculatorAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'calculator');
   private isContactsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'contacts');
-  private isMemailAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'memail');
+  private isMessagesAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'messages');
   private isSettingsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'settings');
   private isBrowserAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'browser');
   private isDialerBinding = ui.Binding.derive([this.isDialingBinding], (isDialing) => !isDialing);
@@ -282,7 +337,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 ui.UINode.if(this.isPhoneAppBinding, this.renderPhoneApp()),
                 ui.UINode.if(this.isCalculatorAppBinding, this.renderCalculatorApp()),
                 ui.UINode.if(this.isContactsAppBinding, this.renderContactsApp()),
-                ui.UINode.if(this.isMemailAppBinding, this.renderMemailApp()),
+                ui.UINode.if(this.isMessagesAppBinding, this.renderMessagesApp()),
                 ui.UINode.if(this.isSettingsAppBinding, this.renderSettingsApp()),
                 ui.UINode.if(this.isBrowserAppBinding, this.renderBrowserApp())
               ]
@@ -333,7 +388,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone'), // Updated green color
-                this.createAppIcon('Calculator', '#2b7fff', BigInt("2175040452971461"), 'calculator') // Updated blue color
+                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts') // Updated orange color
               ]
             }),
             
@@ -347,8 +402,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts'), // Updated orange color
-                this.createAppIcon('MeMail', '#fb2c36', BigInt("2571486876541221"), 'memail') // Updated red color
+                this.createAppIcon('Messages', '#fb2c36', BigInt("1480228839964364"), 'messages'), // Updated to Messages app
+                this.createAppIcon('Browser', '#ad46ff', BigInt("592774970456232"), 'browser') // Updated purple color
               ]
             }),
             
@@ -362,7 +417,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Browser', '#ad46ff', BigInt("592774970456232"), 'browser'), // Updated purple color
+                this.createAppIcon('Calculator', '#2b7fff', BigInt("2175040452971461"), 'calculator'), // Updated blue color
                 this.createAppIcon('Settings', '#6a7282', BigInt("1342398257464986"), 'settings') // Updated gray color
               ]
             })
@@ -1611,85 +1666,57 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     });
   }
 
-  private renderMemailApp(): ui.UINode {
+  private renderMessagesApp(): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
         height: '100%'
       },
       children: [
-        // Inbox View
+        // Conversations List View
         ui.UINode.if(
-          ui.Binding.derive([this.selectedEmailBinding, this.isComposingBinding], (email, composing) => 
-            !email && !composing
-          ),
-          this.renderInbox()
+          ui.Binding.derive([this.currentMessagesViewBinding], (view) => view === 'list'),
+          this.renderConversationsList()
         ),
-        // Email Detail View
+        // Chat View
         ui.UINode.if(
-          ui.Binding.derive([this.selectedEmailBinding], (email) => email !== null),
-          this.renderEmailDetail()
-        ),
-        // Compose View
-        ui.UINode.if(
-          ui.Binding.derive([this.isComposingBinding], (composing) => composing),
-          this.renderCompose()
+          ui.Binding.derive([this.currentMessagesViewBinding], (view) => view === 'chat'),
+          this.renderChatView()
         )
       ]
     });
   }
 
-  private renderInbox(): ui.UINode {
-    const unreadCount = this.emails.filter(e => !e.isRead).length;
+  private renderConversationsList(): ui.UINode {
+    const unreadCount = this.conversations.filter(c => c.unread > 0).length;
     
     return ui.View({
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#F9FAFB'
+        backgroundColor: '#FFFFFF'
       },
       children: [
         // Header
         this.createAppHeader({
-          appName: 'MeMail',
+          appName: 'Messages',
           onHomePress: () => {
             this.currentAppBinding.set('home');
-            // Reset email state
-            this.selectedEmailBinding.set(null);
-            this.isComposingBinding.set(false);
-            this.composeToBinding.set('');
-            this.composeSubjectBinding.set('');
-            this.composeBodyBinding.set('');
+            // Reset messages state
+            this.selectedConversationBinding.set(null);
+            this.currentMessagesViewBinding.set('list');
+            this.messagesBinding.set([]);
+            this.selectedMessageTemplateBinding.set(null);
           },
           showBackButton: false
         }),
         
-        // Section Header
-        ui.View({
-          style: {
-            backgroundColor: '#F9FAFB',
-            paddingHorizontal: 12,
-            paddingVertical: 3,
-            marginTop: 36,
-            borderBottomWidth: 1
-          },
-          children: [
-            ui.Text({
-              text: `${unreadCount} Unread MeMails`,
-              style: {
-                fontSize: 10,
-                color: '#6B7280',
-                fontWeight: '500'
-              }
-            })
-          ]
-        }),
-        
-        // Email List
+        // Conversations List
         ui.View({
           style: {
             flex: 1,
-            backgroundColor: '#FFFFFF'
+            backgroundColor: '#FFFFFF',
+            marginTop: 36
           },
           children: [
             ui.ScrollView({
@@ -1701,7 +1728,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   style: {
                     backgroundColor: '#FFFFFF'
                   },
-                  children: this.emails.map(email => this.createEmailItem(email))
+                  children: this.conversations.map(conversation => this.createConversationItem(conversation))
                 })
               ]
             })
@@ -1711,248 +1738,156 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     });
   }
 
-  private renderEmailDetail(): ui.UINode {
+  private renderChatView(): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#FFFFFF'
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'column'
       },
       children: [
         // Header
         this.createAppHeader({
-          appName: 'Email',
+          appName: 'Messages',
           onHomePress: () => {
             this.currentAppBinding.set('home');
-            this.selectedEmailBinding.set(null);
+            this.selectedConversationBinding.set(null);
+            this.currentMessagesViewBinding.set('list');
+            this.messagesBinding.set([]);
           },
           onBackPress: () => {
-            this.selectedEmailBinding.set(null);
+            this.currentMessagesViewBinding.set('list');
+            this.selectedConversationBinding.set(null);
+            this.messagesBinding.set([]);
           },
           showBackButton: true
         }),
         
-        // Email Content
+        // Messages
         ui.View({
           style: {
             flex: 1,
-            justifyContent: 'flex-start',
             paddingHorizontal: 12,
             paddingVertical: 12,
             marginTop: 36
           },
           children: [
-            // From
-            ui.Text({
-              text: ui.Binding.derive([this.selectedEmailBinding], (email) => 
-                email ? `From: ${email.from}` : ''
-              ),
-              style: {
-                fontSize: 9,
-                color: '#6B7280',
-                marginBottom: 6
-              }
-            }),
-            // Subject
-            ui.Text({
-              text: ui.Binding.derive([this.selectedEmailBinding], (email) => 
-                email ? email.subject : ''
-              ),
-              style: {
-                fontSize: 12,
-                fontWeight: '600',
-                color: '#111827',
-                marginBottom: 12
-              }
-            }),
-            // Body
-            ui.Text({
-              text: ui.Binding.derive([this.selectedEmailBinding], (email) => 
-                email ? `${email.preview}\n\nThis is the full email content. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.` : ''
-              ),
-              style: {
-                fontSize: 10,
-                color: '#374151',
-                lineHeight: 14
-              }
-            })
-          ]
-        })
-      ]
-    });
-  }
-
-  private renderCompose(): ui.UINode {
-    return ui.View({
-      style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#FFFFFF'
-      },
-      children: [
-        // Header
-        this.createAppHeader({
-          appName: 'Compose',
-          onHomePress: () => {
-            this.currentAppBinding.set('home');
-            this.isComposingBinding.set(false);
-            this.composeToBinding.set('');
-            this.composeSubjectBinding.set('');
-            this.composeBodyBinding.set('');
-          },
-          onBackPress: () => {
-            this.isComposingBinding.set(false);
-            this.composeToBinding.set('');
-            this.composeSubjectBinding.set('');
-            this.composeBodyBinding.set('');
-          },
-          showBackButton: true,
-          rightElement: ui.Pressable({
-            style: {
-              backgroundColor: '#00c951',
-              borderRadius: 8,
-              paddingHorizontal: 8,
-              paddingVertical: 4
-            },
-            onPress: () => {
-              console.log('Email sent!');
-              this.isComposingBinding.set(false);
-              this.composeToBinding.set('');
-              this.composeSubjectBinding.set('');
-              this.composeBodyBinding.set('');
-            },
-            children: [
-              ui.Text({
-                text: 'Send',
-                style: {
-                  fontSize: 12,
-                  color: '#FFFFFF',
-                  fontWeight: '500'
-                }
-              })
-            ]
-          })
-        }),
-        
-        // Compose Form
-        ui.View({
-          style: {
-            flex: 1,
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-            marginTop: 36
-          },
-          children: [
-            // To field
-            ui.View({
-              style: {
-                marginBottom: 12
-              },
-              children: [
-                ui.Text({
-                  text: 'To:',
-                  style: {
-                    fontSize: 12,
-                    color: '#6B7280',
-                    marginBottom: 4
-                  }
-                }),
-                ui.View({
-                  style: {
-                    backgroundColor: '#F3F4F6',
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8
-                  },
-                  children: [
-                    ui.Text({
-                      text: ui.Binding.derive([this.composeToBinding], (to) => 
-                        to || 'recipient@example.com'
-                      ),
-                      style: {
-                        fontSize: 14,
-                        color: ui.Binding.derive([this.composeToBinding], (to) => 
-                          to ? '#111827' : '#9CA3AF'
-                        )
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            // Subject field
-            ui.View({
-              style: {
-                marginBottom: 12
-              },
-              children: [
-                ui.Text({
-                  text: 'Subject:',
-                  style: {
-                    fontSize: 12,
-                    color: '#6B7280',
-                    marginBottom: 4
-                  }
-                }),
-                ui.View({
-                  style: {
-                    backgroundColor: '#F3F4F6',
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8
-                  },
-                  children: [
-                    ui.Text({
-                      text: ui.Binding.derive([this.composeSubjectBinding], (subject) => 
-                        subject || 'Enter subject...'
-                      ),
-                      style: {
-                        fontSize: 14,
-                        color: ui.Binding.derive([this.composeSubjectBinding], (subject) => 
-                          subject ? '#111827' : '#9CA3AF'
-                        )
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            // Body field
-            ui.View({
+            ui.ScrollView({
               style: {
                 flex: 1
               },
               children: [
-                ui.Text({
-                  text: 'Message:',
-                  style: {
-                    fontSize: 12,
-                    color: '#6B7280',
-                    marginBottom: 4
-                  }
-                }),
                 ui.View({
                   style: {
-                    backgroundColor: '#F3F4F6',
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    flex: 1,
-                    minHeight: 100
+                    flexDirection: 'column',
+                    padding: 8
                   },
                   children: [
-                    ui.Text({
-                      text: ui.Binding.derive([this.composeBodyBinding], (body) => 
-                        body || 'Type your message here...'
-                      ),
-                      style: {
-                        fontSize: 14,
-                        color: ui.Binding.derive([this.composeBodyBinding], (body) => 
-                          body ? '#111827' : '#9CA3AF'
-                        )
-                      }
-                    })
+                    // Show sample messages for now
+                    this.createMessageBubble({ id: 1, text: 'Hi there!', sender: 'contact', timestamp: '2:25 PM' }, 0),
+                    this.createMessageBubble({ id: 2, text: 'Hello! How are you?', sender: 'user', timestamp: '2:26 PM' }, 1),
+                    this.createMessageBubble({ id: 3, text: 'I\'m good, thanks for asking!', sender: 'contact', timestamp: '2:27 PM' }, 2)
                   ]
+                })
+              ]
+            })
+          ]
+        }),
+        
+        // Message Templates Section
+        ui.View({
+          style: {
+            backgroundColor: '#F9FAFB',
+            borderTopWidth: 1,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            maxHeight: 160
+          },
+          children: [
+            ui.View({
+              style: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 8
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1480228839964364"))),
+                  style: {
+                    width: 14,
+                    height: 14,
+                    tintColor: '#6B7280',
+                    marginRight: 6
+                  }
+                }),
+                ui.Text({
+                  text: 'Choose a message to send:',
+                  style: {
+                    fontSize: 12,
+                    color: '#6B7280'
+                  }
+                })
+              ]
+            }),
+            ui.ScrollView({
+              style: {
+                flex: 1,
+                maxHeight: 120
+              },
+              children: [
+                ui.View({
+                  style: {
+                    flexDirection: 'column'
+                  },
+                  children: this.messageTemplates.map((category, categoryIndex) => 
+                    ui.View({
+                      style: {
+                        marginBottom: 8
+                      },
+                      children: [
+                        ui.Text({
+                          text: category.category,
+                          style: {
+                            fontSize: 10,
+                            color: '#6B7280',
+                            fontWeight: '500',
+                            marginBottom: 4
+                          }
+                        }),
+                        ui.View({
+                          style: {
+                            flexDirection: 'column'
+                          },
+                          children: category.messages.map((message, messageIndex) =>
+                            ui.Pressable({
+                              style: {
+                                backgroundColor: '#FFFFFF',
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                                borderRadius: 8,
+                                paddingHorizontal: 8,
+                                paddingVertical: 6,
+                                marginBottom: 4
+                              },
+                              onPress: () => {
+                                this.sendMessage(message);
+                              },
+                              children: [
+                                ui.Text({
+                                  text: message,
+                                  style: {
+                                    fontSize: 12,
+                                    color: '#374151'
+                                  }
+                                })
+                              ]
+                            })
+                          )
+                        })
+                      ]
+                    })
+                  )
                 })
               ]
             })
@@ -1962,6 +1897,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     });
   }
 
+  /* OLD MEMAIL METHOD - DISABLED
   private createEmailItem(email: Email): ui.UINode {
     return ui.Pressable({
       style: {
@@ -2098,6 +2034,180 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         })
       ]
     });
+  }
+  */
+
+  private createConversationItem(conversation: Conversation): ui.UINode {
+    return ui.Pressable({
+      style: {
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center'
+      },
+      onPress: () => {
+        this.openChat(conversation);
+      },
+      children: [
+        // Avatar
+        ui.View({
+          style: {
+            width: 40,
+            height: 40,
+            backgroundColor: '#3B82F6',
+            borderRadius: 12,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 12,
+            flexShrink: 0
+          },
+          children: [
+            ui.Text({
+              text: conversation.avatar,
+              style: {
+                fontSize: 18
+              }
+            })
+          ]
+        }),
+        
+        // Content
+        ui.View({
+          style: {
+            flex: 1,
+            flexDirection: 'column',
+            marginRight: 8
+          },
+          children: [
+            ui.Text({
+              text: conversation.name,
+              style: {
+                fontSize: 12,
+                fontWeight: '500',
+                color: '#111827',
+                marginBottom: 2
+              }
+            }),
+            ui.Text({
+              text: conversation.lastMessage,
+              style: {
+                fontSize: 12,
+                color: '#6B7280'
+              }
+            })
+          ]
+        }),
+        
+        // Right side info
+        ui.View({
+          style: {
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            justifyContent: 'center'
+          },
+          children: [
+            ui.Text({
+              text: conversation.timestamp,
+              style: {
+                fontSize: 10,
+                color: '#9CA3AF',
+                marginBottom: conversation.unread > 0 ? 4 : 0
+              }
+            }),
+            ...(conversation.unread > 0 ? [
+              ui.View({
+                style: {
+                  backgroundColor: '#3B82F6',
+                  borderRadius: 10,
+                  minWidth: 20,
+                  height: 20,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 6
+                },
+                children: [
+                  ui.Text({
+                    text: conversation.unread.toString(),
+                    style: {
+                      fontSize: 10,
+                      color: '#FFFFFF',
+                      fontWeight: '500'
+                    }
+                  })
+                ]
+              })
+            ] : [])
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderMessagesList(): ui.UINode[] {
+    return this.currentMessages.map((message, index) => this.createMessageBubble(message, index));
+  }
+
+  private createMessageBubble(message: Message, index: number): ui.UINode {
+    const isUser = message.sender === 'user';
+    
+    return ui.View({
+      style: {
+        flexDirection: 'row',
+        justifyContent: isUser ? 'flex-end' : 'flex-start',
+        marginBottom: 8,
+        paddingHorizontal: 4
+      },
+      children: [
+        ui.View({
+          style: {
+            backgroundColor: isUser ? '#3B82F6' : '#F3F4F6',
+            borderRadius: 16,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            maxWidth: 140
+          },
+          children: [
+            ui.Text({
+              text: message.text,
+              style: {
+                fontSize: 12,
+                color: isUser ? '#FFFFFF' : '#111827'
+              }
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private openChat(conversation: Conversation): void {
+    this.currentConversation = conversation;
+    this.selectedConversationBinding.set(conversation);
+    this.currentMessagesViewBinding.set('chat');
+    
+    // Load messages for this conversation
+    const conversationMessages = this.messageThreads[conversation.id] || [];
+    this.currentMessages = conversationMessages;
+    this.messagesBinding.set(conversationMessages);
+  }
+
+  private sendMessage(messageText: string): void {
+    if (messageText.trim() && this.currentConversation) {
+      const conversationMessages = this.messageThreads[this.currentConversation.id] || [];
+      const message: Message = {
+        id: Date.now(),
+        text: messageText,
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      const updatedMessages = [...conversationMessages, message];
+      this.messageThreads[this.currentConversation.id] = updatedMessages;
+      this.currentMessages = updatedMessages;
+      this.messagesBinding.set(updatedMessages);
+      this.selectedMessageTemplateBinding.set(null);
+    }
   }
 
   private renderSettingsApp(): ui.UINode {
@@ -2421,7 +2531,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           },
           children: [
             ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1288271619346253"))),
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1060423696117146"))), // bell icon
               style: {
                 width: 9,
                 height: 9,
@@ -2450,22 +2560,31 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         }),
 
         // Right content
-        isCurrent ? ui.Text({
-          text: '▶️',
+        isCurrent ? ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1131016642456733"))), // play icon
           style: {
-            fontSize: 10,
-            color: '#3B82F6'
+            width: 10,
+            height: 10,
+            tintColor: '#3B82F6'
           }
-        }) : ui.Text({
-          text: ui.Binding.derive([this.selectedRingtoneBinding], (selected) => 
-            selected === ringtone.id ? '✅' : '▶️'
-          ),
-          style: {
-            fontSize: 10,
-            color: ui.Binding.derive([this.selectedRingtoneBinding], (selected) => 
-              selected === ringtone.id ? '#00c951' : '#9CA3AF'
-            )
-          }
+        }) : ui.Binding.derive([this.selectedRingtoneBinding], (selected) => {
+          return selected === ringtone.id ? 
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24270584229301990"))), // check icon
+              style: {
+                width: 10,
+                height: 10,
+                tintColor: '#00c951'
+              }
+            }) :
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1131016642456733"))), // play icon
+              style: {
+                width: 10,
+                height: 10,
+                tintColor: '#9CA3AF'
+              }
+            });
         })
       ]
     });
