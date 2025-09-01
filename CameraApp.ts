@@ -1,8 +1,16 @@
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
+import LocalCamera, { CameraTransitionOptions, Easing } from 'horizon/camera';
 
 class CameraApp extends ui.UIComponent<typeof CameraApp> {
-  static propsDefinition = {};
+  static componentName = "CameraApp";
+  static local = true; // Set to be a local UI like the working example
+  
+  static propsDefinition = {
+    // Define custom camera controls icons
+    cameraControlIcon: { type: hz.PropTypes.Asset },
+    movementControlIcon: { type: hz.PropTypes.Asset }
+  };
 
   // App state management
   private currentAppBinding = new ui.Binding('home');
@@ -14,17 +22,45 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
   private recordingInterval: any = null;
   private recordingTime = 0;
   private recordingTracker: any = null;
+  
+  // Camera state
+  private originalCameraMode: any = null;
+  private cameraPosition: hz.Vec3 | null = null;
+  private isInCameraMode = false;
+  
+  // Input controls
+  private lookInputX?: hz.PlayerInput;
+  private lookInputY?: hz.PlayerInput;
+  private movementInputX?: hz.PlayerInput;
+  private movementInputY?: hz.PlayerInput;
+  private exitInput?: hz.PlayerInput;
+  private inputPollingInterval: any = null;
 
   initializeUI(): ui.UINode {
-    return ui.UINode.if(
-      this.isCameraAppBinding,
-      this.renderFullScreenCameraApp(),
-      this.renderPhoneFrame()
-    );
+    return ui.View({
+      style: { 
+        width: "100%", 
+        height: "100%" 
+      },
+      children: [
+        ui.UINode.if(this.isCameraAppBinding, this.renderFullScreenCameraApp()),
+        ui.UINode.if(this.isCameraAppBinding.derive(val => !val), this.renderPhoneFrame())
+      ]
+    });
   }
 
   start() {
     super.start();
+    
+    // Register for player enter world event to set entity ownership
+    this.connectCodeBlockEvent(
+      this.entity,
+      hz.CodeBlockEvents.OnPlayerEnterWorld,
+      player => {
+        console.log('Setting entity owner for camera app:', player.id);
+        this.entity.owner.set(player);
+      }
+    );
   }
 
   // Handle camera input (simplified for now)
@@ -34,65 +70,329 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
     // to camera rotation and movement
   }
 
-  // Camera mode methods
+  // Camera mode methods with proper Camera API
   private async enterCameraMode(): Promise<void> {
-    console.log('Entering camera mode...');
+    console.log('Entering advanced camera mode...');
     
-    // Get the local player
+    // Only proceed if this is running locally (not on server)
     const localPlayer = this.world.getLocalPlayer();
-    
-    if (localPlayer) {
-      try {
-        // Switch to full-screen camera UI first
-        this.isCameraAppBinding.set(true);
-        this.currentAppBinding.set('camera');
-        
-        // Enter focused interaction mode for direct camera control
-        localPlayer.enterFocusedInteractionMode({
-          disableFocusExitButton: true // Disable the default exit button since we have our own
-        });
-        
-        // Don't focus the UI on this component as it blocks the view
-        // Instead, let the player have free camera movement
-        
-        console.log('Camera mode activated - Free POV camera control enabled');
-        console.log('Use touch/mouse to look around, use the exit button to return');
-      } catch (error) {
-        console.error('Failed to enter camera mode:', error);
-      }
-    } else {
-      // Fallback if no local player found
+    if (!localPlayer || this.entity.owner.get().id === this.world.getServerPlayer().id) {
+      console.log('Camera mode requires local execution');
+      return;
+    }
+
+    try {
+      this.isInCameraMode = true;
+      
+      console.log('Switching to full-screen camera UI...');
+      
+      // Switch to full-screen camera UI first
       this.isCameraAppBinding.set(true);
       this.currentAppBinding.set('camera');
+      
+      // Enter focused interaction mode to take full control of the UI
+      localPlayer.enterFocusedInteractionMode({
+        disableFocusExitButton: true // We'll handle exit ourselves
+      });
+      
+      // Force UI to focus on this component for full-screen interaction
+      localPlayer.focusUI(this.entity);
+      
+      // Get current player position and calculate camera position 10 meters above
+      const playerPosition = localPlayer.head.position.get();
+      const cameraPosition = new hz.Vec3(
+        playerPosition.x,
+        playerPosition.y + 10, // 10 meters above player
+        playerPosition.z
+      );
+      
+      // Store the camera position for movement controls
+      this.cameraPosition = cameraPosition;
+      
+      // Look down at the player from above
+      const lookAtDirection = cameraPosition.sub(playerPosition).normalize();
+      const cameraRotation = hz.Quaternion.lookRotation(lookAtDirection, hz.Vec3.up);
+      
+      // Set up custom input controls for camera movement
+      this.setupCameraInputControls();
+      
+      // Transition smoothly to fixed camera mode at the elevated position
+      const transitionOptions: CameraTransitionOptions = {
+        duration: 1.0,
+        easing: Easing.EaseInOut
+      };
+      
+      LocalCamera.setCameraModeFixed({
+        position: cameraPosition,
+        rotation: cameraRotation,
+        ...transitionOptions
+      });
+      
+      // Enable camera collision for realistic behavior
+      LocalCamera.collisionEnabled.set(true);
+      
+      // Disable automatic perspective switching since we're in camera mode
+      LocalCamera.perspectiveSwitchingEnabled.set(false);
+      
+      console.log('Camera positioned 10 meters above player at:', cameraPosition.toString());
+      console.log('Camera looking at player position:', playerPosition.toString());
+      
+    } catch (error) {
+      console.error('Failed to enter camera mode:', error);
+      this.isInCameraMode = false;
     }
   }
 
   private exitCameraMode(): void {
-    console.log('Exiting camera mode...');
+    console.log('Exiting advanced camera mode...');
     
-    // Get the local player
     const localPlayer = this.world.getLocalPlayer();
-    
-    if (localPlayer) {
-      try {
-        // Exit focused interaction mode
-        localPlayer.exitFocusedInteractionMode();
-        
-        // Remove UI focus (if any was applied)
-        localPlayer.unfocusUI();
-        
-        console.log('Camera mode deactivated - Normal controls restored');
-      } catch (error) {
-        console.error('Failed to exit camera mode:', error);
-      }
+    if (!localPlayer || !this.isInCameraMode) {
+      return;
     }
-    
-    // Stop any recording
-    this.stopRecording();
+
+    try {
+      this.isInCameraMode = false;
+      
+      // Exit focused interaction mode first
+      localPlayer.exitFocusedInteractionMode();
+      
+      // Unfocus UI
+      localPlayer.unfocusUI();
+      
+      // Cleanup input controls
+      this.cleanupCameraInputControls();
+      
+      // Return to third person camera mode with smooth transition
+      const transitionOptions: CameraTransitionOptions = {
+        duration: 1.0,
+        easing: Easing.EaseInOut
+      };
+      
+      LocalCamera.setCameraModeThirdPerson(transitionOptions);
+      
+      // Re-enable perspective switching
+      LocalCamera.perspectiveSwitchingEnabled.set(true);
+      
+      // Stop any recording
+      this.stopRecording();
+      
+      console.log('Returned to normal camera mode');
+      
+    } catch (error) {
+      console.error('Failed to exit camera mode:', error);
+    }
     
     // Return to home screen
     this.isCameraAppBinding.set(false);
     this.currentAppBinding.set('home');
+  }
+
+  // Set up custom input controls for camera movement
+  private setupCameraInputControls(): void {
+    console.log('Setting up camera input controls...');
+    
+    // Only set up controls if this is running locally
+    if (this.entity.owner.get().id === this.world.getServerPlayer().id) {
+      return;
+    }
+
+    try {
+      // Set up look controls using left stick for camera rotation
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftXAxis)) {
+        this.lookInputX = hz.PlayerControls.connectLocalInput(
+          hz.PlayerInputAction.LeftXAxis,
+          hz.ButtonIcon.None,
+          this,
+          {
+            customAssetIconId: this.props.cameraControlIcon?.id.toString(),
+            preferredButtonPlacement: hz.ButtonPlacement.Center
+          }
+        );
+      }
+
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftYAxis)) {
+        this.lookInputY = hz.PlayerControls.connectLocalInput(
+          hz.PlayerInputAction.LeftYAxis,
+          hz.ButtonIcon.None,
+          this,
+          {
+            customAssetIconId: this.props.cameraControlIcon?.id.toString(),
+            preferredButtonPlacement: hz.ButtonPlacement.Center
+          }
+        );
+      }
+
+      // Set up movement controls using right stick for camera position (if available)
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightXAxis)) {
+        this.movementInputX = hz.PlayerControls.connectLocalInput(
+          hz.PlayerInputAction.RightXAxis,
+          hz.ButtonIcon.None,
+          this,
+          {
+            customAssetIconId: this.props.movementControlIcon?.id.toString(),
+            preferredButtonPlacement: hz.ButtonPlacement.Default
+          }
+        );
+      }
+
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightYAxis)) {
+        this.movementInputY = hz.PlayerControls.connectLocalInput(
+          hz.PlayerInputAction.RightYAxis,
+          hz.ButtonIcon.None,
+          this,
+          {
+            customAssetIconId: this.props.movementControlIcon?.id.toString(),
+            preferredButtonPlacement: hz.ButtonPlacement.Default
+          }
+        );
+      }
+
+      // Set up exit control using right secondary button (F key on desktop)
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightSecondary)) {
+        this.exitInput = hz.PlayerControls.connectLocalInput(
+          hz.PlayerInputAction.RightSecondary,
+          hz.ButtonIcon.None,
+          this,
+          {
+            preferredButtonPlacement: hz.ButtonPlacement.Default
+          }
+        );
+
+        this.exitInput.registerCallback((action, pressed) => {
+          if (pressed) {
+            this.exitCameraMode();
+          }
+        });
+      }
+
+      // Start polling for input values
+      this.startInputPolling();
+
+      console.log('Camera input controls configured');
+      
+    } catch (error) {
+      console.error('Failed to set up camera input controls:', error);
+    }
+  }
+
+  // Start polling input values for smooth camera control
+  private startInputPolling(): void {
+    // Clear any existing polling interval
+    if (this.inputPollingInterval) {
+      this.async.clearInterval(this.inputPollingInterval);
+    }
+
+    // Use async.setInterval to continuously check input values
+    this.inputPollingInterval = this.async.setInterval(() => {
+      if (!this.isInCameraMode) {
+        return;
+      }
+
+      let lookX = 0, lookY = 0, moveX = 0, moveY = 0;
+
+      // Get axis values for camera control
+      if (this.lookInputX) {
+        lookX = this.lookInputX.axisValue.get();
+      }
+      if (this.lookInputY) {
+        lookY = this.lookInputY.axisValue.get();
+      }
+      if (this.movementInputX) {
+        moveX = this.movementInputX.axisValue.get();
+      }
+      if (this.movementInputY) {
+        moveY = this.movementInputY.axisValue.get();
+      }
+
+      // Apply input if there's any significant movement
+      if (Math.abs(lookX) > 0.1 || Math.abs(lookY) > 0.1) {
+        this.handleCameraLook(lookX, lookY);
+      }
+      if (Math.abs(moveX) > 0.1 || Math.abs(moveY) > 0.1) {
+        this.handleCameraMovement(moveX, moveY);
+      }
+
+    }, 16); // ~60 FPS polling
+  }
+
+  // Clean up input controls
+  private cleanupCameraInputControls(): void {
+    console.log('Cleaning up camera input controls...');
+    
+    // Stop input polling
+    if (this.inputPollingInterval) {
+      this.async.clearInterval(this.inputPollingInterval);
+      this.inputPollingInterval = null;
+    }
+    
+    // The input controls will be automatically disposed when the component is disposed
+    // Since we passed 'this' as the disposable object
+    this.lookInputX = undefined;
+    this.lookInputY = undefined;
+    this.movementInputX = undefined;
+    this.movementInputY = undefined;
+    this.exitInput = undefined;
+  }
+
+  // Handle camera look/rotation input
+  private handleCameraLook(deltaX: number, deltaY: number): void {
+    if (!this.isInCameraMode || !this.cameraPosition) {
+      return;
+    }
+
+    // Get current camera mode and update rotation based on input
+    const lookSensitivity = 2.0;
+    
+    try {
+      // For fixed camera mode, we can update the camera rotation
+      // This is a simplified approach - in a real implementation you might want to 
+      // track the current rotation and apply deltas
+      console.log('Camera look input:', deltaX, deltaY);
+      
+      // Update the camera with new orientation
+      // For now, we'll just log the input - proper rotation tracking would require
+      // maintaining state of current camera orientation
+      
+    } catch (error) {
+      console.error('Failed to handle camera look:', error);
+    }
+  }
+
+  // Handle camera movement input
+  private handleCameraMovement(deltaX: number, deltaY: number): void {
+    if (!this.isInCameraMode || !this.cameraPosition) {
+      return;
+    }
+
+    const movementSpeed = 0.2; // Reduced for smoother movement
+    
+    try {
+      // Update camera position based on input
+      // X-axis moves left/right, Y-axis moves forward/back
+      const newPosition = new hz.Vec3(
+        this.cameraPosition.x + (deltaX * movementSpeed),
+        this.cameraPosition.y, // Keep Y constant for now
+        this.cameraPosition.z + (deltaY * movementSpeed)
+      );
+      
+      this.cameraPosition = newPosition;
+      
+      // Update the camera position in real-time with minimal transition for smooth movement
+      LocalCamera.setCameraModeFixed({
+        position: newPosition,
+        duration: 0.05, // Very short transition for smooth movement
+        easing: Easing.Linear
+      });
+      
+      // Only log significant movements to avoid spam
+      if (Math.abs(deltaX) > 0.3 || Math.abs(deltaY) > 0.3) {
+        console.log('Camera moved to:', newPosition.toString());
+      }
+      
+    } catch (error) {
+      console.error('Failed to handle camera movement:', error);
+    }
   }
 
   private renderPhoneFrame(): ui.UINode {
@@ -278,39 +578,17 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: 'transparent',
-        justifyContent: 'center',
-        alignItems: 'center'
+        backgroundColor: 'transparent'
       },
       children: [
-        // Camera viewfinder (transparent to show world)
+        // Top controls bar
         ui.View({
           style: {
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'transparent', // Make transparent to see the world
-            position: 'relative'
-          },
-          children: [
-            // Camera overlay UI
-            ui.View({
-              style: {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 10
-              },
-              children: [
-                // Top controls bar
-                ui.View({
-                  style: {
-                    position: 'absolute',
-                    top: 20,
-                    left: 20,
-                    right: 20,
-                    flexDirection: 'row',
+            position: 'absolute',
+            top: 20,
+            left: 20,
+            right: 20,
+            flexDirection: 'row',
                     justifyContent: 'flex-end',
                     alignItems: 'center'
                   },
@@ -460,30 +738,127 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
                   ]
                 }),
 
-                // Camera mode text
+                // Camera mode text with control instructions
                 ui.View({
                   style: {
                     position: 'absolute',
                     bottom: 110,
                     left: 0,
                     right: 0,
+                    width: '100%',
                     alignItems: 'center'
                   },
                   children: [
                     ui.Text({
-                      text: 'POV Camera Mode - Touch to Look Around',
+                      text: 'Freeform Camera Mode',
                       style: {
                         color: 'rgba(255, 255, 255, 0.9)',
-                        fontSize: 16,
-                        fontWeight: '500',
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        marginBottom: 8
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Left Stick: Look Around | Right Stick: Move Camera | F: Exit',
+                      style: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        fontSize: 14,
+                        fontWeight: '400',
                         textAlign: 'center'
                       }
                     })
                   ]
-                })
-              ]
-            })
-          ]
+                }),
+
+                // Debug indicator to show viewport coverage (temporary - remove when working)
+                ui.View({
+                  style: {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: 4,
+                    height: '100%',
+                    backgroundColor: 'rgba(255, 0, 0, 0.8)', // Thick red line on left edge
+                    zIndex: 100
+                  }
+                }),
+                ui.View({
+                  style: {
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: 4,
+                    height: '100%',
+                    backgroundColor: 'rgba(255, 0, 0, 0.8)', // Thick red line on right edge
+                    zIndex: 100
+                  }
+                }),
+                ui.View({
+                  style: {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    backgroundColor: 'rgba(0, 255, 0, 0.8)', // Green line on top edge
+                    zIndex: 100
+                  }
+                }),
+                ui.View({
+                  style: {
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    backgroundColor: 'rgba(0, 255, 0, 0.8)' // Green line on bottom edge
+                  }
+                }),
+
+        // Debug indicator to show viewport coverage (temporary - remove when working)
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: 4,
+            height: '100%',
+            backgroundColor: 'rgba(255, 0, 0, 0.8)',
+            zIndex: 100
+          }
+        }),
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: 4,
+            height: '100%',
+            backgroundColor: 'rgba(255, 0, 0, 0.8)',
+            zIndex: 100
+          }
+        }),
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            backgroundColor: 'rgba(0, 255, 0, 0.8)',
+            zIndex: 100
+          }
+        }),
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            backgroundColor: 'rgba(0, 255, 0, 0.8)'
+          }
         })
       ]
     });
@@ -547,10 +922,6 @@ class CameraApp extends ui.UIComponent<typeof CameraApp> {
     
     // Store the tracking interval so we can clean it up
     this.recordingTracker = recordingTracker;
-  }
-
-  private async updateRecordingTimer(): Promise<void> {
-    // This method is no longer needed with setInterval approach
   }
 
   private stopRecording(): void {
