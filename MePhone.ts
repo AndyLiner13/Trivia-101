@@ -2567,24 +2567,55 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             height: 10,
             tintColor: '#3B82F6'
           }
-        }) : ui.Binding.derive([this.selectedRingtoneBinding], (selected) => {
-          return selected === ringtone.id ? 
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24270584229301990"))), // check icon
+        }) : ui.View({
+          style: {
+            width: 10,
+            height: 10
+          },
+          children: [
+            // Check icon (when selected)
+            ui.View({
               style: {
+                position: 'absolute',
                 width: 10,
                 height: 10,
-                tintColor: '#00c951'
-              }
-            }) :
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1131016642456733"))), // play icon
+                opacity: ui.Binding.derive([this.selectedRingtoneBinding], (selected) => 
+                  selected === ringtone.id ? 1 : 0
+                )
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24270584229301990"))), // check icon
+                  style: {
+                    width: 10,
+                    height: 10,
+                    tintColor: '#00c951'
+                  }
+                })
+              ]
+            }),
+            // Play icon (when not selected)
+            ui.View({
               style: {
+                position: 'absolute',
                 width: 10,
                 height: 10,
-                tintColor: '#9CA3AF'
-              }
-            });
+                opacity: ui.Binding.derive([this.selectedRingtoneBinding], (selected) => 
+                  selected === ringtone.id ? 0 : 1
+                )
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1131016642456733"))), // play icon
+                  style: {
+                    width: 10,
+                    height: 10,
+                    tintColor: '#9CA3AF'
+                  }
+                })
+              ]
+            })
+          ]
         })
       ]
     });
