@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { 
   Phone as PhoneIcon, 
   Calculator, 
-  Globe, 
+  CreditCard, 
   Settings, 
-  Mail, 
+  MessageCircle, 
   Users,
   Home,
   ArrowLeft
@@ -16,13 +16,13 @@ import { NotificationsProvider, useNotifications } from './shared/NotificationsC
 // Import app components
 import { PhoneApp } from './apps/PhoneApp';
 import { CalculatorApp } from './apps/CalculatorApp';
-import { BrowserApp } from './apps/BrowserApp';
+import { MePayApp } from './apps/MePayApp';
 import { SettingsApp } from './apps/SettingsApp';
-import { MailApp } from './apps/MailApp';
+// import { MailApp } from './apps/MailApp'; // Replaced with MessagesApp
 import { ContactsApp } from './apps/ContactsApp';
 import { MessagesApp } from './apps/MessagesApp';
 
-type AppType = 'home' | 'phone' | 'calculator' | 'browser' | 'settings' | 'mail' | 'contacts' | 'messages';
+type AppType = 'home' | 'phone' | 'calculator' | 'mepay' | 'settings' | 'messages' | 'contacts';
 
 interface AppNavigationData {
   contactId?: number;
@@ -36,10 +36,10 @@ type AppSelectFunction = (app: AppType, data?: AppNavigationData) => void;
 
 const apps = [
   { id: 'phone' as AppType, name: 'Phone', icon: PhoneIcon, color: 'bg-green-500' },
-  { id: 'calculator' as AppType, name: 'Calculator', icon: Calculator, color: 'bg-blue-500' },
+  { id: 'messages' as AppType, name: 'Messages', icon: MessageCircle, color: 'bg-blue-600' },
   { id: 'contacts' as AppType, name: 'Contacts', icon: Users, color: 'bg-orange-500' },
-  { id: 'mail' as AppType, name: 'MeMail', icon: Mail, color: 'bg-red-500' },
-  { id: 'browser' as AppType, name: 'Browser', icon: Globe, color: 'bg-purple-500' },
+  { id: 'mepay' as AppType, name: 'MePay', icon: CreditCard, color: 'bg-purple-500' },
+  { id: 'calculator' as AppType, name: 'Calculator', icon: Calculator, color: 'bg-blue-500' },
   { id: 'settings' as AppType, name: 'Settings', icon: Settings, color: 'bg-gray-500' },
 ];
 
@@ -133,16 +133,14 @@ export function Phone() {
         />;
       case 'calculator':
         return <CalculatorApp onNavigateToHome={navigateToHome} />;
-      case 'browser':
-        return <BrowserApp onNavigateToHome={navigateToHome} onNavigateBack={navigateBack} />;
+      case 'mepay':
+        return <MePayApp onNavigateToHome={navigateToHome} onNavigateBack={navigateBack} />;
       case 'settings':
         return <SettingsApp onNavigateToHome={navigateToHome} onNavigateBack={navigateBack} />;
-      case 'mail':
-        return <MailApp onNavigateToHome={navigateToHome} onNavigateBack={navigateBack} />;
-      case 'contacts':
-        return <ContactsApp onNavigateToHome={navigateToHome} onNavigateToApp={(app, data) => navigateToApp(app, { ...data, returnTo: 'contacts' })} onNavigateBack={navigateBack} />;
       case 'messages':
         return <MessagesApp navigationData={appNavigationData} onNavigateToHome={navigateToHome} onNavigateToApp={navigateToApp} />;
+      case 'contacts':
+        return <ContactsApp onNavigateToHome={navigateToHome} onNavigateToApp={(app, data) => navigateToApp(app, { ...data, returnTo: 'contacts' })} onNavigateBack={navigateBack} />;
       default:
         return <HomeScreen onAppSelect={(app) => navigateToApp(app)} />;
     }

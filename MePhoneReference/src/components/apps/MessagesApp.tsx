@@ -22,10 +22,10 @@ const conversations: Conversation[] = [
   {
     id: 1,
     name: 'Mom',
-    lastMessage: 'Do not forget dinner tonight!',
+    lastMessage: 'Don\'t forget dinner tonight!',
     timestamp: '2:30 PM',
     unread: 2,
-    avatar: '👩‍💼'
+    avatar: '👩‍🦳'
   },
   {
     id: 2,
@@ -43,28 +43,80 @@ const conversations: Conversation[] = [
     unread: 1,
     avatar: '👩‍🎨'
   },
+  {
+    id: 4,
+    name: 'David',
+    lastMessage: 'Project update attached',
+    timestamp: '11:20 AM',
+    unread: 0,
+    avatar: '👨‍💼'
+  },
+  {
+    id: 5,
+    name: 'Emma',
+    lastMessage: 'Coffee later?',
+    timestamp: '10:05 AM',
+    unread: 3,
+    avatar: '👩‍🏫'
+  },
+  {
+    id: 6,
+    name: 'Work Group',
+    lastMessage: 'Meeting moved to 3 PM',
+    timestamp: 'Yesterday',
+    unread: 0,
+    avatar: '👥'
+  },
+  {
+    id: 7,
+    name: 'Jake',
+    lastMessage: 'Happy birthday! 🎉',
+    timestamp: 'Yesterday',
+    unread: 1,
+    avatar: '👨‍🦱'
+  }
 ];
 
-const sampleMessages: Message[] = [
-  {
-    id: 1,
-    text: 'Hey! How are you doing?',
-    sender: 'contact',
-    timestamp: '2:28 PM'
-  },
-  {
-    id: 2,
-    text: 'I am good, thanks! How about you?',
-    sender: 'user',
-    timestamp: '2:29 PM'
-  },
-  {
-    id: 3,
-    text: 'Do not forget dinner tonight!',
-    sender: 'contact',
-    timestamp: '2:30 PM'
-  },
-];
+// Message threads for each conversation
+const messageThreads: Record<number, Message[]> = {
+  1: [ // Mom
+    { id: 1, text: 'Hi honey! How was your day?', sender: 'contact', timestamp: '2:25 PM' },
+    { id: 2, text: 'It was good! Just finished work', sender: 'user', timestamp: '2:26 PM' },
+    { id: 3, text: 'That\'s great! Don\'t forget we have dinner tonight at 7', sender: 'contact', timestamp: '2:28 PM' },
+    { id: 4, text: 'Don\'t forget dinner tonight!', sender: 'contact', timestamp: '2:30 PM' }
+  ],
+  2: [ // Alex
+    { id: 1, text: 'Hey, are you ready for tomorrow\'s presentation?', sender: 'contact', timestamp: '1:10 PM' },
+    { id: 2, text: 'Yes, just finished the slides', sender: 'user', timestamp: '1:12 PM' },
+    { id: 3, text: 'Awesome! See you at the meeting', sender: 'contact', timestamp: '1:15 PM' }
+  ],
+  3: [ // Sarah
+    { id: 1, text: 'Could you help me with the design review?', sender: 'contact', timestamp: '12:40 PM' },
+    { id: 2, text: 'Of course! I\'ll take a look now', sender: 'user', timestamp: '12:42 PM' },
+    { id: 3, text: 'Thanks for helping!', sender: 'contact', timestamp: '12:45 PM' }
+  ],
+  4: [ // David
+    { id: 1, text: 'The client feedback is ready', sender: 'contact', timestamp: '11:15 AM' },
+    { id: 2, text: 'Great, I\'ll review it this afternoon', sender: 'user', timestamp: '11:18 AM' },
+    { id: 3, text: 'Project update attached', sender: 'contact', timestamp: '11:20 AM' }
+  ],
+  5: [ // Emma
+    { id: 1, text: 'How\'s the new job going?', sender: 'contact', timestamp: '10:00 AM' },
+    { id: 2, text: 'Really well! Learning a lot', sender: 'user', timestamp: '10:02 AM' },
+    { id: 3, text: 'That\'s wonderful!', sender: 'contact', timestamp: '10:03 AM' },
+    { id: 4, text: 'Coffee later?', sender: 'contact', timestamp: '10:05 AM' }
+  ],
+  6: [ // Work Group
+    { id: 1, text: 'Team meeting scheduled for 2 PM today', sender: 'contact', timestamp: 'Yesterday' },
+    { id: 2, text: 'Can we move it to 3 PM? I have a client call', sender: 'user', timestamp: 'Yesterday' },
+    { id: 3, text: 'Meeting moved to 3 PM', sender: 'contact', timestamp: 'Yesterday' }
+  ],
+  7: [ // Jake
+    { id: 1, text: 'Hope you have an amazing day!', sender: 'contact', timestamp: 'Yesterday' },
+    { id: 2, text: 'Thank you so much! 😊', sender: 'user', timestamp: 'Yesterday' },
+    { id: 3, text: 'Happy birthday! 🎉', sender: 'contact', timestamp: 'Yesterday' }
+  ]
+};
 
 // Pre-written message templates organized by category
 const messageTemplates = [
@@ -142,12 +194,15 @@ interface MessagesAppProps {
 export function MessagesApp({ navigationData, onNavigateToHome, onNavigateToApp }: MessagesAppProps) {
   const [currentView, setCurrentView] = useState<'list' | 'chat'>('list');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>(sampleMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [selectedMessageTemplate, setSelectedMessageTemplate] = useState<string | null>(null);
 
   const openChat = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setCurrentView('chat');
+    // Load messages for this conversation
+    const conversationMessages = messageThreads[conversation.id] || [];
+    setMessages(conversationMessages);
   };
 
   // If we have contact data, open chat with that contact immediately
@@ -171,8 +226,6 @@ export function MessagesApp({ navigationData, onNavigateToHome, onNavigateToApp 
           avatar: navigationData.contactAvatar || '👤'
         };
         openChat(newConversation);
-        // Set empty messages for new conversation
-        setMessages([]);
       }
     }
   }, [navigationData]);

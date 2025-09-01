@@ -199,18 +199,19 @@ export function ContactsApp({ onNavigateToHome, onNavigateToApp, onNavigateBack 
               </button>
 
               <button 
-                onClick={() => {
-                  if (selectedContact.email) {
-                    window.location.href = `mailto:${selectedContact.email}`;
-                  }
-                }}
+                onClick={() => onNavigateToApp?.('messages', {
+                  contactId: selectedContact.id,
+                  contactName: selectedContact.name,
+                  contactPhone: selectedContact.phone,
+                  contactAvatar: selectedContact.avatar
+                })}
                 style={{
                   width: 'clamp(3.5rem, 12cqw, 4.5rem)',
                   height: 'clamp(3.5rem, 12cqw, 4.5rem)'
                 }}
                 className="bg-blue-500 rounded-xl flex items-center justify-center text-white hover:bg-blue-600 transition-colors"
               >
-                <Mail style={{ 
+                <MessageCircle style={{ 
                   width: 'clamp(1.5rem, 6cqw, 2rem)', 
                   height: 'clamp(1.5rem, 6cqw, 2rem)' 
                 }} />
