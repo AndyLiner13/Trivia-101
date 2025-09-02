@@ -283,9 +283,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Real contacts data from players in the world
   private async updateRealContacts(): Promise<void> {
-    // Throttle contacts updates to prevent spam (max once every 15 seconds)
+    // Throttle contacts updates to prevent spam (max once every 5 seconds for testing)
     const now = Date.now();
-    if (now - this.lastContactsUpdate < 15000) {
+    if (now - this.lastContactsUpdate < 5000) {
       console.log(`[Contacts] Throttled - last update was ${(now - this.lastContactsUpdate) / 1000} seconds ago`);
       return;
     }
@@ -305,10 +305,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     console.log(`[Contacts] Local player: ${localPlayer ? localPlayer.name.get() : 'null'}`);
     console.log(`[Contacts] Assigned player: ${this.assignedPlayer ? this.assignedPlayer.name.get() : 'null'}`);
     
-    // Filter out the local player and create contacts from other players
-    const otherPlayers = players.filter(player => player !== localPlayer);
-    console.log(`[Contacts] Other players (excluding local): ${otherPlayers.length}`);
+    // For contacts, we want to show all OTHER players (not the one using this phone)
+    // If there's an assigned player, exclude them. Otherwise exclude local player.
+    const playerToExclude = this.assignedPlayer || localPlayer;
+    const otherPlayers = players.filter(player => player !== playerToExclude);
     
+    console.log(`[Contacts] Player to exclude: ${playerToExclude ? playerToExclude.name.get() : 'null'}`);
+    console.log(`[Contacts] Other players (excluding phone owner): ${otherPlayers.length}`);
+    if (otherPlayers.length > 0) {
+      const otherPlayerNames = otherPlayers.map(player => player.name.get()).join(', ');
+      console.log(`[Contacts] Other player names: [${otherPlayerNames}]`);
+    }
     const contacts: Contact[] = [];
     
     for (let i = 0; i < otherPlayers.length; i++) {
@@ -328,31 +335,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       });
     }
     
-    // Add a test contact for debugging if no real contacts found
-    if (contacts.length === 0) {
-      console.log(`[Contacts] No other players found, adding test contact for debugging`);
-      contacts.push({
-        id: 999,
-        name: 'Test Contact',
-        phone: '(555) 123-4567',
-        avatar: '🧪',
-        company: 'Debug Test',
-        lastContact: 'Test Entry',
-        player: undefined // No real player for test contact
-      });
-    }
-    
     console.log(`[Contacts] Final contacts count: ${contacts.length}`);
     console.log(`[Contacts] Contacts list:`, contacts.map(c => c.name));
     
     // Set the binding with player-specific targeting if we have an assigned player
-    if (this.assignedPlayer) {
-      console.log(`[Contacts] Setting binding for assigned player: ${this.assignedPlayer.name.get()}`);
-      this.realContactsBinding.set(contacts, [this.assignedPlayer]);
-    } else {
-      console.log(`[Contacts] Setting binding globally (no assigned player)`);
-      this.realContactsBinding.set(contacts);
-    }
+    console.log(`[Contacts] Setting binding with ${contacts.length} contacts`);
+    console.log(`[Contacts] Contacts being set:`, contacts.map(c => ({ name: c.name, id: c.id })));
+    
+    // For now, always set globally to debug binding issues
+    this.realContactsBinding.set(contacts);
+    console.log(`[Contacts] Binding set complete.`);
   }
 
   // Settings app state - PLAYER SPECIFIC
@@ -1678,6 +1670,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private renderContactsApp(): ui.UINode {
+    console.log(`[Contacts UI] renderContactsApp() called - forcing contacts update`);
+    
+    // Force a contacts update when the app is opened (bypassing throttle)
+    this.lastContactsUpdate = 0;
+    this.updateRealContacts();
+    
     return ui.View({
       style: {
         width: '100%',
@@ -1990,6 +1988,34 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           showBackButton: false
         }),
         
+        // Debug refresh button
+        ui.Pressable({
+          style: {
+            backgroundColor: '#3B82F6',
+            marginHorizontal: 16,
+            marginTop: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 6
+          },
+          onPress: () => {
+            console.log(`[Contacts UI] Manual refresh requested`);
+            this.lastContactsUpdate = 0; // Reset throttle
+            this.updateRealContacts();
+          },
+          children: [
+            ui.Text({
+              text: 'Refresh Contacts',
+              style: {
+                color: '#FFFFFF',
+                fontSize: 12,
+                textAlign: 'center',
+                fontWeight: '500'
+              }
+            })
+          ]
+        }),
+        
         // Contacts List or No Contacts Message
         ui.View({
           style: {
@@ -1998,12 +2024,21 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             backgroundColor: '#FFFFFF'
           },
           children: [
-            // Show "No Contacts" message if no other players
+            // Show "No Contacts" message when no contacts
             ui.UINode.if(
               ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                console.log(`[Contacts UI] Checking contacts length: ${contacts.length}`);
-                console.log(`[Contacts UI] Contacts data:`, contacts);
-                return contacts.length === 0;
+                console.log(`[Contacts UI - No Contacts Check] Received binding data:`, contacts);
+                console.log(`[Contacts UI - No Contacts Check] Is array:`, Array.isArray(contacts));
+                console.log(`[Contacts UI - No Contacts Check] Length:`, contacts ? contacts.length : 'null/undefined');
+                
+                const safeContacts = Array.isArray(contacts) ? contacts : [];
+                console.log(`[Contacts UI - No Contacts Check] Safe contacts:`, safeContacts.map(c => c.name || 'unnamed'));
+                
+                // Filter out test contacts for the "no contacts" check
+                const realContacts = safeContacts.filter(c => c.id !== 999);
+                const hasNoRealContacts = realContacts.length === 0;
+                console.log(`[Contacts UI - No Contacts Check] Real contacts count: ${realContacts.length}, showing no contacts message: ${hasNoRealContacts}`);
+                return hasNoRealContacts;
               }),
               ui.View({
                 style: {
@@ -2034,12 +2069,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 ]
               })
             ),
-            
-            // Show contacts list if there are other players
+
+            // Show contacts list when contacts exist
             ui.UINode.if(
               ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                console.log(`[Contacts UI] Showing contacts list, length: ${contacts.length}`);
-                return contacts.length > 0;
+                const safeContacts = Array.isArray(contacts) ? contacts : [];
+                // Filter out test contacts for the display check
+                const realContacts = safeContacts.filter(c => c.id !== 999);
+                console.log(`[Contacts UI] Contacts list check - real contacts: ${realContacts.length}, total: ${safeContacts.length}`);
+                const shouldShow = realContacts.length > 0;
+                console.log(`[Contacts UI] Should show contacts list: ${shouldShow}`);
+                return shouldShow;
               }),
               ui.ScrollView({
                 style: {
@@ -2052,13 +2092,51 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                       width: '100%'
                     },
                     children: [
+                      // Dynamic contacts list - rendered via a simple text display for now
                       ui.Text({
-                        text: 'Loading contacts...',
+                        text: ui.Binding.derive([this.realContactsBinding], (contacts) => {
+                          try {
+                            const safeContacts = Array.isArray(contacts) ? contacts : [];
+                            console.log(`[Contacts UI] Building text display - total contacts: ${safeContacts.length}`);
+                            
+                            // Filter out test contacts for display
+                            const realContacts = safeContacts.filter(c => c.id !== 999);
+                            console.log(`[Contacts UI] Real contacts for display: ${realContacts.length}`);
+                            
+                            if (realContacts.length === 0) {
+                              return 'No real contacts found (test mode shows debug contact)';
+                            }
+                            
+                            console.log(`[Contacts UI] Building contacts text display for ${realContacts.length} real contacts`);
+                            
+                            // Create a simple text list of contacts
+                            let contactsText = `Found ${realContacts.length} contact${realContacts.length !== 1 ? 's' : ''}:\n\n`;
+                            
+                            const groupedContacts = this.groupContactsByLetter(realContacts);
+                            const sortedLetters = Object.keys(groupedContacts).sort();
+                            
+                            for (const letter of sortedLetters) {
+                              contactsText += `--- ${letter.toUpperCase()} ---\n`;
+                              const contactsInSection = groupedContacts[letter] || [];
+                              
+                              for (const contact of contactsInSection) {
+                                contactsText += `• ${contact.name}\n`;
+                              }
+                              contactsText += '\n';
+                            }
+                            
+                            console.log(`[Contacts UI] Generated contacts text:`, contactsText);
+                            return contactsText;
+                          } catch (error) {
+                            console.error(`[Contacts UI] Error building contacts text:`, error);
+                            return 'Error loading contacts';
+                          }
+                        }),
                         style: {
                           fontSize: 14,
-                          color: '#6B7280',
-                          textAlign: 'center',
-                          padding: 20
+                          color: '#1F2937',
+                          padding: 16,
+                          lineHeight: 20
                         }
                       })
                     ]
