@@ -1,6 +1,5 @@
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
-import { Social, AvatarImageType } from 'horizon/social';
 
 // Contact interface
 interface Contact {
@@ -13,7 +12,6 @@ interface Contact {
   address?: string;
   website?: string;
   lastContact?: string;
-  player?: hz.Player; // Add reference to actual player
 }
 
 // Message interfaces
@@ -89,18 +87,14 @@ interface MePayContact {
 class MePhone extends ui.UIComponent<typeof MePhone> {
   static propsDefinition = {};
 
-  // Player ownership tracking
-  private assignedPlayer: hz.Player | null = null;
-  private isInitialized = false;
-
-  // State management for current app - PLAYER SPECIFIC
+  // State management for current app
   private currentAppBinding = new ui.Binding('home');
   
-  // Phone app state - MINIMAL bindings like PhoneApp.ts - PLAYER SPECIFIC
+  // Phone app state - MINIMAL bindings like PhoneApp.ts
   private phoneNumberBinding = new ui.Binding('');
   private isDialingBinding = new ui.Binding(false);
   
-  // Calculator app state - PLAYER SPECIFIC
+  // Calculator app state
   private calcDisplayBinding = new ui.Binding('0');
   private calcPreviousValueBinding = new ui.Binding('');
   private calcOperationBinding = new ui.Binding('');
@@ -112,22 +106,21 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private calcOperation = '';
   private calcWaitingForOperand = false;
 
-  // Contacts app state - PLAYER SPECIFIC
+  // Contacts app state
   private selectedContactBinding = new ui.Binding<Contact | null>(null);
-  private realContactsBinding = new ui.Binding<Contact[]>([]);
   private favoritesBinding = new ui.Binding<Set<number>>(new Set());
 
   // Internal tracking for current messages
   private currentMessages: Message[] = [];
 
-  // Messages app state - PLAYER SPECIFIC
+  // Messages app state
   private selectedConversationBinding = new ui.Binding<Conversation | null>(null);
   private currentMessagesViewBinding = new ui.Binding<'list' | 'chat'>('list');
   private messagesBinding = new ui.Binding<Message[]>([]);
   private selectedMessageTemplateBinding = new ui.Binding<string | null>(null);
   private currentConversation: Conversation | null = null; // Track current conversation
 
-  // Bank app state - PLAYER SPECIFIC
+  // Bank app state
   private currentBankPageBinding = new ui.Binding<BankPage>('home');
   private selectedBillBinding = new ui.Binding<string>('');
   private paidBillsBinding = new ui.Binding<string[]>([]);
@@ -137,7 +130,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private selectedBill = '';
   private paidBills: string[] = [];
 
-  // MePay app state - PLAYER SPECIFIC
+  // MePay app state
   private currentMePayPageBinding = new ui.Binding<'home' | 'send' | 'request' | 'sent' | 'requested'>('home');
   private mePayBalanceBinding = new ui.Binding(12847.92);
   private selectedMePayContactBinding = new ui.Binding<MePayContact | null>(null);
@@ -172,14 +165,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isRequestContactDropdownOpen = false;
   private isSendNoteDropdownOpen = false;
   private isRequestNoteDropdownOpen = false;
-
-  // Settings app state - PLAYER SPECIFIC
-  private currentSettingsViewBinding = new ui.Binding<'main' | 'ringtones'>('main');
-  private notificationsEnabledBinding = new ui.Binding<boolean>(true);
-  private selectedRingtoneBinding = new ui.Binding<string>('classic-ring');
-
-  // Email binding for settings - PLAYER SPECIFIC
-  private selectedEmailBinding = new ui.Binding<string>('');
   
   private lastTransaction: {
     type: 'sent' | 'requested';
@@ -280,47 +265,69 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
   ];
 
-  // Real contacts data from players in the world
-  private async updateRealContacts(): Promise<void> {
-    const players = this.world.getPlayers();
-    const localPlayer = this.world.getLocalPlayer();
-    
-    // Debug logging to match PlayersLogger
-    console.log(`[Contacts] Total players found: ${players.length}`);
-    if (players.length > 0) {
-      const playerNames = players.map(player => player.name.get()).join(', ');
-      console.log(`[Contacts] All players: [${playerNames}]`);
+  // Sample contacts data
+  private contacts: Contact[] = [
+    {
+      id: 1,
+      name: 'Alice Johnson',
+      phone: '(555) 123-4567',
+      email: 'alice.johnson@email.com',
+      avatar: '👩',
+      company: 'Tech Corp',
+      address: '123 Main St, City',
+      lastContact: '2 days ago'
+    },
+    {
+      id: 2,
+      name: 'Bob Smith',
+      phone: '(555) 234-5678',
+      email: 'bob.smith@email.com',
+      avatar: '👨',
+      company: 'Design Studio',
+      lastContact: '1 week ago'
+    },
+    {
+      id: 3,
+      name: 'Carol Davis',
+      phone: '(555) 345-6789',
+      email: 'carol.davis@email.com',
+      avatar: '👩',
+      company: 'Art Gallery',
+      address: '456 Oak Ave, Town',
+      lastContact: '3 days ago'
+    },
+    {
+      id: 4,
+      name: 'David Wilson',
+      phone: '(555) 456-7890',
+      avatar: '👨',
+      company: 'Research Lab',
+      lastContact: '1 month ago'
+    },
+    {
+      id: 5,
+      name: 'Emma Brown',
+      phone: '(555) 567-8901',
+      email: 'emma.brown@email.com',
+      avatar: '👩',
+      company: 'University',
+      address: '789 Pine St, Village',
+      lastContact: '2 weeks ago'
+    },
+    {
+      id: 6,
+      name: 'Frank Miller',
+      phone: '(555) 678-9012',
+      avatar: '👨',
+      company: 'Restaurant',
+      lastContact: '5 days ago'
     }
-    console.log(`[Contacts] Local player: ${localPlayer ? localPlayer.name.get() : 'null'}`);
-    
-    // Filter out the local player and create contacts from other players
-    const otherPlayers = players.filter(player => player !== localPlayer);
-    console.log(`[Contacts] Other players (excluding local): ${otherPlayers.length}`);
-    
-    const contacts: Contact[] = [];
-    
-    for (let i = 0; i < otherPlayers.length; i++) {
-      const player = otherPlayers[i];
-      const playerName = player.name.get();
-      
-      console.log(`[Contacts] Adding contact: ${playerName}`);
-      
-      contacts.push({
-        id: i + 1,
-        name: playerName,
-        phone: `(555) ${String(i + 100).padStart(3, '0')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
-        avatar: '👤', // Placeholder, will be replaced with real avatar
-        company: 'Horizon Worlds',
-        lastContact: 'Online now',
-        player: player
-      });
-    }
-    
-    console.log(`[Contacts] Final contacts count: ${contacts.length}`);
-    this.realContactsBinding.set(contacts);
-  }
+  ];
 
-  // Settings app state - PLAYER SPECIFIC
+  // Settings app state
+  private currentSettingsViewBinding = new ui.Binding<'main' | 'ringtones'>('main');
+  private notificationsEnabledBinding = new ui.Binding<boolean>(true);
+  private selectedRingtoneBinding = new ui.Binding<string>('classic-ring');
   private notificationsEnabled = true; // Track the current state
 
   private ringtones: Ringtone[] = [
@@ -495,96 +502,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isMePayAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'mepay');
   private isDialerBinding = ui.Binding.derive([this.isDialingBinding], (isDialing) => !isDialing);
 
-  // Player ownership and initialization methods
-  public initializeForPlayer(player: hz.Player) {
-    if (this.isInitialized) {
-      console.log(`[MePhone] Already initialized for player ${this.assignedPlayer?.name.get()}`);
-      return;
-    }
-
-    this.assignedPlayer = player;
-    this.isInitialized = true;
-    
-    console.log(`[MePhone] Initializing phone for player: ${player.name.get()}`);
-    
-    // Initialize player-specific data
-    this.initializePlayerData();
-    
-    // Set up player-specific contacts
-    this.updateRealContacts();
-    
-    // Initialize all bindings with default values for this player
-    this.resetAllBindingsForPlayer();
-  }
-
-  public releasePlayer() {
-    if (!this.isInitialized || !this.assignedPlayer) {
-      console.log('[MePhone] No player to release');
-      return;
-    }
-
-    console.log(`[MePhone] Releasing phone from player: ${this.assignedPlayer.name.get()}`);
-    
-    // Clean up player-specific state
-    this.cleanupPlayerData();
-    
-    this.assignedPlayer = null;
-    this.isInitialized = false;
-  }
-
-  private initializePlayerData() {
-    if (!this.assignedPlayer) return;
-    
-    // Reset to home screen for this player
-    this.currentAppBinding.set('home', [this.assignedPlayer]);
-    
-    // Initialize calculator for this player
-    this.calcDisplay = '0';
-    this.calcPreviousValue = '';
-    this.calcOperation = '';
-    this.calcWaitingForOperand = false;
-    
-    console.log(`[MePhone] Initialized data for player: ${this.assignedPlayer.name.get()}`);
-  }
-
-  private cleanupPlayerData() {
-    if (!this.assignedPlayer) return;
-    
-    // Reset all bindings for this player to default values
-    this.resetAllBindingsForPlayer();
-    
-    console.log(`[MePhone] Cleaned up data for player: ${this.assignedPlayer.name.get()}`);
-  }
-
-  private resetAllBindingsForPlayer() {
-    if (!this.assignedPlayer) return;
-    
-    const player = this.assignedPlayer;
-    
-    // Reset all app states for this player
-    this.currentAppBinding.set('home', [player]);
-    this.phoneNumberBinding.set('', [player]);
-    this.isDialingBinding.set(false, [player]);
-    this.calcDisplayBinding.set('0', [player]);
-    this.calcPreviousValueBinding.set('', [player]);
-    this.calcOperationBinding.set('', [player]);
-    this.calcWaitingForOperandBinding.set(false, [player]);
-    this.selectedContactBinding.set(null, [player]);
-    this.selectedConversationBinding.set(null, [player]);
-    this.currentMessagesViewBinding.set('list', [player]);
-    this.messagesBinding.set([], [player]);
-    this.currentBankPageBinding.set('home', [player]);
-    this.currentMePayPageBinding.set('home', [player]);
-    this.currentSettingsViewBinding.set('main', [player]);
-    
-    console.log(`[MePhone] Reset all bindings for player: ${player.name.get()}`);
-  }
-
-  // Helper method to get the current player (for use in UI callbacks)
-  private getCurrentPlayer(): hz.Player | null {
-    return this.assignedPlayer;
-  }
-
   initializeUI(): ui.UINode {
     return ui.View({
       style: {
@@ -601,23 +518,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   start() {
     super.start();
-    
-    // Initialize real contacts from players in the world with a small delay
-    // to ensure all players are properly loaded
-    this.async.setTimeout(() => {
-      this.updateRealContacts();
-    }, 100);
-    
-    // Set up event listeners for player enter/exit
-    this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerEnterWorld, () => {
-      console.log('[Contacts] Player entered world event');
-      this.updateRealContacts();
-    });
-    
-    this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerExitWorld, () => {
-      console.log('[Contacts] Player exited world event');
-      this.updateRealContacts();
-    });
   }
 
   private renderPhoneFrame(): ui.UINode {
@@ -756,20 +656,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         flex: 1,
         height: '100%'
       },
-      onPress: (player: hz.Player) => {
-        // Use the assigned player for this phone instance
-        const targetPlayer = this.assignedPlayer || player;
-        
+      onPress: () => {
         if (appId === 'camera') {
           // Camera opens as overlay (handled by separate CameraOverlay.ts script)
           // For now, we'll just log that camera was pressed
           console.log('Camera app pressed - overlay should be handled by CameraOverlay.ts script');
         } else {
-          // Refresh contacts list when contacts app is opened
-          if (appId === 'contacts') {
-            this.updateRealContacts();
-          }
-          this.currentAppBinding.set(appId, [targetPlayer]);
+          this.currentAppBinding.set(appId);
         }
       },
       children: [
@@ -967,12 +860,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         this.createAppHeader({
           appName: 'Phone',
           onHomePress: () => {
-            if (this.assignedPlayer) {
-              this.currentAppBinding.set('home', [this.assignedPlayer]);
-              // Reset phone state
-              this.phoneNumberBinding.set('', [this.assignedPlayer]);
-              this.isDialingBinding.set(false, [this.assignedPlayer]);
-            }
+            this.currentAppBinding.set('home');
+            // Reset phone state
+            this.phoneNumberBinding.set('');
+            this.isDialingBinding.set(false);
           }
         }),
         
@@ -1233,11 +1124,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         this.createAppHeader({
           appName: 'Calculator',
           onHomePress: () => {
-            if (this.assignedPlayer) {
-              this.currentAppBinding.set('home', [this.assignedPlayer]);
-            }
+            this.currentAppBinding.set('home');
             // Reset calculator state
-            this.calcClear(this.assignedPlayer || undefined);
+            this.calcClear();
           }
         }),
         
@@ -1278,31 +1167,31 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           children: [
             // Row 1: C, ±, ⌫, ÷
             this.createCalculatorRow([
-              { label: 'C', type: 'function', action: () => this.calcClear(this.assignedPlayer || undefined), bg: '#d1d5dc' },
+              { label: 'C', type: 'function', action: () => this.calcClear(), bg: '#d1d5dc' },
               { label: '±', type: 'function', action: () => this.calcToggleSign(), bg: '#d1d5dc' },
               { label: '⌫', type: 'function', action: () => this.calcDeleteDigit(), bg: '#d1d5dc' },
-              { label: '÷', type: 'operation', action: () => this.calcInputOperation('÷', this.assignedPlayer || undefined), bg: '#F97316' }
+              { label: '÷', type: 'operation', action: () => this.calcInputOperation('÷'), bg: '#F97316' }
             ]),
             // Row 2: 7, 8, 9, ×
             this.createCalculatorRow([
-              { label: '7', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('7', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '8', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('8', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '9', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('9', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '×', type: 'operation', action: () => this.calcInputOperation('×', this.assignedPlayer || undefined), bg: '#F97316' }
+              { label: '7', type: 'number', action: () => this.calcInputNumber('7'), bg: '#FFFFFF' },
+              { label: '8', type: 'number', action: () => this.calcInputNumber('8'), bg: '#FFFFFF' },
+              { label: '9', type: 'number', action: () => this.calcInputNumber('9'), bg: '#FFFFFF' },
+              { label: '×', type: 'operation', action: () => this.calcInputOperation('×'), bg: '#F97316' }
             ]),
             // Row 3: 4, 5, 6, -
             this.createCalculatorRow([
-              { label: '4', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('4', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '5', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('5', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '6', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('6', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '-', type: 'operation', action: () => this.calcInputOperation('-', this.assignedPlayer || undefined), bg: '#F97316' }
+              { label: '4', type: 'number', action: () => this.calcInputNumber('4'), bg: '#FFFFFF' },
+              { label: '5', type: 'number', action: () => this.calcInputNumber('5'), bg: '#FFFFFF' },
+              { label: '6', type: 'number', action: () => this.calcInputNumber('6'), bg: '#FFFFFF' },
+              { label: '-', type: 'operation', action: () => this.calcInputOperation('-'), bg: '#F97316' }
             ]),
             // Row 4: 1, 2, 3, +
             this.createCalculatorRow([
-              { label: '1', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('1', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '2', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('2', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '3', type: 'number', action: () => this.assignedPlayer && this.calcInputNumber('3', this.assignedPlayer), bg: '#FFFFFF' },
-              { label: '+', type: 'operation', action: () => this.calcInputOperation('+', this.assignedPlayer || undefined), bg: '#F97316' }
+              { label: '1', type: 'number', action: () => this.calcInputNumber('1'), bg: '#FFFFFF' },
+              { label: '2', type: 'number', action: () => this.calcInputNumber('2'), bg: '#FFFFFF' },
+              { label: '3', type: 'number', action: () => this.calcInputNumber('3'), bg: '#FFFFFF' },
+              { label: '+', type: 'operation', action: () => this.calcInputOperation('+'), bg: '#F97316' }
             ]),
             // Row 5: 0 (wide), ., =
             ui.View({
@@ -1324,7 +1213,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
-                  onPress: (player: hz.Player) => this.calcInputNumber('0', this.assignedPlayer || player),
+                  onPress: () => this.calcInputNumber('0'),
                   children: [
                     ui.Text({
                       text: '0',
@@ -1347,7 +1236,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
-                  onPress: (player: hz.Player) => this.calcInputDecimal(this.assignedPlayer || player),
+                  onPress: () => this.calcInputDecimal(),
                   children: [
                     ui.Text({
                       text: '.',
@@ -1370,7 +1259,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
-                  onPress: (player: hz.Player) => this.calcPerformCalculation(this.assignedPlayer || player),
+                  onPress: () => this.calcPerformCalculation(),
                   children: [
                     ui.Text({
                       text: '=',
@@ -1435,21 +1324,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   // Calculator logic methods
-  private calcInputNumber(num: string, player: hz.Player): void {
+  private calcInputNumber(num: string): void {
     if (this.calcWaitingForOperand) {
       this.calcDisplay = num;
       this.calcWaitingForOperand = false;
     } else {
       this.calcDisplay = this.calcDisplay === '0' ? num : this.calcDisplay + num;
     }
-    this.calcDisplayBinding.set(this.calcDisplay, [player]);
-    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand, [player]);
+    this.calcDisplayBinding.set(this.calcDisplay);
+    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand);
   }
 
-  private calcInputOperation(nextOperation: string, player?: hz.Player): void {
-    const targetPlayer = player || this.assignedPlayer;
-    if (!targetPlayer) return;
-    
+  private calcInputOperation(nextOperation: string): void {
     const inputValue = parseFloat(this.calcDisplay);
 
     if (this.calcPreviousValue === '') {
@@ -1460,14 +1346,14 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       
       this.calcDisplay = String(newValue);
       this.calcPreviousValue = String(newValue);
-      this.calcDisplayBinding.set(this.calcDisplay, [targetPlayer]);
+      this.calcDisplayBinding.set(this.calcDisplay);
     }
 
     this.calcWaitingForOperand = true;
     this.calcOperation = nextOperation;
-    this.calcPreviousValueBinding.set(this.calcPreviousValue, [targetPlayer]);
-    this.calcOperationBinding.set(this.calcOperation, [targetPlayer]);
-    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand, [targetPlayer]);
+    this.calcPreviousValueBinding.set(this.calcPreviousValue);
+    this.calcOperationBinding.set(this.calcOperation);
+    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand);
   }
 
   private calcCalculate(firstOperand: number, secondOperand: number, operation: string): number {
@@ -1485,10 +1371,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
   }
 
-  private calcPerformCalculation(player?: hz.Player): void {
-    const targetPlayer = player || this.assignedPlayer;
-    if (!targetPlayer) return;
-    
+  private calcPerformCalculation(): void {
     if (this.calcPreviousValue && this.calcOperation) {
       const inputValue = parseFloat(this.calcDisplay);
       const currentValue = parseFloat(this.calcPreviousValue);
@@ -1499,26 +1382,23 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       this.calcOperation = '';
       this.calcWaitingForOperand = true;
       
-      this.calcDisplayBinding.set(this.calcDisplay, [targetPlayer]);
-      this.calcPreviousValueBinding.set(this.calcPreviousValue, [targetPlayer]);
-      this.calcOperationBinding.set(this.calcOperation, [targetPlayer]);
-      this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand, [targetPlayer]);
+      this.calcDisplayBinding.set(this.calcDisplay);
+      this.calcPreviousValueBinding.set(this.calcPreviousValue);
+      this.calcOperationBinding.set(this.calcOperation);
+      this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand);
     }
   }
 
-  private calcClear(player?: hz.Player): void {
-    const targetPlayer = player || this.assignedPlayer;
-    if (!targetPlayer) return;
-    
+  private calcClear(): void {
     this.calcDisplay = '0';
     this.calcPreviousValue = '';
     this.calcOperation = '';
     this.calcWaitingForOperand = false;
     
-    this.calcDisplayBinding.set(this.calcDisplay, [targetPlayer]);
-    this.calcPreviousValueBinding.set(this.calcPreviousValue, [targetPlayer]);
-    this.calcOperationBinding.set(this.calcOperation, [targetPlayer]);
-    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand, [targetPlayer]);
+    this.calcDisplayBinding.set(this.calcDisplay);
+    this.calcPreviousValueBinding.set(this.calcPreviousValue);
+    this.calcOperationBinding.set(this.calcOperation);
+    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand);
   }
 
   private calcClearEntry(): void {
@@ -1540,7 +1420,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
   }
 
-  private calcInputDecimal(player: hz.Player): void {
+  private calcInputDecimal(): void {
     if (this.calcWaitingForOperand) {
       this.calcDisplay = '0.';
       this.calcWaitingForOperand = false;
@@ -1548,8 +1428,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       this.calcDisplay = this.calcDisplay + '.';
     }
     
-    this.calcDisplayBinding.set(this.calcDisplay, [player]);
-    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand, [player]);
+    this.calcDisplayBinding.set(this.calcDisplay);
+    this.calcWaitingForOperandBinding.set(this.calcWaitingForOperand);
   }
 
   private calcDeleteDigit(): void {
@@ -1584,26 +1464,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private renderContactDetail(): ui.UINode {
-    // Create a binding for the detail avatar image
-    const detailAvatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
-    
-    // Set up reactive loading of avatar when contact changes
-    ui.Binding.derive([this.selectedContactBinding], (contact) => {
-      if (contact?.player) {
-        Social.getAvatarImageSource(contact.player, { 
-          type: AvatarImageType.HEADSHOT, 
-          highRes: true 
-        }).then(imageSource => {
-          detailAvatarImageBinding.set(imageSource);
-        }).catch(() => {
-          detailAvatarImageBinding.set(null);
-        });
-      } else {
-        detailAvatarImageBinding.set(null);
-      }
-      return contact;
-    });
-    
     return ui.View({
       style: {
         width: '100%',
@@ -1615,15 +1475,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         this.createAppHeader({
           appName: 'Contact',
           onHomePress: () => {
-            if (this.assignedPlayer) {
-              this.currentAppBinding.set('home', [this.assignedPlayer]);
-              this.selectedContactBinding.set(null, [this.assignedPlayer]);
-            }
+            this.currentAppBinding.set('home');
+            this.selectedContactBinding.set(null);
           },
           onBackPress: () => {
             this.selectedContactBinding.set(null);
-            // Refresh contacts when going back to contacts list
-            this.updateRealContacts();
           },
           showBackButton: true
         }),
@@ -1648,34 +1504,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 borderRadius: 15,
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginBottom: 12,
-                overflow: 'hidden'
+                marginBottom: 12
               },
               children: [
-                // Show real avatar image if available, otherwise show placeholder
-                ui.UINode.if(
-                  ui.Binding.derive([detailAvatarImageBinding], (image) => image !== null),
-                  ui.Image({
-                    source: ui.Binding.derive([detailAvatarImageBinding], (image) => image || new ui.ImageSource()),
-                    style: {
-                      width: 60,
-                      height: 60,
-                      borderRadius: 15
-                    }
-                  })
-                ),
-                ui.UINode.if(
-                  ui.Binding.derive([detailAvatarImageBinding], (image) => image === null),
-                  ui.Text({
-                    text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                      contact ? contact.avatar : ''
-                    ),
-                    style: {
-                      fontSize: 32,
-                      color: '#FFFFFF'
-                    }
-                  })
-                )
+                ui.Text({
+                  text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
+                    contact ? contact.avatar : ''
+                  ),
+                  style: {
+                    fontSize: 32
+                  }
+                })
               ]
             }),
             
@@ -1858,6 +1697,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private renderContactsList(): ui.UINode {
+    const groupedContacts = this.groupContactsByLetter(this.contacts);
+    const sortedLetters = Object.keys(groupedContacts).sort();
+    
     return ui.View({
       style: {
         width: '100%',
@@ -1875,7 +1717,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           showBackButton: false
         }),
         
-        // Contacts List or No Contacts Message
+        // Contacts List
         ui.View({
           style: {
             flex: 1,
@@ -1883,83 +1725,35 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             backgroundColor: '#FFFFFF'
           },
           children: [
-            // Show "No Contacts" message if no other players
-            ui.UINode.if(
-              ui.Binding.derive([this.realContactsBinding], (contacts) => contacts.length === 0),
-              ui.View({
-                style: {
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  paddingHorizontal: 32
-                },
-                children: [
-                  ui.Text({
-                    text: 'No Contacts',
-                    style: {
-                      fontSize: 18,
-                      fontWeight: '500',
-                      color: '#6B7280',
-                      textAlign: 'center',
-                      marginBottom: 8
-                    }
-                  }),
-                  ui.Text({
-                    text: 'No other players are currently in this world.',
-                    style: {
-                      fontSize: 14,
-                      color: '#9CA3AF',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              })
-            ),
-            
-            // Show contacts list if there are other players
-            ui.UINode.if(
-              ui.Binding.derive([this.realContactsBinding], (contacts) => contacts.length > 0),
-              ui.ScrollView({
-                style: {
-                  flex: 1
-                },
-                children: [
-                  ui.View({
-                    style: {
-                      paddingBottom: 20
-                    },
-                    children: [
-                      ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                        const groupedContacts = this.groupContactsByLetter(contacts);
-                        const sortedLetters = Object.keys(groupedContacts).sort();
+            // Scrollable contacts list
+            ui.ScrollView({
+              style: {
+                flex: 1
+              },
+              children: [
+                ui.View({
+                  style: {
+                    paddingBottom: 20
+                  },
+                  children: sortedLetters.map(letter => 
+                    ui.View({
+                      style: {
+                        width: '100%'
+                      },
+                      children: [
+                        // Section header
+                        this.createSectionHeader(letter),
                         
-                        return ui.View({
-                          style: {
-                            width: '100%'
-                          },
-                          children: sortedLetters.map(letter => 
-                            ui.View({
-                              style: {
-                                width: '100%'
-                              },
-                              children: [
-                                // Section header
-                                this.createSectionHeader(letter),
-                                
-                                // Contacts in this section
-                                ...groupedContacts[letter].map(contact =>
-                                  this.createContactListItem(contact)
-                                )
-                              ]
-                            })
-                          )
-                        });
-                      })
-                    ]
-                  })
-                ]
-              })
-            )
+                        // Contacts in this section
+                        ...groupedContacts[letter].map(contact =>
+                          this.createContactListItem(contact)
+                        )
+                      ]
+                    })
+                  )
+                })
+              ]
+            })
           ]
         })
       ]
@@ -1988,22 +1782,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private createContactListItem(contact: Contact): ui.UINode {
-    // Create a binding for the avatar image
-    const avatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
-    
-    // Load the real avatar image if player is available
-    if (contact.player) {
-      Social.getAvatarImageSource(contact.player, { 
-        type: AvatarImageType.HEADSHOT, 
-        highRes: false 
-      }).then(imageSource => {
-        avatarImageBinding.set(imageSource);
-      }).catch(() => {
-        // Fallback to default if loading fails
-        avatarImageBinding.set(null);
-      });
-    }
-    
     return ui.Pressable({
       style: {
         backgroundColor: '#FFFFFF',
@@ -2014,8 +1792,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         width: '100%'
       },
       onPress: () => {
-        // Refresh contacts to ensure we have the latest data
-        this.updateRealContacts();
         this.selectedContactBinding.set(contact);
       },
       children: [
@@ -2028,32 +1804,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             borderRadius: 8,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 8,
-            overflow: 'hidden'
+            marginRight: 8
           },
           children: [
-            // Show real avatar image if available, otherwise show placeholder
-            ui.UINode.if(
-              ui.Binding.derive([avatarImageBinding], (image) => image !== null),
-              ui.Image({
-                source: ui.Binding.derive([avatarImageBinding], (image) => image || new ui.ImageSource()),
-                style: {
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8
-                }
-              })
-            ),
-            ui.UINode.if(
-              ui.Binding.derive([avatarImageBinding], (image) => image === null),
-              ui.Text({
-                text: contact.avatar,
-                style: {
-                  fontSize: 16,
-                  color: '#FFFFFF'
-                }
-              })
-            )
+            ui.Text({
+              text: contact.avatar,
+              style: {
+                fontSize: 16,
+                color: '#FFFFFF'
+              }
+            })
           ]
         }),
         
