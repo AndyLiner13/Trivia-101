@@ -1933,26 +1933,24 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                         const groupedContacts = this.groupContactsByLetter(contacts);
                         const sortedLetters = Object.keys(groupedContacts).sort();
                         
+                        // Create a flat array of all UI elements
+                        const contactElements: any[] = [];
+                        
+                        for (const letter of sortedLetters) {
+                          // Add section header
+                          contactElements.push(this.createSectionHeader(letter));
+                          
+                          // Add contacts in this section
+                          for (const contact of groupedContacts[letter]) {
+                            contactElements.push(this.createContactListItem(contact));
+                          }
+                        }
+                        
                         return ui.View({
                           style: {
                             width: '100%'
                           },
-                          children: sortedLetters.map(letter => 
-                            ui.View({
-                              style: {
-                                width: '100%'
-                              },
-                              children: [
-                                // Section header
-                                this.createSectionHeader(letter),
-                                
-                                // Contacts in this section
-                                ...groupedContacts[letter].map(contact =>
-                                  this.createContactListItem(contact)
-                                )
-                              ]
-                            })
-                          )
+                          children: contactElements
                         });
                       })
                     ]
@@ -2187,7 +2185,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                   style: {
                     backgroundColor: '#FFFFFF'
                   },
-                  children: this.conversations.map(conversation => this.createConversationItem(conversation))
+                  children: [...this.conversations.map(conversation => this.createConversationItem(conversation))]
                 })
               ]
             })
@@ -2814,9 +2812,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                             style: {
                               backgroundColor: '#FFFFFF'
                             },
-                            children: this.ringtones
-                              .filter(r => r.category === category)
-                              .map(ringtone => this.createRingtoneItem(ringtone, false))
+                            children: [
+                              ...this.ringtones
+                                .filter(r => r.category === category)
+                                .map(ringtone => this.createRingtoneItem(ringtone, false))
+                            ]
                           })
                         ]
                       })
@@ -3248,7 +3248,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 ui.View({
-                  children: this.recentTransactions.slice(0, 8).map(transaction => this.createTransactionItem(transaction))
+                  children: [...this.recentTransactions.slice(0, 8).map(transaction => this.createTransactionItem(transaction))]
                 })
               ]
             })
