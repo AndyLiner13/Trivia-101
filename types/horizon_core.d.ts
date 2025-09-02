@@ -1921,10 +1921,12 @@ export declare type ParticleFXSetParametersOptions = {
 };
 /**
  * ParticleFXPlayOptions controls how the particle is played. Extends {@link ParticleFXPlayOptions} and {@link ParticleFXSetParametersOptions}.
+ * @param localOnly - Optional. Defaults to false. Whether to set the transform of the particle for just the local player. Will be overridden by any network updates to the entity.
  * @param position - Optional. Position to move to before emitting.
  * @param rotation - Optional. Rotation to rotate to before emitting.
  */
 export declare type ParticleFXSetParametersAndPlayOptions = ParticleFXPlayOptions & ParticleFXSetParametersOptions & {
+    localOnly?: boolean;
     position?: Vec3;
     rotation?: Quaternion;
 };

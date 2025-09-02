@@ -503,7 +503,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isDialerBinding = ui.Binding.derive([this.isDialingBinding], (isDialing) => !isDialing);
 
   initializeUI(): ui.UINode {
-    return this.renderPhoneFrame();
+    return ui.View({
+      style: {
+        width: "100%",
+        height: "100%",
+        position: 'relative'
+      },
+      children: [
+        // Main phone frame
+        this.renderPhoneFrame()
+      ]
+    });
   }
 
   start() {
@@ -613,7 +623,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts'), // Updated orange color
-                this.createAppIcon('MePay', '#10b981', BigInt("769107079414002"), 'mepay') // Updated to MePay with credit-card icon
+                this.createAppIcon('MePay', '#10b981', BigInt("769107079414002"), 'mepay') // Moved MePay to Camera's position
               ]
             }),
             
@@ -627,7 +637,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Calculator', '#2b7fff', BigInt("2175040452971461"), 'calculator'), // Updated blue color
+                this.createAppIcon('Calculator', '#F97316', BigInt("2175040452971461"), 'calculator'), // Calculator app with proper calculator icon
                 this.createAppIcon('Settings', '#6a7282', BigInt("1342398257464986"), 'settings') // Updated gray color
               ]
             })
@@ -647,7 +657,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         height: '100%'
       },
       onPress: () => {
-        this.currentAppBinding.set(appId);
+        if (appId === 'camera') {
+          // Camera opens as overlay (handled by separate CameraOverlay.ts script)
+          // For now, we'll just log that camera was pressed
+          console.log('Camera app pressed - overlay should be handled by CameraOverlay.ts script');
+        } else {
+          this.currentAppBinding.set(appId);
+        }
       },
       children: [
         // App icon background
