@@ -286,9 +286,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Throttle contacts updates to prevent spam (max once every 15 seconds)
     const now = Date.now();
     if (now - this.lastContactsUpdate < 15000) {
+      console.log(`[Contacts] Throttled - last update was ${(now - this.lastContactsUpdate) / 1000} seconds ago`);
       return;
     }
     this.lastContactsUpdate = now;
+
+    console.log(`[Contacts] Starting updateRealContacts for player: ${this.assignedPlayer?.name.get() || 'unassigned'}`);
 
     const players = this.world.getPlayers();
     const localPlayer = this.world.getLocalPlayer();
@@ -300,6 +303,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       console.log(`[Contacts] All players: [${playerNames}]`);
     }
     console.log(`[Contacts] Local player: ${localPlayer ? localPlayer.name.get() : 'null'}`);
+    console.log(`[Contacts] Assigned player: ${this.assignedPlayer ? this.assignedPlayer.name.get() : 'null'}`);
     
     // Filter out the local player and create contacts from other players
     const otherPlayers = players.filter(player => player !== localPlayer);
@@ -324,8 +328,31 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       });
     }
     
+    // Add a test contact for debugging if no real contacts found
+    if (contacts.length === 0) {
+      console.log(`[Contacts] No other players found, adding test contact for debugging`);
+      contacts.push({
+        id: 999,
+        name: 'Test Contact',
+        phone: '(555) 123-4567',
+        avatar: '🧪',
+        company: 'Debug Test',
+        lastContact: 'Test Entry',
+        player: undefined // No real player for test contact
+      });
+    }
+    
     console.log(`[Contacts] Final contacts count: ${contacts.length}`);
-    this.realContactsBinding.set(contacts);
+    console.log(`[Contacts] Contacts list:`, contacts.map(c => c.name));
+    
+    // Set the binding with player-specific targeting if we have an assigned player
+    if (this.assignedPlayer) {
+      console.log(`[Contacts] Setting binding for assigned player: ${this.assignedPlayer.name.get()}`);
+      this.realContactsBinding.set(contacts, [this.assignedPlayer]);
+    } else {
+      console.log(`[Contacts] Setting binding globally (no assigned player)`);
+      this.realContactsBinding.set(contacts);
+    }
   }
 
   // Settings app state - PLAYER SPECIFIC
@@ -792,6 +819,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         } else {
           // Refresh contacts list when contacts app is opened
           if (appId === 'contacts') {
+            console.log(`[MePhone] Contacts app opened, updating contacts list...`);
+            // Temporarily reset throttle for debugging
+            this.lastContactsUpdate = 0;
             this.updateRealContacts();
           }
           this.currentAppBinding.set(appId, [targetPlayer]);
@@ -1970,7 +2000,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           children: [
             // Show "No Contacts" message if no other players
             ui.UINode.if(
-              ui.Binding.derive([this.realContactsBinding], (contacts) => contacts.length === 0),
+              ui.Binding.derive([this.realContactsBinding], (contacts) => {
+                console.log(`[Contacts UI] Checking contacts length: ${contacts.length}`);
+                console.log(`[Contacts UI] Contacts data:`, contacts);
+                return contacts.length === 0;
+              }),
               ui.View({
                 style: {
                   flex: 1,
@@ -2003,7 +2037,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             
             // Show contacts list if there are other players
             ui.UINode.if(
-              ui.Binding.derive([this.realContactsBinding], (contacts) => contacts.length > 0),
+              ui.Binding.derive([this.realContactsBinding], (contacts) => {
+                console.log(`[Contacts UI] Showing contacts list, length: ${contacts.length}`);
+                return contacts.length > 0;
+              }),
               ui.ScrollView({
                 style: {
                   flex: 1
@@ -2011,27 +2048,20 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 children: [
                   ui.View({
                     style: {
-                      paddingBottom: 20
+                      paddingBottom: 20,
+                      width: '100%'
                     },
-                    children: ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                      const groupedContacts = this.groupContactsByLetter(contacts);
-                      const sortedLetters = Object.keys(groupedContacts).sort();
-                      
-                      // Create a flat array of all UI elements
-                      const contactElements: ui.UINode[] = [];
-                      
-                      for (const letter of sortedLetters) {
-                        // Add section header
-                        contactElements.push(this.createSectionHeader(letter));
-                        
-                        // Add contacts in this section
-                        for (const contact of groupedContacts[letter]) {
-                          contactElements.push(this.createContactListItem(contact));
+                    children: [
+                      ui.Text({
+                        text: 'Loading contacts...',
+                        style: {
+                          fontSize: 14,
+                          color: '#6B7280',
+                          textAlign: 'center',
+                          padding: 20
                         }
-                      }
-                      
-                      return contactElements;
-                    })
+                      })
+                    ]
                   })
                 ]
               })
@@ -2064,21 +2094,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private createContactListItem(contact: Contact): ui.UINode {
-    // Create a binding for the avatar image
-    const avatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
-    
-    // Load the real avatar image if player is available
-    if (contact.player) {
-      Social.getAvatarImageSource(contact.player, { 
-        type: AvatarImageType.HEADSHOT, 
-        highRes: false 
-      }).then(imageSource => {
-        avatarImageBinding.set(imageSource);
-      }).catch(() => {
-        // Fallback to default if loading fails
-        avatarImageBinding.set(null);
-      });
-    }
+    console.log(`[Contacts UI] Creating contact list item for: ${contact.name}`);
     
     return ui.Pressable({
       style: {
@@ -2095,7 +2111,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         this.selectedContactBinding.set(contact);
       },
       children: [
-        // Left content (avatar)
+        // Left content (avatar) - simplified static version
         ui.View({
           style: {
             width: 32,
@@ -2104,32 +2120,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             borderRadius: 8,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 8,
-            overflow: 'hidden'
+            marginRight: 8
           },
           children: [
-            // Show real avatar image if available, otherwise show placeholder
-            ui.UINode.if(
-              ui.Binding.derive([avatarImageBinding], (image) => image !== null),
-              ui.Image({
-                source: ui.Binding.derive([avatarImageBinding], (image) => image || new ui.ImageSource()),
-                style: {
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8
-                }
-              })
-            ),
-            ui.UINode.if(
-              ui.Binding.derive([avatarImageBinding], (image) => image === null),
-              ui.Text({
-                text: contact.avatar,
-                style: {
-                  fontSize: 16,
-                  color: '#FFFFFF'
-                }
-              })
-            )
+            ui.Text({
+              text: contact.avatar,
+              style: {
+                fontSize: 16,
+                color: '#FFFFFF'
+              }
+            })
           ]
         }),
         
@@ -2141,6 +2141,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             marginRight: 6
           },
           children: [
+            // Contact name
             ui.Text({
               text: contact.name,
               style: {
@@ -2150,51 +2151,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 marginBottom: contact.company || contact.phone ? 1 : 0
               }
             }),
-            ...(contact.company || contact.phone ? [
+            // Company/phone (conditional using UINode.if)
+            ui.UINode.if(
+              !!(contact.company || contact.phone),
               ui.Text({
-                text: contact.company || contact.phone,
+                text: contact.company || contact.phone || '',
                 style: {
                   fontSize: 10,
                   color: '#6B7280',
                   fontWeight: '400'
                 }
               })
-            ] : [])
-          ]
-        }),
-        
-        // Right content (favorite star)
-        ui.Pressable({
-          style: {
-            padding: 4,
-            borderRadius: 6
-          },
-          onPress: () => {
-            this.favoritesBinding.set(prev => {
-              const newFavorites = new Set(prev);
-              if (newFavorites.has(contact.id)) {
-                newFavorites.delete(contact.id);
-              } else {
-                newFavorites.add(contact.id);
-              }
-              return newFavorites;
-            });
-          },
-          children: [
-            ui.Image({
-              source: ui.Binding.derive([this.favoritesBinding], (favorites) => 
-                favorites.has(contact.id) 
-                  ? ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("24150527294650016")))
-                  : ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("787034810502774")))
-              ),
-              style: {
-                width: 14,
-                height: 14,
-                tintColor: ui.Binding.derive([this.favoritesBinding], (favorites) => 
-                  favorites.has(contact.id) ? '#F59E0B' : '#9CA3AF'
-                )
-              }
-            })
+            )
           ]
         })
       ]
@@ -5050,6 +5018,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 }
 
-hz.Component.register(MePhone);
-
-hz.Component.register(MePhone);
+// Safe component registration - prevents duplicate registration errors
+try {
+  hz.Component.register(MePhone);
+  console.log('[MePhone] Component registered successfully');
+} catch (error) {
+  console.warn('[MePhone] Component registration failed (may already be registered):', error);
+}

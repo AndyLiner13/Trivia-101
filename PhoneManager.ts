@@ -207,4 +207,10 @@ class PhoneManager extends hz.Component<{}> {
   }
 }
 
-hz.Component.register(PhoneManager);
+// Safe component registration - prevents duplicate registration errors
+try {
+  hz.Component.register(PhoneManager);
+  console.log('[PhoneManager] Component registered successfully');
+} catch (error) {
+  console.warn('[PhoneManager] Component registration failed (may already be registered):', error);
+}
