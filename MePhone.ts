@@ -92,6 +92,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   // Player ownership tracking
   private assignedPlayer: hz.Player | null = null;
   private isInitialized = false;
+  private lastContactsUpdate: number = 0;
 
   // State management for current app - PLAYER SPECIFIC
   private currentAppBinding = new ui.Binding('home');
@@ -282,6 +283,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Real contacts data from players in the world
   private async updateRealContacts(): Promise<void> {
+    // Throttle contacts updates to prevent spam (max once every 15 seconds)
+    const now = Date.now();
+    if (now - this.lastContactsUpdate < 15000) {
+      return;
+    }
+    this.lastContactsUpdate = now;
+
     const players = this.world.getPlayers();
     const localPlayer = this.world.getLocalPlayer();
     
@@ -585,6 +593,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     return this.assignedPlayer;
   }
 
+  // Check if a player can interact with this phone instance
+  private canPlayerInteract(player: hz.Player): boolean {
+    return this.assignedPlayer === player;
+  }
+
   initializeUI(): ui.UINode {
     return ui.View({
       style: {
@@ -757,6 +770,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         height: '100%'
       },
       onPress: (player: hz.Player) => {
+        // Auto-assign phone to player if not assigned yet
+        if (!this.assignedPlayer) {
+          console.log(`[MePhone] Auto-assigning phone to player ${player.name.get()}`);
+          this.initializeForPlayer(player);
+        }
+        
+        // Check if this player is authorized to use this phone
+        if (!this.canPlayerInteract(player)) {
+          console.log(`[MePhone] Unauthorized interaction attempt by ${player.name.get()} - phone is assigned to ${this.assignedPlayer?.name.get() || 'nobody'}`);
+          return;
+        }
+
         // Use the assigned player for this phone instance
         const targetPlayer = this.assignedPlayer || player;
         
@@ -1436,6 +1461,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Calculator logic methods
   private calcInputNumber(num: string, player: hz.Player): void {
+    // Auto-assign phone to player if not assigned yet
+    if (!this.assignedPlayer) {
+      console.log(`[MePhone] Auto-assigning phone to player ${player.name.get()} for calculator`);
+      this.initializeForPlayer(player);
+    }
+    
+    // Check if this player is authorized to use this phone
+    if (!this.canPlayerInteract(player)) {
+      console.log(`[MePhone] Unauthorized calculator interaction by ${player.name.get()}`);
+      return;
+    }
+
     if (this.calcWaitingForOperand) {
       this.calcDisplay = num;
       this.calcWaitingForOperand = false;
@@ -1449,6 +1486,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private calcInputOperation(nextOperation: string, player?: hz.Player): void {
     const targetPlayer = player || this.assignedPlayer;
     if (!targetPlayer) return;
+
+    // Auto-assign phone to player if not assigned yet
+    if (!this.assignedPlayer) {
+      console.log(`[MePhone] Auto-assigning phone to player ${targetPlayer.name.get()} for calculator`);
+      this.initializeForPlayer(targetPlayer);
+    }
+
+    // Check if this player is authorized to use this phone
+    if (!this.canPlayerInteract(targetPlayer)) {
+      console.log(`[MePhone] Unauthorized calculator interaction by ${targetPlayer.name.get()}`);
+      return;
+    }
     
     const inputValue = parseFloat(this.calcDisplay);
 
@@ -1488,6 +1537,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private calcPerformCalculation(player?: hz.Player): void {
     const targetPlayer = player || this.assignedPlayer;
     if (!targetPlayer) return;
+
+    // Auto-assign phone to player if not assigned yet
+    if (!this.assignedPlayer) {
+      console.log(`[MePhone] Auto-assigning phone to player ${targetPlayer.name.get()} for calculator`);
+      this.initializeForPlayer(targetPlayer);
+    }
+
+    // Check if this player is authorized to use this phone
+    if (!this.canPlayerInteract(targetPlayer)) {
+      console.log(`[MePhone] Unauthorized calculator interaction by ${targetPlayer.name.get()}`);
+      return;
+    }
     
     if (this.calcPreviousValue && this.calcOperation) {
       const inputValue = parseFloat(this.calcDisplay);
@@ -1509,6 +1570,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private calcClear(player?: hz.Player): void {
     const targetPlayer = player || this.assignedPlayer;
     if (!targetPlayer) return;
+
+    // Auto-assign phone to player if not assigned yet
+    if (!this.assignedPlayer) {
+      console.log(`[MePhone] Auto-assigning phone to player ${targetPlayer.name.get()} for calculator`);
+      this.initializeForPlayer(targetPlayer);
+    }
+
+    // Check if this player is authorized to use this phone
+    if (!this.canPlayerInteract(targetPlayer)) {
+      console.log(`[MePhone] Unauthorized calculator interaction by ${targetPlayer.name.get()}`);
+      return;
+    }
     
     this.calcDisplay = '0';
     this.calcPreviousValue = '';
@@ -1541,6 +1614,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private calcInputDecimal(player: hz.Player): void {
+    // Auto-assign phone to player if not assigned yet
+    if (!this.assignedPlayer) {
+      console.log(`[MePhone] Auto-assigning phone to player ${player.name.get()} for calculator`);
+      this.initializeForPlayer(player);
+    }
+    
+    // Check if this player is authorized to use this phone
+    if (!this.canPlayerInteract(player)) {
+      console.log(`[MePhone] Unauthorized calculator interaction by ${player.name.get()}`);
+      return;
+    }
+
     if (this.calcWaitingForOperand) {
       this.calcDisplay = '0.';
       this.calcWaitingForOperand = false;
@@ -1928,32 +2013,25 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     style: {
                       paddingBottom: 20
                     },
-                    children: [
-                      ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                        const groupedContacts = this.groupContactsByLetter(contacts);
-                        const sortedLetters = Object.keys(groupedContacts).sort();
+                    children: ui.Binding.derive([this.realContactsBinding], (contacts) => {
+                      const groupedContacts = this.groupContactsByLetter(contacts);
+                      const sortedLetters = Object.keys(groupedContacts).sort();
+                      
+                      // Create a flat array of all UI elements
+                      const contactElements: ui.UINode[] = [];
+                      
+                      for (const letter of sortedLetters) {
+                        // Add section header
+                        contactElements.push(this.createSectionHeader(letter));
                         
-                        // Create a flat array of all UI elements
-                        const contactElements: any[] = [];
-                        
-                        for (const letter of sortedLetters) {
-                          // Add section header
-                          contactElements.push(this.createSectionHeader(letter));
-                          
-                          // Add contacts in this section
-                          for (const contact of groupedContacts[letter]) {
-                            contactElements.push(this.createContactListItem(contact));
-                          }
+                        // Add contacts in this section
+                        for (const contact of groupedContacts[letter]) {
+                          contactElements.push(this.createContactListItem(contact));
                         }
-                        
-                        return ui.View({
-                          style: {
-                            width: '100%'
-                          },
-                          children: contactElements
-                        });
-                      })
-                    ]
+                      }
+                      
+                      return contactElements;
+                    })
                   })
                 ]
               })

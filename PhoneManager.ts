@@ -118,8 +118,12 @@ class PhoneManager extends hz.Component<{}> {
       
       console.log(`[PhoneManager] Assigned phone ${availablePhone.phoneEntity.name.get()} to player ${player.name.get()}`);
       
-      // Note: Custom events would need to be defined properly in Horizon Worlds
-      // For now, we'll use local events or property changes to communicate with the phone
+      // Note: Due to component access limitations, the MePhone component will auto-assign
+      // itself when the player first interacts with it. The PhoneManager just manages
+      // entity ownership and visibility.
+      
+      console.log(`[PhoneManager] Phone assigned to player ${player.name.get()} - MePhone will auto-initialize on first interaction`);
+      
       console.log(`[PhoneManager] Phone assigned to player ${player.name.get()}`);
     } else {
       console.warn(`[PhoneManager] No available phones for player ${player.name.get()}`);
