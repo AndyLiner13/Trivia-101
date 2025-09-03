@@ -64,10 +64,10 @@ const sampleQuestions: Question[] = [
 ];
 
 const answerShapes = [
-  { emoji: '🔴', color: '#EF4444', shape: 'Circle' },
-  { emoji: '🟦', color: '#3B82F6', shape: 'Square' },
-  { emoji: '🔺', color: '#EAB308', shape: 'Triangle' },
-  { emoji: '💎', color: '#22C55E', shape: 'Diamond' }
+  { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
+  { iconId: '1286736292915198', color: '#3B82F6', shape: 'Square' },
+  { iconId: '1290982519195562', color: '#EAB308', shape: 'Triangle' },
+  { iconId: '1286736292915198', color: '#22C55E', shape: 'Diamond', rotation: 45 }
 ];
 
 const quirkyWaitingMessages = [
@@ -625,6 +625,8 @@ export class TriviaApp {
     const currentQuestion = sampleQuestions[this.currentQuestionIndex];
     if (!currentQuestion) return ui.View({ children: [] });
 
+    const shape = answerShapes[answerIndex];
+
     return ui.Pressable({
       style: {
         flex: 1,
@@ -637,10 +639,13 @@ export class TriviaApp {
       },
       onPress: () => this.handleAnswerSelect(answerIndex, assignedPlayer),
       children: [
-        ui.Text({
-          text: answerShapes[answerIndex].emoji,
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
           style: {
-            fontSize: 32
+            width: 40,
+            height: 40,
+            tintColor: '#FFFFFF',
+            ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
           }
         })
       ]
