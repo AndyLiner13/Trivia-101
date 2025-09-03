@@ -2,6 +2,10 @@ import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
 
+// Network events for trivia
+const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
+const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }>('triviaResults');
+
 // Import all the app classes
 import { TriviaApp } from './TriviaApp';
 import { MeChatApp } from './MeChatApp';
@@ -31,7 +35,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isSettingsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'settings');
 
   // App instances - one per app type
-  private triviaApp = new TriviaApp(this.world, (event, data) => this.sendNetworkBroadcastEvent(event, data));
+  private triviaApp = new TriviaApp(this.world, (event, data) => this.sendNetworkBroadcastEvent(event, data), this.async);
   private messagesApp = new MeChatApp();
   private contactsApp: ContactsApp | null = null; // Initialize lazily
   private mePayApp = new MePayApp();
@@ -45,6 +49,34 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     super();
     console.log('[MePhone] Component initialized');
     this.setupTriviaSync();
+  }
+
+  async start() {
+    console.log('[MePhone] Starting and setting up network events');
+    this.setupNetworkEvents();
+  }
+
+  // Set up network event listeners for trivia events
+  private setupNetworkEvents(): void {
+    console.log('[MePhone] Setting up network event listeners');
+    
+    // Listen for trivia question show events
+    this.connectNetworkBroadcastEvent(triviaQuestionShowEvent, (eventData) => {
+      console.log('[MePhone] Received trivia question show event', eventData);
+      if (this.triviaApp) {
+        this.triviaApp.syncWithExternalTrivia(eventData);
+      }
+    });
+    
+    // Listen for trivia results events
+    this.connectNetworkBroadcastEvent(triviaResultsEvent, (eventData) => {
+      console.log('[MePhone] Received trivia results event', eventData);
+      if (this.triviaApp) {
+        this.triviaApp.onTriviaResults(eventData);
+      }
+    });
+    
+    console.log('[MePhone] Network event listeners configured');
   }
 
   // Ensure ContactsApp is initialized with world context

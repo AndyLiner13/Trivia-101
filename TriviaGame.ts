@@ -590,23 +590,62 @@ export class TriviaGame extends ui.UIComponent {
     
     // Call TriviaApp instances directly via world reference
     const triviaApps = (this.world as any).triviaApps;
+    console.log('***** TriviaGame: Looking for TriviaApps *****');
+    console.log('TriviaGame: World object ID:', this.world?.id || 'no-id');
+    console.log('TriviaGame: triviaApps found:', triviaApps);
+    console.log('TriviaGame: triviaApps is array:', Array.isArray(triviaApps));
+    
+    // Also check global registry as backup
+    const globalTriviaApps = (globalThis as any).triviaAppInstances || [];
+    console.log('TriviaGame: Global TriviaApps found:', globalTriviaApps.length);
+    
+    // Also send network event for TriviaApp instances that might be listening
+    // Use actual answer count in a way that won't reset our display
+    const actualAnswerCounts = [0, 0, 0, 0];
+    actualAnswerCounts[correctAnswerIndex] = this.playersAnswered.size;
+    
+    // Try world registry first
     if (triviaApps && Array.isArray(triviaApps)) {
-      console.log(`TriviaGame: Notifying ${triviaApps.length} TriviaApp instances of results`);
-      triviaApps.forEach((triviaApp: any) => {
+      console.log(`***** TriviaGame: Notifying ${triviaApps.length} TriviaApp instances of results (world registry) *****`);
+      triviaApps.forEach((triviaApp: any, index: number) => {
+        console.log(`TriviaGame: Calling onTriviaResults on TriviaApp ${index}:`, triviaApp);
         if (triviaApp && typeof triviaApp.onTriviaResults === 'function') {
           triviaApp.onTriviaResults({
             question: serializableQuestion,
             correctAnswerIndex: correctAnswerIndex,
-            answerCounts: [0, 0, 0, 0],
+            answerCounts: actualAnswerCounts,
             scores: {}
           });
+        } else {
+          console.log(`TriviaGame: TriviaApp ${index} doesn't have onTriviaResults method`);
         }
       });
+    } else if (globalTriviaApps.length > 0) {
+      // Fallback to global registry
+      console.log(`***** TriviaGame: Using global registry - Notifying ${globalTriviaApps.length} TriviaApp instances *****`);
+      globalTriviaApps.forEach((triviaApp: any, index: number) => {
+        console.log(`TriviaGame: Calling onTriviaResults on global TriviaApp ${index}:`, triviaApp);
+        if (triviaApp && typeof triviaApp.onTriviaResults === 'function') {
+          triviaApp.onTriviaResults({
+            question: serializableQuestion,
+            correctAnswerIndex: correctAnswerIndex,
+            answerCounts: actualAnswerCounts,
+            scores: {}
+          });
+        } else {
+          console.log(`TriviaGame: Global TriviaApp ${index} doesn't have onTriviaResults method`);
+        }
+      });
+    } else {
+      console.log('***** TriviaGame: No TriviaApps found in either world or global registry *****');
     }
     
-    // Don't send network event that would reset our answer count
-    // The network event with zero counts would trigger onQuestionResults and reset the count
-    // Since we're already showing results locally, we don't need to trigger the network event
+    this.sendNetworkBroadcastEvent(triviaResultsEvent, {
+      question: serializableQuestion,
+      correctAnswerIndex: correctAnswerIndex,
+      answerCounts: actualAnswerCounts,
+      scores: {}
+    });
     
     console.log("TriviaGame: Sent results to TriviaApps");
     
@@ -632,10 +671,7 @@ export class TriviaGame extends ui.UIComponent {
     const realLeaderboard = await this.generateRealLeaderboard();
     this.leaderboardDataBinding.set(realLeaderboard);
     
-    // After 5 seconds, auto-advance to next question
-    this.async.setTimeout(() => {
-      this.advanceToNextQuestion();
-    }, 5000);
+    // No auto-advance - wait for host to press next button
   }
 
   private async generateRealLeaderboard(): Promise<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>> {
@@ -673,15 +709,23 @@ export class TriviaGame extends ui.UIComponent {
     // Sort by score descending
     return leaderboard.sort((a, b) => b.score - a.score);
   }  private advanceToNextQuestion(): void {
-    console.log("TriviaGame: Auto-advancing to next question");
+    console.log("TriviaGame: Advancing to next question");
     
     // Hide leaderboard
     this.showLeaderboardBinding.set(false);
     
-    // Reset question state
-    this.questionBinding.set("Waiting for next question...");
+    // Clear any previous results state
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
     
-    // The next question will be triggered by the server via onQuestionStart
+    // Reset players answered tracking for new question
+    this.playersAnswered.clear();
+    
+    // Move to next question
+    this.currentQuestionIndex++;
+    
+    // Show the next question
+    this.showNextQuestion();
   }
 
   private detectHostPlayer(): void {
@@ -1555,6 +1599,37 @@ export class TriviaGame extends ui.UIComponent {
                               }
                             })
                           ]
+                        })
+                      ),
+                      
+                      // Next button (only visible to host)
+                      UINode.if(
+                        this.isLocalPlayerHostBinding,
+                        Pressable({
+                          onPress: () => {
+                            console.log("TriviaGame: Host pressed Next button");
+                            this.advanceToNextQuestion();
+                          },
+                          style: {
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 8,
+                            paddingVertical: 12,
+                            paddingHorizontal: 24,
+                            marginTop: 16,
+                            alignItems: 'center',
+                            shadowColor: 'black',
+                            shadowOpacity: 0.2,
+                            shadowRadius: 4,
+                            shadowOffset: [0, 2]
+                          },
+                          children: Text({
+                            text: 'Next Question',
+                            style: {
+                              fontSize: 16,
+                              fontWeight: 'bold',
+                              color: 'white'
+                            }
+                          })
                         })
                       )
                     ]
