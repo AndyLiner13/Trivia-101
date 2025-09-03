@@ -495,8 +495,17 @@ export class TriviaApp {
                     },
                     children: [
                       ui.Text({
-                        text: this.selectedAnswer !== null && sampleQuestions[this.currentQuestionIndex]?.answers[this.selectedAnswer]?.correct 
-                          ? '✅ Correct!' : '❌ Wrong!',
+                        text: ui.Binding.derive([
+                          this.selectedAnswerBinding,
+                          this.currentQuestionIndexBinding
+                        ], (selectedAnswer, questionIndex) => {
+                          if (selectedAnswer !== null) {
+                            const currentQuestion = sampleQuestions[questionIndex];
+                            const isCorrect = currentQuestion?.answers[selectedAnswer]?.correct;
+                            return isCorrect ? '✅ Correct!' : '❌ Wrong!';
+                          }
+                          return '❌ Wrong!';
+                        }),
                         style: {
                           fontSize: 20,
                           fontWeight: '700',
@@ -511,8 +520,22 @@ export class TriviaApp {
                         },
                         children: [
                           ui.Text({
-                            text: this.selectedAnswer !== null && sampleQuestions[this.currentQuestionIndex]?.answers[this.selectedAnswer]?.correct 
-                              ? '' : `Correct: ${sampleQuestions[this.currentQuestionIndex]?.answers.find(a => a.correct)?.text || ''}`,
+                            text: ui.Binding.derive([
+                              this.selectedAnswerBinding,
+                              this.currentQuestionIndexBinding
+                            ], (selectedAnswer, questionIndex) => {
+                              if (selectedAnswer !== null) {
+                                const currentQuestion = sampleQuestions[questionIndex];
+                                const isCorrect = currentQuestion?.answers[selectedAnswer]?.correct;
+                                if (isCorrect) {
+                                  return ''; // Don't show correct answer if they got it right
+                                } else {
+                                  const correctAnswer = currentQuestion?.answers.find(a => a.correct)?.text;
+                                  return `Correct: ${correctAnswer || ''}`;
+                                }
+                              }
+                              return '';
+                            }),
                             style: {
                               fontSize: 14,
                               color: '#FFFFFF',
