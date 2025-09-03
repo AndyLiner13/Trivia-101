@@ -1,9 +1,16 @@
 import * as ui from 'horizon/ui';
 import * as hz from 'horizon/core';
 
+// Network events for syncing with world trivia game
+const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
+const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }>('triviaResults');
+const triviaGameCompleteEvent = new hz.NetworkEvent<{ finalScores: Array<{ playerId: string, score: number }>, totalQuestions: number }>('triviaGameComplete');
+
 interface Question {
   id: number;
   question: string;
+  category?: string;
+  difficulty?: string;
   answers: {
     text: string;
     correct: boolean;
@@ -98,6 +105,15 @@ export class TriviaApp {
   private selectedAnswer: number | null = null;
   private showResult = false;
   private waitingMessage = '';
+  
+  // Questions array - can be updated externally
+  private questions: Question[] = sampleQuestions;
+  private useExternalQuestions = false;
+
+  // Auto-progression timer
+  private autoProgressTimer: ReturnType<typeof setTimeout> | null = null;
+  private countdownTimer: ReturnType<typeof setInterval> | null = null;
+  private secondsRemaining = 5;
 
   // Bindings for UI reactivity
   private currentQuestionIndexBinding = new ui.Binding(0);
@@ -106,8 +122,222 @@ export class TriviaApp {
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
   private waitingMessageBinding = new ui.Binding('');
+  private secondsRemainingBinding = new ui.Binding(5);
 
-  constructor() {}
+  constructor() {
+    // Load questions from the JSON data
+    this.loadQuestionsFromData();
+  }
+
+  private loadQuestionsFromData(): void {
+    try {
+      // Load questions from the trivia-questions.json data
+      // In a real implementation, this could be loaded via asset system
+      const questionsData = [
+        {
+          "id": 1,
+          "question": "What is the capital of France?",
+          "category": "Geography",
+          "difficulty": "easy",
+          "answers": [
+            { "text": "London", "correct": false },
+            { "text": "Berlin", "correct": false },
+            { "text": "Paris", "correct": true },
+            { "text": "Madrid", "correct": false }
+          ]
+        },
+        {
+          "id": 2,
+          "question": "Which planet is known as the Red Planet?",
+          "category": "Science",
+          "difficulty": "easy",
+          "answers": [
+            { "text": "Mars", "correct": true },
+            { "text": "Venus", "correct": false },
+            { "text": "Jupiter", "correct": false },
+            { "text": "Saturn", "correct": false }
+          ]
+        },
+        {
+          "id": 3,
+          "question": "What is 7 × 8?",
+          "category": "Mathematics",
+          "difficulty": "medium",
+          "answers": [
+            { "text": "54", "correct": false },
+            { "text": "56", "correct": true },
+            { "text": "64", "correct": false },
+            { "text": "48", "correct": false }
+          ]
+        },
+        {
+          "id": 4,
+          "question": "Who painted the Mona Lisa?",
+          "category": "Art",
+          "difficulty": "medium",
+          "answers": [
+            { "text": "Van Gogh", "correct": false },
+            { "text": "Picasso", "correct": false },
+            { "text": "Da Vinci", "correct": true },
+            { "text": "Monet", "correct": false }
+          ]
+        },
+        {
+          "id": 5,
+          "question": "What is the largest ocean on Earth?",
+          "category": "Geography",
+          "difficulty": "easy",
+          "answers": [
+            { "text": "Atlantic", "correct": false },
+            { "text": "Pacific", "correct": true },
+            { "text": "Indian", "correct": false },
+            { "text": "Arctic", "correct": false }
+          ]
+        },
+        {
+          "id": 6,
+          "question": "In which year did World War II end?",
+          "category": "History",
+          "difficulty": "medium",
+          "answers": [
+            { "text": "1944", "correct": false },
+            { "text": "1945", "correct": true },
+            { "text": "1946", "correct": false },
+            { "text": "1947", "correct": false }
+          ]
+        },
+        {
+          "id": 7,
+          "question": "What is the chemical symbol for gold?",
+          "category": "Science",
+          "difficulty": "hard",
+          "answers": [
+            { "text": "Go", "correct": false },
+            { "text": "Gd", "correct": false },
+            { "text": "Au", "correct": true },
+            { "text": "Ag", "correct": false }
+          ]
+        },
+        {
+          "id": 8,
+          "question": "Which Shakespeare play features the character Romeo?",
+          "category": "Literature",
+          "difficulty": "easy",
+          "answers": [
+            { "text": "Hamlet", "correct": false },
+            { "text": "Macbeth", "correct": false },
+            { "text": "Romeo and Juliet", "correct": true },
+            { "text": "Othello", "correct": false }
+          ]
+        },
+        {
+          "id": 9,
+          "question": "What is the speed of light in a vacuum?",
+          "category": "Physics",
+          "difficulty": "hard",
+          "answers": [
+            { "text": "299,792,458 m/s", "correct": true },
+            { "text": "300,000,000 m/s", "correct": false },
+            { "text": "186,000 m/s", "correct": false },
+            { "text": "150,000,000 m/s", "correct": false }
+          ]
+        },
+        {
+          "id": 10,
+          "question": "Which country has the most natural lakes?",
+          "category": "Geography",
+          "difficulty": "hard",
+          "answers": [
+            { "text": "United States", "correct": false },
+            { "text": "Russia", "correct": false },
+            { "text": "Canada", "correct": true },
+            { "text": "Finland", "correct": false }
+          ]
+        }
+      ];
+
+      if (Array.isArray(questionsData) && questionsData.length > 0) {
+        this.questions = questionsData.map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          category: q.category,
+          difficulty: q.difficulty,
+          answers: q.answers
+        }));
+        this.useExternalQuestions = true;
+        console.log(`TriviaApp: Loaded ${this.questions.length} questions from trivia data`);
+      }
+    } catch (error) {
+      console.log('TriviaApp: Could not load external questions, using sample questions:', error);
+      // Keep using sample questions as fallback
+    }
+  }
+
+  // Method to sync with external trivia system
+  public syncWithExternalTrivia(questionData: {
+    question: any;
+    questionIndex: number;
+    timeLimit?: number;
+  }): void {
+    console.log("TriviaApp: Syncing with external trivia question", questionData);
+    
+    // Clear any running timer since we're syncing with external system
+    this.clearAutoProgressTimer();
+    
+    // Convert external question to our format
+    const externalQuestion: Question = {
+      id: questionData.question.id || questionData.questionIndex + 1,
+      question: questionData.question.question,
+      category: questionData.question.category,
+      difficulty: questionData.question.difficulty,
+      answers: questionData.question.answers || []
+    };
+    
+    // Update our questions array and current index
+    this.questions[questionData.questionIndex] = externalQuestion;
+    this.currentQuestionIndex = questionData.questionIndex;
+    
+    // Reset state for new question
+    this.selectedAnswer = null;
+    this.showResult = false;
+    this.waitingMessage = '';
+    this.gameState = 'playing';
+    
+    // Update bindings
+    this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
+    this.selectedAnswerBinding.set(null);
+    this.showResultBinding.set(false);
+    this.waitingMessageBinding.set('');
+    this.gameStateBinding.set('playing');
+  }
+
+  // Method to show results from external trivia system
+  public showExternalResults(resultsData: {
+    question: any;
+    correctAnswerIndex: number;
+    answerCounts?: number[];
+    scores?: { [key: string]: number };
+  }): void {
+    console.log("TriviaApp: Showing external trivia results", resultsData);
+    
+    // Show results automatically
+    this.gameState = 'answered';
+    this.showResult = true;
+    this.gameStateBinding.set('answered');
+    this.showResultBinding.set(true);
+  }
+
+  // Method to end game from external trivia system
+  public endExternalGame(gameData: {
+    finalScores?: Array<{ playerId: string; score: number }>;
+    totalQuestions?: number;
+  }): void {
+    console.log("TriviaApp: External trivia game completed", gameData);
+    
+    // End the game
+    this.gameState = 'finished';
+    this.gameStateBinding.set('finished');
+  }
 
   // Standardized Header Component
   private createAppHeader(props: {
@@ -224,7 +454,7 @@ export class TriviaApp {
     this.waitingMessageBinding.set(randomMessage, assignedPlayer ? [assignedPlayer] : undefined);
     
     // Check if answer is correct
-    const currentQuestion = sampleQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.questions[this.currentQuestionIndex];
     if (currentQuestion.answers[answerIndex].correct) {
       this.score += 1;
       this.scoreBinding.set(this.score, assignedPlayer ? [assignedPlayer] : undefined);
@@ -235,9 +465,53 @@ export class TriviaApp {
     this.showResult = true;
     this.gameStateBinding.set('answered', assignedPlayer ? [assignedPlayer] : undefined);
     this.showResultBinding.set(true, assignedPlayer ? [assignedPlayer] : undefined);
+    
+    // Start auto-progression timer (5 seconds)
+    this.startAutoProgressTimer(assignedPlayer);
+  }
+
+  private startAutoProgressTimer(assignedPlayer?: hz.Player): void {
+    // Clear any existing timers
+    this.clearAutoProgressTimer();
+    
+    // Reset countdown
+    this.secondsRemaining = 5;
+    this.secondsRemainingBinding.set(this.secondsRemaining, assignedPlayer ? [assignedPlayer] : undefined);
+    
+    // Start countdown timer (updates every second)
+    this.countdownTimer = setInterval(() => {
+      this.secondsRemaining -= 1;
+      this.secondsRemainingBinding.set(this.secondsRemaining, assignedPlayer ? [assignedPlayer] : undefined);
+      
+      if (this.secondsRemaining <= 0) {
+        // Time's up, clear timers and progress
+        this.clearAutoProgressTimer();
+        this.checkGameEnd(assignedPlayer);
+      }
+    }, 1000);
+    
+    // Set main timer for 5 seconds (backup in case interval fails)
+    this.autoProgressTimer = setTimeout(() => {
+      this.clearAutoProgressTimer();
+      this.checkGameEnd(assignedPlayer);
+    }, 5000);
+  }
+
+  private clearAutoProgressTimer(): void {
+    if (this.autoProgressTimer) {
+      clearTimeout(this.autoProgressTimer);
+      this.autoProgressTimer = null;
+    }
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
+    }
   }
 
   private nextQuestion(assignedPlayer?: hz.Player): void {
+    // Clear any running timer
+    this.clearAutoProgressTimer();
+    
     this.currentQuestionIndex += 1;
     this.selectedAnswer = null;
     this.showResult = false;
@@ -253,7 +527,7 @@ export class TriviaApp {
   }
 
   private checkGameEnd(assignedPlayer?: hz.Player): void {
-    const isLastQuestion = this.currentQuestionIndex === sampleQuestions.length - 1;
+    const isLastQuestion = this.currentQuestionIndex === this.questions.length - 1;
     if (isLastQuestion) {
       this.gameState = 'finished';
       this.gameStateBinding.set('finished', assignedPlayer ? [assignedPlayer] : undefined);
@@ -263,12 +537,16 @@ export class TriviaApp {
   }
 
   private resetGame(assignedPlayer?: hz.Player): void {
+    // Clear any running timer
+    this.clearAutoProgressTimer();
+    
     this.currentQuestionIndex = 0;
     this.score = 0;
     this.gameState = 'playing';
     this.selectedAnswer = null;
     this.showResult = false;
     this.waitingMessage = '';
+    this.secondsRemaining = 5;
     
     // Update bindings
     this.currentQuestionIndexBinding.set(0, assignedPlayer ? [assignedPlayer] : undefined);
@@ -277,6 +555,7 @@ export class TriviaApp {
     this.selectedAnswerBinding.set(null, assignedPlayer ? [assignedPlayer] : undefined);
     this.showResultBinding.set(false, assignedPlayer ? [assignedPlayer] : undefined);
     this.waitingMessageBinding.set('', assignedPlayer ? [assignedPlayer] : undefined);
+    this.secondsRemainingBinding.set(5, assignedPlayer ? [assignedPlayer] : undefined);
   }
 
   private getBackgroundColor(): string {
@@ -293,7 +572,7 @@ export class TriviaApp {
       return answerShapes[answerIndex].color;
     }
     
-    const currentQuestion = sampleQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.questions[this.currentQuestionIndex];
     const isCorrect = currentQuestion.answers[answerIndex].correct;
     const isSelected = this.selectedAnswer === answerIndex;
     
@@ -363,7 +642,7 @@ export class TriviaApp {
               }
             }),
             ui.Text({
-              text: ui.Binding.derive([this.scoreBinding], (score) => `${score}/${sampleQuestions.length}`),
+              text: ui.Binding.derive([this.scoreBinding], (score) => `${score}/${this.questions.length}`),
               style: {
                 fontSize: 36,
                 fontWeight: '700',
@@ -374,9 +653,9 @@ export class TriviaApp {
             }),
             ui.Text({
               text: ui.Binding.derive([this.scoreBinding], (score) => {
-                if (score === sampleQuestions.length) return 'Perfect!';
-                if (score >= sampleQuestions.length * 0.8) return 'Excellent!';
-                if (score >= sampleQuestions.length * 0.6) return 'Good job!';
+                if (score === this.questions.length) return 'Perfect!';
+                if (score >= this.questions.length * 0.8) return 'Excellent!';
+                if (score >= this.questions.length * 0.6) return 'Good job!';
                 return 'Keep trying!';
               }),
               style: {
@@ -425,7 +704,7 @@ export class TriviaApp {
           this.selectedAnswerBinding
         ], (gameState, showResult, selectedAnswer) => {
           if (gameState === 'answered' && showResult && selectedAnswer !== null) {
-            const currentQuestion = sampleQuestions[this.currentQuestionIndex];
+            const currentQuestion = this.questions[this.currentQuestionIndex];
             const isCorrect = currentQuestion.answers[selectedAnswer].correct;
             return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
           }
@@ -500,7 +779,7 @@ export class TriviaApp {
                           this.currentQuestionIndexBinding
                         ], (selectedAnswer, questionIndex) => {
                           if (selectedAnswer !== null) {
-                            const currentQuestion = sampleQuestions[questionIndex];
+                            const currentQuestion = this.questions[questionIndex];
                             const isCorrect = currentQuestion?.answers[selectedAnswer]?.correct;
                             return isCorrect ? '✅ Correct!' : '❌ Wrong!';
                           }
@@ -525,7 +804,7 @@ export class TriviaApp {
                               this.currentQuestionIndexBinding
                             ], (selectedAnswer, questionIndex) => {
                               if (selectedAnswer !== null) {
-                                const currentQuestion = sampleQuestions[questionIndex];
+                                const currentQuestion = this.questions[questionIndex];
                                 const isCorrect = currentQuestion?.answers[selectedAnswer]?.correct;
                                 if (isCorrect) {
                                   return ''; // Don't show correct answer if they got it right
@@ -543,25 +822,17 @@ export class TriviaApp {
                               opacity: 0.9
                             }
                           }),
-                          ui.Pressable({
+                          ui.Text({
+                            text: ui.Binding.derive([this.secondsRemainingBinding], (seconds) => 
+                              seconds > 0 ? `Next question in ${seconds} second${seconds !== 1 ? 's' : ''}...` : 'Loading next question...'
+                            ),
                             style: {
-                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                              borderRadius: 8,
-                              paddingHorizontal: 16,
-                              paddingVertical: 8,
-                              marginTop: 16
-                            },
-                            onPress: () => this.checkGameEnd(assignedPlayer),
-                            children: [
-                              ui.Text({
-                                text: this.currentQuestionIndex === sampleQuestions.length - 1 ? 'Finish' : 'Next Question',
-                                style: {
-                                  fontSize: 14,
-                                  fontWeight: '600',
-                                  color: '#FFFFFF'
-                                }
-                              })
-                            ]
+                              fontSize: 12,
+                              color: '#FFFFFF',
+                              textAlign: 'center',
+                              opacity: 0.7,
+                              marginTop: 12
+                            }
                           })
                         ]
                       })
@@ -623,7 +894,7 @@ export class TriviaApp {
           children: [
             ui.Text({
               text: ui.Binding.derive([this.currentQuestionIndexBinding], (index) => 
-                `Question ${index + 1} of ${sampleQuestions.length}`
+                `Question ${index + 1} of ${this.questions.length}`
               ),
               style: {
                 fontSize: 12,
@@ -645,7 +916,7 @@ export class TriviaApp {
   }
 
   private createAnswerButton(answerIndex: number, assignedPlayer?: hz.Player): ui.UINode {
-    const currentQuestion = sampleQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.questions[this.currentQuestionIndex];
     if (!currentQuestion) return ui.View({ children: [] });
 
     const shape = answerShapes[answerIndex];
