@@ -783,41 +783,6 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
-  private handleAnswerPress(answerIndex: number): void {
-    if (!this.currentQuestion || this.hasLocalPlayerAnswered) {
-      return; // Can't answer if no question or already answered
-    }
-    
-    const player = this.world.getLocalPlayer();
-    if (!player) return;
-    
-    // Mark that local player has answered
-    this.hasLocalPlayerAnswered = true;
-    this.playersAnswered.add(player.id.toString());
-    
-    // Update answer count immediately
-    this.answerCountBinding.set(this.playersAnswered.size.toString());
-    
-    // Send answer to the world trivia system
-    this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
-      playerId: player.id.toString(),
-      answerIndex: answerIndex,
-      responseTime: this.props.questionTimeLimit - this.timeRemaining
-    });
-    
-    console.log(`TriviaGame: Player ${player.id} answered ${answerIndex}`);
-    
-    // Check if we need to show waiting screen based on number of players
-    if (this.playersInWorld.size === 1) {
-      // Single player - results will come immediately from server
-      console.log("TriviaGame: Single player mode, waiting for immediate results");
-    } else {
-      // Multiplayer - show waiting screen until all players answer
-      this.showWaitingBinding.set(true);
-      console.log(`TriviaGame: Multiplayer mode (${this.playersInWorld.size} players), showing waiting screen`);
-    }
-  }
-
   initializeUI() {
     return View({
       style: {
@@ -1541,8 +1506,7 @@ export class TriviaGame extends ui.UIComponent {
   private createAnswerButton(index: number, color: string, iconTextureId: string) {
     const textureAsset = new hz.TextureAsset(BigInt(iconTextureId));
     
-    return Pressable({
-      onPress: () => this.handleAnswerPress(index),
+    return View({
       style: {
         width: '100%',
         height: '100%',

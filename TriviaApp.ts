@@ -516,7 +516,7 @@ export class TriviaApp {
     console.log(`TriviaApp: Player ${playerId} answered ${answerIndex} in ${responseTime}ms`);
     
     // Show waiting for other players message
-    const waitingMessage = "Waiting for other players...";
+    const waitingMessage = "Waiting...";
     this.waitingMessage = waitingMessage;
     
     // Update bindings to show waiting state
@@ -805,18 +805,31 @@ export class TriviaApp {
                 style: {
                   flex: 1,
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  paddingHorizontal: 16
                 },
                 children: [
-                  ui.Text({
-                    text: this.waitingMessageBinding,
+                  // Container for better visual grouping
+                  ui.View({
                     style: {
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: '#FFFFFF',
-                      textAlign: 'center',
-                      lineHeight: 1.4
-                    }
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 20,
+                      paddingHorizontal: 16,
+                      paddingVertical: 24,
+                      alignItems: 'center',
+                      width: '85%',
+                      maxWidth: 200
+                    },
+                    children: [
+                      // Loading animation placeholder (using emoji as visual element)
+                      ui.Text({
+                        text: '⏳',
+                        style: {
+                          fontSize: 32,
+                          textAlign: 'center'
+                        }
+                      })
+                    ]
                   })
                 ]
               })
