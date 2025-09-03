@@ -13,7 +13,6 @@ import { ContactsApp } from './ContactsApp';
 import { MePayApp } from './MePayApp';
 import { CalculatorApp } from './CalculatorApp';
 import { SettingsApp } from './SettingsApp';
-import { TriviaSync } from './TriviaSync';
 
 class MePhone extends ui.UIComponent<typeof MePhone> {
   static propsDefinition = {};
@@ -41,14 +40,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private mePayApp = new MePayApp();
   private calculatorApp = new CalculatorApp();
   private settingsApp = new SettingsApp();
-  
-  // Trivia sync component reference
-  private triviaSyncComponent: TriviaSync | null = null;
 
   constructor() {
     super();
     console.log('[MePhone] Component initialized');
-    this.setupTriviaSync();
   }
 
   async start() {
@@ -85,13 +80,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       this.contactsApp = new ContactsApp(this.world);
     }
     return this.contactsApp;
-  }
-
-  // Setup trivia sync integration
-  private setupTriviaSync(): void {
-    console.log('[MePhone] Trivia app initialized with extended question set and sync capabilities');
-    // The TriviaApp now loads questions from the trivia-questions.json data
-    // and has methods for external sync if needed
   }
 
   initializeUI() {
