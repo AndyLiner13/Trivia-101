@@ -54,6 +54,9 @@ export class ContactsApp {
   private playersCache = new Map<number, hz.Player>();
   private lastContactsUpdate: number = 0;
 
+  // Grouped contacts binding for alphabetical organization
+  private groupedContactsBinding = new ui.Binding<{letter: string, contacts: Contact[]}[]>([]);
+
   constructor(private world: hz.World) {}
 
   // Standardized Header Component
@@ -230,7 +233,35 @@ export class ContactsApp {
     
     // For now, always set globally to debug binding issues
     this.realContactsBinding.set(contacts);
+    
+    // Also update the grouped contacts binding
+    this.updateGroupedContacts(contacts);
+    
     console.log(`[Contacts] Binding set complete.`);
+  }
+
+  // Helper method to organize contacts alphabetically
+  private updateGroupedContacts(contacts: Contact[]): void {
+    // Filter out test contacts and sort alphabetically
+    const realContacts = contacts.filter(c => c.id !== 999);
+    realContacts.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Group by first letter
+    const grouped = new Map<string, Contact[]>();
+    realContacts.forEach(contact => {
+      const firstLetter = contact.name.charAt(0).toUpperCase();
+      if (!grouped.has(firstLetter)) {
+        grouped.set(firstLetter, []);
+      }
+      grouped.get(firstLetter)!.push(contact);
+    });
+    
+    // Convert to array and sort by letter
+    const groupedArray = Array.from(grouped.entries())
+      .map(([letter, contacts]) => ({ letter, contacts }))
+      .sort((a, b) => a.letter.localeCompare(b.letter));
+    
+    this.groupedContactsBinding.set(groupedArray);
   }
 
   render(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
@@ -589,7 +620,6 @@ export class ContactsApp {
         ui.View({
           style: {
             flex: 1,
-            marginTop: 36,
             backgroundColor: '#FFFFFF'
           },
           children: [
@@ -641,13 +671,9 @@ export class ContactsApp {
 
             // Show contacts list when contacts exist
             ui.UINode.if(
-              ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                const safeContacts = Array.isArray(contacts) ? contacts : [];
-                // Filter out test contacts for the display check
-                const testContacts = safeContacts.filter(c => c.id === 999);
-                console.log(`[Contacts UI] Contacts list check - real contacts: ${safeContacts.length - testContacts.length}, total: ${safeContacts.length}`);
-                const shouldShow = safeContacts.length > 0 && safeContacts.length > testContacts.length;
-                console.log(`[Contacts UI] Should show contacts list: ${shouldShow}`);
+              ui.Binding.derive([this.groupedContactsBinding], (groupedContacts) => {
+                const shouldShow = Array.isArray(groupedContacts) && groupedContacts.length > 0;
+                console.log(`[Contacts UI] Contacts list check - grouped contacts: ${groupedContacts?.length || 0}, should show: ${shouldShow}`);
                 return shouldShow;
               }),
               ui.ScrollView({
@@ -661,10 +687,10 @@ export class ContactsApp {
                       width: '100%'
                     },
                     children: [
-                      // Dynamic contacts list with proper UI
-                      ui.DynamicList<Contact>({
-                        data: this.realContactsBinding,
-                        renderItem: (contact: Contact) => this.createContactListItem(contact)
+                      // Alphabetically organized contacts list
+                      ui.DynamicList<{letter: string, contacts: Contact[]}>({
+                        data: this.groupedContactsBinding,
+                        renderItem: (group: {letter: string, contacts: Contact[]}) => this.createContactGroup(group)
                       })
                     ]
                   })
@@ -673,6 +699,41 @@ export class ContactsApp {
             )
           ]
         })
+      ]
+    });
+  }
+
+  // Create a contact group with letter header and contacts
+  private createContactGroup(group: {letter: string, contacts: Contact[]}): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%'
+      },
+      children: [
+        // Section header with letter
+        ui.View({
+          style: {
+            backgroundColor: '#F3F4F6',
+            paddingHorizontal: 16,
+            paddingVertical: 4,
+            borderTopWidth: 1,
+            borderBottomWidth: 1,
+            borderColor: '#E5E7EB'
+          },
+          children: [
+            ui.Text({
+              text: group.letter,
+              style: {
+                fontSize: 12,
+                fontWeight: '600',
+                color: '#374151',
+                textAlign: 'left'
+              }
+            })
+          ]
+        }),
+        // Contacts in this group
+        ...group.contacts.map(contact => this.createContactListItem(contact))
       ]
     });
   }
