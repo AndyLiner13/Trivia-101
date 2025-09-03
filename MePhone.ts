@@ -167,7 +167,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 this.createAppIcon('MePay', '#10b981', BigInt("769107079414002"), 'mepay'),
-                this.createAppIcon('Trivia', '#7C3AED', BigInt("24322726084045822"), 'trivia')
+                this.createAppIcon('Trivia', '#7C3AED', BigInt("1806321090277222"), 'trivia')
               ]
             }),
             
