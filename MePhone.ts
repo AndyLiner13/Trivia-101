@@ -3,7 +3,7 @@ import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
 
 // Import all the app classes
-import { PhoneApp } from './PhoneApp';
+import { TriviaApp } from './TriviaApp';
 import { MeChatApp } from './MeChatApp';
 import { ContactsApp } from './ContactsApp';
 import { MePayApp } from './MePayApp';
@@ -22,7 +22,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Derived bindings for conditional rendering
   private isHomeBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'home');
-  private isPhoneAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'phone');
+  private isTriviaAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'trivia');
   private isMessagesAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'messages');
   private isContactsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'contacts');
   private isMePayAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'mepay');
@@ -30,7 +30,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isSettingsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'settings');
 
   // App instances - one per app type
-  private phoneApp = new PhoneApp();
+  private triviaApp = new TriviaApp();
   private messagesApp = new MeChatApp();
   private contactsApp: ContactsApp | null = null; // Initialize lazily
   private mePayApp = new MePayApp();
@@ -167,7 +167,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               },
               children: [
                 this.createAppIcon('MePay', '#10b981', BigInt("769107079414002"), 'mepay'),
-                this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone')
+                this.createAppIcon('Trivia', '#7C3AED', BigInt("24322726084045822"), 'trivia')
               ]
             }),
             
@@ -296,7 +296,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               children: [
                 // Dynamic content based on current app using conditional rendering
                 ui.UINode.if(this.isHomeBinding, this.createHomeScreen()),
-                ui.UINode.if(this.isPhoneAppBinding, this.phoneApp.render(() => this.navigateHome(), this.assignedPlayer ?? undefined)),
+                ui.UINode.if(this.isTriviaAppBinding, this.triviaApp.render(() => this.navigateHome(), this.assignedPlayer ?? undefined)),
                 ui.UINode.if(this.isMessagesAppBinding, this.messagesApp.render(() => this.navigateHome())),
                 ui.UINode.if(this.isContactsAppBinding, this.ensureContactsApp().render(() => this.navigateHome(), this.assignedPlayer ?? undefined)),
                 ui.UINode.if(this.isMePayAppBinding, this.mePayApp.render(() => this.navigateHome())),
