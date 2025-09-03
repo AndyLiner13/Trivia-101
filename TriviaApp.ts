@@ -1,5 +1,6 @@
 import * as ui from 'horizon/ui';
 import * as hz from 'horizon/core';
+import { Social, AvatarImageType } from 'horizon/social';
 
 // Global registry for TriviaApp instances
 (globalThis as any).triviaAppInstances = (globalThis as any).triviaAppInstances || [];
@@ -7,8 +8,8 @@ import * as hz from 'horizon/core';
 // Network events for syncing with world trivia game
 const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
 
-// Network event for trivia results
-const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }>('triviaResults');
+// Network event for trivia results (now includes leaderboard data)
+const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 const triviaGameCompleteEvent = new hz.NetworkEvent<{ finalScores: Array<{ playerId: string, score: number }>, totalQuestions: number }>('triviaGameComplete');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 
@@ -101,7 +102,7 @@ const quirkyWaitingMessages = [
   "🏆 Preparing your fate..."
 ];
 
-type GameState = 'playing' | 'waiting' | 'answered' | 'finished';
+type GameState = 'playing' | 'waiting' | 'answered' | 'leaderboard' | 'finished';
 
 export class TriviaApp {
   // Game state bindings
@@ -153,6 +154,12 @@ export class TriviaApp {
   private waitingMessageBinding = new ui.Binding('');
   private secondsRemainingBinding = new ui.Binding(5);
 
+  // Leaderboard bindings
+  private playerRankBinding = new ui.Binding(1);
+  private playerScoreBinding = new ui.Binding(0);
+  private totalPlayersBinding = new ui.Binding(1);
+  private playerHeadshotBinding = new ui.Binding<ui.ImageSource | null>(null);
+
   constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any) {
     // Store world reference for network events
     this.world = world || null;
@@ -198,8 +205,19 @@ export class TriviaApp {
   }
 
   // Called by TriviaGame when trivia results are available
-  public onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }): void {
+  public async onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }): Promise<void> {
     console.log('TriviaApp: Received trivia results', eventData);
+    console.log('TriviaApp: showLeaderboard flag:', eventData.showLeaderboard);
+    console.log('TriviaApp: leaderboardData:', eventData.leaderboardData);
+    
+    // Check if this is a leaderboard event
+    if (eventData.showLeaderboard && eventData.leaderboardData) {
+      console.log('TriviaApp: *** PROCESSING LEADERBOARD DATA ***', eventData.leaderboardData);
+      await this.handleLeaderboardData(eventData.leaderboardData);
+      return;
+    }
+    
+    console.log('TriviaApp: Processing normal answer results (not leaderboard)');
     console.log('TriviaApp: Current selected answer:', this.selectedAnswer);
     console.log('TriviaApp: Last answer timestamp:', this.lastAnswerTimestamp);
     console.log('TriviaApp: Answer selection count:', this.answerSelectionCount);
@@ -243,6 +261,135 @@ export class TriviaApp {
     
     // Don't start auto-progression timer - wait for host to press "Next Question"
     // this.startAutoProgressTimer(this.assignedPlayer ?? undefined);
+  }
+
+  // Called when leaderboard data is received for this specific player
+  public async onLeaderboardData(eventData: { playerId: string, rank: number, score: number, totalPlayers: number }): Promise<void> {
+    console.log('TriviaApp: Received leaderboard data', eventData);
+    
+    // Check if this data is for the assigned player
+    const assignedPlayerId = this.assignedPlayer?.id.toString();
+    console.log(`TriviaApp: Assigned player ID: ${assignedPlayerId}, Event player ID: ${eventData.playerId}`);
+    
+    if (assignedPlayerId && eventData.playerId === assignedPlayerId) {
+      console.log(`TriviaApp: Leaderboard data matches assigned player ${assignedPlayerId}`);
+      
+      // Update leaderboard bindings
+      this.playerRankBinding.set(eventData.rank, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.playerScoreBinding.set(eventData.score, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.totalPlayersBinding.set(eventData.totalPlayers, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      
+      // Get headshot using Social API
+      try {
+        if (this.assignedPlayer) {
+          const headshotImageSource = await Social.getAvatarImageSource(this.assignedPlayer, {
+            type: AvatarImageType.HEADSHOT,
+            highRes: true
+          });
+          this.playerHeadshotBinding.set(headshotImageSource, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        }
+      } catch (error) {
+        console.log('TriviaApp: Could not get player headshot:', error);
+        this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      }
+      
+      // Transition to leaderboard state
+      console.log('TriviaApp: Changing game state from', this.gameState, 'to leaderboard');
+      this.gameState = 'leaderboard';
+      this.showResult = false; // Hide answer result screen
+      this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.showResultBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      
+      console.log(`TriviaApp: Showing personal leaderboard - Rank ${eventData.rank}/${eventData.totalPlayers}, Score: ${eventData.score}`);
+    } else {
+      console.log(`TriviaApp: Leaderboard data is for different player (${eventData.playerId}), assigned player is ${assignedPlayerId}`);
+    }
+  }
+
+  private async handleLeaderboardData(leaderboardData: Array<{name: string, score: number, playerId: string}>): Promise<void> {
+    console.log('TriviaApp: Processing leaderboard data for assigned player');
+    console.log('TriviaApp: Available leaderboard data:', leaderboardData);
+    
+    // Try multiple ways to get the current player ID
+    let currentPlayerId: string | null = null;
+    
+    // Method 1: Use assigned player
+    if (this.assignedPlayer) {
+      currentPlayerId = this.assignedPlayer.id.toString();
+      console.log('TriviaApp: Using assigned player ID:', currentPlayerId);
+    }
+    
+    // Method 2: If no assigned player, but we have leaderboard data with only one player, use that
+    if (!currentPlayerId && leaderboardData.length === 1) {
+      currentPlayerId = leaderboardData[0].playerId;
+      console.log('TriviaApp: Single player in leaderboard, using ID:', currentPlayerId);
+    }
+    
+    // Method 3: Check if there's a player ID we can derive from previous interactions
+    if (!currentPlayerId) {
+      // Look for any stored data that might indicate which player this is
+      console.log('TriviaApp: No assigned player or single player fallback available');
+      console.log('TriviaApp: Attempting to show leaderboard for first player in list as fallback');
+      if (leaderboardData.length > 0) {
+        currentPlayerId = leaderboardData[0].playerId;
+        console.log('TriviaApp: Using first player as fallback:', currentPlayerId);
+      }
+    }
+    
+    if (!currentPlayerId) {
+      console.log('TriviaApp: Cannot determine current player ID to show leaderboard for');
+      return;
+    }
+    
+    // Find player's rank and score
+    const playerIndex = leaderboardData.findIndex(player => player.playerId === currentPlayerId);
+    if (playerIndex === -1) {
+      console.log(`TriviaApp: Player ${currentPlayerId} not found in leaderboard data`);
+      return;
+    }
+    
+    const playerData = leaderboardData[playerIndex];
+    const rank = playerIndex + 1; // Rank is 1-based
+    const totalPlayers = leaderboardData.length;
+    
+    console.log(`TriviaApp: Found player data - Player ID: ${currentPlayerId}, Rank: ${rank}, Score: ${playerData.score}, Total players: ${totalPlayers}`);
+    
+    // Update leaderboard bindings
+    this.playerRankBinding.set(rank, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    this.playerScoreBinding.set(playerData.score, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    this.totalPlayersBinding.set(totalPlayers, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    
+    // Get headshot using Social API - try to use assignedPlayer or get current player from world
+    try {
+      let playerForHeadshot = this.assignedPlayer;
+      if (!playerForHeadshot) {
+        // Try to get the player from the world (this might not work in all contexts)
+        console.log('TriviaApp: Attempting to get player headshot without assigned player');
+      }
+      
+      if (playerForHeadshot) {
+        const headshotImageSource = await Social.getAvatarImageSource(playerForHeadshot, {
+          type: AvatarImageType.HEADSHOT,
+          highRes: true
+        });
+        this.playerHeadshotBinding.set(headshotImageSource, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      } else {
+        console.log('TriviaApp: No player available for headshot');
+        this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      }
+    } catch (error) {
+      console.log('TriviaApp: Could not get player headshot:', error);
+      this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    }
+    
+    // Transition to leaderboard state
+    console.log('TriviaApp: Changing game state from', this.gameState, 'to leaderboard');
+    this.gameState = 'leaderboard';
+    this.showResult = false; // Hide answer result screen
+    this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    this.showResultBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    
+    console.log(`TriviaApp: Successfully showing personal leaderboard - Rank ${rank}/${totalPlayers}, Score: ${playerData.score}`);
   }
 
   // Method to send network events (requires callback from parent component)
@@ -759,6 +906,21 @@ export class TriviaApp {
     this.secondsRemainingBinding.set(5, assignedPlayer ? [assignedPlayer] : undefined);
   }
 
+  private getOrdinalSuffix(num: number): string {
+    const j = num % 10;
+    const k = num % 100;
+    if (j === 1 && k !== 11) {
+      return 'st';
+    }
+    if (j === 2 && k !== 12) {
+      return 'nd';
+    }
+    if (j === 3 && k !== 13) {
+      return 'rd';
+    }
+    return 'th';
+  }
+
   private getAnswerButtonColor(answerIndex: number): string {
     if (!this.showResult) {
       return answerShapes[answerIndex].color;
@@ -790,7 +952,11 @@ export class TriviaApp {
           this.renderFinishedScreen(onHomePress, assignedPlayer)
         ),
         ui.UINode.if(
-          ui.Binding.derive([this.gameStateBinding], (state) => state !== 'finished'),
+          ui.Binding.derive([this.gameStateBinding], (state) => state === 'leaderboard'),
+          this.renderLeaderboardScreen(onHomePress, assignedPlayer)
+        ),
+        ui.UINode.if(
+          ui.Binding.derive([this.gameStateBinding], (state) => state !== 'finished' && state !== 'leaderboard'),
           this.renderGameScreen(onHomePress, assignedPlayer)
         )
       ]
@@ -877,6 +1043,143 @@ export class TriviaApp {
                 fontSize: 16,
                 fontWeight: '600',
                 color: '#7C3AED'
+              }
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderLeaderboardScreen(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#4F46E5', // Indigo background
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20
+      },
+      children: [
+        ui.View({
+          style: {
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: 20,
+            padding: 24,
+            width: '90%',
+            maxWidth: 280
+          },
+          children: [
+            // Title
+            ui.Text({
+              text: '🏆 Your Ranking',
+              style: {
+                fontSize: 20,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 20
+              }
+            }),
+            
+            // Player headshot (if available)
+            ui.UINode.if(
+              ui.Binding.derive([this.playerHeadshotBinding], (headshot) => headshot !== null),
+              ui.View({
+                style: {
+                  marginBottom: 16,
+                  alignItems: 'center'
+                },
+                children: [
+                  ui.Image({
+                    source: this.playerHeadshotBinding,
+                    style: {
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      borderWidth: 3,
+                      borderColor: '#FFFFFF'
+                    }
+                  })
+                ]
+              })
+            ),
+            
+            // Rank display
+            ui.View({
+              style: {
+                alignItems: 'center',
+                marginBottom: 16
+              },
+              children: [
+                ui.Text({
+                  text: 'Rank',
+                  style: {
+                    fontSize: 14,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textAlign: 'center',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: ui.Binding.derive([this.playerRankBinding, this.totalPlayersBinding], (rank, total) => 
+                    `${rank}${this.getOrdinalSuffix(rank)} of ${total}`
+                  ),
+                  style: {
+                    fontSize: 24,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+            
+            // Score display
+            ui.View({
+              style: {
+                alignItems: 'center',
+                marginBottom: 20
+              },
+              children: [
+                ui.Text({
+                  text: 'Score',
+                  style: {
+                    fontSize: 14,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textAlign: 'center',
+                    marginBottom: 4
+                  }
+                }),
+                ui.Text({
+                  text: ui.Binding.derive([this.playerScoreBinding], (score) => score.toString()),
+                  style: {
+                    fontSize: 32,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                }),
+                ui.Text({
+                  text: 'points',
+                  style: {
+                    fontSize: 12,
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+            
+            // Waiting message
+            ui.Text({
+              text: 'Waiting for next question...',
+              style: {
+                fontSize: 12,
+                color: 'rgba(255, 255, 255, 0.7)',
+                textAlign: 'center'
               }
             })
           ]

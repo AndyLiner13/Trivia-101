@@ -27,7 +27,7 @@ interface SerializableQuestion {
 
 // Network events for syncing with the world trivia system
 const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: SerializableQuestion, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
-const triviaResultsEvent = new hz.NetworkEvent<{ question: SerializableQuestion, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }>('triviaResults');
+const triviaResultsEvent = new hz.NetworkEvent<{ question: SerializableQuestion, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: any }>('triviaGameStart');
 
@@ -637,6 +637,41 @@ export class TriviaGame extends ui.UIComponent {
     // Generate real leaderboard data from actual players
     const realLeaderboard = await this.generateRealLeaderboard();
     this.leaderboardDataBinding.set(realLeaderboard);
+    console.log("TriviaGame: Generated leaderboard data:", realLeaderboard);
+    
+    // Send leaderboard data through the existing triviaResultsEvent
+    if (!this.currentQuestion) {
+      console.log("TriviaGame: No current question available for leaderboard");
+      return;
+    }
+    
+    const serializableQuestion: SerializableQuestion = {
+      id: this.currentQuestion.id,
+      question: this.currentQuestion.question,
+      category: this.currentQuestion.category,
+      difficulty: this.currentQuestion.difficulty,
+      answers: this.currentQuestion.answers
+    };
+    
+    // Prepare leaderboard data for network event (without headshot which can't be serialized)
+    const networkLeaderboardData = realLeaderboard.map(player => ({
+      name: player.name,
+      score: player.score,
+      playerId: player.playerId
+    }));
+    
+    this.sendNetworkBroadcastEvent(triviaResultsEvent, {
+      question: serializableQuestion,
+      correctAnswerIndex: this.currentQuestion.answers.findIndex((a: any) => a.correct),
+      answerCounts: [],
+      scores: {},
+      showLeaderboard: true,
+      leaderboardData: networkLeaderboardData
+    });
+    
+    console.log("TriviaGame: *** SENT LEADERBOARD DATA via triviaResultsEvent ***");
+    console.log("TriviaGame: showLeaderboard = true");
+    console.log("TriviaGame: leaderboardData =", networkLeaderboardData);
     
     // No auto-advance - wait for host to press next button
   }
