@@ -448,7 +448,7 @@ export class TriviaApp {
           style: {
             flex: 1,
             padding: 8,
-            paddingTop: 64, // Account for header + matching gap (52 + 12)
+            paddingTop: 48, // Reduced gap below header
             paddingBottom: 12 // Match footer gap
           },
           children: [
