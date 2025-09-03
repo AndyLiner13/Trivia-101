@@ -13,7 +13,7 @@ interface Contact {
   address?: string;
   website?: string;
   lastContact?: string;
-  player?: hz.Player; // Add reference to actual player
+  playerId?: number; // Store player ID instead of player object
 }
 
 // Message interfaces
@@ -114,12 +114,43 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private calcWaitingForOperand = false;
 
   // Contacts app state - PLAYER SPECIFIC
-  private selectedContactBinding = new ui.Binding<Contact | null>(null);
+  private selectedContactIdBinding = new ui.Binding<number | null>(null);
   private realContactsBinding = new ui.Binding<Contact[]>([]);
   private favoritesBinding = new ui.Binding<Set<number>>(new Set());
 
+  // Derived binding to get the selected contact from the ID
+  private selectedContactBinding = ui.Binding.derive(
+    [this.selectedContactIdBinding, this.realContactsBinding],
+    (contactId, contacts) => {
+      if (contactId === null) return null;
+      return contacts.find(c => c.id === contactId) || null;
+    }
+  );
+
+  // Derived bindings for contact details display
+  private selectedContactAvatarTextBinding = ui.Binding.derive(
+    [this.selectedContactIdBinding, this.realContactsBinding],
+    (contactId, contacts) => {
+      if (contactId === null) return '';
+      const contact = contacts.find(c => c.id === contactId);
+      return contact ? contact.name.charAt(0).toUpperCase() : '';
+    }
+  );
+
+  private selectedContactNameBinding = ui.Binding.derive(
+    [this.selectedContactIdBinding, this.realContactsBinding],
+    (contactId, contacts) => {
+      if (contactId === null) return '';
+      const contact = contacts.find(c => c.id === contactId);
+      return contact ? contact.name : '';
+    }
+  );
+
   // Internal tracking for current messages
   private currentMessages: Message[] = [];
+  
+  // Player cache for avatar loading
+  private playersCache = new Map<number, hz.Player>();
 
   // Messages app state - PLAYER SPECIFIC
   private selectedConversationBinding = new ui.Binding<Conversation | null>(null);
@@ -318,11 +349,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
     const contacts: Contact[] = [];
     
+    // Clear the existing players cache
+    this.playersCache.clear();
+    
     for (let i = 0; i < otherPlayers.length; i++) {
       const player = otherPlayers[i];
       const playerName = player.name.get();
       
       console.log(`[Contacts] Adding contact: ${playerName}`);
+      
+      // Cache the player for later lookup
+      this.playersCache.set(player.id, player);
       
       contacts.push({
         id: i + 1,
@@ -331,7 +368,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         avatar: '👤', // Placeholder, will be replaced with real avatar
         company: 'Horizon Worlds',
         lastContact: 'Online now',
-        player: player
+        playerId: player.id
       });
     }
     
@@ -596,7 +633,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     this.calcPreviousValueBinding.set('', [player]);
     this.calcOperationBinding.set('', [player]);
     this.calcWaitingForOperandBinding.set(false, [player]);
-    this.selectedContactBinding.set(null, [player]);
+    this.selectedContactIdBinding.set(null, [player]);
     this.selectedConversationBinding.set(null, [player]);
     this.currentMessagesViewBinding.set('list', [player]);
     this.messagesBinding.set([], [player]);
@@ -1684,12 +1721,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       children: [
         // Contact Detail View
         ui.UINode.if(
-          ui.Binding.derive([this.selectedContactBinding], (contact) => contact !== null),
+          ui.Binding.derive([this.selectedContactIdBinding], (contactId) => contactId !== null),
           this.renderContactDetail()
         ),
         // Contacts List View
         ui.UINode.if(
-          ui.Binding.derive([this.selectedContactBinding], (contact) => contact === null),
+          ui.Binding.derive([this.selectedContactIdBinding], (contactId) => contactId === null),
           this.renderContactsList()
         )
       ]
@@ -1701,21 +1738,35 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     const detailAvatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
     
     // Set up reactive loading of avatar when contact changes
-    ui.Binding.derive([this.selectedContactBinding], (contact) => {
-      if (contact?.player) {
-        Social.getAvatarImageSource(contact.player, { 
-          type: AvatarImageType.HEADSHOT, 
-          highRes: true 
-        }).then(imageSource => {
-          detailAvatarImageBinding.set(imageSource);
-        }).catch(() => {
+    // Use a derived binding to automatically update the avatar
+    ui.Binding.derive(
+      [this.selectedContactIdBinding, this.realContactsBinding],
+      (contactId, contacts) => {
+        if (contactId !== null) {
+          const contact = contacts.find((c: Contact) => c.id === contactId);
+          if (contact?.playerId) {
+            const player = this.playersCache.get(contact.playerId);
+            if (player) {
+              Social.getAvatarImageSource(player, { 
+                type: AvatarImageType.HEADSHOT, 
+                highRes: true 
+              }).then(imageSource => {
+                detailAvatarImageBinding.set(imageSource);
+              }).catch(() => {
+                detailAvatarImageBinding.set(null);
+              });
+            } else {
+              detailAvatarImageBinding.set(null);
+            }
+          } else {
+            detailAvatarImageBinding.set(null);
+          }
+        } else {
           detailAvatarImageBinding.set(null);
-        });
-      } else {
-        detailAvatarImageBinding.set(null);
+        }
+        return contactId; // Return something to satisfy the derive function
       }
-      return contact;
-    });
+    );
     
     return ui.View({
       style: {
@@ -1730,11 +1781,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           onHomePress: () => {
             if (this.assignedPlayer) {
               this.currentAppBinding.set('home', [this.assignedPlayer]);
-              this.selectedContactBinding.set(null, [this.assignedPlayer]);
+              this.selectedContactIdBinding.set(null, [this.assignedPlayer]);
             }
           },
           onBackPress: () => {
-            this.selectedContactBinding.set(null);
+            this.selectedContactIdBinding.set(null);
             // Refresh contacts when going back to contacts list
             this.updateRealContacts();
           },
@@ -1780,9 +1831,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 ui.UINode.if(
                   ui.Binding.derive([detailAvatarImageBinding], (image) => image === null),
                   ui.Text({
-                    text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                      contact ? contact.avatar : ''
-                    ),
+                    text: this.selectedContactAvatarTextBinding,
                     style: {
                       fontSize: 32,
                       color: '#FFFFFF'
@@ -1794,9 +1843,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             
             // Name
             ui.Text({
-              text: ui.Binding.derive([this.selectedContactBinding], (contact) => 
-                contact ? contact.name : ''
-              ),
+              text: this.selectedContactNameBinding,
               style: {
                 fontSize: 16,
                 fontWeight: '500',
@@ -1831,7 +1878,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                     // Note: In a real implementation, we'd need to access the current contact
                     // For now, we'll use a simplified approach
                     this.currentAppBinding.set('phone');
-                    this.selectedContactBinding.set(null);
+                    this.selectedContactIdBinding.set(null);
                   },
                   children: [
                     ui.Image({
@@ -1983,7 +2030,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           appName: 'Contacts',
           onHomePress: () => {
             this.currentAppBinding.set('home');
-            this.selectedContactBinding.set(null);
+            this.selectedContactIdBinding.set(null);
           },
           showBackButton: false
         }),
@@ -2136,16 +2183,19 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     const avatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
     
     // Load the avatar asynchronously if we have a player reference
-    if (contact.player) {
-      Social.getAvatarImageSource(contact.player, {
-        type: AvatarImageType.HEADSHOT,
-        highRes: false
-      }).then(imageSource => {
-        avatarImageBinding.set(imageSource);
-      }).catch(error => {
-        console.log(`[Contacts UI] Failed to load avatar for ${contact.name}:`, error);
-        avatarImageBinding.set(null);
-      });
+    if (contact.playerId) {
+      const player = this.playersCache.get(contact.playerId);
+      if (player) {
+        Social.getAvatarImageSource(player, {
+          type: AvatarImageType.HEADSHOT,
+          highRes: false
+        }).then(imageSource => {
+          avatarImageBinding.set(imageSource);
+        }).catch(error => {
+          console.log(`[Contacts UI] Failed to load avatar for ${contact.name}:`, error);
+          avatarImageBinding.set(null);
+        });
+      }
     }
     
     return ui.Pressable({
@@ -2160,7 +2210,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       onPress: () => {
         // Refresh contacts to ensure we have the latest data
         this.updateRealContacts();
-        this.selectedContactBinding.set(contact);
+        this.selectedContactIdBinding.set(contact.id);
       },
       children: [
         // Left content (avatar) - with real avatar loading
