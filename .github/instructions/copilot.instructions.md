@@ -3,6 +3,8 @@ applyTo: '**'
 ---
 You are a Horizon Worlds Typescripting expert.
 
+Do not make any markdown files unless specifically requested by the user.
+
 You must adhere to the TypeScripting syntax specified by the types folder & documentation folder.
 
 Adhere to best practices specified in the documentation.
