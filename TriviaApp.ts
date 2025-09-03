@@ -1057,130 +1057,149 @@ export class TriviaApp {
         width: '100%',
         height: '100%',
         backgroundColor: '#4F46E5', // Indigo background
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20
+        flexDirection: 'column'
       },
       children: [
+        // Header
+        this.createAppHeader({
+          appName: 'Trivia',
+          onHomePress: () => {
+            onHomePress();
+            this.resetGame(assignedPlayer);
+          }
+        }),
+
+        // Main Content Area
         ui.View({
           style: {
+            flex: 1,
+            justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: 20,
-            padding: 24,
-            width: '90%',
-            maxWidth: 280
+            padding: 20,
+            paddingTop: 48 // Space for header
           },
           children: [
-            // Title
-            ui.Text({
-              text: '🏆 Your Ranking',
+            ui.View({
               style: {
-                fontSize: 20,
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center',
-                marginBottom: 20
-              }
-            }),
-            
-            // Player headshot (if available)
-            ui.UINode.if(
-              ui.Binding.derive([this.playerHeadshotBinding], (headshot) => headshot !== null),
-              ui.View({
-                style: {
-                  marginBottom: 16,
-                  alignItems: 'center'
-                },
-                children: [
-                  ui.Image({
-                    source: this.playerHeadshotBinding,
+                alignItems: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 20,
+                padding: 24,
+                width: '90%',
+                maxWidth: 280
+              },
+              children: [
+                // Title
+                ui.Text({
+                  text: '🏆 Your Ranking',
+                  style: {
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    marginBottom: 20
+                  }
+                }),
+                
+                // Player headshot (if available)
+                ui.UINode.if(
+                  ui.Binding.derive([this.playerHeadshotBinding], (headshot) => headshot !== null),
+                  ui.View({
                     style: {
-                      width: 60,
-                      height: 60,
-                      borderRadius: 30,
-                      borderWidth: 3,
-                      borderColor: '#FFFFFF'
-                    }
+                      marginBottom: 16,
+                      alignItems: 'center'
+                    },
+                    children: [
+                      ui.Image({
+                        source: this.playerHeadshotBinding,
+                        style: {
+                          width: 60,
+                          height: 60,
+                          borderRadius: 30,
+                          borderWidth: 3,
+                          borderColor: '#FFFFFF'
+                        }
+                      })
+                    ]
                   })
-                ]
-              })
-            ),
-            
-            // Rank display
-            ui.View({
-              style: {
-                alignItems: 'center',
-                marginBottom: 16
-              },
-              children: [
-                ui.Text({
-                  text: 'Rank',
+                ),
+                
+                // Rank display
+                ui.View({
                   style: {
-                    fontSize: 14,
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    textAlign: 'center',
-                    marginBottom: 4
-                  }
+                    alignItems: 'center',
+                    marginBottom: 16
+                  },
+                  children: [
+                    ui.Text({
+                      text: 'Rank',
+                      style: {
+                        fontSize: 14,
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        textAlign: 'center',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: ui.Binding.derive([this.playerRankBinding, this.totalPlayersBinding], (rank, total) => 
+                        `${rank}${this.getOrdinalSuffix(rank)} of ${total}`
+                      ),
+                      style: {
+                        fontSize: 24,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
                 }),
-                ui.Text({
-                  text: ui.Binding.derive([this.playerRankBinding, this.totalPlayersBinding], (rank, total) => 
-                    `${rank}${this.getOrdinalSuffix(rank)} of ${total}`
-                  ),
+                
+                // Score display
+                ui.View({
                   style: {
-                    fontSize: 24,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
-            
-            // Score display
-            ui.View({
-              style: {
-                alignItems: 'center',
-                marginBottom: 20
-              },
-              children: [
-                ui.Text({
-                  text: 'Score',
-                  style: {
-                    fontSize: 14,
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    textAlign: 'center',
-                    marginBottom: 4
-                  }
+                    alignItems: 'center',
+                    marginBottom: 20
+                  },
+                  children: [
+                    ui.Text({
+                      text: 'Score',
+                      style: {
+                        fontSize: 14,
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        textAlign: 'center',
+                        marginBottom: 4
+                      }
+                    }),
+                    ui.Text({
+                      text: ui.Binding.derive([this.playerScoreBinding], (score) => score.toString()),
+                      style: {
+                        fontSize: 32,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        textAlign: 'center'
+                      }
+                    }),
+                    ui.Text({
+                      text: 'points',
+                      style: {
+                        fontSize: 12,
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
                 }),
+                
+                // Waiting message
                 ui.Text({
-                  text: ui.Binding.derive([this.playerScoreBinding], (score) => score.toString()),
-                  style: {
-                    fontSize: 32,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                }),
-                ui.Text({
-                  text: 'points',
+                  text: 'Waiting for next question...',
                   style: {
                     fontSize: 12,
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     textAlign: 'center'
                   }
                 })
               ]
-            }),
-            
-            // Waiting message
-            ui.Text({
-              text: 'Waiting for next question...',
-              style: {
-                fontSize: 12,
-                color: 'rgba(255, 255, 255, 0.7)',
-                textAlign: 'center'
-              }
             })
           ]
         })
