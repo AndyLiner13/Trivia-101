@@ -2092,52 +2092,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                       width: '100%'
                     },
                     children: [
-                      // Dynamic contacts list - rendered via a simple text display for now
-                      ui.Text({
-                        text: ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                          try {
-                            const safeContacts = Array.isArray(contacts) ? contacts : [];
-                            console.log(`[Contacts UI] Building text display - total contacts: ${safeContacts.length}`);
-                            
-                            // Filter out test contacts for display
-                            const realContacts = safeContacts.filter(c => c.id !== 999);
-                            console.log(`[Contacts UI] Real contacts for display: ${realContacts.length}`);
-                            
-                            if (realContacts.length === 0) {
-                              return 'No real contacts found (test mode shows debug contact)';
-                            }
-                            
-                            console.log(`[Contacts UI] Building contacts text display for ${realContacts.length} real contacts`);
-                            
-                            // Create a simple text list of contacts
-                            let contactsText = `Found ${realContacts.length} contact${realContacts.length !== 1 ? 's' : ''}:\n\n`;
-                            
-                            const groupedContacts = this.groupContactsByLetter(realContacts);
-                            const sortedLetters = Object.keys(groupedContacts).sort();
-                            
-                            for (const letter of sortedLetters) {
-                              contactsText += `--- ${letter.toUpperCase()} ---\n`;
-                              const contactsInSection = groupedContacts[letter] || [];
-                              
-                              for (const contact of contactsInSection) {
-                                contactsText += `• ${contact.name}\n`;
-                              }
-                              contactsText += '\n';
-                            }
-                            
-                            console.log(`[Contacts UI] Generated contacts text:`, contactsText);
-                            return contactsText;
-                          } catch (error) {
-                            console.error(`[Contacts UI] Error building contacts text:`, error);
-                            return 'Error loading contacts';
-                          }
-                        }),
-                        style: {
-                          fontSize: 14,
-                          color: '#1F2937',
-                          padding: 16,
-                          lineHeight: 20
-                        }
+                      // Dynamic contacts list with proper UI
+                      ui.DynamicList<Contact>({
+                        data: this.realContactsBinding,
+                        renderItem: (contact: Contact) => this.createContactListItem(contact)
                       })
                     ]
                   })
@@ -2174,6 +2132,22 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private createContactListItem(contact: Contact): ui.UINode {
     console.log(`[Contacts UI] Creating contact list item for: ${contact.name}`);
     
+    // Create a binding for the avatar image
+    const avatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
+    
+    // Load the avatar asynchronously if we have a player reference
+    if (contact.player) {
+      Social.getAvatarImageSource(contact.player, {
+        type: AvatarImageType.HEADSHOT,
+        highRes: false
+      }).then(imageSource => {
+        avatarImageBinding.set(imageSource);
+      }).catch(error => {
+        console.log(`[Contacts UI] Failed to load avatar for ${contact.name}:`, error);
+        avatarImageBinding.set(null);
+      });
+    }
+    
     return ui.Pressable({
       style: {
         backgroundColor: '#FFFFFF',
@@ -2189,25 +2163,39 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         this.selectedContactBinding.set(contact);
       },
       children: [
-        // Left content (avatar) - simplified static version
+        // Left content (avatar) - with real avatar loading
         ui.View({
           style: {
             width: 32,
             height: 32,
             backgroundColor: '#3B82F6', // blue-500
-            borderRadius: 8,
+            borderRadius: 16, // Make it circular
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 8
+            marginRight: 8,
+            overflow: 'hidden'
           },
           children: [
-            ui.Text({
-              text: contact.avatar,
-              style: {
-                fontSize: 16,
-                color: '#FFFFFF'
-              }
-            })
+            // Show real avatar if loaded, otherwise show placeholder
+            ui.UINode.if(
+              ui.Binding.derive([avatarImageBinding], (avatar) => avatar !== null),
+              ui.Image({
+                source: avatarImageBinding,
+                style: {
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16
+                }
+              }),
+              ui.Text({
+                text: contact.name.charAt(0).toUpperCase(),
+                style: {
+                  fontSize: 14,
+                  color: '#FFFFFF',
+                  fontWeight: '600'
+                }
+              })
+            )
           ]
         }),
         
