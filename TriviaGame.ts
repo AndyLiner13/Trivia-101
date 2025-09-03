@@ -348,7 +348,7 @@ export class TriviaGame extends ui.UIComponent {
     // Update UI bindings
     this.questionNumberBinding.set(`Q${this.currentQuestionIndex + 1}`);
     this.questionBinding.set(question.question);
-    this.answerCountBinding.set("0");
+    // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
 
     // Update answer options
@@ -380,6 +380,9 @@ export class TriviaGame extends ui.UIComponent {
       questionIndex: this.currentQuestionIndex,
       timeLimit: this.props.questionTimeLimit
     });
+
+    // Reset answer count when starting new question
+    this.answerCountBinding.set("0");
 
     // Start countdown timer
     this.startTimer();
@@ -481,7 +484,7 @@ export class TriviaGame extends ui.UIComponent {
     // Update UI bindings
     this.questionNumberBinding.set(`Q${eventData.questionIndex + 1}`);
     this.questionBinding.set(eventData.question.question);
-    this.answerCountBinding.set("0");
+    // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
     
     // Update answer options
@@ -499,6 +502,9 @@ export class TriviaGame extends ui.UIComponent {
     this.answerButtonColors[1].set('#2563EB'); // Blue
     this.answerButtonColors[2].set('#EAB308'); // Yellow
     this.answerButtonColors[3].set('#16A34A'); // Green
+    
+    // Reset answer count when starting new question
+    this.answerCountBinding.set("0");
     
     // Start countdown timer
     this.startTimer();
@@ -561,6 +567,9 @@ export class TriviaGame extends ui.UIComponent {
     const correctAnswerIndex = this.currentQuestion.answers.findIndex(answer => answer.correct);
     this.correctAnswerBinding.set(correctAnswerIndex);
     
+    // Update answer count to show how many players answered
+    this.answerCountBinding.set(this.playersAnswered.size.toString());
+    
     // Update answer button colors for results
     for (let i = 0; i < 4; i++) {
       if (i === correctAnswerIndex) {
@@ -595,13 +604,9 @@ export class TriviaGame extends ui.UIComponent {
       });
     }
     
-    // Also send network event for other systems that might be listening
-    this.sendNetworkBroadcastEvent(triviaResultsEvent, {
-      question: serializableQuestion,
-      correctAnswerIndex: correctAnswerIndex,
-      answerCounts: [0, 0, 0, 0], // No vote counts in this implementation
-      scores: {} // Simplified scores
-    });
+    // Don't send network event that would reset our answer count
+    // The network event with zero counts would trigger onQuestionResults and reset the count
+    // Since we're already showing results locally, we don't need to trigger the network event
     
     console.log("TriviaGame: Sent results to TriviaApps");
     
