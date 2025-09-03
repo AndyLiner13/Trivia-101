@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "question": "What is the capital of France?",
+    "category": "Geography",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "London", "correct": false },
+      { "text": "Berlin", "correct": false },
+      { "text": "Paris", "correct": true },
+      { "text": "Madrid", "correct": false }
+    ]
+  },
+  {
+    "id": 2,
+    "question": "Which planet is known as the Red Planet?",
+    "category": "Science",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "Mars", "correct": true },
+      { "text": "Venus", "correct": false },
+      { "text": "Jupiter", "correct": false },
+      { "text": "Saturn", "correct": false }
+    ]
+  },
+  {
+    "id": 3,
+    "question": "What is 7 × 8?",
+    "category": "Mathematics",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "54", "correct": false },
+      { "text": "56", "correct": true },
+      { "text": "64", "correct": false },
+      { "text": "48", "correct": false }
+    ]
+  },
+  {
+    "id": 4,
+    "question": "Who painted the Mona Lisa?",
+    "category": "Art",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "Van Gogh", "correct": false },
+      { "text": "Picasso", "correct": false },
+      { "text": "Da Vinci", "correct": true },
+      { "text": "Monet", "correct": false }
+    ]
+  },
+  {
+    "id": 5,
+    "question": "What is the largest ocean on Earth?",
+    "category": "Geography",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "Atlantic", "correct": false },
+      { "text": "Pacific", "correct": true },
+      { "text": "Indian", "correct": false },
+      { "text": "Arctic", "correct": false }
+    ]
+  },
+  {
+    "id": 6,
+    "question": "In which year did World War II end?",
+    "category": "History",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "1944", "correct": false },
+      { "text": "1945", "correct": true },
+      { "text": "1946", "correct": false },
+      { "text": "1947", "correct": false }
+    ]
+  },
+  {
+    "id": 7,
+    "question": "What is the chemical symbol for gold?",
+    "category": "Science",
+    "difficulty": "hard",
+    "answers": [
+      { "text": "Go", "correct": false },
+      { "text": "Gd", "correct": false },
+      { "text": "Au", "correct": true },
+      { "text": "Ag", "correct": false }
+    ]
+  },
+  {
+    "id": 8,
+    "question": "Which Shakespeare play features the character Romeo?",
+    "category": "Literature",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "Hamlet", "correct": false },
+      { "text": "Macbeth", "correct": false },
+      { "text": "Romeo and Juliet", "correct": true },
+      { "text": "Othello", "correct": false }
+    ]
+  },
+  {
+    "id": 9,
+    "question": "What is the speed of light in a vacuum?",
+    "category": "Physics",
+    "difficulty": "hard",
+    "answers": [
+      { "text": "299,792,458 m/s", "correct": true },
+      { "text": "300,000,000 m/s", "correct": false },
+      { "text": "186,000 m/s", "correct": false },
+      { "text": "150,000,000 m/s", "correct": false }
+    ]
+  },
+  {
+    "id": 10,
+    "question": "Which country has the most natural lakes?",
+    "category": "Geography",
+    "difficulty": "hard",
+    "answers": [
+      { "text": "United States", "correct": false },
+      { "text": "Russia", "correct": false },
+      { "text": "Canada", "correct": true },
+      { "text": "Finland", "correct": false }
+    ]
+  }
+]
