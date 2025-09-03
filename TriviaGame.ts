@@ -1,6 +1,6 @@
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
-import { View, Text, Pressable, Binding, UINode } from 'horizon/ui';
+import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
 
 // Interface for trivia question data from JSON asset
 interface TriviaQuestion {
@@ -478,165 +478,206 @@ export class TriviaGame extends ui.UIComponent {
     return View({
       style: {
         width: '100%',
-        aspectRatio: 16/9, // 16:9 aspect ratio for widescreen display
-        backgroundColor: this.props.backgroundColor,
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: 32 // Increased padding for wider layout
+        aspectRatio: 16/9, // 16:9 aspect ratio matching TriviaUIReference
+        backgroundColor: '#F3F4F6', // Gray-100 background
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 8
       },
       children: [
-        // Header with question number
+        // Header with question number - centered at top
         View({
           style: {
-            width: '100%',
-            height: 80, // Restored height for better visibility
-            backgroundColor: this.props.headerColor,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: 12,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: 12,
-            marginBottom: 20
+            backgroundColor: '#F3F4F6'
           },
           children: Text({
             text: this.questionNumberBinding,
             style: {
-              fontSize: 36, // Larger font for widescreen
+              fontSize: 20,
+              fontWeight: '500',
+              color: '#FF6B35' // Orange-500 color
+            }
+          })
+        }),
+
+        // Timer - positioned at left, aligned with question
+        View({
+          style: {
+            position: 'absolute',
+            left: '8%',
+            top: '25%',
+            width: 40,
+            height: 40,
+            backgroundColor: '#FF6B35', // Orange-500
+            borderRadius: 20,
+            alignItems: 'center',
+            justifyContent: 'center'
+          },
+          children: Text({
+            text: this.timerBinding,
+            style: {
+              fontSize: 14,
               fontWeight: 'bold',
               color: 'white'
             }
           })
         }),
 
-        // Main content area with timer, question, and answer count
+        // Answer count - positioned at right, aligned with question
         View({
           style: {
-            flex: 1,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 20
+            position: 'absolute',
+            right: '8%',
+            top: '25%',
+            alignItems: 'center'
           },
           children: [
-            // Timer (left)
-            View({
+            Text({
+              text: this.answerCountBinding,
               style: {
-                width: 90, // Larger timer for 16:9
-                height: 90,
-                backgroundColor: '#FF6B35',
-                borderRadius: 40,
-                alignItems: 'center',
-                justifyContent: 'center'
-              },
-              children: Text({
-                text: this.timerBinding,
-                style: {
-                  fontSize: 28, // Larger font for bigger timer
-                  fontWeight: 'bold',
-                  color: 'white'
-                }
-              })
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: '#1F2937' // Gray-800
+              }
             }),
-
-            // Question (center)
-            View({
+            Text({
+              text: 'Answers',
               style: {
-                flex: 1,
-                backgroundColor: 'white',
-                borderRadius: 16, // Larger radius for widescreen
-                padding: 32, // Increased padding for more space
-                marginHorizontal: 32, // More horizontal spacing
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: 'black',
-                shadowOpacity: 0.1,
-                shadowRadius: 6
-              },
-              children: Text({
-                text: this.questionBinding,
-                style: {
-                  fontSize: Math.max(22, this.props.fontSize), // Larger font for widescreen
-                  fontWeight: '500',
-                  color: 'black',
-                  textAlign: 'center'
-                }
-              })
-            }),
-
-            // Answer count (right)
-            View({
-              style: {
-                alignItems: 'center'
-              },
-              children: [
-                Text({
-                  text: this.answerCountBinding,
-                  style: {
-                    fontSize: 38, // Larger answer count for widescreen
-                    fontWeight: 'bold',
-                    color: '#374151'
-                  }
-                }),
-                Text({
-                  text: 'Answers',
-                  style: {
-                    fontSize: 16, // Larger label text
-                    color: '#6B7280'
-                  }
-                })
-              ]
+                fontSize: 10,
+                color: '#6B7280' // Gray-600
+              }
             })
           ]
         }),
 
-        // Answer options grid
+        // Question - positioned in center area, moved up
         View({
           style: {
-            height: 160, // Increased height for better button proportions
-            width: '100%',
-            flexDirection: 'row',
-            flexWrap: 'wrap'
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: '20%',
+            bottom: '60%',
+            alignItems: 'center',
+            justifyContent: 'center'
+          },
+          children: View({
+            style: {
+              backgroundColor: 'white',
+              borderRadius: 6,
+              shadowColor: 'black',
+              shadowOpacity: 0.1,
+              shadowRadius: 6,
+              shadowOffset: [0, 2],
+              padding: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              maxWidth: '60%' // Prevent it from getting too wide
+            },
+            children: Text({
+              text: this.questionBinding,
+              style: {
+                fontSize: 16,
+                fontWeight: '500',
+                color: 'black',
+                textAlign: 'center'
+              }
+            })
+          })
+        }),
+
+        // Answer options grid - positioned at bottom with compact spacing
+        View({
+          style: {
+            position: 'absolute',
+            bottom: 8,
+            left: 8,
+            right: 8,
+            height: 120
           },
           children: [
-            // Red answer (Triangle)
-            this.createAnswerButton(0, '#DC2626', '▲'),
+            // Top row
+            View({
+              style: {
+                width: '100%',
+                height: 50,
+                flexDirection: 'row',
+                marginBottom: 8
+              },
+              children: [
+                // Red answer (Triangle)
+                View({
+                  style: { width: '48%', marginRight: '4%' },
+                  children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                }),
+                
+                // Blue answer (Star)  
+                View({
+                  style: { width: '48%' },
+                  children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+                })
+              ]
+            }),
             
-            // Blue answer (Diamond)
-            this.createAnswerButton(1, '#2563EB', '♦'),
-            
-            // Yellow answer (Circle)
-            this.createAnswerButton(2, '#EAB308', '●'),
-            
-            // Green answer (Square)
-            this.createAnswerButton(3, '#16A34A', '■')
+            // Bottom row
+            View({
+              style: {
+                width: '100%',
+                height: 50,
+                flexDirection: 'row'
+              },
+              children: [
+                // Yellow answer (Circle)
+                View({
+                  style: { width: '48%', marginRight: '4%' },
+                  children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                }),
+                
+                // Green answer (Square) 
+                View({
+                  style: { width: '48%' },
+                  children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                })
+              ]
+            })
           ]
         })
       ]
     });
   }
 
-  private createAnswerButton(index: number, color: string, icon: string) {
+  private createAnswerButton(index: number, color: string, iconTextureId: string) {
+    const textureAsset = new hz.TextureAsset(BigInt(iconTextureId));
+    
     return Pressable({
       onPress: () => this.handleAnswerPress(index),
       style: {
-        flex: 1,
-        minWidth: '47%', // Good width for 16:9
+        width: '100%',
+        height: '100%',
         backgroundColor: color,
-        borderRadius: 12, // Restored larger radius
-        padding: 20, // Increased padding for better proportions
+        borderRadius: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-start',
-        margin: 8 // Restored margin for proper spacing
+        justifyContent: 'flex-start'
       },
       children: [
         // Icon
-        Text({
-          text: icon,
+        Image({
+          source: ImageSource.fromTextureAsset(textureAsset),
           style: {
-            fontSize: 26, // Larger icon for widescreen
-            color: 'white',
-            fontWeight: 'bold',
-            marginRight: 16 // More spacing
+            width: 16,
+            height: 16,
+            marginRight: 8
           }
         }),
         
@@ -650,7 +691,7 @@ export class TriviaGame extends ui.UIComponent {
             Text({
               text: this.answerTexts[index],
               style: {
-                fontSize: 20, // Larger answer text for widescreen
+                fontSize: 14,
                 fontWeight: '500',
                 color: 'white'
               }
@@ -661,7 +702,7 @@ export class TriviaGame extends ui.UIComponent {
               this.showResultsBinding,
               View({
                 style: {
-                  marginTop: 6, // Slightly more spacing
+                  marginTop: 2,
                   flexDirection: 'row',
                   alignItems: 'center'
                 },
@@ -670,8 +711,8 @@ export class TriviaGame extends ui.UIComponent {
                   Text({
                     text: this.correctAnswerBinding.derive(correct => correct === index ? '✅' : '❌'),
                     style: {
-                      fontSize: 18, // Larger results indicator
-                      marginRight: 6
+                      fontSize: 12,
+                      marginRight: 4
                     }
                   }),
                   
@@ -679,7 +720,7 @@ export class TriviaGame extends ui.UIComponent {
                   Text({
                     text: this.answerCountsBinding.derive(counts => `${counts[index] || 0} players`),
                     style: {
-                      fontSize: 16, // Larger player count text
+                      fontSize: 10,
                       color: 'white',
                       opacity: 0.9
                     }
