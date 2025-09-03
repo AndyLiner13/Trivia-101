@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Phone as PhoneIcon, 
+  HelpCircle, 
   Calculator, 
   CreditCard, 
   Settings, 
@@ -14,15 +14,15 @@ import { FavoritesProvider } from './shared/FavoritesContext';
 import { NotificationsProvider, useNotifications } from './shared/NotificationsContext';
 
 // Import app components
-import { PhoneApp } from './apps/PhoneApp';
 import { CalculatorApp } from './apps/CalculatorApp';
+import { TriviaApp } from './TriviaApp';
 import { MePayApp } from './apps/MePayApp';
 import { SettingsApp } from './apps/SettingsApp';
 // import { MailApp } from './apps/MailApp'; // Replaced with MessagesApp
 import { ContactsApp } from './apps/ContactsApp';
 import { MessagesApp } from './apps/MessagesApp';
 
-type AppType = 'home' | 'phone' | 'calculator' | 'mepay' | 'settings' | 'messages' | 'contacts';
+type AppType = 'home' | 'trivia' | 'calculator' | 'mepay' | 'settings' | 'messages' | 'contacts';
 
 interface AppNavigationData {
   contactId?: number;
@@ -35,10 +35,10 @@ interface AppNavigationData {
 type AppSelectFunction = (app: AppType, data?: AppNavigationData) => void;
 
 const apps = [
-  { id: 'phone' as AppType, name: 'Phone', icon: PhoneIcon, color: 'bg-green-500' },
-  { id: 'messages' as AppType, name: 'Messages', icon: MessageCircle, color: 'bg-blue-600' },
   { id: 'contacts' as AppType, name: 'Contacts', icon: Users, color: 'bg-orange-500' },
+  { id: 'messages' as AppType, name: 'MeChat', icon: MessageCircle, color: 'bg-blue-600' },
   { id: 'mepay' as AppType, name: 'MePay', icon: CreditCard, color: 'bg-purple-500' },
+  { id: 'trivia' as AppType, name: 'Trivia', icon: HelpCircle, color: 'bg-green-500' },
   { id: 'calculator' as AppType, name: 'Calculator', icon: Calculator, color: 'bg-blue-500' },
   { id: 'settings' as AppType, name: 'Settings', icon: Settings, color: 'bg-gray-500' },
 ];
@@ -53,7 +53,6 @@ export function Phone() {
   const [currentApp, setCurrentApp] = useState<AppType>('home');
   const [appNavigationData, setAppNavigationData] = useState<AppNavigationData | null>(null);
   const [time] = useState('12:34');
-  const [isCallActive, setIsCallActive] = useState(false);
   const [isInSubpage, setIsInSubpage] = useState(false);
   const [navigationHistory, setNavigationHistory] = useState<NavigationHistoryEntry[]>([]);
 
@@ -67,18 +66,12 @@ export function Phone() {
       }]);
     }
     
-    // Reset call state when navigating away from phone app
-    if (currentApp === 'phone' && app !== 'phone') {
-      setIsCallActive(false);
-    }
     setCurrentApp(app);
     setAppNavigationData(data || null);
     setIsInSubpage(false); // Reset subpage state when switching apps
   };
 
   const navigateToHome = () => {
-    // Reset call state when going home
-    setIsCallActive(false);
     setCurrentApp('home');
     setAppNavigationData(null);
     setIsInSubpage(false);
@@ -87,11 +80,6 @@ export function Phone() {
   };
 
   const navigateBack = () => {
-    // Reset call state when navigating back
-    if (currentApp === 'phone') {
-      setIsCallActive(false);
-    }
-    
     // If we're in a subpage, just exit the subpage
     if (isInSubpage) {
       setIsInSubpage(false);
@@ -124,13 +112,8 @@ export function Phone() {
 
   const renderApp = () => {
     switch (currentApp) {
-      case 'phone':
-        return <PhoneApp 
-          navigationData={appNavigationData} 
-          onNavigateToHome={navigateToHome}
-          onNavigateBack={navigateBack} 
-          onCallStateChange={setIsCallActive}
-        />;
+      case 'trivia':
+        return <TriviaApp onNavigateToHome={navigateToHome} />;
       case 'calculator':
         return <CalculatorApp onNavigateToHome={navigateToHome} />;
       case 'mepay':

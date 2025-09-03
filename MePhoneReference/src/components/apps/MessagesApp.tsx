@@ -279,7 +279,7 @@ export function MessagesApp({ navigationData, onNavigateToHome, onNavigateToApp 
               }} />
             </button>
           </div>
-          <h1 className="font-medium capitalize" style={{ fontSize: 'clamp(1.125rem, 5cqw, 1.375rem)' }}>Messages</h1>
+          <h1 className="font-medium capitalize" style={{ fontSize: 'clamp(1.125rem, 5cqw, 1.375rem)' }}>MeChat</h1>
         </div>
 
         {/* Messages */}
@@ -380,7 +380,7 @@ export function MessagesApp({ navigationData, onNavigateToHome, onNavigateToApp 
             }} />
           </button>
         </div>
-        <h1 className="font-medium capitalize" style={{ fontSize: 'clamp(1.125rem, 5cqw, 1.375rem)' }}>Messages</h1>
+        <h1 className="font-medium capitalize" style={{ fontSize: 'clamp(1.125rem, 5cqw, 1.375rem)' }}>MeChat</h1>
       </div>
 
       {/* Conversations List */}

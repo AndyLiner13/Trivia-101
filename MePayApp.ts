@@ -318,26 +318,31 @@ export class MePayApp {
   }
 
   render(onHomePress: () => void): ui.UINode {
-    // Handle success screens first
-    if (this.currentMePayPage === 'sent' && this.lastTransaction) {
-      return this.renderPaymentSentScreen(onHomePress);
-    }
-    
-    if (this.currentMePayPage === 'requested' && this.lastTransaction) {
-      return this.renderRequestSentScreen(onHomePress);
-    }
-
-    // Main pages
-    switch (this.currentMePayPage) {
-      case 'home':
-        return this.renderMePayHome(onHomePress);
-      case 'send':
-        return this.renderMePaySend(onHomePress);
-      case 'request':
-        return this.renderMePayRequest(onHomePress);
-      default:
-        return this.renderMePayHome(onHomePress);
-    }
+    return ui.View({
+      style: { width: '100%', height: '100%' },
+      children: [
+        ui.UINode.if(
+          ui.Binding.derive([this.currentMePayPageBinding], (currentPage) => currentPage === 'sent' && this.lastTransaction != null),
+          this.renderPaymentSentScreen(onHomePress)
+        ),
+        ui.UINode.if(
+          ui.Binding.derive([this.currentMePayPageBinding], (currentPage) => currentPage === 'requested' && this.lastTransaction != null),
+          this.renderRequestSentScreen(onHomePress)
+        ),
+        ui.UINode.if(
+          ui.Binding.derive([this.currentMePayPageBinding], (currentPage) => currentPage === 'home'),
+          this.renderMePayHome(onHomePress)
+        ),
+        ui.UINode.if(
+          ui.Binding.derive([this.currentMePayPageBinding], (currentPage) => currentPage === 'send'),
+          this.renderMePaySend(onHomePress)
+        ),
+        ui.UINode.if(
+          ui.Binding.derive([this.currentMePayPageBinding], (currentPage) => currentPage === 'request'),
+          this.renderMePayRequest(onHomePress)
+        )
+      ]
+    });
   }
 
   private renderMePayHome(onHomePress: () => void): ui.UINode {
@@ -361,8 +366,8 @@ export class MePayApp {
         ui.View({
           style: {
             flex: 1,
-            marginTop: 36,
-            padding: 16
+            marginTop: 12,
+            padding: 12
           },
           children: [
             // Balance Card
@@ -370,16 +375,16 @@ export class MePayApp {
               style: {
                 backgroundColor: '#3B82F6',
                 borderRadius: 12,
-                padding: 20,
-                marginBottom: 20
+                padding: 16,
+                marginBottom: 16
               },
               children: [
                 ui.Text({
                   text: 'Account Balance',
                   style: {
-                    fontSize: 14,
+                    fontSize: 12,
                     color: 'rgba(255, 255, 255, 0.9)',
-                    marginBottom: 8
+                    marginBottom: 6
                   }
                 }),
                 ui.Text({
@@ -387,7 +392,7 @@ export class MePayApp {
                     `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                   ),
                   style: {
-                    fontSize: 28,
+                    fontSize: 22,
                     fontWeight: '700',
                     color: '#FFFFFF'
                   }
@@ -399,7 +404,7 @@ export class MePayApp {
             ui.View({
               style: {
                 flexDirection: 'row',
-                marginBottom: 20
+                marginBottom: 16
               },
               children: [
                 // Send Button
@@ -407,29 +412,31 @@ export class MePayApp {
                   style: {
                     flex: 1,
                     backgroundColor: '#3B82F6',
-                    borderRadius: 12,
-                    padding: 16,
+                    borderRadius: 10,
+                    padding: 12,
                     flexDirection: 'column',
                     alignItems: 'center',
                     marginRight: 8
                   },
                   onPress: () => {
+                    console.log('[MePay] Send button clicked');
                     this.navigateToMePayPage('send');
+                    console.log('[MePay] Navigation to send page completed');
                   },
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("2808780245977101"))),
                       style: {
-                        width: 20,
-                        height: 20,
+                        width: 16,
+                        height: 16,
                         tintColor: '#FFFFFF',
-                        marginBottom: 8
+                        marginBottom: 6
                       }
                     }),
                     ui.Text({
                       text: 'Send',
                       style: {
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: '#FFFFFF'
                       }
@@ -442,8 +449,8 @@ export class MePayApp {
                   style: {
                     flex: 1,
                     backgroundColor: '#10B981',
-                    borderRadius: 12,
-                    padding: 16,
+                    borderRadius: 10,
+                    padding: 12,
                     flexDirection: 'column',
                     alignItems: 'center',
                     marginLeft: 8
@@ -455,44 +462,21 @@ export class MePayApp {
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("2521912731541281"))),
                       style: {
-                        width: 20,
-                        height: 20,
+                        width: 16,
+                        height: 16,
                         tintColor: '#FFFFFF',
-                        marginBottom: 8
+                        marginBottom: 6
                       }
                     }),
                     ui.Text({
                       text: 'Request',
                       style: {
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: '#FFFFFF'
                       }
                     })
                   ]
-                })
-              ]
-            }),
-
-            // Recent Activity Section
-            ui.Text({
-              text: 'Recent Activity',
-              style: {
-                fontSize: 16,
-                fontWeight: '600',
-                color: '#111827',
-                marginBottom: 12
-              }
-            }),
-
-            // Transactions List
-            ui.ScrollView({
-              style: {
-                flex: 1
-              },
-              children: [
-                ui.View({
-                  children: [...this.recentTransactions.slice(0, 8).map(transaction => this.createTransactionItem(transaction))]
                 })
               ]
             })
@@ -527,15 +511,15 @@ export class MePayApp {
         ui.View({
           style: {
             flex: 1,
-            marginTop: 36,
-            padding: this.showSendNumpad ? 0 : 16
+            marginTop: 12,
+            padding: this.showSendNumpad ? 0 : 12
           },
           children: [
             // Form Fields
             ui.View({
               style: {
-                padding: this.showSendNumpad ? 16 : 0,
-                paddingBottom: this.showSendNumpad ? 12 : 0
+                padding: this.showSendNumpad ? 12 : 0,
+                paddingBottom: this.showSendNumpad ? 8 : 0
               },
               children: [
                 // Recipient Field
@@ -557,18 +541,18 @@ export class MePayApp {
                 ui.View({
                   style: {
                     backgroundColor: '#F9FAFB',
-                    borderRadius: 12,
-                    padding: 12,
-                    marginBottom: 16
+                    borderRadius: 10,
+                    padding: 10,
+                    marginBottom: 12
                   },
                   children: [
                     ui.Text({
                       text: 'Amount',
                       style: {
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: '500',
                         color: '#374151',
-                        marginBottom: 8
+                        marginBottom: 6
                       }
                     }),
                     ui.Pressable({
@@ -577,8 +561,8 @@ export class MePayApp {
                         borderWidth: 1,
                         borderColor: '#D1D5DB',
                         borderRadius: 8,
-                        padding: 12,
-                        minHeight: 44
+                        padding: 10,
+                        minHeight: 36
                       },
                       onPress: () => {
                         this.showSendNumpad = true;
@@ -590,7 +574,7 @@ export class MePayApp {
                             amount ? `$${this.formatMePayAmount(amount)}` : '$0'
                           ),
                           style: {
-                            fontSize: 32,
+                            fontSize: 20,
                             fontWeight: '600',
                             color: '#111827',
                             textAlign: 'center'
@@ -624,8 +608,8 @@ export class MePayApp {
               ui.Pressable({
                 style: {
                   backgroundColor: this.selectedMePayContact && this.sendAmount ? '#3B82F6' : '#9CA3AF',
-                  borderRadius: 12,
-                  padding: 16,
+                  borderRadius: 10,
+                  padding: 12,
                   marginTop: 'auto'
                 },
                 onPress: () => {
@@ -637,7 +621,7 @@ export class MePayApp {
                   ui.Text({
                     text: 'Send Money',
                     style: {
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: '600',
                       color: '#FFFFFF',
                       textAlign: 'center'
@@ -680,7 +664,7 @@ export class MePayApp {
         ui.View({
           style: {
             flex: 1,
-            marginTop: 36,
+            marginTop: 12,
             padding: this.showRequestNumpad ? 0 : 16
           },
           children: [
@@ -743,7 +727,7 @@ export class MePayApp {
                             amount ? `$${this.formatMePayAmount(amount)}` : '$0'
                           ),
                           style: {
-                            fontSize: 32,
+                            fontSize: 24,
                             fontWeight: '600',
                             color: '#111827',
                             textAlign: 'center'
@@ -810,8 +794,10 @@ export class MePayApp {
 
   // MePay helper methods
   private navigateToMePayPage(page: 'home' | 'send' | 'request' | 'sent' | 'requested'): void {
+    console.log(`[MePay] Navigating to page: ${page}`);
     this.currentMePayPage = page;
     this.currentMePayPageBinding.set(page);
+    console.log(`[MePay] Page set to: ${this.currentMePayPage}, binding updated`);
   }
 
   private resetMePayState(): void {
@@ -943,18 +929,18 @@ export class MePayApp {
     return ui.View({
       style: {
         backgroundColor: '#F9FAFB',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 16
+        borderRadius: 10,
+        padding: 10,
+        marginBottom: 12
       },
       children: [
         ui.Text({
           text: label,
           style: {
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: '500',
             color: '#374151',
-            marginBottom: 8
+            marginBottom: 6
           }
         }),
         ui.Pressable({
@@ -963,7 +949,7 @@ export class MePayApp {
             borderWidth: 1,
             borderColor: '#D1D5DB',
             borderRadius: 8,
-            padding: 12,
+            padding: 10,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between'
@@ -979,8 +965,8 @@ export class MePayApp {
                 ui.Text({
                   text: selectedContact.avatar,
                   style: {
-                    fontSize: 16,
-                    marginRight: 8
+                    fontSize: 14,
+                    marginRight: 6
                   }
                 }),
                 ui.View({
@@ -988,7 +974,7 @@ export class MePayApp {
                     ui.Text({
                       text: selectedContact.name,
                       style: {
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: '500',
                         color: '#111827'
                       }
@@ -996,7 +982,7 @@ export class MePayApp {
                     ui.Text({
                       text: selectedContact.phone,
                       style: {
-                        fontSize: 12,
+                        fontSize: 10,
                         color: '#6B7280'
                       }
                     })
@@ -1006,7 +992,7 @@ export class MePayApp {
             }) : ui.Text({
               text: 'Select a contact',
               style: {
-                fontSize: 14,
+                fontSize: 12,
                 color: '#9CA3AF'
               }
             }),
@@ -1106,18 +1092,18 @@ export class MePayApp {
     return ui.View({
       style: {
         backgroundColor: '#F9FAFB',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 16
+        borderRadius: 10,
+        padding: 10,
+        marginBottom: 12
       },
       children: [
         ui.Text({
           text: label,
           style: {
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: '500',
             color: '#374151',
-            marginBottom: 8
+            marginBottom: 6
           }
         }),
         ui.Pressable({
@@ -1126,7 +1112,7 @@ export class MePayApp {
             borderWidth: 1,
             borderColor: '#D1D5DB',
             borderRadius: 8,
-            padding: 12,
+            padding: 10,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between'
@@ -1216,7 +1202,7 @@ export class MePayApp {
       children: [
         ui.View({
           style: {
-            padding: 16
+            padding: 12
           },
           children: [
             // Numpad Grid
@@ -1224,7 +1210,7 @@ export class MePayApp {
               ui.View({
                 style: {
                   flexDirection: 'row',
-                  marginBottom: 8
+                  marginBottom: 6
                 },
                 children: row.map((key, keyIndex) => 
                   ui.Pressable({
@@ -1233,12 +1219,12 @@ export class MePayApp {
                       backgroundColor: '#FFFFFF',
                       borderWidth: 1,
                       borderColor: '#E5E7EB',
-                      borderRadius: 8,
-                      padding: 16,
-                      marginHorizontal: 4,
+                      borderRadius: 6,
+                      padding: 12,
+                      marginHorizontal: 3,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: 48
+                      minHeight: 40
                     },
                     onPress: () => {
                       this.handleMePayNumpadPress(key, isRequest);
@@ -1421,7 +1407,7 @@ export class MePayApp {
         ui.Text({
           text: 'Payment Sent Successfully!',
           style: {
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: '700',
             color: '#FFFFFF',
             textAlign: 'center',
@@ -1494,7 +1480,7 @@ export class MePayApp {
         ui.Text({
           text: 'Request Sent Successfully!',
           style: {
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: '700',
             color: '#FFFFFF',
             textAlign: 'center',
