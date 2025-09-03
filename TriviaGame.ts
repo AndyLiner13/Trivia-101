@@ -387,8 +387,8 @@ export class TriviaGame extends ui.UIComponent {
     // Start countdown timer
     this.startTimer();
 
-    // Schedule next question after time limit + results display time
-    this.scheduleNextQuestion();
+    // Don't auto-schedule next question - wait for host to press "Next Question"
+    // this.scheduleNextQuestion();
 
     console.log(`TriviaGame: Showing question ${this.currentQuestionIndex + 1}: ${question.question}`);
   }
@@ -418,43 +418,10 @@ export class TriviaGame extends ui.UIComponent {
   private showQuestionResults(): void {
     if (!this.currentQuestion) return;
 
-    // Find correct answer
-    const correctAnswerIndex = this.currentQuestion.answers.findIndex(a => a.correct);
+    console.log("TriviaGame: Time's up! Showing results and leaderboard");
     
-    // Show results
-    this.showResultsBinding.set(true);
-    this.correctAnswerBinding.set(correctAnswerIndex);
-    
-    // Mock answer counts for demonstration (in real implementation, these would come from player submissions)
-    const mockAnswerCounts = [
-      Math.floor(Math.random() * 5),
-      Math.floor(Math.random() * 5), 
-      Math.floor(Math.random() * 5),
-      Math.floor(Math.random() * 5)
-    ];
-    this.answerCountsBinding.set(mockAnswerCounts);
-    
-    // Calculate total answers
-    this.totalAnswers = mockAnswerCounts.reduce((sum, count) => sum + count, 0);
-    this.answerCountBinding.set(this.totalAnswers.toString());
-
-    // Send results to TriviaApp and other components
-    const serializableQuestion: SerializableQuestion = {
-      id: this.currentQuestion.id,
-      question: this.currentQuestion.question,
-      category: this.currentQuestion.category,
-      difficulty: this.currentQuestion.difficulty,
-      answers: this.currentQuestion.answers.map(a => ({ text: a.text, correct: a.correct }))
-    };
-
-    this.sendNetworkBroadcastEvent(triviaResultsEvent, {
-      question: serializableQuestion,
-      correctAnswerIndex: correctAnswerIndex,
-      answerCounts: mockAnswerCounts,
-      scores: {}
-    });
-
-    console.log(`TriviaGame: Showing results for question ${this.currentQuestionIndex + 1}`);
+    // Time's up - show correct answers and leaderboard (same as when all players answer)
+    this.showCorrectAnswersAndLeaderboard();
   }
 
   private onQuestionStart(eventData: { question: SerializableQuestion, questionIndex: number, timeLimit: number }): void {
@@ -652,9 +619,9 @@ export class TriviaGame extends ui.UIComponent {
     // Show results without vote counts (just correct/incorrect indicators)
     this.showResultsBinding.set(true);
     
-    console.log("TriviaGame: Showing correct answers for 5 seconds");
+    console.log("TriviaGame: Showing correct answers for 5 seconds, then showing leaderboard");
     
-    // After 5 seconds, show leaderboard
+    // After 5 seconds, show leaderboard (but don't auto-advance to next question)
     this.async.setTimeout(() => {
       this.showLeaderboard();
     }, 5000);
@@ -709,7 +676,7 @@ export class TriviaGame extends ui.UIComponent {
     // Sort by score descending
     return leaderboard.sort((a, b) => b.score - a.score);
   }  private advanceToNextQuestion(): void {
-    console.log("TriviaGame: Advancing to next question");
+    console.log("TriviaGame: Host pressed Next Question - advancing to next question");
     
     // Hide leaderboard
     this.showLeaderboardBinding.set(false);
@@ -724,7 +691,7 @@ export class TriviaGame extends ui.UIComponent {
     // Move to next question
     this.currentQuestionIndex++;
     
-    // Show the next question
+    // Show the next question (this will send network event to all TriviaApps)
     this.showNextQuestion();
   }
 

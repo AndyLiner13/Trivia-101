@@ -239,9 +239,10 @@ export class TriviaApp {
     this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
     
     console.log('TriviaApp: Showing answer feedback -', isCorrect ? 'CORRECT' : isCorrect === false ? 'WRONG' : 'NO ANSWER');
+    console.log('TriviaApp: Waiting for host to press Next Question button (no auto-progression)');
     
-    // Start auto-progression timer (5 seconds)
-    this.startAutoProgressTimer(this.assignedPlayer ?? undefined);
+    // Don't start auto-progression timer - wait for host to press "Next Question"
+    // this.startAutoProgressTimer(this.assignedPlayer ?? undefined);
   }
 
   // Method to send network events (requires callback from parent component)
@@ -426,7 +427,7 @@ export class TriviaApp {
     
     // Only reset state for new question if we're moving to a different question
     // or if we're starting a fresh question (selectedAnswer is already null)
-    if (this.selectedAnswer === null || this.showResult === true) {
+    if (this.selectedAnswer === null || this.showResult === true || questionData.questionIndex !== this.currentQuestionIndex) {
       console.log("TriviaApp: Resetting state for new question");
       this.selectedAnswer = null;
       this.showResult = false;
@@ -438,12 +439,17 @@ export class TriviaApp {
       this.lastAnswerTimestamp = 0;
       this.answerSelectionCount = 0;
       
+      // Clear any running timers when new question starts
+      this.clearAutoProgressTimer();
+      
       // Update bindings
       this.selectedAnswerBinding.set(null);
       this.showResultBinding.set(false);
       this.isAnswerCorrectBinding.set(null);
       this.waitingMessageBinding.set('');
       this.gameStateBinding.set('playing');
+      
+      console.log("TriviaApp: Ready for new question - all state reset");
     } else {
       console.log("TriviaApp: Preserving current answer selection during sync");
       console.log("TriviaApp: Preserved selectedAnswer:", this.selectedAnswer);
@@ -1016,9 +1022,7 @@ export class TriviaApp {
                             }
                           }),
                           ui.Text({
-                            text: ui.Binding.derive([this.secondsRemainingBinding], (seconds) => 
-                              seconds > 0 ? `Next question in ${seconds} second${seconds !== 1 ? 's' : ''}...` : 'Loading next question...'
-                            ),
+                            text: "Waiting for next question...",
                             style: {
                               fontSize: 12,
                               color: '#FFFFFF',
