@@ -23,8 +23,8 @@ interface MessageTemplate {
   messages: string[];
 }
 
-export class MessagesApp {
-  // Messages app state bindings
+export class MeChatApp {
+  // MeChat app state bindings
   private selectedConversationBinding = new ui.Binding<Conversation | null>(null);
   private currentMessagesViewBinding = new ui.Binding<'list' | 'chat'>('list');
   private messagesBinding = new ui.Binding<Message[]>([]);
@@ -257,7 +257,7 @@ export class MessagesApp {
       children: [
         // Header
         this.createAppHeader({
-          appName: 'Messages',
+          appName: 'MeChat',
           onHomePress: () => {
             onHomePress();
             // Reset messages state
@@ -307,7 +307,7 @@ export class MessagesApp {
       children: [
         // Header
         this.createAppHeader({
-          appName: 'Messages',
+          appName: 'MeChat',
           onHomePress: () => {
             onHomePress();
             this.selectedConversationBinding.set(null);

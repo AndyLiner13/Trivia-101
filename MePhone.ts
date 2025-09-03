@@ -4,7 +4,7 @@ import { Social, AvatarImageType } from 'horizon/social';
 
 // Import all the app classes
 import { PhoneApp } from './PhoneApp';
-import { MessagesApp } from './MessagesApp';
+import { MeChatApp } from './MeChatApp';
 import { ContactsApp } from './ContactsApp';
 import { MePayApp } from './MePayApp';
 import { CalculatorApp } from './CalculatorApp';
@@ -31,7 +31,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // App instances - one per app type
   private phoneApp = new PhoneApp();
-  private messagesApp = new MessagesApp();
+  private messagesApp = new MeChatApp();
   private contactsApp: ContactsApp | null = null; // Initialize lazily
   private mePayApp = new MePayApp();
   private calculatorApp = new CalculatorApp();
@@ -151,8 +151,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone'),
-                this.createAppIcon('Messages', '#fb2c36', BigInt("1480228839964364"), 'messages')
+                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts'),
+                this.createAppIcon('MeChat', '#fb2c36', BigInt("1480228839964364"), 'messages')
               ]
             }),
             
@@ -166,8 +166,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 flex: 1
               },
               children: [
-                this.createAppIcon('Contacts', '#ff6900', BigInt("1328787472168292"), 'contacts'),
-                this.createAppIcon('MePay', '#10b981', BigInt("769107079414002"), 'mepay')
+                this.createAppIcon('MePay', '#10b981', BigInt("769107079414002"), 'mepay'),
+                this.createAppIcon('Phone', '#00c951', BigInt("24322726084045822"), 'phone')
               ]
             }),
             
