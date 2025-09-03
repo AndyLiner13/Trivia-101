@@ -111,8 +111,8 @@ export class TriviaApp {
   private useExternalQuestions = false;
 
   // Auto-progression timer
-  private autoProgressTimer: ReturnType<typeof setTimeout> | null = null;
-  private countdownTimer: ReturnType<typeof setInterval> | null = null;
+  private autoProgressTimer: any = null;
+  private countdownTimer: any = null;
   private secondsRemaining = 5;
 
   // Bindings for UI reactivity
@@ -479,7 +479,7 @@ export class TriviaApp {
     this.secondsRemainingBinding.set(this.secondsRemaining, assignedPlayer ? [assignedPlayer] : undefined);
     
     // Start countdown timer (updates every second)
-    this.countdownTimer = setInterval(() => {
+    this.countdownTimer = (globalThis as any).setInterval(() => {
       this.secondsRemaining -= 1;
       this.secondsRemainingBinding.set(this.secondsRemaining, assignedPlayer ? [assignedPlayer] : undefined);
       
@@ -491,7 +491,7 @@ export class TriviaApp {
     }, 1000);
     
     // Set main timer for 5 seconds (backup in case interval fails)
-    this.autoProgressTimer = setTimeout(() => {
+    this.autoProgressTimer = (globalThis as any).setTimeout(() => {
       this.clearAutoProgressTimer();
       this.checkGameEnd(assignedPlayer);
     }, 5000);
@@ -499,11 +499,11 @@ export class TriviaApp {
 
   private clearAutoProgressTimer(): void {
     if (this.autoProgressTimer) {
-      clearTimeout(this.autoProgressTimer);
+      (globalThis as any).clearTimeout(this.autoProgressTimer);
       this.autoProgressTimer = null;
     }
     if (this.countdownTimer) {
-      clearInterval(this.countdownTimer);
+      (globalThis as any).clearInterval(this.countdownTimer);
       this.countdownTimer = null;
     }
   }
