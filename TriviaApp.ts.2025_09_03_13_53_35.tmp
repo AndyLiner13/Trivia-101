@@ -134,21 +134,20 @@ export class TriviaApp {
   private waitingMessageBinding = new ui.Binding('');
   private secondsRemainingBinding = new ui.Binding(5);
 
-  constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void) {
+  constructor(world?: hz.World) {
     // Store world reference for network events
     this.world = world || null;
-    this.sendNetworkCallback = sendNetworkCallback || null;
     
     // Load questions from the JSON data
     this.loadQuestionsFromData();
   }
 
-  // Method to send network events (requires callback from parent component)
-  private sendNetworkEvent(event: hz.NetworkEvent<any>, data: any): void {
-    if (this.sendNetworkCallback) {
-      this.sendNetworkCallback(event, data);
+  // Method to send network events (requires world context)
+  private sendNetworkEvent<T>(event: hz.NetworkEvent<T>, data: T): void {
+    if (this.world) {
+      event.sendBroadcast(data);
     } else {
-      console.warn('TriviaApp: Cannot send network event - no network callback');
+      console.warn('TriviaApp: Cannot send network event - no world context');
     }
   }
 
@@ -475,7 +474,7 @@ export class TriviaApp {
     const playerId = assignedPlayer?.id.toString() || 'local';
     
     // Send network event to sync with TriviaGame
-    this.sendNetworkEvent(triviaAnswerSubmittedEvent, {
+    this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
       playerId: playerId,
       answerIndex: answerIndex,
       responseTime: responseTime

@@ -5,7 +5,11 @@ import {
   Square,
 } from "lucide-react";
 
-export function KahootInterface() {
+interface KahootInterfaceProps {
+  questionNumber?: number;
+}
+
+export function KahootInterface({ questionNumber = 6 }: KahootInterfaceProps) {
   return (
     <div className="w-full max-w-6xl mx-auto aspect-video bg-gray-100 relative overflow-hidden rounded-lg">
       {/* Header */}
@@ -13,7 +17,7 @@ export function KahootInterface() {
         {/* Question Number - Center */}
         <div className="text-center">
           <span className="text-2xl font-medium text-orange-500 text-[32px]">
-            Q6
+            Q{questionNumber}
           </span>
         </div>
       </div>

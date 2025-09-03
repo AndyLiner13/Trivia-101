@@ -31,7 +31,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isSettingsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'settings');
 
   // App instances - one per app type
-  private triviaApp = new TriviaApp();
+  private triviaApp = new TriviaApp(this.world, (event, data) => this.sendNetworkBroadcastEvent(event, data));
   private messagesApp = new MeChatApp();
   private contactsApp: ContactsApp | null = null; // Initialize lazily
   private mePayApp = new MePayApp();

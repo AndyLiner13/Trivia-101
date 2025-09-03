@@ -171,6 +171,7 @@ export class TriviaGame extends ui.UIComponent {
     new Binding("")
   ];
   private showResultsBinding = new Binding(false);
+  private showWaitingBinding = new Binding(false);
   private correctAnswerBinding = new Binding(-1);
   private answerCountsBinding = new Binding([0, 0, 0, 0]);
 
@@ -181,6 +182,11 @@ export class TriviaGame extends ui.UIComponent {
   private timeRemaining: number = 30;
   private totalAnswers: number = 0;
   private isRunning: boolean = false;
+
+  // Player tracking for waiting logic
+  private playersInWorld: Set<string> = new Set();
+  private playersAnswered: Set<string> = new Set();
+  private hasLocalPlayerAnswered: boolean = false;
 
   // Timer management
   private timerInterval: number | null = null;
@@ -237,6 +243,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Listen for results events
     this.connectNetworkBroadcastEvent(triviaResultsEvent, this.onQuestionResults.bind(this));
+    
+    // Listen for answer submissions from other players
+    this.connectNetworkBroadcastEvent(triviaAnswerSubmittedEvent, this.onPlayerAnswerSubmitted.bind(this));
   }
 
   private initializeGameState(): void {
@@ -393,6 +402,20 @@ export class TriviaGame extends ui.UIComponent {
     this.timeRemaining = eventData.timeLimit;
     this.totalAnswers = 0;
     
+    // Reset player tracking for new question
+    this.playersAnswered.clear();
+    this.hasLocalPlayerAnswered = false;
+    this.showWaitingBinding.set(false);
+    
+    // Get current players in world
+    const currentPlayers = this.world.getPlayers();
+    this.playersInWorld.clear();
+    currentPlayers.forEach(player => {
+      this.playersInWorld.add(player.id.toString());
+    });
+    
+    console.log(`TriviaGame: ${this.playersInWorld.size} players in world`);
+    
     // Update UI bindings
     this.questionNumberBinding.set(`Q${eventData.questionIndex + 1}`);
     this.questionBinding.set(eventData.question.question);
@@ -417,6 +440,7 @@ export class TriviaGame extends ui.UIComponent {
     console.log("TriviaGame: Question results", eventData);
     
     this.showResultsBinding.set(true);
+    this.showWaitingBinding.set(false); // Hide waiting screen when results come in
     this.correctAnswerBinding.set(eventData.correctAnswerIndex);
     this.answerCountsBinding.set(eventData.answerCounts);
     
@@ -432,6 +456,25 @@ export class TriviaGame extends ui.UIComponent {
       this.showResultsBinding.set(false);
       this.questionBinding.set("Waiting for next question...");
     }, this.props.autoAdvanceTime * 1000);
+  }
+
+  private onPlayerAnswerSubmitted(eventData: { playerId: string, answerIndex: number, responseTime: number }): void {
+    console.log("TriviaGame: Player answer submitted", eventData);
+    
+    // Track this player as having answered
+    this.playersAnswered.add(eventData.playerId);
+    
+    // Update answer count immediately
+    this.answerCountBinding.set(this.playersAnswered.size.toString());
+    
+    console.log(`TriviaGame: ${this.playersAnswered.size}/${this.playersInWorld.size} players have answered`);
+    
+    // Check if all players have answered
+    if (this.playersAnswered.size >= this.playersInWorld.size && this.playersInWorld.size > 1) {
+      console.log("TriviaGame: All players have answered, waiting for results from server");
+      // Note: We don't hide the waiting screen here because results should come shortly
+      // The waiting screen will be hidden when onQuestionResults is called
+    }
   }
 
   private startTimer(): void {
@@ -457,12 +500,19 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private handleAnswerPress(answerIndex: number): void {
-    if (!this.currentQuestion) {
-      return; // Can't answer if no question
+    if (!this.currentQuestion || this.hasLocalPlayerAnswered) {
+      return; // Can't answer if no question or already answered
     }
     
     const player = this.world.getLocalPlayer();
     if (!player) return;
+    
+    // Mark that local player has answered
+    this.hasLocalPlayerAnswered = true;
+    this.playersAnswered.add(player.id.toString());
+    
+    // Update answer count immediately
+    this.answerCountBinding.set(this.playersAnswered.size.toString());
     
     // Send answer to the world trivia system
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
@@ -472,6 +522,16 @@ export class TriviaGame extends ui.UIComponent {
     });
     
     console.log(`TriviaGame: Player ${player.id} answered ${answerIndex}`);
+    
+    // Check if we need to show waiting screen based on number of players
+    if (this.playersInWorld.size === 1) {
+      // Single player - results will come immediately from server
+      console.log("TriviaGame: Single player mode, waiting for immediate results");
+    } else {
+      // Multiplayer - show waiting screen until all players answer
+      this.showWaitingBinding.set(true);
+      console.log(`TriviaGame: Multiplayer mode (${this.playersInWorld.size} players), showing waiting screen`);
+    }
   }
 
   initializeUI() {
@@ -729,6 +789,50 @@ export class TriviaGame extends ui.UIComponent {
               })
             )
           ]
+        }),
+
+        // Waiting for Other Players overlay
+        View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent overlay
+            alignItems: 'center',
+            justifyContent: 'center',
+            display: this.showWaitingBinding.derive(show => show ? 'flex' : 'none')
+          },
+          children: View({
+            style: {
+              backgroundColor: 'white',
+              borderRadius: 12,
+              padding: 24,
+              alignItems: 'center',
+              maxWidth: '80%'
+            },
+            children: [
+              Text({
+                text: 'Waiting for Other Players...',
+                style: {
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#1F2937',
+                  marginBottom: 8,
+                  textAlign: 'center'
+                }
+              }),
+              Text({
+                text: 'Please wait while other players submit their answers',
+                style: {
+                  fontSize: 14,
+                  color: '#6B7280',
+                  textAlign: 'center'
+                }
+              })
+            ]
+          })
         })
       ]
     });
