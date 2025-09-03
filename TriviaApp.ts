@@ -124,6 +124,9 @@ export class TriviaApp {
   
   // Network event callback
   private sendNetworkCallback: ((event: hz.NetworkEvent<any>, data: any) => void) | null = null;
+  
+  // Assigned player context for binding updates
+  private assignedPlayer: hz.Player | null = null;
 
   // Bindings for UI reactivity
   private currentQuestionIndexBinding = new ui.Binding(0);
@@ -139,8 +142,37 @@ export class TriviaApp {
     this.world = world || null;
     this.sendNetworkCallback = sendNetworkCallback || null;
     
+    // Register this TriviaApp instance with the world for results callbacks
+    if (this.world && (this.world as any).triviaApps) {
+      (this.world as any).triviaApps = (this.world as any).triviaApps || [];
+      (this.world as any).triviaApps.push(this);
+    } else if (this.world) {
+      (this.world as any).triviaApps = [this];
+    }
+    
     // Load questions from the JSON data
     this.loadQuestionsFromData();
+  }
+
+  // Set the assigned player for this TriviaApp instance
+  public setAssignedPlayer(player: hz.Player | null): void {
+    this.assignedPlayer = player;
+  }
+
+  // Called by TriviaGame when trivia results are available
+  public onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }): void {
+    console.log('TriviaApp: Received trivia results', eventData);
+    
+    // Show the results immediately
+    this.gameState = 'answered';
+    this.showResult = true;
+    this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    
+    console.log('TriviaApp: Showing results screen');
+    
+    // Start auto-progression timer (5 seconds)
+    this.startAutoProgressTimer(this.assignedPlayer ?? undefined);
   }
 
   // Method to send network events (requires callback from parent component)
@@ -483,30 +515,24 @@ export class TriviaApp {
     
     console.log(`TriviaApp: Player ${playerId} answered ${answerIndex} in ${responseTime}ms`);
     
-    // Show a random quirky message
-    const randomMessage = quirkyWaitingMessages[Math.floor(Math.random() * quirkyWaitingMessages.length)];
-    this.waitingMessage = randomMessage;
+    // Show waiting for other players message
+    const waitingMessage = "Waiting for other players...";
+    this.waitingMessage = waitingMessage;
     
-    // Update bindings
+    // Update bindings to show waiting state
     this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
     this.gameStateBinding.set('waiting', assignedPlayer ? [assignedPlayer] : undefined);
-    this.waitingMessageBinding.set(randomMessage, assignedPlayer ? [assignedPlayer] : undefined);
+    this.waitingMessageBinding.set(waitingMessage, assignedPlayer ? [assignedPlayer] : undefined);
     
-    // Check if answer is correct
+    // Store the correct answer for scoring when results come back
     const currentQuestion = this.questions[this.currentQuestionIndex];
     if (currentQuestion.answers[answerIndex].correct) {
       this.score += 1;
       this.scoreBinding.set(this.score, assignedPlayer ? [assignedPlayer] : undefined);
     }
     
-    // Simulate waiting and then show result (immediate for simplicity)
-    this.gameState = 'answered';
-    this.showResult = true;
-    this.gameStateBinding.set('answered', assignedPlayer ? [assignedPlayer] : undefined);
-    this.showResultBinding.set(true, assignedPlayer ? [assignedPlayer] : undefined);
-    
-    // Start auto-progression timer (5 seconds)
-    this.startAutoProgressTimer(assignedPlayer);
+    console.log(`TriviaApp: Waiting for results from TriviaGame...`);
+    // Results will be shown when triviaResultsEvent is received
   }
 
   private startAutoProgressTimer(assignedPlayer?: hz.Player): void {

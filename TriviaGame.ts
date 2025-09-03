@@ -28,6 +28,7 @@ interface SerializableQuestion {
 const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: SerializableQuestion, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
 const triviaResultsEvent = new hz.NetworkEvent<{ question: SerializableQuestion, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }>('triviaResults');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
+const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: any }>('triviaGameStart');
 
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
@@ -172,8 +173,35 @@ export class TriviaGame extends ui.UIComponent {
   ];
   private showResultsBinding = new Binding(false);
   private showWaitingBinding = new Binding(false);
+  private showLeaderboardBinding = new Binding(false);
   private correctAnswerBinding = new Binding(-1);
   private answerCountsBinding = new Binding([0, 0, 0, 0]);
+  
+  // Leaderboard data
+  private leaderboardDataBinding = new Binding<Array<{name: string, score: number, playerId: string}>>([]);
+
+  // Game configuration state
+  private showConfigBinding = new Binding(true); // Show config screen initially
+  private gameConfigBinding = new Binding({
+    timeLimit: 30,
+    autoAdvance: true,
+    numQuestions: 10,
+    category: "General",
+    difficulty: "Medium"
+  });
+  private hostPlayerIdBinding = new Binding<string | null>(null);
+  private isLocalPlayerHostBinding = new Binding(false);
+  
+  // Internal state variables (not bound to UI)
+  private hostPlayerId: string | null = null;
+  private isLocalPlayerHost: boolean = false;
+  private gameConfig = {
+    timeLimit: 30,
+    autoAdvance: true,
+    numQuestions: 10,
+    category: "General",
+    difficulty: "Medium"
+  };
 
   // Game data
   private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
@@ -206,11 +234,13 @@ export class TriviaGame extends ui.UIComponent {
     // Set up network event listeners
     this.setupNetworkEvents();
     
-    // Initialize the UI
+    // Initialize the UI (shows config screen by default)
     this.initializeGameState();
     
-    // Start continuous trivia game
-    this.startContinuousGame();
+    // Detect host player (first player to join)
+    this.detectHostPlayer();
+    
+    console.log("TriviaGame: Initialized - showing configuration screen");
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -246,6 +276,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Listen for answer submissions from other players
     this.connectNetworkBroadcastEvent(triviaAnswerSubmittedEvent, this.onPlayerAnswerSubmitted.bind(this));
+    
+    // Listen for game start events from host
+    this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
   }
 
   private initializeGameState(): void {
@@ -254,11 +287,16 @@ export class TriviaGame extends ui.UIComponent {
     this.answerCountBinding.set("0");
     this.questionBinding.set("Starting trivia game...");
     this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
     
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
       this.answerTexts[i].set("");
     }
+    
+    // Reset leaderboard
+    this.leaderboardDataBinding.set([]);
   }
 
   private startContinuousGame(): void {
@@ -271,6 +309,10 @@ export class TriviaGame extends ui.UIComponent {
     console.log("TriviaGame: Starting continuous trivia game");
     this.isRunning = true;
     this.currentQuestionIndex = 0;
+    
+    // Reset game state for new game
+    this.initializeGameState();
+    
     this.showNextQuestion();
   }
 
@@ -406,6 +448,8 @@ export class TriviaGame extends ui.UIComponent {
     this.playersAnswered.clear();
     this.hasLocalPlayerAnswered = false;
     this.showWaitingBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showLeaderboardBinding.set(false);
     
     // Get current players in world
     const currentPlayers = this.world.getPlayers();
@@ -470,11 +514,216 @@ export class TriviaGame extends ui.UIComponent {
     console.log(`TriviaGame: ${this.playersAnswered.size}/${this.playersInWorld.size} players have answered`);
     
     // Check if all players have answered
-    if (this.playersAnswered.size >= this.playersInWorld.size && this.playersInWorld.size > 1) {
-      console.log("TriviaGame: All players have answered, waiting for results from server");
-      // Note: We don't hide the waiting screen here because results should come shortly
-      // The waiting screen will be hidden when onQuestionResults is called
+    if (this.playersAnswered.size >= this.playersInWorld.size && this.playersInWorld.size > 0) {
+      console.log("TriviaGame: All players have answered, showing correct answers");
+      this.showCorrectAnswersAndLeaderboard();
     }
+  }
+
+  private showCorrectAnswersAndLeaderboard(): void {
+    if (!this.currentQuestion) return;
+    
+    // Stop timer and hide waiting screen
+    this.stopTimer();
+    this.showWaitingBinding.set(false);
+    
+    // Find the correct answer index
+    const correctAnswerIndex = this.currentQuestion.answers.findIndex(answer => answer.correct);
+    this.correctAnswerBinding.set(correctAnswerIndex);
+    
+    // Convert question to serializable format
+    const serializableQuestion: SerializableQuestion = {
+      id: this.currentQuestion.id,
+      question: this.currentQuestion.question,
+      category: this.currentQuestion.category,
+      difficulty: this.currentQuestion.difficulty,
+      answers: this.currentQuestion.answers
+    };
+    
+    // Call TriviaApp instances directly via world reference
+    const triviaApps = (this.world as any).triviaApps;
+    if (triviaApps && Array.isArray(triviaApps)) {
+      console.log(`TriviaGame: Notifying ${triviaApps.length} TriviaApp instances of results`);
+      triviaApps.forEach((triviaApp: any) => {
+        if (triviaApp && typeof triviaApp.onTriviaResults === 'function') {
+          triviaApp.onTriviaResults({
+            question: serializableQuestion,
+            correctAnswerIndex: correctAnswerIndex,
+            answerCounts: [0, 0, 0, 0],
+            scores: {}
+          });
+        }
+      });
+    }
+    
+    // Also send network event for other systems that might be listening
+    this.sendNetworkBroadcastEvent(triviaResultsEvent, {
+      question: serializableQuestion,
+      correctAnswerIndex: correctAnswerIndex,
+      answerCounts: [0, 0, 0, 0], // No vote counts in this implementation
+      scores: {} // Simplified scores
+    });
+    
+    console.log("TriviaGame: Sent results to TriviaApps");
+    
+    // Show results without vote counts (just correct/incorrect indicators)
+    this.showResultsBinding.set(true);
+    
+    console.log("TriviaGame: Showing correct answers for 5 seconds");
+    
+    // After 5 seconds, show leaderboard
+    this.async.setTimeout(() => {
+      this.showLeaderboard();
+    }, 5000);
+  }
+
+  private showLeaderboard(): void {
+    console.log("TriviaGame: Showing leaderboard");
+    
+    // Hide results, show leaderboard
+    this.showResultsBinding.set(false);
+    this.showLeaderboardBinding.set(true);
+    
+    // Generate mock leaderboard data (in a real implementation, this would come from server)
+    const mockLeaderboard = this.generateMockLeaderboard();
+    this.leaderboardDataBinding.set(mockLeaderboard);
+    
+    // After 5 seconds, auto-advance to next question
+    this.async.setTimeout(() => {
+      this.advanceToNextQuestion();
+    }, 5000);
+  }
+
+  private generateMockLeaderboard(): Array<{name: string, score: number, playerId: string}> {
+    // Get actual players in the world
+    const currentPlayers = this.world.getPlayers();
+    const leaderboard: Array<{name: string, score: number, playerId: string}> = [];
+    
+    // Create leaderboard entries for each player with mock scores
+    currentPlayers.forEach((player, index) => {
+      const playerId = player.id.toString();
+      if (this.playersInWorld.has(playerId)) {
+        leaderboard.push({
+          name: player.name.get() || `Player ${index + 1}`,
+          score: Math.floor(Math.random() * 500) + 500, // Random score between 500-999
+          playerId: playerId
+        });
+      }
+    });
+    
+    // Add some mock players if we don't have enough real players
+    const mockNames = ["Alex Johnson", "Sarah Davis", "Mike Chen", "Emma Wilson", "James Brown"];
+    while (leaderboard.length < 3 && leaderboard.length < mockNames.length) {
+      const index = leaderboard.length;
+      leaderboard.push({
+        name: mockNames[index],
+        score: Math.floor(Math.random() * 400) + 300, // Lower scores for mock players
+        playerId: `mock-${index}`
+      });
+    }
+    
+    // Sort by score descending
+    return leaderboard.sort((a, b) => b.score - a.score);
+  }
+
+  private advanceToNextQuestion(): void {
+    console.log("TriviaGame: Auto-advancing to next question");
+    
+    // Hide leaderboard
+    this.showLeaderboardBinding.set(false);
+    
+    // Reset question state
+    this.questionBinding.set("Waiting for next question...");
+    
+    // The next question will be triggered by the server via onQuestionStart
+  }
+
+  private detectHostPlayer(): void {
+    const localPlayer = this.world.getLocalPlayer();
+    if (!localPlayer) return;
+    
+    const allPlayers = this.world.getPlayers();
+    console.log(`TriviaGame: Detecting host among ${allPlayers.length} players`);
+    
+    if (allPlayers.length === 0) {
+      // No players yet, local player becomes host
+      this.hostPlayerId = localPlayer.id.toString();
+      this.isLocalPlayerHost = true;
+      this.hostPlayerIdBinding.set(this.hostPlayerId);
+      this.isLocalPlayerHostBinding.set(true);
+      console.log("TriviaGame: Local player is the host (first to join)");
+    } else {
+      // Check if there's already a host or if local player is first
+      if (!this.hostPlayerId) {
+        // No host set yet, local player becomes host
+        this.hostPlayerId = localPlayer.id.toString();
+        this.isLocalPlayerHost = true;
+        this.hostPlayerIdBinding.set(this.hostPlayerId);
+        this.isLocalPlayerHostBinding.set(true);
+        console.log("TriviaGame: Local player is the host");
+      } else {
+        // Host already exists
+        this.isLocalPlayerHost = this.hostPlayerId === localPlayer.id.toString();
+        this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
+        console.log(`TriviaGame: Host is ${this.hostPlayerId}, local player is host: ${this.isLocalPlayerHost}`);
+      }
+    }
+  }
+
+  private handleStartGame(): void {
+    if (!this.isLocalPlayerHost) {
+      console.log("TriviaGame: Only host can start the game");
+      return;
+    }
+    
+    console.log("TriviaGame: Host is starting the game");
+    
+    // Broadcast game start to all players
+    this.sendNetworkBroadcastEvent(triviaGameStartEvent, {
+      hostId: this.hostPlayerId!,
+      config: this.gameConfig
+    });
+    
+    // Hide config screen and start game locally
+    this.showConfigBinding.set(false);
+    
+    // Apply current configuration
+    this.timeRemaining = this.gameConfig.timeLimit;
+    this.timerBinding.set(this.gameConfig.timeLimit.toString());
+    
+    // Start the trivia game
+    this.startContinuousGame();
+  }
+
+  private onGameStart(data: { hostId: string, config: any }): void {
+    console.log("TriviaGame: Received game start from host", data.hostId);
+    
+    // Update configuration
+    this.gameConfig = data.config;
+    this.gameConfigBinding.set(this.gameConfig);
+    
+    // Hide config screen
+    this.showConfigBinding.set(false);
+    
+    // Apply configuration
+    this.timeRemaining = this.gameConfig.timeLimit;
+    this.timerBinding.set(this.gameConfig.timeLimit.toString());
+    
+    // Start the game if not already running
+    if (!this.isRunning) {
+      this.startContinuousGame();
+    }
+  }
+
+  private updateGameConfig(newConfig: any): void {
+    if (!this.isLocalPlayerHost) {
+      console.log("TriviaGame: Only host can change game settings");
+      return;
+    }
+    
+    this.gameConfig = { ...this.gameConfig, ...newConfig };
+    this.gameConfigBinding.set(this.gameConfig);
+    console.log("TriviaGame: Game configuration updated", this.gameConfig);
   }
 
   private startTimer(): void {
@@ -545,171 +794,711 @@ export class TriviaGame extends ui.UIComponent {
         borderRadius: 8
       },
       children: [
-        // Header with question number - centered at top
-        View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            padding: 12,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#F3F4F6'
-          },
-          children: Text({
-            text: this.questionNumberBinding,
+        // Configuration Screen (shows initially)
+        UINode.if(
+          this.showConfigBinding,
+          View({
             style: {
-              fontSize: 20,
-              fontWeight: '500',
-              color: '#FF6B35' // Orange-500 color
-            }
-          })
-        }),
-
-        // Timer - positioned at left, aligned with question
-        View({
-          style: {
-            position: 'absolute',
-            left: '8%',
-            top: '25%',
-            width: 40,
-            height: 40,
-            backgroundColor: '#FF6B35', // Orange-500
-            borderRadius: 20,
-            alignItems: 'center',
-            justifyContent: 'center'
-          },
-          children: Text({
-            text: this.timerBinding,
-            style: {
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: 'white'
-            }
-          })
-        }),
-
-        // Answer count - positioned at right, aligned with question
-        View({
-          style: {
-            position: 'absolute',
-            right: '8%',
-            top: '25%',
-            alignItems: 'center'
-          },
-          children: [
-            Text({
-              text: this.answerCountBinding,
-              style: {
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: '#1F2937' // Gray-800
-              }
-            }),
-            Text({
-              text: 'Answers',
-              style: {
-                fontSize: 10,
-                color: '#6B7280' // Gray-600
-              }
-            })
-          ]
-        }),
-
-        // Question - positioned in center area, moved up
-        View({
-          style: {
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: '20%',
-            bottom: '60%',
-            alignItems: 'center',
-            justifyContent: 'center'
-          },
-          children: View({
-            style: {
-              backgroundColor: 'white',
-              borderRadius: 6,
-              shadowColor: 'black',
-              shadowOpacity: 0.1,
-              shadowRadius: 6,
-              shadowOffset: [0, 2],
-              padding: 16,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#F3F4F6',
               alignItems: 'center',
-              justifyContent: 'center',
-              maxWidth: '60%' // Prevent it from getting too wide
+              justifyContent: 'center'
             },
-            children: Text({
-              text: this.questionBinding,
-              style: {
-                fontSize: 16,
-                fontWeight: '500',
-                color: 'black',
-                textAlign: 'center'
-              }
-            })
-          })
-        }),
+            children: [
+              // Title
+              View({
+                style: {
+                  position: 'absolute',
+                  top: '15%',
+                  left: 0,
+                  right: 0,
+                  alignItems: 'center'
+                },
+                children: Text({
+                  text: 'Trivia Game Configuration',
+                  style: {
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#1F2937',
+                    textAlign: 'center'
+                  }
+                })
+              }),
 
-        // Answer options grid - positioned at bottom with compact spacing
-        View({
-          style: {
-            position: 'absolute',
-            bottom: 8,
-            left: 8,
-            right: 8,
-            height: 120
-          },
-          children: [
-            // Top row
-            View({
-              style: {
-                width: '100%',
-                height: 50,
-                flexDirection: 'row',
-                marginBottom: 8
-              },
-              children: [
-                // Red answer (Triangle)
-                View({
-                  style: { width: '48%', marginRight: '4%' },
-                  children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
-                }),
-                
-                // Blue answer (Star)  
-                View({
-                  style: { width: '48%' },
-                  children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+              // Host indicator
+              View({
+                style: {
+                  position: 'absolute',
+                  top: '25%',
+                  left: 0,
+                  right: 0,
+                  alignItems: 'center'
+                },
+                children: Text({
+                  text: this.isLocalPlayerHostBinding.derive(isHost => 
+                    isHost ? '👑 You are the host' : '👥 Waiting for host to start...'
+                  ),
+                  style: {
+                    fontSize: 16,
+                    color: '#6B7280',
+                    textAlign: 'center'
+                  }
                 })
-              ]
-            }),
-            
-            // Bottom row
-            View({
-              style: {
-                width: '100%',
-                height: 50,
-                flexDirection: 'row'
-              },
-              children: [
-                // Yellow answer (Circle)
+              }),
+
+              // Configuration panel (only visible to host)
+              UINode.if(
+                this.isLocalPlayerHostBinding,
                 View({
-                  style: { width: '48%', marginRight: '4%' },
-                  children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                }),
-                
-                // Green answer (Square) 
-                View({
-                  style: { width: '48%' },
-                  children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                  style: {
+                    position: 'absolute',
+                    top: '35%',
+                    left: '20%',
+                    right: '20%',
+                    backgroundColor: 'white',
+                    borderRadius: 12,
+                    padding: 16,
+                    shadowColor: 'black',
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    shadowOffset: [0, 4]
+                  },
+                  children: [
+                    // Time limit setting
+                    View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 12
+                      },
+                      children: [
+                        Text({
+                          text: 'Time per question:',
+                          style: {
+                            fontSize: 14,
+                            color: '#1F2937'
+                          }
+                        }),
+                        Text({
+                          text: this.gameConfigBinding.derive(config => `${config.timeLimit}s`),
+                          style: {
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            color: '#6366F1'
+                          }
+                        })
+                      ]
+                    }),
+
+                    // Number of questions setting
+                    View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 12
+                      },
+                      children: [
+                        Text({
+                          text: 'Number of questions:',
+                          style: {
+                            fontSize: 14,
+                            color: '#1F2937'
+                          }
+                        }),
+                        Text({
+                          text: this.gameConfigBinding.derive(config => config.numQuestions.toString()),
+                          style: {
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            color: '#6366F1'
+                          }
+                        })
+                      ]
+                    }),
+
+                    // Difficulty setting
+                    View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      },
+                      children: [
+                        Text({
+                          text: 'Difficulty:',
+                          style: {
+                            fontSize: 14,
+                            color: '#1F2937'
+                          }
+                        }),
+                        Text({
+                          text: this.gameConfigBinding.derive(config => config.difficulty),
+                          style: {
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            color: '#6366F1'
+                          }
+                        })
+                      ]
+                    })
+                  ]
                 })
-              ]
-            })
-          ]
-        })
+              ),
+
+              // Start button (only visible to host)
+              UINode.if(
+                this.isLocalPlayerHostBinding,
+                View({
+                  style: {
+                    position: 'absolute',
+                    bottom: '20%',
+                    left: '30%',
+                    right: '30%'
+                  },
+                  children: Pressable({
+                    onPress: () => this.handleStartGame(),
+                    style: {
+                      backgroundColor: '#10B981', // Green-500
+                      borderRadius: 8,
+                      paddingVertical: 12,
+                      paddingHorizontal: 24,
+                      alignItems: 'center',
+                      shadowColor: 'black',
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      shadowOffset: [0, 2]
+                    },
+                    children: Text({
+                      text: 'Start Trivia Game',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                        color: 'white'
+                      }
+                    })
+                  })
+                })
+              )
+            ]
+          })
+        ),
+
+        // Game UI (shows when game is running)
+        UINode.if(
+          this.showConfigBinding.derive(show => !show),
+          View({
+            style: {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0
+            },
+            children: [
+              // Header with question number - centered at top
+              View({
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  padding: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#F3F4F6'
+                },
+                children: Text({
+                  text: this.questionNumberBinding,
+                  style: {
+                    fontSize: 20,
+                    fontWeight: '500',
+                    color: '#FF6B35' // Orange-500 color
+                  }
+                })
+              }),
+
+              // Timer - positioned at left, aligned with question
+              View({
+                style: {
+                  position: 'absolute',
+                  left: '8%',
+                  top: '25%',
+                  width: 40,
+                  height: 40,
+                  backgroundColor: '#FF6B35', // Orange-500
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                },
+                children: Text({
+                  text: this.timerBinding,
+                  style: {
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    color: 'white'
+                  }
+                })
+              }),
+
+              // Answer count - positioned at right, aligned with question
+              View({
+                style: {
+                  position: 'absolute',
+                  right: '8%',
+                  top: '25%',
+                  alignItems: 'center'
+                },
+                children: [
+                  Text({
+                    text: this.answerCountBinding,
+                    style: {
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      color: '#1F2937' // Gray-800
+                    }
+                  }),
+                  Text({
+                    text: 'Answers',
+                    style: {
+                      fontSize: 10,
+                      color: '#6B7280' // Gray-600
+                    }
+                  })
+                ]
+              }),
+
+              // Question - positioned in center area, moved up
+              View({
+                style: {
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: '20%',
+                  bottom: '60%',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                },
+                children: View({
+                  style: {
+                    backgroundColor: 'white',
+                    borderRadius: 6,
+                    shadowColor: 'black',
+                    shadowOpacity: 0.1,
+                    shadowRadius: 6,
+                    shadowOffset: [0, 2],
+                    padding: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    maxWidth: '60%' // Prevent it from getting too wide
+                  },
+                  children: Text({
+                    text: this.questionBinding,
+                    style: {
+                      fontSize: 16,
+                      fontWeight: '500',
+                      color: 'black',
+                      textAlign: 'center'
+                    }
+                  })
+                })
+              }),
+
+              // Answer options grid - positioned at bottom with compact spacing
+              View({
+                style: {
+                  position: 'absolute',
+                  bottom: 8,
+                  left: 8,
+                  right: 8,
+                  height: 120
+                },
+                children: [
+                  // Top row
+                  View({
+                    style: {
+                      width: '100%',
+                      height: 50,
+                      flexDirection: 'row',
+                      marginBottom: 8
+                    },
+                    children: [
+                      // Red answer (Triangle)
+                      View({
+                        style: { width: '48%', marginRight: '4%' },
+                        children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                      }),
+                      
+                      // Blue answer (Star)  
+                      View({
+                        style: { width: '48%' },
+                        children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+                      })
+                    ]
+                  }),
+                  
+                  // Bottom row
+                  View({
+                    style: {
+                      width: '100%',
+                      height: 50,
+                      flexDirection: 'row'
+                    },
+                    children: [
+                      // Yellow answer (Circle)
+                      View({
+                        style: { width: '48%', marginRight: '4%' },
+                        children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                      }),
+                      
+                      // Green answer (Square) 
+                      View({
+                        style: { width: '48%' },
+                        children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                      })
+                    ]
+                  })
+                ]
+              }),
+
+              // Waiting for Other Players overlay
+              View({
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent overlay
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  display: this.showWaitingBinding.derive(show => show ? 'flex' : 'none')
+                },
+                children: View({
+                  style: {
+                    backgroundColor: 'white',
+                    borderRadius: 12,
+                    padding: 24,
+                    alignItems: 'center',
+                    maxWidth: '80%'
+                  },
+                  children: [
+                    Text({
+                      text: 'Waiting for Other Players...',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: '#1F2937',
+                        marginBottom: 8,
+                        textAlign: 'center'
+                      }
+                    }),
+                    Text({
+                      text: 'Please wait while other players submit their answers',
+                      style: {
+                        fontSize: 14,
+                        color: '#6B7280',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              }),
+
+              // Leaderboard overlay
+              View({
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: '#F3F4F6', // Light gray background like main UI
+                  display: this.showLeaderboardBinding.derive(show => show ? 'flex' : 'none')
+                },
+                children: [
+                  // Header
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: 12,
+                      left: 0,
+                      right: 0,
+                      alignItems: 'center'
+                    },
+                    children: View({
+                      style: {
+                        backgroundColor: 'white',
+                        borderRadius: 8,
+                        paddingHorizontal: 24,
+                        paddingVertical: 8,
+                        shadowColor: 'black',
+                        shadowOpacity: 0.1,
+                        shadowRadius: 6,
+                        shadowOffset: [0, 2]
+                      },
+                      children: Text({
+                        text: 'Leaderboard',
+                        style: {
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                          color: '#1F2937'
+                        }
+                      })
+                    })
+                  }),
+
+                  // Leaderboard list
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: 60,
+                      bottom: 12,
+                      left: '15%',
+                      right: '15%',
+                      flexDirection: 'column'
+                    },
+                    children: [
+                      // Player 1
+                      UINode.if(
+                        this.leaderboardDataBinding.derive(players => players.length > 0),
+                        View({
+                          style: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 8,
+                            padding: 12,
+                            marginBottom: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            shadowColor: 'black',
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                            shadowOffset: [0, 2]
+                          },
+                          children: [
+                            // Left side: rank and name
+                            View({
+                              style: {
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                flex: 1
+                              },
+                              children: [
+                                // Rank
+                                View({
+                                  style: {
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 12,
+                                    backgroundColor: '#F3F4F6',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginRight: 12
+                                  },
+                                  children: Text({
+                                    text: '1',
+                                    style: {
+                                      fontSize: 12,
+                                      fontWeight: 'bold',
+                                      color: '#1F2937'
+                                    }
+                                  })
+                                }),
+                                
+                                // Player name
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players => 
+                                    players.length > 0 ? players[0].name : ''
+                                  ),
+                                  style: {
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: '#1F2937'
+                                  }
+                                })
+                              ]
+                            }),
+                            
+                            // Right side: score
+                            Text({
+                              text: this.leaderboardDataBinding.derive(players => 
+                                players.length > 0 ? players[0].score.toString() : '0'
+                              ),
+                              style: {
+                                fontSize: 16,
+                                fontWeight: 'bold',
+                                color: '#1F2937'
+                              }
+                            })
+                          ]
+                        })
+                      ),
+                      
+                      // Player 2
+                      UINode.if(
+                        this.leaderboardDataBinding.derive(players => players.length > 1),
+                        View({
+                          style: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 8,
+                            padding: 12,
+                            marginBottom: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            shadowColor: 'black',
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                            shadowOffset: [0, 2]
+                          },
+                          children: [
+                            // Left side: rank and name
+                            View({
+                              style: {
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                flex: 1
+                              },
+                              children: [
+                                // Rank
+                                View({
+                                  style: {
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 12,
+                                    backgroundColor: '#F3F4F6',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginRight: 12
+                                  },
+                                  children: Text({
+                                    text: '2',
+                                    style: {
+                                      fontSize: 12,
+                                      fontWeight: 'bold',
+                                      color: '#1F2937'
+                                    }
+                                  })
+                                }),
+                                
+                                // Player name
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players => 
+                                    players.length > 1 ? players[1].name : ''
+                                  ),
+                                  style: {
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: '#1F2937'
+                                  }
+                                })
+                              ]
+                            }),
+                            
+                            // Right side: score
+                            Text({
+                              text: this.leaderboardDataBinding.derive(players => 
+                                players.length > 1 ? players[1].score.toString() : '0'
+                              ),
+                              style: {
+                                fontSize: 16,
+                                fontWeight: 'bold',
+                                color: '#1F2937'
+                              }
+                            })
+                          ]
+                        })
+                      ),
+                      
+                      // Player 3
+                      UINode.if(
+                        this.leaderboardDataBinding.derive(players => players.length > 2),
+                        View({
+                          style: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 8,
+                            padding: 12,
+                            marginBottom: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            shadowColor: 'black',
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                            shadowOffset: [0, 2]
+                          },
+                          children: [
+                            // Left side: rank and name
+                            View({
+                              style: {
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                flex: 1
+                              },
+                              children: [
+                                // Rank
+                                View({
+                                  style: {
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 12,
+                                    backgroundColor: '#F3F4F6',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginRight: 12
+                                  },
+                                  children: Text({
+                                    text: '3',
+                                    style: {
+                                      fontSize: 12,
+                                      fontWeight: 'bold',
+                                      color: '#1F2937'
+                                    }
+                                  })
+                                }),
+                                
+                                // Player name
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players => 
+                                    players.length > 2 ? players[2].name : ''
+                                  ),
+                                  style: {
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: '#1F2937'
+                                  }
+                                })
+                              ]
+                            }),
+                            
+                            // Right side: score
+                            Text({
+                              text: this.leaderboardDataBinding.derive(players => 
+                                players.length > 2 ? players[2].score.toString() : '0'
+                              ),
+                              style: {
+                                fontSize: 16,
+                                fontWeight: 'bold',
+                                color: '#1F2937'
+                              }
+                            })
+                          ]
+                        })
+                      )
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        )
       ]
     });
   }
@@ -763,76 +1552,22 @@ export class TriviaGame extends ui.UIComponent {
               View({
                 style: {
                   marginTop: 2,
-                  flexDirection: 'row',
                   alignItems: 'center'
                 },
                 children: [
-                  // Correct/incorrect indicator
+                  // Correct/incorrect indicator only
                   Text({
-                    text: this.correctAnswerBinding.derive(correct => correct === index ? '✅' : '❌'),
+                    text: this.correctAnswerBinding.derive(correct => correct === index ? '✅ Correct' : '❌'),
                     style: {
                       fontSize: 12,
-                      marginRight: 4
-                    }
-                  }),
-                  
-                  // Answer count for this option
-                  Text({
-                    text: this.answerCountsBinding.derive(counts => `${counts[index] || 0} players`),
-                    style: {
-                      fontSize: 10,
                       color: 'white',
-                      opacity: 0.9
+                      fontWeight: 'bold'
                     }
                   })
                 ]
               })
             )
           ]
-        }),
-
-        // Waiting for Other Players overlay
-        View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent overlay
-            alignItems: 'center',
-            justifyContent: 'center',
-            display: this.showWaitingBinding.derive(show => show ? 'flex' : 'none')
-          },
-          children: View({
-            style: {
-              backgroundColor: 'white',
-              borderRadius: 12,
-              padding: 24,
-              alignItems: 'center',
-              maxWidth: '80%'
-            },
-            children: [
-              Text({
-                text: 'Waiting for Other Players...',
-                style: {
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: '#1F2937',
-                  marginBottom: 8,
-                  textAlign: 'center'
-                }
-              }),
-              Text({
-                text: 'Please wait while other players submit their answers',
-                style: {
-                  fontSize: 14,
-                  color: '#6B7280',
-                  textAlign: 'center'
-                }
-              })
-            ]
-          })
         })
       ]
     });

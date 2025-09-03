@@ -71,6 +71,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     this.assignedPlayer = player;
     this.isInitialized = true;
     
+    // Set the assigned player for TriviaApp
+    this.triviaApp.setAssignedPlayer(player);
+    
     // Load contacts for the assigned player
     console.log(`[MePhone] Loading contacts for assigned player: ${player.name.get()}`);
     this.ensureContactsApp().updateContacts(player);
@@ -83,6 +86,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     console.log(`[MePhone] Player unassigned: ${player.id} (${player.name.get()})`);
     this.assignedPlayer = null;
     this.isInitialized = false;
+    
+    // Clear the assigned player for TriviaApp
+    this.triviaApp.setAssignedPlayer(null);
     
     // Reset to home screen
     this.currentAppBinding.set('home');
