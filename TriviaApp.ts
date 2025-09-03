@@ -568,14 +568,17 @@ export class TriviaApp {
       answers: questionData.question.answers || []
     };
     
+    // Check if this is a new question or if we need to reset state
+    const isNewQuestion = questionData.questionIndex !== this.currentQuestionIndex;
+    const shouldResetState = this.selectedAnswer === null || this.showResult === true || isNewQuestion || this.gameState === 'leaderboard';
+    
     // Update our questions array and current index
     this.questions[questionData.questionIndex] = externalQuestion;
     this.currentQuestionIndex = questionData.questionIndex;
     
-    // Only reset state for new question if we're moving to a different question
-    // or if we're starting a fresh question (selectedAnswer is already null)
-    if (this.selectedAnswer === null || this.showResult === true || questionData.questionIndex !== this.currentQuestionIndex) {
-      console.log("TriviaApp: Resetting state for new question");
+    // Reset state for new question or when transitioning from leaderboard
+    if (shouldResetState) {
+      console.log("TriviaApp: Resetting state for new question (gameState was:", this.gameState, ")");
       this.selectedAnswer = null;
       this.showResult = false;
       this.waitingMessage = '';
@@ -607,6 +610,7 @@ export class TriviaApp {
     // Always update these bindings regardless
     this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
     
+    console.log("TriviaApp: *** SYNC COMPLETE - Current game state:", this.gameState);
     console.log("TriviaApp: After sync - selectedAnswer:", this.selectedAnswer);
     console.log("TriviaApp: After sync - last answer timestamp:", this.lastAnswerTimestamp);
   }
