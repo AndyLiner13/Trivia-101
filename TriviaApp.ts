@@ -498,7 +498,6 @@ export class TriviaApp {
     if (this.gameState !== 'playing') return;
     
     this.selectedAnswer = answerIndex;
-    this.gameState = 'waiting';
     
     // Calculate response time
     const responseTime = Date.now() - this.questionStartTime;
@@ -515,14 +514,30 @@ export class TriviaApp {
     
     console.log(`TriviaApp: Player ${playerId} answered ${answerIndex} in ${responseTime}ms`);
     
-    // Show waiting for other players message
-    const waitingMessage = "Waiting...";
-    this.waitingMessage = waitingMessage;
+    // Check how many players are in the world
+    const playersInWorld = this.world?.getPlayers() || [];
+    const playerCount = playersInWorld.length;
     
-    // Update bindings to show waiting state
-    this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
-    this.gameStateBinding.set('waiting', assignedPlayer ? [assignedPlayer] : undefined);
-    this.waitingMessageBinding.set(waitingMessage, assignedPlayer ? [assignedPlayer] : undefined);
+    console.log(`TriviaApp: ${playerCount} players in world`);
+    
+    // Only show waiting screen if there are multiple players
+    if (playerCount > 1) {
+      // Multiple players - show waiting screen
+      this.gameState = 'waiting';
+      const waitingMessage = "Waiting...";
+      this.waitingMessage = waitingMessage;
+      
+      // Update bindings to show waiting state
+      this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
+      this.gameStateBinding.set('waiting', assignedPlayer ? [assignedPlayer] : undefined);
+      this.waitingMessageBinding.set(waitingMessage, assignedPlayer ? [assignedPlayer] : undefined);
+      
+      console.log(`TriviaApp: Multiplayer mode, showing waiting screen`);
+    } else {
+      // Single player - skip waiting and stay in playing state for immediate results
+      this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
+      console.log(`TriviaApp: Single player mode, waiting for immediate results`);
+    }
     
     // Store the correct answer for scoring when results come back
     const currentQuestion = this.questions[this.currentQuestionIndex];

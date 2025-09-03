@@ -1,5 +1,6 @@
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
+import { Social, AvatarImageType } from 'horizon/social';
 import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
 
 // Interface for trivia question data from JSON asset
@@ -178,7 +179,10 @@ export class TriviaGame extends ui.UIComponent {
   private answerCountsBinding = new Binding([0, 0, 0, 0]);
   
   // Leaderboard data
-  private leaderboardDataBinding = new Binding<Array<{name: string, score: number, playerId: string}>>([]);
+  private leaderboardDataBinding = new Binding<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>>([]);
+  
+  // Player scores tracking
+  private playerScores = new Map<string, number>();
 
   // Game configuration state
   private showConfigBinding = new Binding(true); // Show config screen initially
@@ -612,16 +616,16 @@ export class TriviaGame extends ui.UIComponent {
     }, 5000);
   }
 
-  private showLeaderboard(): void {
+  private async showLeaderboard(): Promise<void> {
     console.log("TriviaGame: Showing leaderboard");
     
     // Hide results, show leaderboard
     this.showResultsBinding.set(false);
     this.showLeaderboardBinding.set(true);
     
-    // Generate mock leaderboard data (in a real implementation, this would come from server)
-    const mockLeaderboard = this.generateMockLeaderboard();
-    this.leaderboardDataBinding.set(mockLeaderboard);
+    // Generate real leaderboard data from actual players
+    const realLeaderboard = await this.generateRealLeaderboard();
+    this.leaderboardDataBinding.set(realLeaderboard);
     
     // After 5 seconds, auto-advance to next question
     this.async.setTimeout(() => {
@@ -629,39 +633,41 @@ export class TriviaGame extends ui.UIComponent {
     }, 5000);
   }
 
-  private generateMockLeaderboard(): Array<{name: string, score: number, playerId: string}> {
+  private async generateRealLeaderboard(): Promise<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>> {
     // Get actual players in the world
     const currentPlayers = this.world.getPlayers();
-    const leaderboard: Array<{name: string, score: number, playerId: string}> = [];
+    const leaderboard: Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}> = [];
     
-    // Create leaderboard entries for each player with mock scores
-    currentPlayers.forEach((player, index) => {
+    // Create leaderboard entries for each real player
+    for (const player of currentPlayers) {
       const playerId = player.id.toString();
       if (this.playersInWorld.has(playerId)) {
+        // Get actual score or default to 0
+        const score = this.playerScores.get(playerId) || 0;
+        
+        // Get player headshot using Social API
+        let headshotImageSource: ImageSource | undefined;
+        try {
+          headshotImageSource = await Social.getAvatarImageSource(player, {
+            type: AvatarImageType.HEADSHOT,
+            highRes: true
+          });
+        } catch (error) {
+          console.log(`TriviaGame: Could not get headshot for player ${playerId}:`, error);
+        }
+        
         leaderboard.push({
-          name: player.name.get() || `Player ${index + 1}`,
-          score: Math.floor(Math.random() * 500) + 500, // Random score between 500-999
-          playerId: playerId
+          name: player.name.get() || `Player ${leaderboard.length + 1}`,
+          score: score,
+          playerId: playerId,
+          headshotImageSource: headshotImageSource
         });
       }
-    });
-    
-    // Add some mock players if we don't have enough real players
-    const mockNames = ["Alex Johnson", "Sarah Davis", "Mike Chen", "Emma Wilson", "James Brown"];
-    while (leaderboard.length < 3 && leaderboard.length < mockNames.length) {
-      const index = leaderboard.length;
-      leaderboard.push({
-        name: mockNames[index],
-        score: Math.floor(Math.random() * 400) + 300, // Lower scores for mock players
-        playerId: `mock-${index}`
-      });
     }
-    
+
     // Sort by score descending
     return leaderboard.sort((a, b) => b.score - a.score);
-  }
-
-  private advanceToNextQuestion(): void {
+  }  private advanceToNextQuestion(): void {
     console.log("TriviaGame: Auto-advancing to next question");
     
     // Hide leaderboard
@@ -1312,6 +1318,24 @@ export class TriviaGame extends ui.UIComponent {
                                   })
                                 }),
                                 
+                                // Player headshot (if available)
+                                UINode.if(
+                                  this.leaderboardDataBinding.derive(players => 
+                                    players.length > 0 && players[0].headshotImageSource
+                                  ),
+                                  Image({
+                                    source: this.leaderboardDataBinding.derive(players => 
+                                      players.length > 0 && players[0].headshotImageSource ? players[0].headshotImageSource : null
+                                    ),
+                                    style: {
+                                      width: 32,
+                                      height: 32,
+                                      borderRadius: 16,
+                                      marginRight: 8
+                                    }
+                                  })
+                                ),
+                                
                                 // Player name
                                 Text({
                                   text: this.leaderboardDataBinding.derive(players => 
@@ -1388,6 +1412,24 @@ export class TriviaGame extends ui.UIComponent {
                                   })
                                 }),
                                 
+                                // Player headshot (if available)
+                                UINode.if(
+                                  this.leaderboardDataBinding.derive(players => 
+                                    players.length > 1 && players[1].headshotImageSource
+                                  ),
+                                  Image({
+                                    source: this.leaderboardDataBinding.derive(players => 
+                                      players.length > 1 && players[1].headshotImageSource ? players[1].headshotImageSource : null
+                                    ),
+                                    style: {
+                                      width: 32,
+                                      height: 32,
+                                      borderRadius: 16,
+                                      marginRight: 8
+                                    }
+                                  })
+                                ),
+                                
                                 // Player name
                                 Text({
                                   text: this.leaderboardDataBinding.derive(players => 
@@ -1463,6 +1505,24 @@ export class TriviaGame extends ui.UIComponent {
                                     }
                                   })
                                 }),
+                                
+                                // Player headshot (if available)
+                                UINode.if(
+                                  this.leaderboardDataBinding.derive(players => 
+                                    players.length > 2 && players[2].headshotImageSource
+                                  ),
+                                  Image({
+                                    source: this.leaderboardDataBinding.derive(players => 
+                                      players.length > 2 && players[2].headshotImageSource ? players[2].headshotImageSource : null
+                                    ),
+                                    style: {
+                                      width: 32,
+                                      height: 32,
+                                      borderRadius: 16,
+                                      marginRight: 8
+                                    }
+                                  })
+                                ),
                                 
                                 // Player name
                                 Text({
