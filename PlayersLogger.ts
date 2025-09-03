@@ -24,10 +24,10 @@ class PlayersLogger extends hz.Component<typeof PlayersLogger> {
     const players = this.world.getPlayers();
     
     if (players.length === 0) {
-      console.log('0 Players in the world: []');
+      // No players in the world
     } else {
       const playerNames = players.map(player => player.name.get()).join(', ');
-      console.log(`${players.length} Players in the world: [${playerNames}]`);
+      // Players logged
     }
   }
 }

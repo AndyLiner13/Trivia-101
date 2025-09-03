@@ -419,9 +419,7 @@ export class MePayApp {
                     marginRight: 8
                   },
                   onPress: () => {
-                    console.log('[MePay] Send button clicked');
                     this.navigateToMePayPage('send');
-                    console.log('[MePay] Navigation to send page completed');
                   },
                   children: [
                     ui.Image({
@@ -794,10 +792,8 @@ export class MePayApp {
 
   // MePay helper methods
   private navigateToMePayPage(page: 'home' | 'send' | 'request' | 'sent' | 'requested'): void {
-    console.log(`[MePay] Navigating to page: ${page}`);
     this.currentMePayPage = page;
     this.currentMePayPageBinding.set(page);
-    console.log(`[MePay] Page set to: ${this.currentMePayPage}, binding updated`);
   }
 
   private resetMePayState(): void {

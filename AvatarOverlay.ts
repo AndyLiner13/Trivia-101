@@ -37,7 +37,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
    */
   private isReady(): boolean {
     if (!this.isComponentReady) {
-      console.log('[AvatarOverlay] Component not ready yet');
       return false;
     }
     
@@ -50,26 +49,20 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
   }
 
   initializeUI(): ui.UINode {
-    console.log('[AvatarOverlay] Initializing UI');
     
     // Set up world event listeners to update when players join/leave
     try {
       this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerEnterWorld, (player: hz.Player) => {
-        console.log(`[AvatarOverlay] Player entered world: ${player.name.get()}, updating player list`);
         this.updatePlayersList();
       });
       
       this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerExitWorld, (player: hz.Player) => {
-        console.log(`[AvatarOverlay] Player exited world: ${player.name.get()}, updating player list`);
         this.updatePlayersList();
       });
       
-      console.log('[AvatarOverlay] Event listeners set up successfully');
     } catch (error) {
       console.error('[AvatarOverlay] Error setting up event listeners:', error);
     }
-
-    console.log('[AvatarOverlay] UI initialization complete, waiting for start() to trigger player list update');
 
     return ui.View({
       style: {
@@ -148,7 +141,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
             marginTop: 8
           },
           onPress: () => {
-            console.log('[AvatarOverlay] Manual refresh button pressed');
             this.lastUpdate = 0; // Reset throttle
             this.updatePlayersList();
           },
@@ -268,23 +260,18 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
    * Updates the list of players and their avatar data
    */
   private updatePlayersList(): void {
-    console.log('[AvatarOverlay] Starting updatePlayersList method');
     
     // Check if component is ready
     if (!this.isReady()) {
-      console.log('[AvatarOverlay] Component not ready, skipping update');
       return;
     }
     
     // Throttle updates to prevent excessive API calls
     const now = Date.now();
     if (now - this.lastUpdate < this.updateThrottleMs) {
-      console.log(`[AvatarOverlay] Update throttled - last update was ${(now - this.lastUpdate) / 1000} seconds ago`);
       return;
     }
     this.lastUpdate = now;
-
-    console.log('[AvatarOverlay] Updating players list');
 
     try {
       // Check if world object exists
@@ -294,7 +281,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
         return;
       }
 
-      console.log('[AvatarOverlay] World object exists, getting players...');
       const players = this.world.getPlayers();
       
       if (!players) {
@@ -303,16 +289,12 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
         return;
       }
 
-      console.log(`[AvatarOverlay] Found ${players.length} players in world`);
-
       if (players.length === 0) {
-        console.log('[AvatarOverlay] No players found, setting empty list');
         this.playersBinding.set([]);
         return;
       }
 
       // Create initial player data array with loading state
-      console.log('[AvatarOverlay] Creating player data array...');
       const playersData: PlayerAvatarData[] = [];
       
       // Clear and update the players cache
@@ -345,25 +327,20 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
             isLoading: true
           });
           
-          console.log(`[AvatarOverlay] Added player data for: ${playerName} (ID: ${playerId})`);
         } catch (playerError) {
           console.error(`[AvatarOverlay] Error processing player at index ${i}:`, playerError);
         }
       }
 
       if (playersData.length === 0) {
-        console.log('[AvatarOverlay] No valid players found after processing, setting empty list');
         this.playersBinding.set([]);
         return;
       }
 
       // Set initial data (with loading state)
-      console.log(`[AvatarOverlay] Setting binding with ${playersData.length} players...`);
       this.playersBinding.set(playersData);
-      console.log(`[AvatarOverlay] Set initial player data for ${playersData.length} players`);
 
       // Load avatar images asynchronously for each player
-      console.log('[AvatarOverlay] Starting avatar loading for all players...');
       playersData.forEach((playerData, index) => {
         this.loadPlayerAvatar(playerData, index, playersData);
       });
@@ -389,7 +366,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
    */
   private loadPlayerAvatar(playerData: PlayerAvatarData, index: number, playersData: PlayerAvatarData[]): void {
     try {
-      console.log(`[AvatarOverlay] Loading avatar for player: ${playerData.name} (ID: ${playerData.playerId})`);
       
       // Look up the player object from cache
       const player = this.playersCache.get(playerData.playerId);
@@ -412,7 +388,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
         // Clear the timeout since we got a response
         this.async.clearTimeout(timeoutId);
         
-        console.log(`[AvatarOverlay] Avatar loaded successfully for player: ${playerData.name}`);
         
         // Validate the image source
         if (!avatarImageSource) {
@@ -431,7 +406,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
 
           // Update the binding with new data
           this.playersBinding.set([...playersData]);
-          console.log(`[AvatarOverlay] Successfully updated avatar for player: ${playerData.name}`);
         } catch (bindingError) {
           console.error(`[AvatarOverlay] Error updating binding for player ${playerData.name}:`, bindingError);
           this.setPlayerAvatarFailed(playerData, index, playersData);
@@ -473,7 +447,6 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
   start() {
     try {
       super.start();
-      console.log('[AvatarOverlay] Component started');
       
       // Validate that we have access to the world
       if (!this.world) {
@@ -481,12 +454,10 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
         return;
       }
 
-      console.log('[AvatarOverlay] World object available, marking component as ready');
       this.isComponentReady = true;
       
       // Do an initial update after a short delay to ensure world is fully loaded
       this.async.setTimeout(() => {
-        console.log('[AvatarOverlay] Executing delayed initial update');
         this.updatePlayersList();
       }, 1000);
       
@@ -497,6 +468,4 @@ class AvatarOverlay extends ui.UIComponent<typeof AvatarOverlay> {
 }
 
 // Register the component for use in Horizon Worlds
-console.log('[AvatarOverlay] Registering component...');
 ui.UIComponent.register(AvatarOverlay);
-console.log('[AvatarOverlay] Component registered successfully');

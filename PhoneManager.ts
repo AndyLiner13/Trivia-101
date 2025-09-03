@@ -41,7 +41,6 @@ class PhoneManager extends hz.Component<{}> {
   }
 
   private discoverPhoneEntities() {
-    console.log('[PhoneManager] Discovering MePhone entities...');
     
     // Find all entities in the world with the "MePhone" tag
     const allEntitiesInWorld = this.world.getEntitiesWithTags(['MePhone']);
@@ -56,10 +55,8 @@ class PhoneManager extends hz.Component<{}> {
       // Initially set the phone to be invisible
       entity.visible.set(false);
       
-      console.log(`[PhoneManager] Found phone entity: ${entity.name.get()} with MePhone tag`);
     }
     
-    console.log(`[PhoneManager] Discovered ${this.phoneAssignments.length} phone entities with MePhone tag`);
   }
 
   // Method to manually add phone entities
@@ -73,16 +70,13 @@ class PhoneManager extends hz.Component<{}> {
     // Initially set the phone to be invisible
     phoneEntity.visible.set(false);
     
-    console.log(`[PhoneManager] Added phone entity: ${phoneEntity.name.get()}`);
   }
 
   private onPlayerEnter(player: hz.Player) {
-    console.log(`[PhoneManager] Player ${player.name.get()} (ID: ${player.index.get()}) entered world`);
     this.assignPhoneToPlayer(player);
   }
 
   private onPlayerExit(player: hz.Player) {
-    console.log(`[PhoneManager] Player ${player.name.get()} (ID: ${player.index.get()}) exited world`);
     this.releasePlayerPhone(player);
   }
 
@@ -93,7 +87,6 @@ class PhoneManager extends hz.Component<{}> {
     );
     
     if (existingAssignment) {
-      console.log(`[PhoneManager] Player ${player.name.get()} already has a phone assigned`);
       return;
     }
 
@@ -116,15 +109,12 @@ class PhoneManager extends hz.Component<{}> {
       // Set ownership of the phone entity to this player
       availablePhone.phoneEntity.owner.set(player);
       
-      console.log(`[PhoneManager] Assigned phone ${availablePhone.phoneEntity.name.get()} to player ${player.name.get()}`);
       
       // Note: Due to component access limitations, the MePhone component will auto-assign
       // itself when the player first interacts with it. The PhoneManager just manages
       // entity ownership and visibility.
       
-      console.log(`[PhoneManager] Phone assigned to player ${player.name.get()} - MePhone will auto-initialize on first interaction`);
       
-      console.log(`[PhoneManager] Phone assigned to player ${player.name.get()}`);
     } else {
       console.warn(`[PhoneManager] No available phones for player ${player.name.get()}`);
       
@@ -140,7 +130,6 @@ class PhoneManager extends hz.Component<{}> {
     );
 
     if (playerAssignment) {
-      console.log(`[PhoneManager] Releasing phone ${playerAssignment.phoneEntity.name.get()} from player ${player.name.get()}`);
       
       // Hide the phone entity
       playerAssignment.phoneEntity.visible.set(false);
@@ -152,7 +141,6 @@ class PhoneManager extends hz.Component<{}> {
       playerAssignment.assignedPlayer = null;
       playerAssignment.isInUse = false;
       
-      console.log(`[PhoneManager] Phone ${playerAssignment.phoneEntity.name.get()} is now available`);
     } else {
       console.warn(`[PhoneManager] No phone assignment found for player ${player.name.get()}`);
     }
@@ -186,7 +174,6 @@ class PhoneManager extends hz.Component<{}> {
     
     if (assignment && assignment.isInUse) {
       assignment.isInUse = false;
-      console.log(`[PhoneManager] Phone ${phoneEntity.name.get()} marked as available`);
       
       // Try to assign to any waiting players if needed
       this.tryAssignWaitingPlayers();
@@ -210,7 +197,6 @@ class PhoneManager extends hz.Component<{}> {
 // Safe component registration - prevents duplicate registration errors
 try {
   hz.Component.register(PhoneManager);
-  console.log('[PhoneManager] Component registered successfully');
 } catch (error) {
   console.warn('[PhoneManager] Component registration failed (may already be registered):', error);
 }

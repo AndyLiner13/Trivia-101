@@ -162,24 +162,12 @@ export class ContactsApp {
     // Throttle contacts updates to prevent spam (max once every 5 seconds for testing)
     const now = Date.now();
     if (now - this.lastContactsUpdate < 5000) {
-      console.log(`[Contacts] Throttled - last update was ${(now - this.lastContactsUpdate) / 1000} seconds ago`);
       return;
     }
     this.lastContactsUpdate = now;
 
-    console.log(`[Contacts] Starting updateRealContacts for player: ${assignedPlayer?.name.get() || 'unassigned'}`);
-
     const players = this.world.getPlayers();
     const localPlayer = this.world.getLocalPlayer();
-    
-    // Debug logging to match PlayersLogger
-    console.log(`[Contacts] Total players found: ${players.length}`);
-    if (players.length > 0) {
-      const playerInfo = players.map(player => `${player.name.get()}(ID:${player.id})`).join(', ');
-      console.log(`[Contacts] All players: [${playerInfo}]`);
-    }
-    console.log(`[Contacts] Local player: ${localPlayer ? `${localPlayer.name.get()}(ID:${localPlayer.id})` : 'null'}`);
-    console.log(`[Contacts] Assigned player: ${assignedPlayer ? `${assignedPlayer.name.get()}(ID:${assignedPlayer.id})` : 'null'}`);
     
     // For contacts, we want to show all OTHER players (not the one using this phone)
     // If there's an assigned player, exclude them. Otherwise exclude local player.
@@ -189,16 +177,6 @@ export class ContactsApp {
     // Filter using player IDs instead of player object references
     const otherPlayers = players.filter(player => player.id !== playerIdToExclude);
     
-    console.log(`[Contacts] Player ID to exclude: ${playerIdToExclude || 'null'}`);
-    console.log(`[Contacts] Other players (excluding phone owner by ID): ${otherPlayers.length}`);
-    if (otherPlayers.length > 0) {
-      const otherPlayerInfo = otherPlayers.map(player => `${player.name.get()}(ID:${player.id})`).join(', ');
-      console.log(`[Contacts] Other player info: [${otherPlayerInfo}]`);
-    }
-    if (otherPlayers.length > 0) {
-      const otherPlayerNames = otherPlayers.map(player => player.name.get()).join(', ');
-      console.log(`[Contacts] Other player names: [${otherPlayerNames}]`);
-    }
     const contacts: Contact[] = [];
     
     // Clear the existing players cache
@@ -207,8 +185,6 @@ export class ContactsApp {
     for (let i = 0; i < otherPlayers.length; i++) {
       const player = otherPlayers[i];
       const playerName = player.name.get();
-      
-      console.log(`[Contacts] Adding contact: ${playerName}`);
       
       // Cache the player for later lookup
       this.playersCache.set(player.id, player);
@@ -224,20 +200,12 @@ export class ContactsApp {
       });
     }
     
-    console.log(`[Contacts] Final contacts count: ${contacts.length}`);
-    console.log(`[Contacts] Contacts list:`, contacts.map(c => c.name));
-    
     // Set the binding with player-specific targeting if we have an assigned player
-    console.log(`[Contacts] Setting binding with ${contacts.length} contacts`);
-    console.log(`[Contacts] Contacts being set:`, contacts.map(c => ({ name: c.name, id: c.id })));
-    
     // For now, always set globally to debug binding issues
     this.realContactsBinding.set(contacts);
     
     // Also update the grouped contacts binding
     this.updateGroupedContacts(contacts);
-    
-    console.log(`[Contacts] Binding set complete.`);
   }
 
   // Helper method to organize contacts alphabetically
@@ -265,8 +233,6 @@ export class ContactsApp {
   }
 
   render(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
-    console.log(`[Contacts UI] renderContactsApp() called - forcing contacts update`);
-    
     // Force a contacts update when the app is opened (bypassing throttle)
     this.lastContactsUpdate = 0;
     this.updateRealContacts(assignedPlayer);
@@ -433,7 +399,6 @@ export class ContactsApp {
                     // Switch to phone app and pre-fill the number
                     // Note: In a real implementation, we'd need to access the current contact
                     // For now, we'll use a simplified approach
-                    console.log('Call button pressed');
                   },
                   children: [
                     ui.Image({
@@ -459,7 +424,6 @@ export class ContactsApp {
                     marginHorizontal: 6
                   },
                   onPress: () => {
-                    console.log('Message button pressed');
                   },
                   children: [
                     ui.Image({
@@ -530,7 +494,6 @@ export class ContactsApp {
                       },
                       onPress: () => {
                         // In a real app, this would open the Uber app or teleport to the contact
-                        console.log('Opening Uber to contact');
                       },
                       children: [
                         ui.Image({
@@ -599,7 +562,6 @@ export class ContactsApp {
             borderRadius: 6
           },
           onPress: () => {
-            console.log(`[Contacts UI] Manual refresh requested`);
             this.lastContactsUpdate = 0; // Reset throttle
             this.updateRealContacts(assignedPlayer);
           },
@@ -626,17 +588,11 @@ export class ContactsApp {
             // Show "No Contacts" message when no contacts
             ui.UINode.if(
               ui.Binding.derive([this.realContactsBinding], (contacts) => {
-                console.log(`[Contacts UI - No Contacts Check] Received binding data:`, contacts);
-                console.log(`[Contacts UI - No Contacts Check] Is array:`, Array.isArray(contacts));
-                console.log(`[Contacts UI - No Contacts Check] Length:`, contacts ? contacts.length : 'null/undefined');
-                
                 const safeContacts = Array.isArray(contacts) ? contacts : [];
-                console.log(`[Contacts UI - No Contacts Check] Safe contacts:`, safeContacts.map(c => c.name || 'unnamed'));
                 
                 // Filter out test contacts for the "no contacts" check
                 const realContacts = safeContacts.filter(c => c.id === 999); // Show "No Contacts" only if we have test contacts
                 const hasNoRealContacts = safeContacts.length === 0 || safeContacts.length === realContacts.length;
-                console.log(`[Contacts UI - No Contacts Check] Real contacts count: ${safeContacts.length - realContacts.length}, showing no contacts message: ${hasNoRealContacts}`);
                 return hasNoRealContacts;
               }),
               ui.View({
@@ -673,7 +629,6 @@ export class ContactsApp {
             ui.UINode.if(
               ui.Binding.derive([this.groupedContactsBinding], (groupedContacts) => {
                 const shouldShow = Array.isArray(groupedContacts) && groupedContacts.length > 0;
-                console.log(`[Contacts UI] Contacts list check - grouped contacts: ${groupedContacts?.length || 0}, should show: ${shouldShow}`);
                 return shouldShow;
               }),
               ui.ScrollView({
@@ -739,8 +694,6 @@ export class ContactsApp {
   }
 
   private createContactListItem(contact: Contact): ui.UINode {
-    console.log(`[Contacts UI] Creating contact list item for: ${contact.name}`);
-    
     // Create a binding for the avatar image
     const avatarImageBinding = new ui.Binding<ui.ImageSource | null>(null);
     
@@ -754,7 +707,6 @@ export class ContactsApp {
         }).then(imageSource => {
           avatarImageBinding.set(imageSource);
         }).catch(error => {
-          console.log(`[Contacts UI] Failed to load avatar for ${contact.name}:`, error);
           avatarImageBinding.set(null);
         });
       }

@@ -102,13 +102,13 @@ const quirkyWaitingMessages = [
   "🏆 Preparing your fate..."
 ];
 
-type GameState = 'playing' | 'waiting' | 'answered' | 'leaderboard' | 'finished';
+type GameState = 'waiting_for_game' | 'playing' | 'waiting' | 'answered' | 'leaderboard' | 'finished';
 
 export class TriviaApp {
   // Game state bindings
   private currentQuestionIndex = 0;
   private score = 0;
-  private gameState: GameState = 'playing';
+  private gameState: GameState = 'waiting_for_game';
   private selectedAnswer: number | null = null;
   private showResult = false;
   private waitingMessage = '';
@@ -147,7 +147,7 @@ export class TriviaApp {
   // Bindings for UI reactivity
   private currentQuestionIndexBinding = new ui.Binding(0);
   private scoreBinding = new ui.Binding(0);
-  private gameStateBinding = new ui.Binding<GameState>('playing');
+  private gameStateBinding = new ui.Binding<GameState>('waiting_for_game');
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
   private isAnswerCorrectBinding = new ui.Binding<boolean | null>(null);
@@ -166,29 +166,105 @@ export class TriviaApp {
     this.sendNetworkCallback = sendNetworkCallback || null;
     this.asyncUtils = asyncUtils || null;
     
+    // Initialize variable groups for points tracking
+    this.initializeVariableGroups();
+    
     // Register this TriviaApp instance with the world for results callbacks
     if (this.world) {
       if (!(this.world as any).triviaApps) {
         (this.world as any).triviaApps = [];
       }
       (this.world as any).triviaApps.push(this);
-      console.log(`TriviaApp: Registered with world. Total TriviaApps: ${(this.world as any).triviaApps.length}`);
-      console.log('TriviaApp: World object ID:', this.world.id || 'no-id');
-    } else {
-      console.log('TriviaApp: No world object provided!');
     }
     
     // Also register with global registry as backup
     (globalThis as any).triviaAppInstances.push(this);
-    console.log(`TriviaApp: Registered with global registry. Total global TriviaApps: ${(globalThis as any).triviaAppInstances.length}`);
     
     // Load questions from the JSON data
     this.loadQuestionsFromData();
   }
 
+  // Initialize access to the Trivia variable group
+  private initializeVariableGroups(): void {
+    try {
+      // Variable group access will be set up when player is assigned
+    } catch (error) {
+      // Failed to initialize variable groups
+    }
+  }
+
+  // Get player's current points from the variable group
+  private getPlayerPoints(): number {
+    if (!this.assignedPlayer || !this.world) {
+      return 0;
+    }
+    
+    try {
+      const points = this.world.persistentStorage.getPlayerVariable(this.assignedPlayer, 'Trivia:Points');
+      const numericPoints = points || 0;
+      return numericPoints;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  // Set player's points in the variable group
+  private setPlayerPoints(points: number): void {
+    if (!this.assignedPlayer || !this.world) {
+      return;
+    }
+    
+    try {
+      this.world.persistentStorage.setPlayerVariable(this.assignedPlayer, 'Trivia:Points', points);
+      
+      // Update local score and binding
+      this.score = points;
+      this.scoreBinding.set(points, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    } catch (error) {
+      // Failed to set player points
+    }
+  }
+
+  // Add points to player's current total
+  private addPlayerPoints(pointsToAdd: number): void {
+    const currentPoints = this.getPlayerPoints();
+    const newPoints = currentPoints + pointsToAdd;
+    this.setPlayerPoints(newPoints);
+    
+    // Also add to the world total points
+    this.addToWorldTotalPoints(pointsToAdd);
+  }
+
+  // Add points to the world total
+  private addToWorldTotalPoints(points: number): void {
+    if (!this.world) {
+      return;
+    }
+    
+    try {
+      const currentTotal = (this.world.persistentStorageWorld.getWorldVariable('Trivia:TotalPoints') as number) || 0;
+      const newTotal = currentTotal + points;
+      this.world.persistentStorageWorld.setWorldVariableAcrossAllInstancesAsync('Trivia:TotalPoints', newTotal);
+    } catch (error) {
+      // Failed to update world total points
+    }
+  }
+
+  // Reset points to 0 (called at game start)
+  private resetPlayerPoints(): void {
+    this.setPlayerPoints(0);
+  }
+
   // Set the assigned player for this TriviaApp instance
   public setAssignedPlayer(player: hz.Player | null): void {
     this.assignedPlayer = player;
+    
+    // Load current points when player is assigned
+    if (player) {
+      const currentPoints = this.getPlayerPoints();
+      this.score = currentPoints;
+      this.scoreBinding.set(currentPoints, [player]);
+    }
     
     // Ensure registration with world when player is assigned
     if (player && this.world) {
@@ -199,39 +275,22 @@ export class TriviaApp {
       const existingIndex = (this.world as any).triviaApps.indexOf(this);
       if (existingIndex === -1) {
         (this.world as any).triviaApps.push(this);
-        console.log(`TriviaApp: Re-registered with world on player assignment. Total TriviaApps: ${(this.world as any).triviaApps.length}`);
       }
     }
   }
 
   // Called by TriviaGame when trivia results are available
   public async onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }): Promise<void> {
-    console.log('TriviaApp: Received trivia results', eventData);
-    console.log('TriviaApp: showLeaderboard flag:', eventData.showLeaderboard);
-    console.log('TriviaApp: leaderboardData:', eventData.leaderboardData);
-    
     // Check if this is a leaderboard event
     if (eventData.showLeaderboard && eventData.leaderboardData) {
-      console.log('TriviaApp: *** PROCESSING LEADERBOARD DATA ***', eventData.leaderboardData);
       await this.handleLeaderboardData(eventData.leaderboardData);
       return;
     }
-    
-    console.log('TriviaApp: Processing normal answer results (not leaderboard)');
-    console.log('TriviaApp: Current selected answer:', this.selectedAnswer);
-    console.log('TriviaApp: Last answer timestamp:', this.lastAnswerTimestamp);
-    console.log('TriviaApp: Answer selection count:', this.answerSelectionCount);
-    console.log('TriviaApp: Current game state:', this.gameState);
-    console.log('TriviaApp: Current question index:', this.currentQuestionIndex);
-    console.log('TriviaApp: Assigned player:', this.assignedPlayer?.id || 'none');
-    console.log('TriviaApp: Time since answer set:', this.lastAnswerTimestamp > 0 ? (Date.now() - this.lastAnswerTimestamp) : 'never set');
-    console.log('TriviaApp: Persistent storage:', this.persistentAnswerStorage);
     
     // Try to recover answer from persistent storage if selectedAnswer is null
     let effectiveSelectedAnswer = this.selectedAnswer;
     if (effectiveSelectedAnswer === null && this.persistentAnswerStorage[this.currentQuestionIndex] !== undefined) {
       effectiveSelectedAnswer = this.persistentAnswerStorage[this.currentQuestionIndex];
-      console.log(`TriviaApp: Recovered answer from persistent storage: ${effectiveSelectedAnswer}`);
       // Update the selectedAnswer with recovered value
       this.selectedAnswer = effectiveSelectedAnswer;
       this.selectedAnswerBinding.set(effectiveSelectedAnswer, this.assignedPlayer ? [this.assignedPlayer] : undefined);
@@ -241,9 +300,7 @@ export class TriviaApp {
     let isCorrect: boolean | null = null;
     if (effectiveSelectedAnswer !== null) {
       isCorrect = effectiveSelectedAnswer === eventData.correctAnswerIndex;
-      console.log(`TriviaApp: Player selected answer ${effectiveSelectedAnswer}, correct answer was ${eventData.correctAnswerIndex}, result: ${isCorrect ? 'CORRECT' : 'WRONG'}`);
     } else {
-      console.log('TriviaApp: Player did not answer - no answer found in selectedAnswer or persistent storage');
       isCorrect = null; // No answer submitted
     }
     
@@ -255,25 +312,14 @@ export class TriviaApp {
     this.showResult = true;
     this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
     this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    
-    console.log('TriviaApp: Showing answer feedback -', isCorrect ? 'CORRECT' : isCorrect === false ? 'WRONG' : 'NO ANSWER');
-    console.log('TriviaApp: Waiting for host to press Next Question button (no auto-progression)');
-    
-    // Don't start auto-progression timer - wait for host to press "Next Question"
-    // this.startAutoProgressTimer(this.assignedPlayer ?? undefined);
   }
 
   // Called when leaderboard data is received for this specific player
   public async onLeaderboardData(eventData: { playerId: string, rank: number, score: number, totalPlayers: number }): Promise<void> {
-    console.log('TriviaApp: Received leaderboard data', eventData);
-    
     // Check if this data is for the assigned player
     const assignedPlayerId = this.assignedPlayer?.id.toString();
-    console.log(`TriviaApp: Assigned player ID: ${assignedPlayerId}, Event player ID: ${eventData.playerId}`);
     
     if (assignedPlayerId && eventData.playerId === assignedPlayerId) {
-      console.log(`TriviaApp: Leaderboard data matches assigned player ${assignedPlayerId}`);
-      
       // Update leaderboard bindings
       this.playerRankBinding.set(eventData.rank, this.assignedPlayer ? [this.assignedPlayer] : undefined);
       this.playerScoreBinding.set(eventData.score, this.assignedPlayer ? [this.assignedPlayer] : undefined);
@@ -289,70 +335,51 @@ export class TriviaApp {
           this.playerHeadshotBinding.set(headshotImageSource, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         }
       } catch (error) {
-        console.log('TriviaApp: Could not get player headshot:', error);
         this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
       }
       
       // Transition to leaderboard state
-      console.log('TriviaApp: Changing game state from', this.gameState, 'to leaderboard');
       this.gameState = 'leaderboard';
       this.showResult = false; // Hide answer result screen
       this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
       this.showResultBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-      
-      console.log(`TriviaApp: Showing personal leaderboard - Rank ${eventData.rank}/${eventData.totalPlayers}, Score: ${eventData.score}`);
-    } else {
-      console.log(`TriviaApp: Leaderboard data is for different player (${eventData.playerId}), assigned player is ${assignedPlayerId}`);
     }
   }
 
   private async handleLeaderboardData(leaderboardData: Array<{name: string, score: number, playerId: string}>): Promise<void> {
-    console.log('TriviaApp: Processing leaderboard data for assigned player');
-    console.log('TriviaApp: Available leaderboard data:', leaderboardData);
-    
     // Try multiple ways to get the current player ID
     let currentPlayerId: string | null = null;
     
     // Method 1: Use assigned player
     if (this.assignedPlayer) {
       currentPlayerId = this.assignedPlayer.id.toString();
-      console.log('TriviaApp: Using assigned player ID:', currentPlayerId);
     }
     
     // Method 2: If no assigned player, but we have leaderboard data with only one player, use that
     if (!currentPlayerId && leaderboardData.length === 1) {
       currentPlayerId = leaderboardData[0].playerId;
-      console.log('TriviaApp: Single player in leaderboard, using ID:', currentPlayerId);
     }
     
     // Method 3: Check if there's a player ID we can derive from previous interactions
     if (!currentPlayerId) {
-      // Look for any stored data that might indicate which player this is
-      console.log('TriviaApp: No assigned player or single player fallback available');
-      console.log('TriviaApp: Attempting to show leaderboard for first player in list as fallback');
       if (leaderboardData.length > 0) {
         currentPlayerId = leaderboardData[0].playerId;
-        console.log('TriviaApp: Using first player as fallback:', currentPlayerId);
       }
     }
     
     if (!currentPlayerId) {
-      console.log('TriviaApp: Cannot determine current player ID to show leaderboard for');
       return;
     }
     
     // Find player's rank and score
     const playerIndex = leaderboardData.findIndex(player => player.playerId === currentPlayerId);
     if (playerIndex === -1) {
-      console.log(`TriviaApp: Player ${currentPlayerId} not found in leaderboard data`);
       return;
     }
     
     const playerData = leaderboardData[playerIndex];
     const rank = playerIndex + 1; // Rank is 1-based
     const totalPlayers = leaderboardData.length;
-    
-    console.log(`TriviaApp: Found player data - Player ID: ${currentPlayerId}, Rank: ${rank}, Score: ${playerData.score}, Total players: ${totalPlayers}`);
     
     // Update leaderboard bindings
     this.playerRankBinding.set(rank, this.assignedPlayer ? [this.assignedPlayer] : undefined);
@@ -362,10 +389,6 @@ export class TriviaApp {
     // Get headshot using Social API - try to use assignedPlayer or get current player from world
     try {
       let playerForHeadshot = this.assignedPlayer;
-      if (!playerForHeadshot) {
-        // Try to get the player from the world (this might not work in all contexts)
-        console.log('TriviaApp: Attempting to get player headshot without assigned player');
-      }
       
       if (playerForHeadshot) {
         const headshotImageSource = await Social.getAvatarImageSource(playerForHeadshot, {
@@ -374,30 +397,23 @@ export class TriviaApp {
         });
         this.playerHeadshotBinding.set(headshotImageSource, this.assignedPlayer ? [this.assignedPlayer] : undefined);
       } else {
-        console.log('TriviaApp: No player available for headshot');
         this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
       }
     } catch (error) {
-      console.log('TriviaApp: Could not get player headshot:', error);
       this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
     }
     
     // Transition to leaderboard state
-    console.log('TriviaApp: Changing game state from', this.gameState, 'to leaderboard');
     this.gameState = 'leaderboard';
     this.showResult = false; // Hide answer result screen
     this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
     this.showResultBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    
-    console.log(`TriviaApp: Successfully showing personal leaderboard - Rank ${rank}/${totalPlayers}, Score: ${playerData.score}`);
   }
 
   // Method to send network events (requires callback from parent component)
   private sendNetworkEvent(event: hz.NetworkEvent<any>, data: any): void {
     if (this.sendNetworkCallback) {
       this.sendNetworkCallback(event, data);
-    } else {
-      console.warn('TriviaApp: Cannot send network event - no network callback');
     }
   }
 
@@ -537,11 +553,9 @@ export class TriviaApp {
           answers: q.answers
         }));
         this.useExternalQuestions = true;
-        console.log(`TriviaApp: Loaded ${this.questions.length} questions from trivia data`);
       }
     } catch (error) {
-      console.log('TriviaApp: Could not load external questions, using sample questions:', error);
-      // Keep using sample questions as fallback
+      // Could not load external questions, using sample questions as fallback
     }
   }
 
@@ -551,11 +565,6 @@ export class TriviaApp {
     questionIndex: number;
     timeLimit?: number;
   }): void {
-    console.log("TriviaApp: Syncing with external trivia question", questionData);
-    console.log("TriviaApp: Current selectedAnswer before sync:", this.selectedAnswer);
-    console.log("TriviaApp: Last answer timestamp before sync:", this.lastAnswerTimestamp);
-    console.log("TriviaApp: Answer selection count before sync:", this.answerSelectionCount);
-    
     // Clear any running timer since we're syncing with external system
     this.clearAutoProgressTimer();
     
@@ -578,7 +587,6 @@ export class TriviaApp {
     
     // Reset state for new question or when transitioning from leaderboard
     if (shouldResetState) {
-      console.log("TriviaApp: Resetting state for new question (gameState was:", this.gameState, ")");
       this.selectedAnswer = null;
       this.showResult = false;
       this.waitingMessage = '';
@@ -598,21 +606,13 @@ export class TriviaApp {
       this.isAnswerCorrectBinding.set(null);
       this.waitingMessageBinding.set('');
       this.gameStateBinding.set('playing');
-      
-      console.log("TriviaApp: Ready for new question - all state reset");
     } else {
-      console.log("TriviaApp: Preserving current answer selection during sync");
-      console.log("TriviaApp: Preserved selectedAnswer:", this.selectedAnswer);
       // Just update the question-related bindings, keep the selected answer
       this.questionStartTime = Date.now(); // Still update start time
     }
     
     // Always update these bindings regardless
     this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
-    
-    console.log("TriviaApp: *** SYNC COMPLETE - Current game state:", this.gameState);
-    console.log("TriviaApp: After sync - selectedAnswer:", this.selectedAnswer);
-    console.log("TriviaApp: After sync - last answer timestamp:", this.lastAnswerTimestamp);
   }
 
   // Method to show results from external trivia system
@@ -622,8 +622,6 @@ export class TriviaApp {
     answerCounts?: number[];
     scores?: { [key: string]: number };
   }): void {
-    console.log("TriviaApp: Showing external trivia results", resultsData);
-    
     // Show results automatically
     this.gameState = 'answered';
     this.showResult = true;
@@ -636,8 +634,6 @@ export class TriviaApp {
     finalScores?: Array<{ playerId: string; score: number }>;
     totalQuestions?: number;
   }): void {
-    console.log("TriviaApp: External trivia game completed", gameData);
-    
     // End the game
     this.gameState = 'finished';
     this.gameStateBinding.set('finished');
@@ -744,12 +740,8 @@ export class TriviaApp {
   private handleAnswerSelect(answerIndex: number, assignedPlayer?: hz.Player): void {
     // Only allow selection during playing state
     if (this.gameState !== 'playing') {
-      console.log(`TriviaApp: Cannot select answer - game state is ${this.gameState}, not playing`);
       return;
     }
-    
-    console.log(`TriviaApp: Player selected answer ${answerIndex}`);
-    console.log(`TriviaApp: Before selection - selectedAnswer: ${this.selectedAnswer}`);
     
     this.selectedAnswer = answerIndex;
     this.lastAnswerTimestamp = Date.now();
@@ -757,10 +749,6 @@ export class TriviaApp {
     
     // Store answer persistently by question index
     this.persistentAnswerStorage[this.currentQuestionIndex] = answerIndex;
-    
-    console.log(`TriviaApp: After selection - selectedAnswer: ${this.selectedAnswer}`);
-    console.log(`TriviaApp: Answer set at timestamp: ${this.lastAnswerTimestamp}, selection count: ${this.answerSelectionCount}`);
-    console.log(`TriviaApp: Stored in persistent storage for question ${this.currentQuestionIndex}: ${answerIndex}`);
     
     // Calculate response time
     const responseTime = Date.now() - this.questionStartTime;
@@ -775,17 +763,12 @@ export class TriviaApp {
       responseTime: responseTime
     });
     
-    console.log(`TriviaApp: Player ${playerId} answered ${answerIndex} in ${responseTime}ms`);
-    
     // Check how many players are in the world
     const playersInWorld = this.world?.getPlayers() || [];
     const playerCount = playersInWorld.length;
     
-    console.log(`TriviaApp: ${playerCount} players in world`);
-    
     // Update the selected answer binding immediately
     this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
-    console.log(`TriviaApp: Updated selectedAnswerBinding to ${answerIndex}`);
     
     // Only show waiting screen if there are multiple players
     if (playerCount > 1) {
@@ -797,21 +780,16 @@ export class TriviaApp {
       // Update bindings to show waiting state
       this.gameStateBinding.set('waiting', assignedPlayer ? [assignedPlayer] : undefined);
       this.waitingMessageBinding.set(waitingMessage, assignedPlayer ? [assignedPlayer] : undefined);
-      
-      console.log(`TriviaApp: Multiplayer mode, showing waiting screen`);
-    } else {
-      // Single player - stay in playing state and wait for immediate results
-      console.log(`TriviaApp: Single player mode, waiting for immediate results`);
     }
     
     // Store the correct answer for scoring when results come back
     const currentQuestion = this.questions[this.currentQuestionIndex];
+    
     if (currentQuestion.answers[answerIndex].correct) {
-      this.score += 1;
-      this.scoreBinding.set(this.score, assignedPlayer ? [assignedPlayer] : undefined);
+      // Add 1 point for correct answer using the variable system
+      this.addPlayerPoints(1);
     }
     
-    console.log(`TriviaApp: Waiting for results from TriviaGame... selectedAnswer is now: ${this.selectedAnswer}`);
     // Results will be shown when onTriviaResults is called
   }
 
@@ -841,8 +819,6 @@ export class TriviaApp {
         this.clearAutoProgressTimer();
         this.checkGameEnd(assignedPlayer);
       }, 5000);
-    } else {
-      console.log('TriviaApp: No async utils available, skipping auto-progress timer');
     }
   }
 
@@ -890,19 +866,20 @@ export class TriviaApp {
     // Clear any running timer
     this.clearAutoProgressTimer();
     
+    // Reset points to 0 for new game
+    this.resetPlayerPoints();
+    
     this.currentQuestionIndex = 0;
-    this.score = 0;
-    this.gameState = 'playing';
+    this.gameState = 'waiting_for_game';
     this.selectedAnswer = null;
     this.showResult = false;
     this.waitingMessage = '';
     this.secondsRemaining = 5;
     this.questionStartTime = Date.now(); // Record when first question starts
     
-    // Update bindings
+    // Update bindings (score will be updated by resetPlayerPoints)
     this.currentQuestionIndexBinding.set(0, assignedPlayer ? [assignedPlayer] : undefined);
-    this.scoreBinding.set(0, assignedPlayer ? [assignedPlayer] : undefined);
-    this.gameStateBinding.set('playing', assignedPlayer ? [assignedPlayer] : undefined);
+    this.gameStateBinding.set('waiting_for_game', assignedPlayer ? [assignedPlayer] : undefined);
     this.selectedAnswerBinding.set(null, assignedPlayer ? [assignedPlayer] : undefined);
     this.showResultBinding.set(false, assignedPlayer ? [assignedPlayer] : undefined);
     this.isAnswerCorrectBinding.set(null, assignedPlayer ? [assignedPlayer] : undefined);
@@ -960,7 +937,11 @@ export class TriviaApp {
           this.renderLeaderboardScreen(onHomePress, assignedPlayer)
         ),
         ui.UINode.if(
-          ui.Binding.derive([this.gameStateBinding], (state) => state !== 'finished' && state !== 'leaderboard'),
+          ui.Binding.derive([this.gameStateBinding], (state) => state === 'waiting_for_game'),
+          this.renderWaitingForGameScreen(onHomePress, assignedPlayer)
+        ),
+        ui.UINode.if(
+          ui.Binding.derive([this.gameStateBinding], (state) => state !== 'finished' && state !== 'leaderboard' && state !== 'waiting_for_game'),
           this.renderGameScreen(onHomePress, assignedPlayer)
         )
       ]
@@ -1048,6 +1029,84 @@ export class TriviaApp {
                 fontWeight: '600',
                 color: '#7C3AED'
               }
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderWaitingForGameScreen(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#6366F1',
+        flexDirection: 'column'
+      },
+      children: [
+        // Header
+        this.createAppHeader({
+          appName: 'Trivia',
+          onHomePress: onHomePress
+        }),
+
+        // Main Content Area
+        ui.View({
+          style: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+            paddingTop: 48 // Space for header
+          },
+          children: [
+            ui.View({
+              style: {
+                alignItems: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 20,
+                padding: 32,
+                width: '90%',
+                maxWidth: 300
+              },
+              children: [
+                ui.Text({
+                  text: '⏳',
+                  style: {
+                    fontSize: 48,
+                    textAlign: 'center',
+                    marginBottom: 16
+                  }
+                }),
+                ui.Text({
+                  text: 'Waiting for Game to Start',
+                  style: {
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    marginBottom: 8
+                  }
+                }),
+                ui.Text({
+                  text: 'A trivia game will begin shortly.',
+                  style: {
+                    fontSize: 14,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textAlign: 'center',
+                    marginBottom: 16
+                  }
+                }),
+                ui.Text({
+                  text: 'Get ready to test your knowledge!',
+                  style: {
+                    fontSize: 12,
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    textAlign: 'center'
+                  }
+                })
+              ]
             })
           ]
         })

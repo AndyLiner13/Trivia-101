@@ -14,3 +14,5 @@ Each .ts file in the root directory is its own script. Each CustomUI Gizmo can o
 Don't try to register individual classes/segments from any file as its own CustomUI script. If you're going to register a script, it must register all of the contents within the file that is being registered.
 
 Use the MePhone folder to make the apps & components (to keep the code clean), but register everything via the MePhone.ts file (which will be the script that is attatched to the actual CustomUI Gizmo used to display & interact with the MePhone in Horizon Worlds)
+
+Only use console.log sparringly, and when you're done troubleshooting remove any console.logs used during the troubleshooting process.

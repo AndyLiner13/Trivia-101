@@ -43,21 +43,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   constructor() {
     super();
-    console.log('[MePhone] Component initialized');
   }
 
   async start() {
-    console.log('[MePhone] Starting and setting up network events');
     this.setupNetworkEvents();
   }
 
   // Set up network event listeners for trivia events
   private setupNetworkEvents(): void {
-    console.log('[MePhone] Setting up network event listeners');
     
     // Listen for trivia question show events
     this.connectNetworkBroadcastEvent(triviaQuestionShowEvent, (eventData) => {
-      console.log('[MePhone] Received trivia question show event', eventData);
       if (this.triviaApp) {
         this.triviaApp.syncWithExternalTrivia(eventData);
       }
@@ -65,13 +61,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     
     // Listen for trivia results events
     this.connectNetworkBroadcastEvent(triviaResultsEvent, (eventData) => {
-      console.log('[MePhone] Received trivia results event', eventData);
       if (this.triviaApp) {
         this.triviaApp.onTriviaResults(eventData);
       }
     });
     
-    console.log('[MePhone] Network event listeners configured');
   }
 
   // Ensure ContactsApp is initialized with world context
@@ -87,7 +81,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   onPlayerAssigned(player: hz.Player) {
-    console.log(`[MePhone] Player assigned: ${player.id} (${player.name.get()})`);
     this.assignedPlayer = player;
     this.isInitialized = true;
     
@@ -95,7 +88,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     this.triviaApp.setAssignedPlayer(player);
     
     // Load contacts for the assigned player
-    console.log(`[MePhone] Loading contacts for assigned player: ${player.name.get()}`);
     this.ensureContactsApp().updateContacts(player);
     
     // Reset to home screen when a new player is assigned
@@ -103,7 +95,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   onPlayerUnassigned(player: hz.Player) {
-    console.log(`[MePhone] Player unassigned: ${player.id} (${player.name.get()})`);
     this.assignedPlayer = null;
     this.isInitialized = false;
     
@@ -116,12 +107,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Initialize phone for a specific player
   public initializeForPlayer(player: hz.Player) {
-    console.log(`[MePhone] Initializing phone for player: ${player.name.get()}`);
     this.assignedPlayer = player;
     this.isInitialized = true;
     
     // Initialize contacts for this player
-    console.log(`[MePhone] Loading contacts for player: ${player.name.get()}`);
     this.ensureContactsApp().updateContacts(player);
     
     // Reset to home screen for this player
@@ -140,12 +129,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   }
 
   private navigateToApp(appName: string) {
-    console.log(`[MePhone] Navigating to app: ${appName}`);
     this.currentAppBinding.set(appName);
   }
 
   private navigateHome() {
-    console.log('[MePhone] Navigating to home');
     this.currentAppBinding.set('home');
   }
 
@@ -241,19 +228,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       onPress: (player: hz.Player) => {
         // Auto-assign phone to player if not assigned yet
         if (!this.assignedPlayer) {
-          console.log(`[MePhone] Auto-assigning phone to player ${player.name.get()}`);
           this.initializeForPlayer(player);
         }
         
         // Check if this player is authorized to use this phone
         if (!this.canPlayerInteract(player)) {
-          console.log(`[MePhone] Unauthorized interaction attempt by ${player.name.get()} - phone is assigned to ${this.assignedPlayer?.name.get() || 'nobody'}`);
           return;
         }
 
         // Navigate to the app
         if (appId === 'contacts') {
-          console.log(`[MePhone] Contacts app opened, refreshing contacts...`);
           // Force refresh contacts when contacts app is opened
           this.ensureContactsApp().updateContacts(this.assignedPlayer ?? undefined);
           this.navigateToApp(appId);
