@@ -192,6 +192,14 @@ export class TriviaGame extends ui.UIComponent {
   private hostPlayerIdBinding = new Binding<string | null>(null);
   private isLocalPlayerHostBinding = new Binding(false);
   
+  // Answer button color bindings for results state
+  private answerButtonColors = [
+    new Binding('#DC2626'), // Default red
+    new Binding('#2563EB'), // Default blue  
+    new Binding('#EAB308'), // Default yellow
+    new Binding('#16A34A')  // Default green
+  ];
+  
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
   private isLocalPlayerHost: boolean = false;
@@ -347,6 +355,12 @@ export class TriviaGame extends ui.UIComponent {
         this.answerTexts[i].set("");
       }
     }
+    
+    // Reset answer button colors to defaults
+    this.answerButtonColors[0].set('#DC2626'); // Red
+    this.answerButtonColors[1].set('#2563EB'); // Blue
+    this.answerButtonColors[2].set('#EAB308'); // Yellow
+    this.answerButtonColors[3].set('#16A34A'); // Green
 
     // Send question to TriviaApp and other components
     const serializableQuestion: SerializableQuestion = {
@@ -476,6 +490,12 @@ export class TriviaGame extends ui.UIComponent {
       }
     }
     
+    // Reset answer button colors to defaults
+    this.answerButtonColors[0].set('#DC2626'); // Red
+    this.answerButtonColors[1].set('#2563EB'); // Blue
+    this.answerButtonColors[2].set('#EAB308'); // Yellow
+    this.answerButtonColors[3].set('#16A34A'); // Green
+    
     // Start countdown timer
     this.startTimer();
   }
@@ -527,9 +547,24 @@ export class TriviaGame extends ui.UIComponent {
     this.stopTimer();
     this.showWaitingBinding.set(false);
     
+    // Cancel any scheduled auto-advance to prevent counter reset
+    if (this.gameLoopTimeoutId) {
+      this.async.clearTimeout(this.gameLoopTimeoutId);
+      this.gameLoopTimeoutId = null;
+    }
+    
     // Find the correct answer index
     const correctAnswerIndex = this.currentQuestion.answers.findIndex(answer => answer.correct);
     this.correctAnswerBinding.set(correctAnswerIndex);
+    
+    // Update answer button colors for results
+    for (let i = 0; i < 4; i++) {
+      if (i === correctAnswerIndex) {
+        this.answerButtonColors[i].set('#16A34A'); // Green for correct
+      } else {
+        this.answerButtonColors[i].set('#DC2626'); // Red for incorrect
+      }
+    }
     
     // Convert question to serializable format
     const serializableQuestion: SerializableQuestion = {
@@ -1511,7 +1546,7 @@ export class TriviaGame extends ui.UIComponent {
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: color,
+        backgroundColor: this.answerButtonColors[index],
         borderRadius: 6,
         paddingHorizontal: 12,
         paddingVertical: 8,
@@ -1530,44 +1565,14 @@ export class TriviaGame extends ui.UIComponent {
           }
         }),
         
-        // Answer text with results overlay
-        View({
+        // Answer text only (no results indicator)
+        Text({
+          text: this.answerTexts[index],
           style: {
-            flex: 1,
-            flexDirection: 'column'
-          },
-          children: [
-            Text({
-              text: this.answerTexts[index],
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: 'white'
-              }
-            }),
-            
-            // Results indicator
-            UINode.if(
-              this.showResultsBinding,
-              View({
-                style: {
-                  marginTop: 2,
-                  alignItems: 'center'
-                },
-                children: [
-                  // Correct/incorrect indicator only
-                  Text({
-                    text: this.correctAnswerBinding.derive(correct => correct === index ? '✅ Correct' : '❌'),
-                    style: {
-                      fontSize: 12,
-                      color: 'white',
-                      fontWeight: 'bold'
-                    }
-                  })
-                ]
-              })
-            )
-          ]
+            fontSize: 14,
+            fontWeight: '500',
+            color: 'white'
+          }
         })
       ]
     });
