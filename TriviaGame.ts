@@ -293,6 +293,17 @@ export class TriviaGame extends ui.UIComponent {
 
   async start() {
     
+    // Register this TriviaGame instance with the world for TriviaApp access
+    (this.world as any).triviaGame = this;
+    console.log(`[TriviaGame] Registered with world reference`);
+    
+    // Also register with global registry as backup
+    if (!(globalThis as any).triviaGameInstances) {
+      (globalThis as any).triviaGameInstances = [];
+    }
+    (globalThis as any).triviaGameInstances.push(this);
+    console.log(`[TriviaGame] Registered with global registry. Total instances: ${(globalThis as any).triviaGameInstances.length}`);
+    
     // Load trivia questions from asset if provided, otherwise use defaults or JSON file
     await this.loadTriviaQuestions();
     
@@ -476,17 +487,64 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
+  private resetGameStateButKeepRunning(): void {
+    // Reset all game state variables but preserve isRunning
+    this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
+    this.timeRemaining = this.props.questionTimeLimit;
+    this.totalAnswers = 0;
+    // DON'T reset isRunning here
+
+    // Clear player tracking
+    this.playersAnswered.clear();
+    this.hasLocalPlayerAnswered = false;
+
+    // Reset UI bindings
+    this.questionNumberBinding.set("Q1");
+    const timeLimit = (this.props as any).questionTimeLimit || 30;
+    this.timerBinding.set(timeLimit.toString());
+    this.answerCountBinding.set("0");
+    this.questionBinding.set("Loading first question...");
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+
+    // Clear answer texts
+    for (let i = 0; i < 4; i++) {
+      this.answerTexts[i].set("");
+    }
+
+    // Reset answer button colors
+    this.answerButtonColors[0].set('#DC2626');
+    this.answerButtonColors[1].set('#2563EB');
+    this.answerButtonColors[2].set('#EAB308');
+    this.answerButtonColors[3].set('#16A34A');
+
+    // Clear any running timers
+    this.stopTimer();
+    if (this.roundTimeoutId) {
+      this.async.clearTimeout(this.roundTimeoutId);
+      this.roundTimeoutId = null;
+    }
+    if (this.gameLoopTimeoutId) {
+      this.async.clearTimeout(this.gameLoopTimeoutId);
+      this.gameLoopTimeoutId = null;
+    }
+  }
+
   private startContinuousGame(): void {
     if (this.triviaQuestions.length === 0) {
       this.questionBinding.set("No questions available. Please add trivia questions.");
       return;
     }
 
-    // Reset game state for new game
-    this.resetGameState();
-
-    // Set running flag AFTER reset
+    // Set running flag FIRST before any other operations
     this.isRunning = true;
+    console.log(`[TriviaGame] Game started - isRunning set to true`);
+
+    // Reset game state for new game (but preserve isRunning)
+    this.resetGameStateButKeepRunning();
+
     this.currentQuestionIndex = 0;
 
     // Ensure questions are properly shuffled before starting
@@ -2116,7 +2174,26 @@ export class TriviaGame extends ui.UIComponent {
       this.gameLoopTimeoutId = null;
     }
     
+    // Clean up global registry
+    if ((globalThis as any).triviaGameInstances) {
+      const index = (globalThis as any).triviaGameInstances.indexOf(this);
+      if (index > -1) {
+        (globalThis as any).triviaGameInstances.splice(index, 1);
+      }
+    }
+    
     super.dispose();
+  }
+
+  // Debug method to check current game state
+  public debugGameState(): void {
+    console.log(`[TriviaGame] Debug - isRunning: ${this.isRunning}`);
+    console.log(`[TriviaGame] Debug - currentQuestion: ${!!this.currentQuestion}`);
+    console.log(`[TriviaGame] Debug - currentQuestionIndex: ${this.currentQuestionIndex}`);
+    console.log(`[TriviaGame] Debug - questions loaded: ${this.triviaQuestions.length}`);
+    
+    // Note: Binding values can't be directly accessed in debug method
+    // They are accessed through derive methods in the UI
   }
 }
 

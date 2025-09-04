@@ -172,10 +172,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           } catch (error) {
           }
 
+          // Mark that the player is no longer focused on the UI
+          this.isPlayerFocusedOnUI = false;
         }
-
-        // Update the focus state based on visibility
-        this.isPlayerFocusedOnUI = isVisible;
 
       } catch (error) {
       }
@@ -320,6 +319,23 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Handle MePhone assignment/toggle via keyboard input
   private handleKeyboardTrigger(player: hz.Player): void {
+    // Check if the MePhone is currently visible and assigned to this player
+    // Also check if it's positioned normally (not hidden by E key)
+    const isVisible = this.entity.visible.get();
+    const isAssignedToPlayer = this.assignedPlayer?.id === player.id;
+    const currentPosition = this.entity.position.get();
+    const isPositionedNormally = currentPosition.y > -500; // Not hidden far below
+
+    // Debug logging
+    console.log(`[MePhone] H key pressed - isVisible: ${isVisible}, isAssignedToPlayer: ${isAssignedToPlayer}, isPlayerFocusedOnUI: ${this.isPlayerFocusedOnUI}, positionY: ${currentPosition.y}`);
+
+    if (isVisible && isAssignedToPlayer && isPositionedNormally) {
+      console.log(`[MePhone] Blocking H key - phone is visible, assigned to player, and positioned normally`);
+      return; // Don't execute H key functionality if player is already using the phone
+    }
+
+    console.log(`[MePhone] Allowing H key - proceeding with functionality`);
+
     // Capture camera position when H key is pressed
     try {
       if (camera.default) {
@@ -362,6 +378,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Always set the MePhone's y position to -1000 when E is pressed
     const currentPosition = this.entity.position.get();
     this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
+
+    // Reset focus state since player is no longer actively using the phone
+    this.isPlayerFocusedOnUI = false;
   }
 
   // Open the MePhone UI on the player's device
@@ -383,15 +402,22 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       // First prepare the UI
       this.openUIForPlayer(player);
 
+      // Set focus state immediately to prevent H key from working during the transition
+      this.isPlayerFocusedOnUI = true;
+
       // Wait 25ms for position change to take effect, then focus the UI (reduced from 100ms)
       this.async.setTimeout(() => {
         try {
           player.focusUI(this.entity, { duration: 0.1 });
         } catch (focusError) {
+          // If focus fails, reset the focus state
+          this.isPlayerFocusedOnUI = false;
         }
       }, 25);
 
     } catch (error) {
+      // If something goes wrong, reset the focus state
+      this.isPlayerFocusedOnUI = false;
     }
   }
 
@@ -416,6 +442,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
     // Set the assigned player for TriviaApp
     this.triviaApp.setAssignedPlayer(player);
+    console.log(`[MePhone] Assigned player ${player.id} to TriviaApp`);
 
     // Load contacts for the assigned player
     this.ensureContactsApp().updateContacts(player);
@@ -645,6 +672,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         if (appId === 'contacts') {
           // Force refresh contacts when contacts app is opened
           this.ensureContactsApp().updateContacts(this.assignedPlayer ?? undefined);
+          this.navigateToApp(appId);
+        } else if (appId === 'trivia') {
+          // Force sync with TriviaGame when trivia app is opened
+          this.triviaApp.forceSyncWithTriviaGame();
           this.navigateToApp(appId);
         } else {
           this.navigateToApp(appId);
