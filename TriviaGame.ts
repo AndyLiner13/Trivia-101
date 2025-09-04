@@ -564,30 +564,21 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private async loadCustomQuizData(): Promise<void> {
-    console.log('loadCustomQuizData called');
     try {
       // Load the Italian Brainrot Quiz from the asset
       if (this.props.ItalianBrainrotQuiz) {
-        console.log('ItalianBrainrotQuiz asset found, attempting to load...');
         const assetData = await (this.props.ItalianBrainrotQuiz as any).fetchAsData();
         const quizData = assetData.asJSON() as CustomQuizQuestion[];
-        
-        console.log('Raw quiz data loaded:', quizData);
         
         if (Array.isArray(quizData) && quizData.length > 0) {
           // Convert to standard TriviaQuestion format
           this.customQuizQuestions = await this.loadCustomQuiz(quizData);
-          console.log(`Loaded ${this.customQuizQuestions.length} Italian Brainrot Quiz questions from asset`);
-          console.log('First question sample:', this.customQuizQuestions[0]);
         } else {
-          console.log('Italian Brainrot Quiz asset is empty or invalid');
         }
       } else {
-        console.log('ItalianBrainrotQuiz asset not provided');
       }
     } catch (error) {
       // If custom quiz loading fails, customQuizQuestions will remain empty
-      console.log('Failed to load Italian Brainrot Quiz data:', error);
     }
   }
 
@@ -616,7 +607,6 @@ export class TriviaGame extends ui.UIComponent {
         answers: answers
       };
 
-      console.log(`Loading question ${customQuestion.id} with image_id: "${customQuestion.image_id}"`);
       convertedQuestions.push(triviaQuestion);
     }
 
@@ -632,7 +622,6 @@ export class TriviaGame extends ui.UIComponent {
         const decimalId = parseInt(imagePath, 16).toString();
         return decimalId;
       } catch (error) {
-        console.error(`Error converting hex ${imagePath} to decimal:`, error);
         return null;
       }
     }
@@ -652,12 +641,8 @@ export class TriviaGame extends ui.UIComponent {
   private updateQuestionsForCategory(category: string, difficulty: string): void {
     let allQuestions: TriviaQuestion[] = [];
 
-    console.log(`updateQuestionsForCategory called with category: "${category}", difficulty: "${difficulty}"`);
-    console.log(`Available questions - General: ${this.generalQuestions.length}, History: ${this.historyQuestions.length}, Science: ${this.scienceQuestions.length}, Italian Brainrot: ${this.customQuizQuestions.length}`);
-
     // Collect questions from selected category - NO FALLBACKS
     const categoryLower = category.toLowerCase();
-    console.log(`Category (lowercase): "${categoryLower}"`);
     
     if (categoryLower === "general") {
       allQuestions = [...this.generalQuestions];
@@ -667,24 +652,18 @@ export class TriviaGame extends ui.UIComponent {
       allQuestions = [...this.scienceQuestions];
     } else if (categoryLower === "italian brainrot quiz" || categoryLower === "italianbrainrot quiz" || categoryLower.includes("italian") && categoryLower.includes("brainrot")) {
       allQuestions = [...this.customQuizQuestions];
-      console.log(`Selected Italian Brainrot Quiz with ${allQuestions.length} questions`);
     } else {
       // For unknown categories, don't fall back - show error
       allQuestions = [];
-      console.log(`Unknown category: "${category}" (normalized: "${categoryLower}")`);
     }
 
     // Filter by difficulty if specified (but NOT for Italian Brainrot Quiz)
     const isItalianBrainrot = categoryLower === "italian brainrot quiz" || categoryLower === "italianbrainrot quiz" || (categoryLower.includes("italian") && categoryLower.includes("brainrot"));
     
     if (!isItalianBrainrot && difficulty !== "all" && allQuestions.length > 0) {
-      console.log(`Filtering by difficulty: "${difficulty}"`);
-      console.log(`Available difficulties in questions:`, Array.from(new Set(allQuestions.map(q => q.difficulty))));
       const beforeFilter = allQuestions.length;
       allQuestions = allQuestions.filter(q => q.difficulty?.toLowerCase() === difficulty.toLowerCase());
-      console.log(`Questions after difficulty filter: ${allQuestions.length} (was ${beforeFilter})`);
     } else if (isItalianBrainrot) {
-      console.log(`Italian Brainrot Quiz selected - ignoring difficulty filter, using all ${allQuestions.length} questions`);
     }
 
     // NO FALLBACKS - if no questions match the exact criteria, keep empty array
@@ -693,15 +672,11 @@ export class TriviaGame extends ui.UIComponent {
     // Limit number of questions (but NOT for Italian Brainrot Quiz)
     if (!isItalianBrainrot && this.gameConfig && this.gameConfig.numQuestions && allQuestions.length > this.gameConfig.numQuestions) {
       allQuestions = allQuestions.slice(0, this.gameConfig.numQuestions);
-      console.log(`Limited to ${this.gameConfig.numQuestions} questions as configured`);
     } else if (isItalianBrainrot) {
-      console.log(`Italian Brainrot Quiz - using all ${allQuestions.length} questions (ignoring numQuestions config)`);
     }
 
     this.triviaQuestions = allQuestions;
     this.currentQuestionIndex = 0;
-
-    console.log(`Final triviaQuestions array has ${this.triviaQuestions.length} questions for category "${category}"`);
   }
 
   private setupNetworkEvents(): void {
@@ -866,7 +841,6 @@ export class TriviaGame extends ui.UIComponent {
     // Create a copy of the question with shuffled answers
     const shuffledQuestion = this.shuffleQuestionAnswers(question);
     this.currentQuestion = shuffledQuestion;
-    console.log(`Question ${shuffledQuestion.id}: "${shuffledQuestion.question.substring(0, 30)}..." - Image: "${shuffledQuestion.image || 'none'}"`);
     this.timeRemaining = this.props.questionTimeLimit;
     this.totalAnswers = 0;
 
@@ -875,7 +849,6 @@ export class TriviaGame extends ui.UIComponent {
     this.questionBinding.set(shuffledQuestion.question);
     // Set the image binding for stable image display
     this.questionImageBinding.set(shuffledQuestion.image || null);
-    console.log(`Setting question image binding to: "${shuffledQuestion.image || null}"`);
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
 
@@ -1172,7 +1145,6 @@ export class TriviaGame extends ui.UIComponent {
     this.questionBinding.set(eventData.question.question);
     // Set the image binding for stable image display
     this.questionImageBinding.set((eventData.question as any).image || null);
-    console.log(`Setting question image binding from network event to: "${(eventData.question as any).image || null}"`);
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
     
@@ -1482,7 +1454,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }): void {
-    console.log(`onSettingsUpdate called with category: "${eventData.settings.category}"`);
     
     // Update the game configuration immediately when settings change in TriviaPhone
     this.gameConfig = {
@@ -1492,8 +1463,6 @@ export class TriviaGame extends ui.UIComponent {
       category: eventData.settings.category.toLowerCase(),
       difficulty: eventData.settings.difficulty
     };
-    
-    console.log(`Converted category to: "${this.gameConfig.category}"`);
     
     // Update the binding to reflect changes in the UI
     this.gameConfigBinding.set(this.gameConfig);
@@ -1546,14 +1515,11 @@ export class TriviaGame extends ui.UIComponent {
     const selectedCategory = this.gameConfig.category;
     const selectedDifficulty = this.gameConfig.difficulty;
 
-    console.log(`handleStartGame called with category: "${selectedCategory}", difficulty: "${selectedDifficulty}"`);
-
     // Update questions based on selection
     this.updateQuestionsForCategory(selectedCategory, selectedDifficulty);
 
     // Check if we have questions for the selected category
     if (this.triviaQuestions.length === 0) {
-      console.log(`ERROR: No questions available for category "${selectedCategory}"`);
       this.showErrorScreen(`No questions available for "${selectedCategory}". Please check your category selection and ensure the data source is properly configured.`);
       return;
     }
@@ -1608,7 +1574,6 @@ export class TriviaGame extends ui.UIComponent {
 
     // Check if we have questions available - NO FALLBACKS
     if (this.triviaQuestions.length === 0) {
-      console.log(`ERROR: No questions available for category "${this.gameConfig.category}" in onGameStart`);
       this.showErrorScreen(`No questions available for "${this.gameConfig.category}". Please check your category selection and ensure the data source is properly configured.`);
       return; // Don't start the game
     }
@@ -1647,7 +1612,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private showErrorScreen(message: string): void {
-    console.log(`Showing error screen: ${message}`);
     this.errorMessageBinding.set(message);
     this.showErrorBinding.set(true);
     this.showConfigBinding.set(false);
@@ -2113,12 +2077,10 @@ export class TriviaGame extends ui.UIComponent {
                           if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                           const textureId = this.getTextureIdForImage(imageId);
                           if (textureId) {
-                            console.log(`Using texture ID: ${textureId} from image ID: ${imageId}`);
                             try {
                               const bigIntId = BigInt(textureId);
                               return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
                             } catch (error) {
-                              console.error(`Error creating TextureAsset with ID ${textureId}:`, error);
                               return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                             }
                           }
@@ -2750,7 +2712,6 @@ export class TriviaGame extends ui.UIComponent {
       }
     } catch (error) {
       // Could not get headshot for player, binding will remain null and show fallback
-      console.log(`Could not load headshot for player ${player.name.get()}:`, error);
     }
   }
 
