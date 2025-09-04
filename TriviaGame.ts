@@ -1935,35 +1935,12 @@ export class TriviaGame extends ui.UIComponent {
                   bottom: 0
                 },
                 children: [
-                  // Header with question number - centered at top
-                  View({
-                    style: {
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      padding: 10,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: '#F3F4F6'
-                    },
-                    children: Text({
-                      text: this.questionNumberBinding,
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: '#FF6B35'
-                      }
-                    })
-                  }),
-
                   // Timer - positioned at left, aligned with question
                   View({
                     style: {
                       position: 'absolute',
                       left: '5%',
-                      top: '12%',
+                      top: '2%',
                       width: 35,
                       height: 35,
                       backgroundColor: '#FF6B35',
@@ -1990,7 +1967,7 @@ export class TriviaGame extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       right: '5%',
-                      top: '12%',
+                      top: '2%',
                       alignItems: 'center'
                     },
                     children: [
@@ -2018,7 +1995,7 @@ export class TriviaGame extends ui.UIComponent {
                       position: 'absolute',
                       left: '12%',
                       right: '12%',
-                      top: '12%',
+                      top: '2%',
                       height: '15%',
                       alignItems: 'center',
                       justifyContent: 'center'
@@ -2060,8 +2037,8 @@ export class TriviaGame extends ui.UIComponent {
                         position: 'absolute',
                         left: '20%',
                         right: '20%',
-                        top: '20%',
-                        bottom: '45%',
+                        top: '25%',
+                        bottom: '40%',
                         alignItems: 'center',
                         justifyContent: 'center'
                       },
