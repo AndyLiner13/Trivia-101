@@ -311,6 +311,7 @@ export class TriviaGame extends ui.UIComponent {
   private questionNumberBinding = new Binding("Q1");
   private timerBinding = new Binding("30");
   private answerCountBinding = new Binding("0");
+  private answerCountTracking = new Binding(4); // Track number of answers for layout
   private questionBinding = new Binding("Waiting for question...");
   private questionImageBinding = new Binding<string | null>(null); // Stable binding for question image
   private answerTexts = [
@@ -755,6 +756,9 @@ export class TriviaGame extends ui.UIComponent {
       this.answerTexts[i].set("");
     }
 
+    // Reset answer count tracking
+    this.answerCountTracking.set(4);
+
     // Reset answer button colors
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
     for (let i = 0; i < 4; i++) {
@@ -803,6 +807,9 @@ export class TriviaGame extends ui.UIComponent {
     for (let i = 0; i < 4; i++) {
       this.answerTexts[i].set("");
     }
+
+    // Reset answer count tracking
+    this.answerCountTracking.set(4);
 
     // Reset answer button colors
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
@@ -880,6 +887,9 @@ export class TriviaGame extends ui.UIComponent {
         this.answerTexts[i].set("");
       }
     }
+    
+    // Update answer count tracking for layout logic
+    this.answerCountTracking.set(shuffledQuestion.answers.length);
     
     // Reset answer button colors to defaults - handle variable answer count
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
@@ -1156,6 +1166,9 @@ export class TriviaGame extends ui.UIComponent {
         this.answerTexts[i].set("");
       }
     }
+    
+    // Update answer count tracking for layout logic
+    this.answerCountTracking.set(answers.length);
     
     // Reset answer button colors to defaults - handle variable answer count
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
@@ -2092,55 +2105,110 @@ export class TriviaGame extends ui.UIComponent {
                             alignItems: 'center'
                           },
                           children: [
-                            // Answer 0 (Red/Triangle) - always show if it has text
+                            // For 2-answer questions: Show options 3 and 4, hide 1 and 2
                             UINode.if(
-                              this.answerTexts[0].derive(text => text !== ''),
+                              this.answerCountTracking.derive(count => count === 2),
                               View({
                                 style: {
-                                  width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                  height: 42,
-                                  marginRight: this.answerTexts[1].derive(text => text !== '') ? '4%' : '0%',
-                                  marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                  width: '100%',
+                                  height: '100%',
+                                  flexDirection: 'row',
+                                  justifyContent: 'center',
+                                  alignItems: 'center'
                                 },
-                                children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                                children: [
+                                  // Answer 2 (Yellow/Circle) - shows as Option 3
+                                  UINode.if(
+                                    this.answerTexts[2].derive(text => text !== ''),
+                                    View({
+                                      style: {
+                                        width: '48%',
+                                        height: 42,
+                                        marginRight: '4%'
+                                      },
+                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                                    })
+                                  ),
+                                  // Answer 3 (Green/Square) - shows as Option 4
+                                  UINode.if(
+                                    this.answerTexts[3].derive(text => text !== ''),
+                                    View({
+                                      style: {
+                                        width: '48%',
+                                        height: 42
+                                      },
+                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                    })
+                                  )
+                                ]
                               })
                             ),
 
-                            // Answer 1 (Blue/Star) - show if it has text
+                            // For 3+ answer questions: Show all options normally
                             UINode.if(
-                              this.answerTexts[1].derive(text => text !== ''),
+                              this.answerCountTracking.derive(count => count !== 2),
                               View({
                                 style: {
-                                  width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                  height: 42,
-                                  marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                  width: '100%',
+                                  height: '100%',
+                                  flexDirection: 'row',
+                                  flexWrap: 'wrap',
+                                  justifyContent: 'center',
+                                  alignItems: 'center'
                                 },
-                                children: this.createAnswerButton(1, '#2563EB', '764343253011569')
-                              })
-                            ),
+                                children: [
+                                  // Answer 0 (Red/Triangle) - Option 1
+                                  UINode.if(
+                                    this.answerTexts[0].derive(text => text !== ''),
+                                    View({
+                                      style: {
+                                        width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
+                                        height: 42,
+                                        marginRight: this.answerTexts[1].derive(text => text !== '') ? '4%' : '0%',
+                                        marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                      },
+                                      children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                                    })
+                                  ),
 
-                            // Answer 2 (Yellow/Circle) - show if it has text
-                            UINode.if(
-                              this.answerTexts[2].derive(text => text !== ''),
-                              View({
-                                style: {
-                                  width: '48%',
-                                  height: 42,
-                                  marginRight: '4%'
-                                },
-                                children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                              })
-                            ),
+                                  // Answer 1 (Blue/Star) - Option 2
+                                  UINode.if(
+                                    this.answerTexts[1].derive(text => text !== ''),
+                                    View({
+                                      style: {
+                                        width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
+                                        height: 42,
+                                        marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                      },
+                                      children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+                                    })
+                                  ),
 
-                            // Answer 3 (Green/Square) - show if it has text
-                            UINode.if(
-                              this.answerTexts[3].derive(text => text !== ''),
-                              View({
-                                style: {
-                                  width: '48%',
-                                  height: 42
-                                },
-                                children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                  // Answer 2 (Yellow/Circle) - Option 3
+                                  UINode.if(
+                                    this.answerTexts[2].derive(text => text !== ''),
+                                    View({
+                                      style: {
+                                        width: '48%',
+                                        height: 42,
+                                        marginRight: '4%'
+                                      },
+                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                                    })
+                                  ),
+
+                                  // Answer 3 (Green/Square) - Option 4
+                                  UINode.if(
+                                    this.answerTexts[3].derive(text => text !== ''),
+                                    View({
+                                      style: {
+                                        width: '48%',
+                                        height: 42
+                                      },
+                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                    })
+                                  )
+                                ]
                               })
                             )
                           ]
