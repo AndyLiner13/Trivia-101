@@ -312,6 +312,7 @@ export class TriviaGame extends ui.UIComponent {
   private timerBinding = new Binding("30");
   private answerCountBinding = new Binding("0");
   private questionBinding = new Binding("Waiting for question...");
+  private questionImageBinding = new Binding<string | null>(null); // Stable binding for question image
   private answerTexts = [
     new Binding(""),
     new Binding(""),
@@ -741,6 +742,7 @@ export class TriviaGame extends ui.UIComponent {
     this.timerBinding.set(timeLimit.toString());
     this.answerCountBinding.set("0");
     this.questionBinding.set("Loading first question...");
+    this.questionImageBinding.set(null); // Clear image binding
     this.showResultsBinding.set(false);
     this.isShowingResults = false;
     this.showWaitingBinding.set(false);
@@ -789,6 +791,7 @@ export class TriviaGame extends ui.UIComponent {
     this.timerBinding.set(timeLimit.toString());
     this.answerCountBinding.set("0");
     this.questionBinding.set("Loading first question...");
+    this.questionImageBinding.set(null); // Clear image binding
     this.showResultsBinding.set(false);
     this.isShowingResults = false;
     this.showWaitingBinding.set(false);
@@ -863,6 +866,9 @@ export class TriviaGame extends ui.UIComponent {
     // Update UI bindings
     this.questionNumberBinding.set(`Q${this.currentQuestionIndex + 1}`);
     this.questionBinding.set(shuffledQuestion.question);
+    // Set the image binding for stable image display
+    this.questionImageBinding.set(shuffledQuestion.image || null);
+    console.log(`Setting question image binding to: "${shuffledQuestion.image || null}"`);
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
 
@@ -891,6 +897,7 @@ export class TriviaGame extends ui.UIComponent {
       question: shuffledQuestion.question,
       category: shuffledQuestion.category || 'General',
       difficulty: shuffledQuestion.difficulty || 'easy',
+      image: shuffledQuestion.image, // Include the image field
       answers: shuffledQuestion.answers.map((answer: { text: string; correct: boolean }) => ({ text: answer.text, correct: answer.correct }))
     };
 
@@ -1067,6 +1074,7 @@ export class TriviaGame extends ui.UIComponent {
       question: this.currentQuestion.question,
       category: this.currentQuestion.category || 'General',
       difficulty: this.currentQuestion.difficulty || 'easy',
+      image: this.currentQuestion.image, // Include the image field
       answers: this.currentQuestion.answers
     };      // Prepare final leaderboard data for network event
       const networkLeaderboardData = finalLeaderboard.map(player => ({
@@ -1133,6 +1141,9 @@ export class TriviaGame extends ui.UIComponent {
     // Update UI bindings
     this.questionNumberBinding.set(`Q${eventData.questionIndex + 1}`);
     this.questionBinding.set(eventData.question.question);
+    // Set the image binding for stable image display
+    this.questionImageBinding.set((eventData.question as any).image || null);
+    console.log(`Setting question image binding from network event to: "${(eventData.question as any).image || null}"`);
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
     
@@ -1244,6 +1255,7 @@ export class TriviaGame extends ui.UIComponent {
       question: this.currentQuestion.question,
       category: this.currentQuestion.category || 'General',
       difficulty: this.currentQuestion.difficulty || 'easy',
+      image: this.currentQuestion.image, // Include the image field
       answers: this.currentQuestion.answers
     };
     
@@ -1325,6 +1337,7 @@ export class TriviaGame extends ui.UIComponent {
       question: this.currentQuestion.question,
       category: this.currentQuestion.category || 'General',
       difficulty: this.currentQuestion.difficulty || 'easy',
+      image: this.currentQuestion.image, // Include the image field
       answers: this.currentQuestion.answers
     };
     
@@ -2001,11 +2014,7 @@ export class TriviaGame extends ui.UIComponent {
 
                   // Question text - only shown when there's no image
                   UINode.if(
-                    this.questionBinding.derive(() => {
-                      if (!this.currentQuestion) return false;
-                      const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
-                      return textureId === null;
-                    }),
+                    this.questionImageBinding.derive(imageId => imageId === null),
                     View({
                       style: {
                         position: 'absolute',
@@ -2048,11 +2057,7 @@ export class TriviaGame extends ui.UIComponent {
 
                   // Question image - centered in middle area
                   UINode.if(
-                    this.questionBinding.derive(() => {
-                      if (!this.currentQuestion) return false;
-                      const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
-                      return textureId !== null;
-                    }),
+                    this.questionImageBinding.derive(imageId => imageId !== null),
                     View({
                       style: {
                         position: 'absolute',
@@ -2064,15 +2069,19 @@ export class TriviaGame extends ui.UIComponent {
                         justifyContent: 'center'
                       },
                       children: Image({
-                        source: this.questionBinding.derive(() => {
-                          if (!this.currentQuestion) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                          const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
+                        source: this.questionImageBinding.derive(imageId => {
+                          if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                          const textureId = this.getTextureIdForImage(imageId);
                           if (textureId) {
+                            console.log(`Original texture ID: ${textureId}`);
+                            // Hardcode test texture ID for debugging
+                            const hardcodedTextureId = "3683839291925288";
+                            console.log(`Using hardcoded texture ID: ${hardcodedTextureId}`);
                             try {
-                              const bigIntId = BigInt(textureId);
+                              const bigIntId = BigInt(hardcodedTextureId);
                               return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
                             } catch (error) {
-                              console.error(`Error creating TextureAsset with ID ${textureId}:`, error);
+                              console.error(`Error creating TextureAsset with hardcoded ID ${hardcodedTextureId}:`, error);
                               return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                             }
                           }
@@ -2081,7 +2090,8 @@ export class TriviaGame extends ui.UIComponent {
                         style: {
                           width: '100%',
                           height: '100%',
-                          borderRadius: 8
+                          borderRadius: 8,
+                          backgroundColor: 'lightblue' // Add background to see if Image component is rendering
                         }
                       })
                     })
