@@ -42,8 +42,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private followOffset = new hz.Vec3(0, 0.3, 1.0); // Position relative to player (in front and slightly above)
 
   // Camera state tracking for restoration when leaving UI interaction
-  private originalCameraPosition: hz.Vec3 | null = null;
-  private originalCameraRotation: hz.Quaternion | null = null;
+  private cameraPositionAtHKeyPress: hz.Vec3 | null = null;
+  private cameraRotationAtHKeyPress: hz.Quaternion | null = null;
+  private isPlayerFocusedOnUI: boolean = false;
 
   // Keyboard input connection
   private inputConnection: hz.PlayerInput | null = null;
@@ -95,11 +96,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       const cameraRotation = camera.default.rotation.get();
       const cameraForward = camera.default.forward.get();
 
-      // Position the MePhone exactly at the camera's position (no offset)
-      // This ensures the MePhone appears exactly where the user is looking from
-      const desiredPosition = cameraPosition.clone();
+      // Position the MePhone in front of the camera with forward offset
+      // This ensures the MePhone appears in front of where the user is looking
+      const forwardOffset = 1.5; // Move 1.5 units forward from camera position
+      const desiredPosition = cameraPosition.add(cameraForward.mul(forwardOffset));
 
-      // Update the MePhone's position to match the camera's position
+      // Update the MePhone's position to match the camera's position with forward offset
       this.entity.position.set(desiredPosition);
 
       // Make the MePhone face the opposite direction of the camera (towards the user's viewport)
@@ -107,7 +109,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       const finalRotation = cameraRotation.mul(faceOppositeRotation);
       this.entity.rotation.set(finalRotation);
 
-      console.log(`MePhone positioned exactly at camera position - Pos: (${desiredPosition.x.toFixed(2)}, ${desiredPosition.y.toFixed(2)}, ${desiredPosition.z.toFixed(2)})`);
+      console.log(`MePhone positioned ${forwardOffset} units forward from camera position - Pos: (${desiredPosition.x.toFixed(2)}, ${desiredPosition.y.toFixed(2)}, ${desiredPosition.z.toFixed(2)})`);
       console.log(`MePhone rotated to face towards user's viewport (opposite of camera direction)`);
 
     } catch (error) {
@@ -149,9 +151,49 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     console.log('Stopped following player');
   }
 
-  // Update method called every frame (keeping for compatibility, but using timer for following)
+  // Update method called every frame - using alternative polling approach
   update(dt: number) {
-    // Following is now handled by timer, but we can keep this for other updates if needed
+    // Alternative polling approach: Check if UI is still visible/active
+    if (this.assignedPlayer) {
+      try {
+        // Check if the MePhone entity is still visible (as an indicator of UI focus)
+        const isVisible = this.entity.visible.get();
+
+        // If the MePhone was visible but is no longer visible, trigger restoration
+        if (this.isPlayerFocusedOnUI && !isVisible) {
+          console.log('Player left MePhone UI (detected via visibility polling):', this.assignedPlayer.id);
+
+          // Restore the camera position and rotation to what it was when the user started the interaction
+          try {
+            if (camera.default && this.cameraPositionAtHKeyPress && this.cameraRotationAtHKeyPress) {
+              // Restore camera position and rotation with a smooth transition
+              camera.default.setCameraModeFixed({
+                position: this.cameraPositionAtHKeyPress,
+                rotation: this.cameraRotationAtHKeyPress,
+                duration: 0.5 // 0.5 second transition for smooth restoration
+              });
+
+              console.log('Restored camera to position and rotation from when H key was pressed');
+              console.log('Restored Pos:', this.cameraPositionAtHKeyPress, 'Restored Rot:', this.cameraRotationAtHKeyPress);
+
+              // Clear the stored camera state
+              this.cameraPositionAtHKeyPress = null;
+              this.cameraRotationAtHKeyPress = null;
+            }
+          } catch (error) {
+            console.log('Failed to restore camera state:', error instanceof Error ? error.message : error);
+          }
+
+          console.log('MePhone hidden for player:', this.assignedPlayer.id);
+        }
+
+        // Update the focus state based on visibility
+        this.isPlayerFocusedOnUI = isVisible;
+
+      } catch (error) {
+        console.log('Error in visibility polling:', error instanceof Error ? error.message : error);
+      }
+    }
   }  // Cleanup when component is destroyed
   stop() {
     if (this.inputConnection) {
@@ -256,17 +298,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Handle when the UI gains focus
   onFocus(player: hz.Player): void {
-    // Capture the current camera position and rotation before showing the MePhone
-    try {
-      if (camera.default) {
-        this.originalCameraPosition = camera.default.position.get().clone();
-        this.originalCameraRotation = camera.default.rotation.get().clone();
-        console.log('Captured original camera state for restoration when leaving UI interaction');
-        console.log('Camera Pos:', this.originalCameraPosition, 'Camera Rot:', this.originalCameraRotation);
-      }
-    } catch (error) {
-      console.log('Failed to capture camera state:', error instanceof Error ? error.message : error);
-    }
+    // Mark that the player is now focused on the UI
+    this.isPlayerFocusedOnUI = true;
+    console.log('Player started focusing on MePhone UI:', player.id);
 
     // Show the MePhone when focused - make it visible to all players
     this.entity.visible.set(true);
@@ -275,26 +309,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Handle when the UI loses focus
   onUnfocus(player: hz.Player): void {
-    // Restore the camera position and rotation to what it was when the user started the interaction
-    try {
-      if (camera.default && this.originalCameraPosition && this.originalCameraRotation) {
-        // Restore camera position and rotation with a smooth transition
-        camera.default.setCameraModeFixed({
-          position: this.originalCameraPosition,
-          rotation: this.originalCameraRotation,
-          duration: 0.5 // 0.5 second transition for smooth restoration
-        });
-
-        console.log('Restored camera to original position and rotation from when UI interaction started');
-        console.log('Restored Pos:', this.originalCameraPosition, 'Restored Rot:', this.originalCameraRotation);
-
-        // Clear the stored camera state
-        this.originalCameraPosition = null;
-        this.originalCameraRotation = null;
-      }
-    } catch (error) {
-      console.log('Failed to restore camera state:', error instanceof Error ? error.message : error);
-    }
+    // Mark that the player is no longer focused on the UI
+    this.isPlayerFocusedOnUI = false;
+    console.log('Player stopped focusing on MePhone UI:', player.id);
 
     // Hide the MePhone when unfocused - make it invisible to all players
     this.hideMePhone();
@@ -315,6 +332,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Handle MePhone assignment/toggle via keyboard input
   private handleKeyboardTrigger(player: hz.Player): void {
+    // Capture camera position when H key is pressed
+    try {
+      if (camera.default) {
+        this.cameraPositionAtHKeyPress = camera.default.position.get().clone();
+        this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
+        console.log('Captured camera position when H key was pressed');
+        console.log('H Key Camera Pos:', this.cameraPositionAtHKeyPress, 'H Key Camera Rot:', this.cameraRotationAtHKeyPress);
+      }
+    } catch (error) {
+      console.log('Failed to capture camera state when H key pressed:', error instanceof Error ? error.message : error);
+    }
+
     // If phone is not assigned to anyone, assign it to this player and open UI
     if (!this.assignedPlayer) {
       this.initializeForPlayer(player);
@@ -365,13 +394,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
   }
 
-  // Open and focus the MePhone UI on the player's device with delay
+  // Open and focus the MePhone UI on the player's device with shorter delay
   private openAndFocusUIForPlayer(player: hz.Player): void {
     try {
       // First prepare the UI
       this.openUIForPlayer(player);
 
-      // Wait 100ms for position change to take effect, then focus the UI
+      // Wait 25ms for position change to take effect, then focus the UI (reduced from 100ms)
       this.async.setTimeout(() => {
         try {
           player.focusUI(this.entity, { duration: 0 });
@@ -379,7 +408,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         } catch (focusError) {
           console.log('Failed to focus MePhone UI after delay:', focusError instanceof Error ? focusError.message : focusError);
         }
-      }, 100);
+      }, 25);
 
     } catch (error) {
       console.log('Failed to prepare MePhone UI:', error instanceof Error ? error.message : error);
@@ -422,8 +451,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     this.isInitialized = false;
 
     // Clear stored camera state
-    this.originalCameraPosition = null;
-    this.originalCameraRotation = null;
+    this.cameraPositionAtHKeyPress = null;
+    this.cameraRotationAtHKeyPress = null;
 
     // Hide the MePhone when unassigned
     this.hideMePhone();
@@ -465,30 +494,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   public unfocusAndHide(): void {
     if (this.assignedPlayer) {
       const playerId = this.assignedPlayer.id;
-
-      // Restore camera position and rotation if captured
-      try {
-        if (camera.default && this.originalCameraPosition && this.originalCameraRotation) {
-          camera.default.setCameraModeFixed({
-            position: this.originalCameraPosition,
-            rotation: this.originalCameraRotation,
-            duration: 0.5
-          });
-          console.log('Restored camera to original position and rotation before unfocusing');
-          this.originalCameraPosition = null;
-          this.originalCameraRotation = null;
-        }
-      } catch (error) {
-        console.log('Failed to restore camera state before unfocusing:', error instanceof Error ? error.message : error);
-      }
-
-      try {
-        // Unfocus the UI
-        this.assignedPlayer.unfocusUI();
-        console.log('Player.unfocusUI() called for player:', playerId);
-      } catch (error) {
-        console.log('Error calling unfocusUI():', error instanceof Error ? error.message : error);
-      }
 
       // Explicitly hide the MePhone after a short delay to ensure unfocus completes
       this.async.setTimeout(() => {
@@ -534,22 +539,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   public handleExternalUnfocus(): void {
     if (this.assignedPlayer) {
       console.log('External unfocus detected for player:', this.assignedPlayer.id);
-
-      // Restore camera position and rotation if captured
-      try {
-        if (camera.default && this.originalCameraPosition && this.originalCameraRotation) {
-          camera.default.setCameraModeFixed({
-            position: this.originalCameraPosition,
-            rotation: this.originalCameraRotation,
-            duration: 0.5
-          });
-          console.log('Restored camera to original position and rotation from external unfocus');
-          this.originalCameraPosition = null;
-          this.originalCameraRotation = null;
-        }
-      } catch (error) {
-        console.log('Failed to restore camera state on external unfocus:', error instanceof Error ? error.message : error);
-      }
 
       // Hide the MePhone immediately when external unfocus is detected
       this.hideMePhone();
