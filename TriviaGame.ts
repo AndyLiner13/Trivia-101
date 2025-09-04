@@ -26,11 +26,8 @@ interface TriviaQuestion {
 // Interface for custom quiz questions with images
 interface CustomQuizQuestion {
   id: string;
-  type: string;
-  difficulty: string;
-  category: string;
+  image_id?: string; // New format uses image_id instead of image
   question: string;
-  image?: string; // Path to image file
   correct_answer: string;
   incorrect_answers: string[];
 }
@@ -324,6 +321,8 @@ export class TriviaGame extends ui.UIComponent {
   private showResultsBinding = new Binding(false);
   private showWaitingBinding = new Binding(false);
   private showLeaderboardBinding = new Binding(false);
+  private showErrorBinding = new Binding(false);
+  private errorMessageBinding = new Binding("No questions available for the selected category.");
   private correctAnswerBinding = new Binding(-1);
   private answerCountsBinding = new Binding([0, 0, 0, 0]);
   
@@ -563,16 +562,21 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private async loadCustomQuizData(): Promise<void> {
+    console.log('loadCustomQuizData called');
     try {
       // Load the Italian Brainrot Quiz from the asset
       if (this.props.ItalianBrainrotQuiz) {
+        console.log('ItalianBrainrotQuiz asset found, attempting to load...');
         const assetData = await (this.props.ItalianBrainrotQuiz as any).fetchAsData();
         const quizData = assetData.asJSON() as CustomQuizQuestion[];
+        
+        console.log('Raw quiz data loaded:', quizData);
         
         if (Array.isArray(quizData) && quizData.length > 0) {
           // Convert to standard TriviaQuestion format
           this.customQuizQuestions = await this.loadCustomQuiz(quizData);
           console.log(`Loaded ${this.customQuizQuestions.length} Italian Brainrot Quiz questions from asset`);
+          console.log('First question sample:', this.customQuizQuestions[0]);
         } else {
           console.log('Italian Brainrot Quiz asset is empty or invalid');
         }
@@ -589,7 +593,7 @@ export class TriviaGame extends ui.UIComponent {
     const convertedQuestions: TriviaQuestion[] = [];
 
     for (const customQuestion of quizData) {
-      // Convert custom quiz format to standard TriviaQuestion format
+      // Convert new Italian Brainrot Quiz format to standard TriviaQuestion format
       const answers = [
         { text: customQuestion.correct_answer, correct: true },
         ...customQuestion.incorrect_answers.map(answer => ({ text: answer, correct: false }))
@@ -602,11 +606,11 @@ export class TriviaGame extends ui.UIComponent {
       }
 
       const triviaQuestion: TriviaQuestion = {
-        id: parseInt(customQuestion.id.replace('question_', '')),
+        id: parseInt(customQuestion.id),
         question: customQuestion.question,
-        category: customQuestion.category,
-        difficulty: customQuestion.difficulty,
-        image: customQuestion.image, // Keep the image path
+        category: "italian brainrot quiz", // Override category to ensure matching
+        difficulty: "easy", // Default difficulty for Italian Brainrot Quiz
+        image: customQuestion.image_id ? `images/question_${customQuestion.id}.png` : undefined, // Convert image_id to image path
         answers: answers
       };
 
@@ -629,58 +633,55 @@ export class TriviaGame extends ui.UIComponent {
   private updateQuestionsForCategory(category: string, difficulty: string): void {
     let allQuestions: TriviaQuestion[] = [];
 
-    // Collect questions from selected category
-    switch (category.toLowerCase()) {
-      case "general":
-        allQuestions = [...this.generalQuestions];
-        break;
-      case "history":
-        allQuestions = [...this.historyQuestions];
-        break;
-      case "science":
-        allQuestions = [...this.scienceQuestions];
-        break;
-      case "italian brainrot quiz":
-        allQuestions = [...this.customQuizQuestions];
-        break;
-      default:
-        allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions, ...this.customQuizQuestions];
-        break;
+    console.log(`updateQuestionsForCategory called with category: "${category}", difficulty: "${difficulty}"`);
+    console.log(`Available questions - General: ${this.generalQuestions.length}, History: ${this.historyQuestions.length}, Science: ${this.scienceQuestions.length}, Italian Brainrot: ${this.customQuizQuestions.length}`);
+
+    // Collect questions from selected category - NO FALLBACKS
+    const categoryLower = category.toLowerCase();
+    
+    if (categoryLower === "general") {
+      allQuestions = [...this.generalQuestions];
+    } else if (categoryLower === "history") {
+      allQuestions = [...this.historyQuestions];
+    } else if (categoryLower === "science") {
+      allQuestions = [...this.scienceQuestions];
+    } else if (categoryLower === "italian brainrot quiz" || categoryLower === "italianbrainrot quiz" || categoryLower.includes("italian") && categoryLower.includes("brainrot")) {
+      allQuestions = [...this.customQuizQuestions];
+      console.log(`Selected Italian Brainrot Quiz with ${allQuestions.length} questions`);
+    } else {
+      // For unknown categories, don't fall back - show error
+      allQuestions = [];
+      console.log(`Unknown category: "${category}" (normalized: "${categoryLower}")`);
     }
 
-    // Filter by difficulty if specified
-    if (difficulty !== "all") {
+    // Filter by difficulty if specified (but NOT for Italian Brainrot Quiz)
+    const isItalianBrainrot = categoryLower === "italian brainrot quiz" || categoryLower === "italianbrainrot quiz" || (categoryLower.includes("italian") && categoryLower.includes("brainrot"));
+    
+    if (!isItalianBrainrot && difficulty !== "all" && allQuestions.length > 0) {
+      console.log(`Filtering by difficulty: "${difficulty}"`);
+      console.log(`Available difficulties in questions:`, Array.from(new Set(allQuestions.map(q => q.difficulty))));
+      const beforeFilter = allQuestions.length;
       allQuestions = allQuestions.filter(q => q.difficulty?.toLowerCase() === difficulty.toLowerCase());
+      console.log(`Questions after difficulty filter: ${allQuestions.length} (was ${beforeFilter})`);
+    } else if (isItalianBrainrot) {
+      console.log(`Italian Brainrot Quiz selected - ignoring difficulty filter, using all ${allQuestions.length} questions`);
     }
 
-    // If no questions match the filter, use all questions from the category
-    if (allQuestions.length === 0) {
-      switch (category.toLowerCase()) {
-        case "general":
-          allQuestions = [...this.generalQuestions];
-          break;
-        case "history":
-          allQuestions = [...this.historyQuestions];
-          break;
-        case "science":
-          allQuestions = [...this.scienceQuestions];
-          break;
-        case "italian brainrot quiz":
-          allQuestions = [...this.customQuizQuestions];
-          break;
-        default:
-          allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions, ...this.customQuizQuestions];
-          break;
-      }
-    }
+    // NO FALLBACKS - if no questions match the exact criteria, keep empty array
+    // This will trigger error handling in handleStartGame
 
-    // If still no questions, use defaults
-    if (allQuestions.length === 0) {
-      allQuestions = [...defaultTriviaQuestions];
+    // Limit number of questions (but NOT for Italian Brainrot Quiz)
+    if (!isItalianBrainrot && this.gameConfig && this.gameConfig.numQuestions && allQuestions.length > this.gameConfig.numQuestions) {
+      allQuestions = allQuestions.slice(0, this.gameConfig.numQuestions);
+      console.log(`Limited to ${this.gameConfig.numQuestions} questions as configured`);
+    } else if (isItalianBrainrot) {
+      console.log(`Italian Brainrot Quiz - using all ${allQuestions.length} questions (ignoring numQuestions config)`);
     }
 
     this.triviaQuestions = allQuestions;
     this.currentQuestionIndex = 0;
+
+    console.log(`Final triviaQuestions array has ${this.triviaQuestions.length} questions for category "${category}"`);
   }
 
   private setupNetworkEvents(): void {
@@ -727,6 +728,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
+    this.showErrorBinding.set(false); // Hide error screen on reset
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -734,10 +736,10 @@ export class TriviaGame extends ui.UIComponent {
     }
 
     // Reset answer button colors
-    this.answerButtonColors[0].set('#DC2626');
-    this.answerButtonColors[1].set('#2563EB');
-    this.answerButtonColors[2].set('#EAB308');
-    this.answerButtonColors[3].set('#16A34A');
+    const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
+    for (let i = 0; i < 4; i++) {
+      this.answerButtonColors[i].set(defaultColors[i]);
+    }
 
     // Clear any running timers
     this.stopTimer();
@@ -774,6 +776,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
+    this.showErrorBinding.set(false); // Hide error screen on reset
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -781,10 +784,10 @@ export class TriviaGame extends ui.UIComponent {
     }
 
     // Reset answer button colors
-    this.answerButtonColors[0].set('#DC2626');
-    this.answerButtonColors[1].set('#2563EB');
-    this.answerButtonColors[2].set('#EAB308');
-    this.answerButtonColors[3].set('#16A34A');
+    const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
+    for (let i = 0; i < 4; i++) {
+      this.answerButtonColors[i].set(defaultColors[i]);
+    }
 
     // Clear any running timers
     this.stopTimer();
@@ -844,7 +847,7 @@ export class TriviaGame extends ui.UIComponent {
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
 
-    // Update answer options with shuffled answers
+    // Update answer options with shuffled answers - support both 2 and 4 option questions
     for (let i = 0; i < 4; i++) {
       if (i < shuffledQuestion.answers.length) {
         this.answerTexts[i].set(shuffledQuestion.answers[i].text);
@@ -853,11 +856,15 @@ export class TriviaGame extends ui.UIComponent {
       }
     }
     
-    // Reset answer button colors to defaults
-    this.answerButtonColors[0].set('#DC2626'); // Red
-    this.answerButtonColors[1].set('#2563EB'); // Blue
-    this.answerButtonColors[2].set('#EAB308'); // Yellow
-    this.answerButtonColors[3].set('#16A34A'); // Green
+    // Reset answer button colors to defaults - handle variable answer count
+    const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
+    for (let i = 0; i < 4; i++) {
+      if (i < shuffledQuestion.answers.length) {
+        this.answerButtonColors[i].set(defaultColors[i]);
+      } else {
+        this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
+      }
+    }
 
     // Send question to TriviaApp and other components
     const serializableQuestion: SerializableQuestion = {
@@ -950,6 +957,7 @@ export class TriviaGame extends ui.UIComponent {
       question: question.question,
       category: question.category,
       difficulty: question.difficulty,
+      image: question.image, // Include the image property
       answers: [...question.answers]
     };
 
@@ -1109,7 +1117,7 @@ export class TriviaGame extends ui.UIComponent {
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
     
-    // Update answer options
+    // Update answer options - support both 2 and 4 option questions
     const answers = eventData.question.answers;
     for (let i = 0; i < 4; i++) {
       if (i < answers.length) {
@@ -1119,11 +1127,15 @@ export class TriviaGame extends ui.UIComponent {
       }
     }
     
-    // Reset answer button colors to defaults
-    this.answerButtonColors[0].set('#DC2626'); // Red
-    this.answerButtonColors[1].set('#2563EB'); // Blue
-    this.answerButtonColors[2].set('#EAB308'); // Yellow
-    this.answerButtonColors[3].set('#16A34A'); // Green
+    // Reset answer button colors to defaults - handle variable answer count
+    const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
+    for (let i = 0; i < 4; i++) {
+      if (i < answers.length) {
+        this.answerButtonColors[i].set(defaultColors[i]);
+      } else {
+        this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
+      }
+    }
     
     // Reset answer count when starting new question
     this.answerCountBinding.set("0");
@@ -1193,12 +1205,17 @@ export class TriviaGame extends ui.UIComponent {
     // Update answer count to show how many players answered
     this.answerCountBinding.set(this.playersAnswered.size.toString());
     
-    // Update answer button colors for results
+    // Update answer button colors for results - only for buttons with answers
     for (let i = 0; i < 4; i++) {
-      if (i === correctAnswerIndex) {
-        this.answerButtonColors[i].set('#16A34A'); // Green for correct
+      if (i < this.currentQuestion.answers.length) {
+        if (i === correctAnswerIndex) {
+          this.answerButtonColors[i].set('#16A34A'); // Green for correct
+        } else {
+          this.answerButtonColors[i].set('#DC2626'); // Red for incorrect
+        }
       } else {
-        this.answerButtonColors[i].set('#DC2626'); // Red for incorrect
+        // Keep default colors for empty answer slots
+        this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
       }
     }
     
@@ -1219,7 +1236,8 @@ export class TriviaGame extends ui.UIComponent {
     
     // Also send network event for TriviaApp instances that might be listening
     // Use actual answer count in a way that won't reset our display
-    const actualAnswerCounts = [0, 0, 0, 0];
+    // Create answer counts array based on the number of answers for this question
+    const actualAnswerCounts = new Array(this.currentQuestion.answers.length).fill(0);
     actualAnswerCounts[correctAnswerIndex] = this.playersAnswered.size;
     
     // Try world registry first
@@ -1366,14 +1384,18 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }): void {
+    console.log(`onSettingsUpdate called with category: "${eventData.settings.category}"`);
+    
     // Update the game configuration immediately when settings change in TriviaPhone
     this.gameConfig = {
       timeLimit: eventData.settings.timeLimit,
       autoAdvance: eventData.settings.autoAdvance,
       numQuestions: eventData.settings.numberOfQuestions,
-      category: eventData.settings.category.toLowerCase().replace(' ', ''),
+      category: eventData.settings.category.toLowerCase(),
       difficulty: eventData.settings.difficulty
     };
+    
+    console.log(`Converted category to: "${this.gameConfig.category}"`);
     
     // Update the binding to reflect changes in the UI
     this.gameConfigBinding.set(this.gameConfig);
@@ -1426,8 +1448,17 @@ export class TriviaGame extends ui.UIComponent {
     const selectedCategory = this.gameConfig.category;
     const selectedDifficulty = this.gameConfig.difficulty;
 
+    console.log(`handleStartGame called with category: "${selectedCategory}", difficulty: "${selectedDifficulty}"`);
+
     // Update questions based on selection
     this.updateQuestionsForCategory(selectedCategory, selectedDifficulty);
+
+    // Check if we have questions for the selected category
+    if (this.triviaQuestions.length === 0) {
+      console.log(`ERROR: No questions available for category "${selectedCategory}"`);
+      this.showErrorScreen(`No questions available for "${selectedCategory}". Please check your category selection and ensure the data source is properly configured.`);
+      return;
+    }
 
     // Shuffle questions for completely random order - do this multiple times for maximum randomness
     this.shuffleQuestions();
@@ -1445,6 +1476,7 @@ export class TriviaGame extends ui.UIComponent {
 
     // Hide config screen and start game locally
     this.showConfigBinding.set(false);
+    this.showErrorBinding.set(false); // Hide any error screen
 
     // Apply current configuration
     this.timeRemaining = this.gameConfig.timeLimit;
@@ -1476,9 +1508,11 @@ export class TriviaGame extends ui.UIComponent {
       this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
     }
 
-    // Ensure we have questions available - fallback to default if needed
+    // Check if we have questions available - NO FALLBACKS
     if (this.triviaQuestions.length === 0) {
-      this.triviaQuestions = [...defaultTriviaQuestions];
+      console.log(`ERROR: No questions available for category "${this.gameConfig.category}" in onGameStart`);
+      this.showErrorScreen(`No questions available for "${this.gameConfig.category}". Please check your category selection and ensure the data source is properly configured.`);
+      return; // Don't start the game
     }
 
     // Reset all player points for new game (non-host players)
@@ -1514,10 +1548,20 @@ export class TriviaGame extends ui.UIComponent {
     this.gameConfigBinding.set(this.gameConfig);
   }
 
-  private handleDifficultyChange(difficulty: string): void {
-    this.gameConfig.difficulty = difficulty;
-    this.selectedDifficultyBinding.set(difficulty);
-    this.gameConfigBinding.set(this.gameConfig);
+  private showErrorScreen(message: string): void {
+    console.log(`Showing error screen: ${message}`);
+    this.errorMessageBinding.set(message);
+    this.showErrorBinding.set(true);
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.isShowingLeaderboard = false;
+  }
+
+  private hideErrorScreen(): void {
+    this.showErrorBinding.set(false);
+    this.showConfigBinding.set(true);
   }
 
   private startTimer(): void {
@@ -2421,6 +2465,87 @@ export class TriviaGame extends ui.UIComponent {
                         ]
                       })
                     ]
+                  }),
+
+                  // Error Screen overlay
+                  ui.View({
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      display: this.showErrorBinding.derive(show => show ? 'flex' : 'none')
+                    },
+                    children: ui.View({
+                      style: {
+                        backgroundColor: 'white',
+                        borderRadius: 12,
+                        padding: 24,
+                        alignItems: 'center',
+                        maxWidth: '70%',
+                        shadowColor: 'black',
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        shadowOffset: [0, 4]
+                      },
+                      children: [
+                        // Error icon
+                        ui.Text({
+                          text: '⚠️',
+                          style: {
+                            fontSize: 32,
+                            marginBottom: 12
+                          }
+                        }),
+                        // Error title
+                        ui.Text({
+                          text: 'No Questions Available',
+                          style: {
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            color: '#DC2626',
+                            marginBottom: 8,
+                            textAlign: 'center'
+                          }
+                        }),
+                        // Error message
+                        ui.Text({
+                          text: this.errorMessageBinding,
+                          style: {
+                            fontSize: 14,
+                            color: '#6B7280',
+                            textAlign: 'center',
+                            lineHeight: 1.4,
+                            marginBottom: 16
+                          }
+                        }),
+                        // Back to config button
+                        ui.Pressable({
+                          style: {
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 6,
+                            paddingHorizontal: 16,
+                            paddingVertical: 8,
+                            alignItems: 'center'
+                          },
+                          onPress: () => this.hideErrorScreen(),
+                          children: [
+                            ui.Text({
+                              text: 'Back to Settings',
+                              style: {
+                                fontSize: 14,
+                                fontWeight: '600',
+                                color: 'white'
+                              }
+                            })
+                          ]
+                        })
+                      ]
+                    })
                   })
                 ]
               })

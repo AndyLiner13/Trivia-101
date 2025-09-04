@@ -16,3 +16,5 @@ Don't try to register individual classes/segments from any file as its own Custo
 Use the MePhone folder to make the apps & components (to keep the code clean), but register everything via the MePhone.ts file (which will be the script that is attatched to the actual CustomUI Gizmo used to display & interact with the MePhone in Horizon Worlds)
 
 Only use console.log sparringly, and when you're done troubleshooting remove any console.logs used during the troubleshooting process.
+
+Do not try to run npx tsc checks.
