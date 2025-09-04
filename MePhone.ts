@@ -260,7 +260,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary)) {
         this.inputConnection = hz.PlayerControls.connectLocalInput(
           hz.PlayerInputAction.LeftTertiary,
-          hz.ButtonIcon.Jump,
+          hz.ButtonIcon.Menu,
           this,
           { preferredButtonPlacement: hz.ButtonPlacement.Center }
         );
@@ -280,9 +280,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
           this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
             hz.PlayerInputAction.RightGrip,
-            hz.ButtonIcon.Interact,
+            hz.ButtonIcon.None,
             this,
-            { preferredButtonPlacement: hz.ButtonPlacement.Center }
+            { preferredButtonPlacement: hz.ButtonPlacement.Default }
           );
 
           this.eKeyInputConnection.registerCallback((action, pressed) => {
