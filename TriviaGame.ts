@@ -2087,8 +2087,7 @@ export class TriviaGame extends ui.UIComponent {
                         style: {
                           width: '100%',
                           height: '100%',
-                          borderRadius: 8,
-                          backgroundColor: 'lightblue' // Add background to see if Image component is rendering
+                          borderRadius: 8
                         }
                       })
                     })
