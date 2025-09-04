@@ -235,12 +235,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Listen for trivia game registration events
     this.connectNetworkBroadcastEvent(triviaGameRegisteredEvent, (eventData) => {
-      console.log(`[TriviaPhone] Received TriviaGame registration event`);
+      // Registration event received
     });
 
     // Listen for trivia state responses
     this.connectNetworkBroadcastEvent(triviaStateResponseEvent, (eventData) => {
-      console.log(`[TriviaPhone] Received TriviaGame state response:`, eventData);
       this.onTriviaStateResponse(eventData);
     });
   }

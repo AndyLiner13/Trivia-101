@@ -342,8 +342,6 @@ export class TriviaGame extends ui.UIComponent {
     
     // Register this TriviaGame instance with the world for TriviaApp access
     (this.world as any).triviaGame = this;
-    console.log(`[TriviaGame] Registered with world reference`);
-    console.log(`[TriviaGame] World object:`, !!this.world, `World has triviaGame:`, !!(this.world as any).triviaGame);
     
     // Also store game state in world for cross-script access
     (this.world as any).triviaGameState = {
@@ -354,7 +352,6 @@ export class TriviaGame extends ui.UIComponent {
       isShowingLeaderboard: this.isShowingLeaderboard,
       timestamp: Date.now()
     };
-    console.log(`[TriviaGame] Stored game state in world:`, (this.world as any).triviaGameState);
     
     // Send a network event to notify any TriviaApps that a game is available
     this.sendNetworkBroadcastEvent(triviaGameRegisteredEvent, {
@@ -367,14 +364,11 @@ export class TriviaGame extends ui.UIComponent {
       (globalThis as any).triviaGameInstances = [];
     }
     (globalThis as any).triviaGameInstances.push(this);
-    console.log(`[TriviaGame] Registered with global registry. Total instances: ${(globalThis as any).triviaGameInstances.length}`);
     
     // Notify any existing TriviaApps about our registration
     const globalTriviaApps = (globalThis as any).triviaAppInstances || [];
-    console.log(`[TriviaGame] Found ${globalTriviaApps.length} TriviaApp instances to notify`);
     globalTriviaApps.forEach((triviaApp: any, index: number) => {
       if (triviaApp && typeof triviaApp.forceSyncWithTriviaGame === 'function') {
-        console.log(`[TriviaGame] Notifying TriviaApp ${index} of registration`);
         triviaApp.forceSyncWithTriviaGame();
       }
     });
@@ -622,7 +616,6 @@ export class TriviaGame extends ui.UIComponent {
 
     // Set running flag FIRST before any other operations
     this.isRunning = true;
-    console.log(`[TriviaGame] Game started - isRunning set to true`);
 
     // Reset game state for new game (but preserve isRunning)
     this.resetGameStateButKeepRunning();
@@ -2284,7 +2277,6 @@ export class TriviaGame extends ui.UIComponent {
 
   // Handle state requests from MePhone/TriviaApp
   private async onStateRequest(event: { requesterId: string }): Promise<void> {
-    console.log(`[TriviaGame] Received state request from: ${event.requesterId}`);
     
     // Determine current game state
     let gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended' = 'waiting';
@@ -2331,8 +2323,6 @@ export class TriviaGame extends ui.UIComponent {
       gameState = 'waiting';
       responseData.gameState = gameState;
     }
-
-    console.log(`[TriviaGame] Responding with state: ${gameState}`);
     
     // Send the response
     this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
@@ -2411,11 +2401,7 @@ export class TriviaGame extends ui.UIComponent {
 
       // Set ownership of the phone entity to this player
       availablePhone.phoneEntity.owner.set(player);
-
-      console.log(`[TriviaGame] Assigned phone to player ${player.name.get()}`);
     } else {
-      console.warn(`[TriviaGame] No available phones for player ${player.name.get()}`);
-
       // Optionally create a new phone entity dynamically if none available
       // This would require instantiating a new CustomUI entity
       this.createNewPhoneForPlayer(player);
@@ -2437,10 +2423,6 @@ export class TriviaGame extends ui.UIComponent {
       // Mark as available
       playerAssignment.assignedPlayer = null;
       playerAssignment.isInUse = false;
-
-      console.log(`[TriviaGame] Released phone from player ${player.name.get()}`);
-    } else {
-      console.warn(`[TriviaGame] No phone assignment found for player ${player.name.get()}`);
     }
   }
 
@@ -2448,7 +2430,6 @@ export class TriviaGame extends ui.UIComponent {
     // This is a placeholder for dynamic phone creation
     // In Horizon Worlds, you would typically pre-place enough phone entities
     // rather than creating them dynamically
-    console.warn(`[TriviaGame] Dynamic phone creation not implemented. Consider adding more phone entities to the world.`);
   }
 
   // Public method to get phone assignment for a player (for debugging)
