@@ -2190,10 +2190,26 @@ export class TriviaGame extends ui.UIComponent {
     });
   }
 
+  private async loadPlayerHeadshot(player: hz.Player, headshotBinding: Binding<ImageSource | null>): Promise<void> {
+    try {
+      const headshotImageSource = await Social.getAvatarImageSource(player, {
+        type: AvatarImageType.HEADSHOT,
+        highRes: true
+      });
+
+      if (headshotImageSource) {
+        headshotBinding.set(headshotImageSource);
+      }
+    } catch (error) {
+      // Could not get headshot for player, binding will remain null and show fallback
+      console.log(`Could not load headshot for player ${player.name.get()}:`, error);
+    }
+  }
+
   private createPlayersGrid(): UINode {
     // Get current players in the world
     const currentPlayers = this.world.getPlayers();
-    
+
     if (currentPlayers.length === 0) {
       return View({
         style: {
@@ -2214,6 +2230,12 @@ export class TriviaGame extends ui.UIComponent {
 
     // Create player avatar components
     const playerComponents = currentPlayers.map((player, index) => {
+      // Create a binding for the headshot image
+      const headshotBinding = new Binding<ImageSource | null>(null);
+
+      // Load headshot asynchronously
+      this.loadPlayerHeadshot(player, headshotBinding);
+
       return View({
         style: {
           flexDirection: 'column',
@@ -2222,25 +2244,44 @@ export class TriviaGame extends ui.UIComponent {
           marginRight: 12
         },
         children: [
-          // Player avatar (placeholder for now)
+          // Player avatar with headshot or fallback
           View({
             style: {
               width: 48,
               height: 48,
-              borderRadius: 24,
+              borderRadius: 8,
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 4
+              marginBottom: 4,
+              overflow: 'hidden'
             },
-            children: Text({
-              text: player.name.get().charAt(0).toUpperCase(),
-              style: {
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: 'black'
-              }
-            })
+            children: [
+              // Try to show headshot image first
+              UINode.if(
+                headshotBinding.derive(image => image !== null),
+                Image({
+                  source: headshotBinding.derive(image => image || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)))),
+                  style: {
+                    width: 48,
+                    height: 48,
+                    borderRadius: 8
+                  }
+                })
+              ),
+              // Fallback to initial letter if no headshot
+              UINode.if(
+                headshotBinding.derive(image => image === null),
+                Text({
+                  text: player.name.get().charAt(0).toUpperCase(),
+                  style: {
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    color: 'black'
+                  }
+                })
+              )
+            ]
           }),
           // Player name
           Text({
