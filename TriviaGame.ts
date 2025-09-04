@@ -1192,7 +1192,7 @@ export class TriviaGame extends ui.UIComponent {
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+        backgroundColor: 'transparent', // Fully transparent background
         position: 'relative',
         alignItems: 'center',
         justifyContent: 'center'

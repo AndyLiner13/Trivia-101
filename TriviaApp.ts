@@ -134,6 +134,9 @@ export class TriviaApp {
   private isLocalPlayerHostBinding = new ui.Binding(false);
   private storedHostId: string | null = null;
 
+  // Track if we've already synced with TriviaGame
+  private hasSynced: boolean = false;
+
   constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any, questionsAsset?: hz.Asset) {
     // Store world reference for network events
     this.world = world || null;
@@ -320,14 +323,61 @@ export class TriviaApp {
     this.gameStateBinding.set('playing');
   }
 
+  // Method to sync TriviaApp state with TriviaGame
+  public syncWithTriviaGame(triviaGame: any): void {
+    if (!triviaGame) {
+      // If no TriviaGame, stay in waiting state
+      this.gameState = 'waiting_for_game';
+      this.gameStateBinding.set('waiting_for_game', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      return;
+    }
+
+    // Check if TriviaGame is running
+    if (triviaGame.isRunning) {
+      // Game is running - sync with current state
+      if (triviaGame.currentQuestion) {
+        // There's a current question - sync to playing state
+        this.gameState = 'playing';
+        this.currentQuestionIndex = triviaGame.currentQuestionIndex;
+        this.gameStateBinding.set('playing', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        this.currentQuestionIndexBinding.set(this.currentQuestionIndex, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        
+        // Sync the question data
+        this.syncWithExternalTrivia({
+          question: triviaGame.currentQuestion,
+          questionIndex: triviaGame.currentQuestionIndex,
+          timeLimit: triviaGame.props?.questionTimeLimit || 30
+        });
+      } else {
+        // Game is running but no current question - might be in results/leaderboard state
+        // Check TriviaGame's UI bindings to determine state
+        if (triviaGame.showLeaderboardBinding?.get()) {
+          this.gameState = 'leaderboard';
+          this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        } else if (triviaGame.showResultsBinding?.get()) {
+          this.gameState = 'answered';
+          this.showResult = true;
+          this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+          this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        } else {
+          // Default to playing state if game is running
+          this.gameState = 'playing';
+          this.gameStateBinding.set('playing', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        }
+      }
+    } else {
+      // Game is not running - show waiting screen
+      this.gameState = 'waiting_for_game';
+      this.gameStateBinding.set('waiting_for_game', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    }
+  }
+
   // Method to sync with external trivia system
   public syncWithExternalTrivia(questionData: {
     question: any;
     questionIndex: number;
     timeLimit?: number;
   }): void {
-    // Clear any running timer since we're syncing with external system
-    this.clearAutoProgressTimer();
 
     // Convert external question to our format
     const externalQuestion: Question = {
@@ -1011,6 +1061,9 @@ export class TriviaApp {
     this.secondsRemaining = 5;
     this.questionStartTime = Date.now(); // Record when first question starts
     
+    // Reset sync flag so we can sync again when needed
+    this.hasSynced = false;
+    
     // Update bindings (score will be updated by resetPlayerPoints)
     this.currentQuestionIndexBinding.set(0, assignedPlayer ? [assignedPlayer] : undefined);
     this.gameStateBinding.set('waiting_for_game', assignedPlayer ? [assignedPlayer] : undefined);
@@ -1055,6 +1108,19 @@ export class TriviaApp {
   }
 
   render(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    // Sync with TriviaGame when rendering (only if we have an assigned player and haven't synced yet)
+    if (assignedPlayer && !this.hasSynced) {
+      // Try to find TriviaGame instance to sync with
+      if (this.world) {
+        // Look for TriviaGame in the world
+        const triviaGame = (this.world as any).triviaGame;
+        if (triviaGame) {
+          this.syncWithTriviaGame(triviaGame);
+          this.hasSynced = true;
+        }
+      }
+    }
+    
     return ui.View({
       style: {
         width: '100%',
