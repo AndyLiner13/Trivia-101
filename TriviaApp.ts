@@ -280,12 +280,21 @@ export class TriviaApp {
           this.currentQuestionIndex = event.questionIndex;
           this.currentQuestionIndexBinding.set(event.questionIndex, this.assignedPlayer ? [this.assignedPlayer] : undefined);
           
-          // Set up question data for display
+          // Set up question data for display manually (don't use syncWithExternalTrivia to avoid state reset)
           this.questionBinding.set(event.currentQuestion.question, this.assignedPlayer ? [this.assignedPlayer] : undefined);
           this.answerTexts = event.currentQuestion.answers.map((answer: any) => answer.text);
           
           // Update answer text binding with the array
           this.answerTextsBinding.set(this.answerTexts, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+          
+          // Update the questions array
+          this.questions[event.questionIndex] = {
+            id: event.questionIndex,
+            question: event.currentQuestion.question,
+            category: event.currentQuestion.category || 'General',
+            difficulty: event.currentQuestion.difficulty || 'medium',
+            answers: event.currentQuestion.answers || []
+          };
           
           // Set up correct answer information if provided
           if (event.correctAnswerIndex !== undefined) {
@@ -301,14 +310,16 @@ export class TriviaApp {
             // Check if this player answered correctly (show neutral if no answer found)
             if (effectiveSelectedAnswer !== null) {
               const isCorrect = effectiveSelectedAnswer === event.correctAnswerIndex;
+              console.log(`[TriviaApp] Player answer: ${effectiveSelectedAnswer}, Correct answer: ${event.correctAnswerIndex}, Is correct: ${isCorrect}`);
               this.isAnswerCorrectBinding.set(isCorrect, this.assignedPlayer ? [this.assignedPlayer] : undefined);
             } else {
               // No answer found - show neutral/default state
+              console.log(`[TriviaApp] No answer found for player, setting isCorrect to false`);
               this.isAnswerCorrectBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
             }
           }
         }
-        console.log(`[TriviaApp] Results state setup complete`);
+        console.log(`[TriviaApp] Results state setup complete - gameState: ${this.gameState}, showResult: ${this.showResult}`);
         break;
         
       case 'ended':
