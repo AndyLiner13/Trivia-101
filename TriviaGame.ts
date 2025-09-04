@@ -2012,48 +2012,45 @@ export class TriviaGame extends ui.UIComponent {
                     ]
                   }),
 
-                  // Question text - only shown when there's no image
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId === null),
-                    View({
+                  // Question text - always shown at the top
+                  View({
+                    style: {
+                      position: 'absolute',
+                      left: '12%',
+                      right: '12%',
+                      top: '12%',
+                      height: '15%',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    },
+                    children: View({
                       style: {
-                        position: 'absolute',
-                        left: '12%',
-                        right: '12%',
-                        top: '12%',
-                        height: '15%',
+                        backgroundColor: 'white',
+                        borderRadius: 6,
+                        shadowColor: 'black',
+                        shadowOpacity: 0.15,
+                        shadowRadius: 6,
+                        shadowOffset: [0, 2],
+                        padding: 12,
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        width: '100%'
                       },
-                      children: View({
-                        style: {
-                          backgroundColor: 'white',
-                          borderRadius: 6,
-                          shadowColor: 'black',
-                          shadowOpacity: 0.15,
-                          shadowRadius: 6,
-                          shadowOffset: [0, 2],
-                          padding: 12,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '100%'
-                        },
-                        children: [
-                          // Question text
-                          Text({
-                            text: this.questionBinding,
-                            style: {
-                              fontSize: 14,
-                              fontWeight: '500',
-                              color: 'black',
-                              textAlign: 'center',
-                              lineHeight: 1.3
-                            }
-                          })
-                        ]
-                      })
+                      children: [
+                        // Question text
+                        Text({
+                          text: this.questionBinding,
+                          style: {
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: 'black',
+                            textAlign: 'center',
+                            lineHeight: 1.3
+                          }
+                        })
+                      ]
                     })
-                  ),
+                  }),
 
                   // Question image - centered in middle area
                   UINode.if(
@@ -2085,7 +2082,7 @@ export class TriviaGame extends ui.UIComponent {
                           return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                         }),
                         style: {
-                          width: '80%',
+                          width: '50%',
                           height: 'auto',
                           aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
                           borderRadius: 8,
@@ -2105,50 +2102,73 @@ export class TriviaGame extends ui.UIComponent {
                       height: 100
                     },
                     children: [
-                      // Top row
-                      View({
-                        style: {
-                          width: '100%',
-                          height: 42,
-                          flexDirection: 'row',
-                          marginBottom: 6
-                        },
-                        children: [
-                          // Red answer (Triangle)
-                          View({
-                            style: { width: '48%', marginRight: '4%' },
-                            children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
-                          }),
+                      // Dynamic layout based on number of answers
+                      UINode.if(
+                        this.answerTexts[0].derive(text => text !== ''),
+                        View({
+                          style: {
+                            width: '100%',
+                            height: '100%',
+                            flexDirection: 'row',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                          },
+                          children: [
+                            // Answer 0 (Red/Triangle) - always show if it has text
+                            UINode.if(
+                              this.answerTexts[0].derive(text => text !== ''),
+                              View({
+                                style: {
+                                  width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
+                                  height: 42,
+                                  marginRight: this.answerTexts[1].derive(text => text !== '') ? '4%' : '0%',
+                                  marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                },
+                                children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                              })
+                            ),
 
-                          // Blue answer (Star)
-                          View({
-                            style: { width: '48%' },
-                            children: this.createAnswerButton(1, '#2563EB', '764343253011569')
-                          })
-                        ]
-                      }),
+                            // Answer 1 (Blue/Star) - show if it has text
+                            UINode.if(
+                              this.answerTexts[1].derive(text => text !== ''),
+                              View({
+                                style: {
+                                  width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
+                                  height: 42,
+                                  marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                },
+                                children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+                              })
+                            ),
 
-                      // Bottom row
-                      View({
-                        style: {
-                          width: '100%',
-                          height: 42,
-                          flexDirection: 'row'
-                        },
-                        children: [
-                          // Yellow answer (Circle)
-                          View({
-                            style: { width: '48%', marginRight: '4%' },
-                            children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                          }),
+                            // Answer 2 (Yellow/Circle) - show if it has text
+                            UINode.if(
+                              this.answerTexts[2].derive(text => text !== ''),
+                              View({
+                                style: {
+                                  width: '48%',
+                                  height: 42,
+                                  marginRight: '4%'
+                                },
+                                children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                              })
+                            ),
 
-                          // Green answer (Square)
-                          View({
-                            style: { width: '48%' },
-                            children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
-                          })
-                        ]
-                      })
+                            // Answer 3 (Green/Square) - show if it has text
+                            UINode.if(
+                              this.answerTexts[3].derive(text => text !== ''),
+                              View({
+                                style: {
+                                  width: '48%',
+                                  height: 42
+                                },
+                                children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                              })
+                            )
+                          ]
+                        })
+                      )
                     ]
                   }),
 
