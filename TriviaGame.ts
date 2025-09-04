@@ -2073,15 +2073,12 @@ export class TriviaGame extends ui.UIComponent {
                           if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                           const textureId = this.getTextureIdForImage(imageId);
                           if (textureId) {
-                            console.log(`Original texture ID: ${textureId}`);
-                            // Hardcode test texture ID for debugging
-                            const hardcodedTextureId = "3683839291925288";
-                            console.log(`Using hardcoded texture ID: ${hardcodedTextureId}`);
+                            console.log(`Using texture ID: ${textureId} from image ID: ${imageId}`);
                             try {
-                              const bigIntId = BigInt(hardcodedTextureId);
+                              const bigIntId = BigInt(textureId);
                               return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
                             } catch (error) {
-                              console.error(`Error creating TextureAsset with hardcoded ID ${hardcodedTextureId}:`, error);
+                              console.error(`Error creating TextureAsset with ID ${textureId}:`, error);
                               return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                             }
                           }
