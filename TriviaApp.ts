@@ -13,6 +13,9 @@ const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerInd
 const triviaGameCompleteEvent = new hz.NetworkEvent<{ finalScores: Array<{ playerId: string, score: number }>, totalQuestions: number }>('triviaGameComplete');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 
+// Network event for starting the game
+const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
+
 interface Question {
   id: number;
   question: string;
@@ -160,6 +163,9 @@ export class TriviaApp {
   private totalPlayersBinding = new ui.Binding(1);
   private playerHeadshotBinding = new ui.Binding<ui.ImageSource | null>(null);
 
+  // Host detection binding
+  private isLocalPlayerHostBinding = new ui.Binding(false);
+
   constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any) {
     // Store world reference for network events
     this.world = world || null;
@@ -180,8 +186,53 @@ export class TriviaApp {
     // Also register with global registry as backup
     (globalThis as any).triviaAppInstances.push(this);
     
-    // Load questions from the JSON data
-    this.loadQuestionsFromData();
+    // Initialize host detection
+    this.detectHostPlayer();
+  }
+
+  // Detect if the local player is the host
+  private detectHostPlayer(): void {
+    if (!this.world) {
+      this.isLocalPlayerHostBinding.set(false);
+      return;
+    }
+    
+    const localPlayer = this.world.getLocalPlayer();
+    if (!localPlayer) {
+      this.isLocalPlayerHostBinding.set(false);
+      return;
+    }
+    
+    const allPlayers = this.world.getPlayers();
+    
+    // Simple host detection: first player in the world is considered host
+    // In a real implementation, you might want more sophisticated host detection
+    if (allPlayers.length > 0) {
+      const isHost = allPlayers[0].id.toString() === localPlayer.id.toString();
+      this.isLocalPlayerHostBinding.set(isHost);
+    } else {
+      // If no players yet, assume local player is host
+      this.isLocalPlayerHostBinding.set(true);
+    }
+  }
+
+  // Handle starting the game (only for host)
+  private handleStartGame(): void {
+    // Send network event to start the game
+    this.sendNetworkEvent(triviaGameStartEvent, {
+      hostId: 'host', // This will be handled by TriviaGame
+      config: {
+        timeLimit: 15, // Default time limit
+        category: 'General', // Default category
+        difficulty: 'easy', // Default difficulty
+        numQuestions: 10 // Default number of questions
+      }
+    });
+  }
+
+  // Public method to manually trigger host detection (can be called by parent component)
+  public updateHostStatus(): void {
+    this.detectHostPlayer();
   }
 
   // Initialize access to the Trivia variable group
@@ -276,6 +327,11 @@ export class TriviaApp {
       if (existingIndex === -1) {
         (this.world as any).triviaApps.push(this);
       }
+    }
+    
+    // Re-run host detection when player is assigned (in case world wasn't available during construction)
+    if (player) {
+      this.detectHostPlayer();
     }
   }
 
@@ -1037,6 +1093,9 @@ export class TriviaApp {
   }
 
   private renderWaitingForGameScreen(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    // Ensure host detection is up to date when rendering the waiting screen
+    this.updateHostStatus();
+    
     return ui.View({
       style: {
         width: '100%',
@@ -1105,7 +1164,48 @@ export class TriviaApp {
                     color: 'rgba(255, 255, 255, 0.6)',
                     textAlign: 'center'
                   }
-                })
+                }),
+
+                // Start Game Button (only for host)
+                ui.UINode.if(
+                  ui.Binding.derive([this.isLocalPlayerHostBinding], (isHost) => {
+                    // Show button if user is host OR if no assigned player (fallback for single-player)
+                    const shouldShow = isHost || !this.assignedPlayer;
+                    return shouldShow;
+                  }),
+                  ui.View({
+                    style: {
+                      marginTop: 24,
+                      alignItems: 'center'
+                    },
+                    children: [
+                      ui.Pressable({
+                        style: {
+                          backgroundColor: '#22C55E',
+                          borderRadius: 12,
+                          paddingHorizontal: 24,
+                          paddingVertical: 12,
+                          shadowColor: '#000000',
+                          shadowOffset: [0, 2],
+                          shadowOpacity: 0.3,
+                          shadowRadius: 4
+                        },
+                        onPress: () => this.handleStartGame(),
+                        children: [
+                          ui.Text({
+                            text: '🎮 Start Game',
+                            style: {
+                              fontSize: 16,
+                              fontWeight: '700',
+                              color: '#FFFFFF',
+                              textAlign: 'center'
+                            }
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                )
               ]
             })
           ]

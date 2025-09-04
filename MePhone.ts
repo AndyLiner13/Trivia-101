@@ -6,6 +6,9 @@ import { Social, AvatarImageType } from 'horizon/social';
 const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
 const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 
+// Network event for keyboard input from separate KeyboardInputHandler (fallback)
+const mePhoneKeyboardTriggerEvent = new hz.NetworkEvent<{ playerId: string }>('mePhoneKeyboardTrigger');
+
 // Import all the app classes
 import { TriviaApp } from './TriviaApp';
 import { MeChatApp } from './MeChatApp';
@@ -20,6 +23,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   // Player ownership tracking
   private assignedPlayer: hz.Player | null = null;
   private isInitialized = false;
+
+  // Keyboard input connection
+  private inputConnection: hz.PlayerInput | null = null;
 
   // State management for current app - PLAYER SPECIFIC
   private currentAppBinding = new ui.Binding('home');
@@ -47,25 +53,164 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   async start() {
     this.setupNetworkEvents();
+    this.setupKeyboardInput();
+  }
+
+  // Cleanup when component is destroyed
+  stop() {
+    if (this.inputConnection) {
+      this.inputConnection.disconnect();
+      this.inputConnection = null;
+    }
   }
 
   // Set up network event listeners for trivia events
   private setupNetworkEvents(): void {
-    
+
     // Listen for trivia question show events
     this.connectNetworkBroadcastEvent(triviaQuestionShowEvent, (eventData) => {
       if (this.triviaApp) {
         this.triviaApp.syncWithExternalTrivia(eventData);
       }
     });
-    
+
     // Listen for trivia results events
     this.connectNetworkBroadcastEvent(triviaResultsEvent, (eventData) => {
       if (this.triviaApp) {
         this.triviaApp.onTriviaResults(eventData);
       }
     });
-    
+
+  }
+
+  // Set up keyboard input handling directly in the MePhone
+  private setupKeyboardInput(): void {
+    try {
+      // Check if PlayerControls is available (should be since this is a CustomUI running locally)
+      if (typeof hz.PlayerControls === 'undefined') {
+        console.log('PlayerControls not available - keyboard input disabled');
+        console.log('This may be because the CustomUI gizmo is not set up correctly');
+        this.fallbackToSeparateComponent();
+        return;
+      }
+
+      // Get the local player (owner of the MePhone)
+      const localPlayer = this.world.getLocalPlayer();
+      if (!localPlayer) {
+        console.log('No local player found - keyboard input disabled');
+        this.fallbackToSeparateComponent();
+        return;
+      }
+
+      // Additional check: verify we can actually call PlayerControls methods
+      try {
+        // This will throw an error if not in the right context
+        hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary);
+      } catch (contextError) {
+        console.log('PlayerControls context error:', contextError instanceof Error ? contextError.message : contextError);
+        console.log('Falling back to separate keyboard input component...');
+        this.fallbackToSeparateComponent();
+        return;
+      }
+
+      // Check if LeftTertiary action is supported (maps to H key on desktop)
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary)) {
+        this.inputConnection = hz.PlayerControls.connectLocalInput(
+          hz.PlayerInputAction.LeftTertiary,
+          hz.ButtonIcon.Jump,
+          this,
+          { preferredButtonPlacement: hz.ButtonPlacement.Center }
+        );
+
+        this.inputConnection.registerCallback((action, pressed) => {
+          if (pressed) {
+            // Handle keyboard trigger directly
+            this.handleKeyboardTrigger(localPlayer);
+          }
+        });
+
+        console.log('MePhone keyboard input connected successfully');
+        console.log('Press H key (or platform equivalent) to claim/prepare MePhone for interaction');
+        console.log('Note: You still need to press E when near the CustomUI gizmo to open the interface');
+      } else {
+        console.log('LeftTertiary input action not supported on this platform');
+        console.log('Falling back to separate keyboard input component...');
+        this.fallbackToSeparateComponent();
+      }
+    } catch (error) {
+      console.log('MePhone keyboard input setup failed:', error instanceof Error ? error.message : error);
+      console.log('Falling back to separate keyboard input component...');
+      this.fallbackToSeparateComponent();
+    }
+  }
+
+  // Fallback to separate keyboard input component
+  private fallbackToSeparateComponent(): void {
+    console.log('=== FALLBACK MODE: Using separate KeyboardInputHandler ===');
+    console.log('To enable keyboard input:');
+    console.log('1. Create a new entity in your world');
+    console.log('2. Attach the KeyboardInputHandler.ts script to it');
+    console.log('3. Set the script execution mode to Local');
+    console.log('4. Set the entity owner to the player');
+    console.log('5. The H key will claim/prepare the MePhone (you still need to press E to open it)');
+    console.log('===================================================');
+  }
+
+
+
+  // Handle MePhone assignment/toggle via keyboard input
+  private handleKeyboardTrigger(player: hz.Player): void {
+    // If phone is not assigned to anyone, assign it to this player and open UI
+    if (!this.assignedPlayer) {
+      this.initializeForPlayer(player);
+      // Open and focus the MePhone UI on the player's device
+      this.openAndFocusUIForPlayer(player);
+      console.log('MePhone assigned to player via keyboard and UI opened/focused:', player.id);
+      return;
+    }
+
+    // If phone is assigned to this player, open/show and focus the UI
+    if (this.assignedPlayer.id === player.id) {
+      this.openAndFocusUIForPlayer(player);
+      console.log('MePhone UI opened/focused via keyboard for player:', player.id);
+    } else {
+      // If phone is assigned to someone else, reassign it to this player and open/focus UI
+      console.log('MePhone reassigned from', this.assignedPlayer.id, 'to', player.id, 'via keyboard');
+      this.assignedPlayer = player;
+      this.currentAppBinding.set('home');
+      this.openAndFocusUIForPlayer(player);
+    }
+  }
+
+  // Open the MePhone UI on the player's device
+  private openUIForPlayer(player: hz.Player): void {
+    try {
+      // Navigate to home screen first
+      this.currentAppBinding.set('home');
+
+      // The UI should automatically be visible to the player if they're interacting with the CustomUI gizmo
+      // This ensures the phone is ready when they look at it
+      console.log('MePhone UI prepared for player:', player.id);
+      console.log('Player should see the MePhone interface when looking at the CustomUI gizmo');
+
+    } catch (error) {
+      console.log('Failed to prepare MePhone UI:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // Open and focus the MePhone UI on the player's device
+  private openAndFocusUIForPlayer(player: hz.Player): void {
+    try {
+      // First prepare the UI
+      this.openUIForPlayer(player);
+
+      // Then focus the UI for the player
+      player.focusUI(this.entity);
+      console.log('MePhone UI focused for player:', player.id);
+
+    } catch (error) {
+      console.log('Failed to focus MePhone UI:', error instanceof Error ? error.message : error);
+    }
   }
 
   // Ensure ContactsApp is initialized with world context
