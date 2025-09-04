@@ -2130,7 +2130,7 @@ export class TriviaGame extends ui.UIComponent {
                                   flexDirection: 'row',
                                   flexWrap: 'wrap',
                                   justifyContent: 'center',
-                                  alignItems: 'flex-end' // Align to bottom of container
+                                  alignItems: 'center' // Changed from 'flex-end' to 'center' for consistent spacing
                                 },
                                 children: [
                                   // Empty spacers for top row (where options 1 and 2 would be)
@@ -2138,7 +2138,7 @@ export class TriviaGame extends ui.UIComponent {
                                     style: {
                                       width: '48%',
                                       height: 42,
-                                      marginRight: '4%',
+                                      marginRight: 6,
                                       marginBottom: 6,
                                       opacity: 0 // Invisible spacer
                                     }
@@ -2159,7 +2159,7 @@ export class TriviaGame extends ui.UIComponent {
                                       style: {
                                         width: '48%',
                                         height: 42,
-                                        marginRight: '4%'
+                                        marginRight: 6
                                       },
                                       children: this.createAnswerButton(2, '#EAB308', '797899126007085')
                                     })
@@ -2199,8 +2199,8 @@ export class TriviaGame extends ui.UIComponent {
                                       style: {
                                         width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
                                         height: 42,
-                                        marginRight: this.answerTexts[1].derive(text => text !== '') ? '4%' : '0%',
-                                        marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                        marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
+                                        marginBottom: 6
                                       },
                                       children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
                                     })
@@ -2213,7 +2213,7 @@ export class TriviaGame extends ui.UIComponent {
                                       style: {
                                         width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
                                         height: 42,
-                                        marginBottom: this.answerTexts[2].derive(text => text !== '') ? 6 : 0
+                                        marginBottom: 6
                                       },
                                       children: this.createAnswerButton(1, '#2563EB', '764343253011569')
                                     })
@@ -2226,7 +2226,8 @@ export class TriviaGame extends ui.UIComponent {
                                       style: {
                                         width: '48%',
                                         height: 42,
-                                        marginRight: '4%'
+                                        marginRight: 6,
+                                        marginBottom: 6
                                       },
                                       children: this.createAnswerButton(2, '#EAB308', '797899126007085')
                                     })
@@ -2238,7 +2239,8 @@ export class TriviaGame extends ui.UIComponent {
                                     View({
                                       style: {
                                         width: '48%',
-                                        height: 42
+                                        height: 42,
+                                        marginBottom: 6
                                       },
                                       children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
                                     })
