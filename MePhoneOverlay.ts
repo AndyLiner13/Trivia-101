@@ -67,14 +67,14 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     try {
       // Check if PlayerControls is available
       if (typeof hz.PlayerControls === 'undefined') {
-        console.log('PlayerControls not available - keyboard input disabled');
+        // PlayerControls not available - keyboard input disabled
         return;
       }
 
       // Get the local player (owner of the MePhone)
       const localPlayer = this.world.getLocalPlayer();
       if (!localPlayer) {
-        console.log('No local player found - keyboard input disabled');
+        // No local player found - keyboard input disabled
         return;
       }
 
@@ -94,13 +94,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           }
         });
 
-        console.log('MePhone overlay keyboard input connected successfully');
-        console.log('Press M key (or platform equivalent) to toggle MePhone overlay');
+        // MePhone overlay keyboard input connected successfully
+        // Press M key (or platform equivalent) to toggle MePhone overlay
       } else {
-        console.log('LeftTertiary input action not supported on this platform');
+        // LeftTertiary input action not supported on this platform
       }
     } catch (error) {
-      console.log('MePhone keyboard input setup failed:', error instanceof Error ? error.message : error);
+      // MePhone keyboard input setup failed: [error instanceof Error ? error.message : error]
     }
   }
 
@@ -110,17 +110,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     if (!this.assignedPlayer) {
       this.initializeForPlayer(player);
       this.isOverlayVisible.set(true, [player]);
-      console.log('MePhone assigned to player and overlay opened:', player.id);
+      // MePhone assigned to player and overlay opened: [player.id]
       return;
     }
 
     // If phone is assigned to this player, toggle overlay visibility
     if (this.assignedPlayer.id === player.id) {
       this.isOverlayVisible.set(current => !current, [player]);
-      console.log('MePhone overlay toggled for player:', player.id);
+      // MePhone overlay toggled for player: [player.id]
     } else {
       // If phone is assigned to someone else, reassign it to this player and show overlay
-      console.log('MePhone reassigned from', this.assignedPlayer.id, 'to', player.id);
+      // MePhone reassigned from [this.assignedPlayer.id] to [player.id]
       this.assignedPlayer = player;
       this.currentAppBinding.set('home');
       this.isOverlayVisible.set(true, [player]);

@@ -7,8 +7,8 @@ import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'hori
 interface TriviaQuestion {
   id: number;
   question: string;
-  category: string;
-  difficulty: string;
+  category?: string;
+  difficulty?: string;
   answers: {
     text: string;
     correct: boolean;
@@ -315,7 +315,7 @@ export class TriviaGame extends ui.UIComponent {
           this.generalQuestions = jsonData;
         }
       } catch (error) {
-        console.log("Failed to load general questions, using defaults");
+        // Failed to load general questions, using defaults
       }
     }
 
@@ -328,7 +328,7 @@ export class TriviaGame extends ui.UIComponent {
           this.historyQuestions = jsonData;
         }
       } catch (error) {
-        console.log("Failed to load history questions, using defaults");
+        // Failed to load history questions, using defaults
       }
     }
 
@@ -341,7 +341,7 @@ export class TriviaGame extends ui.UIComponent {
           this.scienceQuestions = jsonData;
         }
       } catch (error) {
-        console.log("Failed to load science questions, using defaults");
+        // Failed to load science questions, using defaults
       }
     }
 
@@ -349,15 +349,15 @@ export class TriviaGame extends ui.UIComponent {
     if (this.generalQuestions.length === 0 && this.historyQuestions.length === 0 && this.scienceQuestions.length === 0) {
       // Categorize default questions by category
       this.generalQuestions = defaultTriviaQuestions.filter(q =>
-        q.category.toLowerCase().includes('geography') ||
-        q.category.toLowerCase().includes('general') ||
-        q.category.toLowerCase().includes('math') ||
-        q.category.toLowerCase().includes('literature') ||
-        q.category.toLowerCase().includes('art') ||
-        !['science', 'history'].includes(q.category.toLowerCase())
+        (q.category?.toLowerCase().includes('geography')) ||
+        (q.category?.toLowerCase().includes('general')) ||
+        (q.category?.toLowerCase().includes('math')) ||
+        (q.category?.toLowerCase().includes('literature')) ||
+        (q.category?.toLowerCase().includes('art')) ||
+        (!q.category || !['science', 'history'].includes(q.category.toLowerCase()))
       );
-      this.historyQuestions = defaultTriviaQuestions.filter(q => q.category.toLowerCase().includes('history'));
-      this.scienceQuestions = defaultTriviaQuestions.filter(q => q.category.toLowerCase().includes('science'));
+      this.historyQuestions = defaultTriviaQuestions.filter(q => q.category?.toLowerCase().includes('history'));
+      this.scienceQuestions = defaultTriviaQuestions.filter(q => q.category?.toLowerCase().includes('science'));
     }
 
     // Set default category to General and filter questions
@@ -385,7 +385,7 @@ export class TriviaGame extends ui.UIComponent {
 
     // Filter by difficulty if specified
     if (difficulty !== "all") {
-      allQuestions = allQuestions.filter(q => q.difficulty.toLowerCase() === difficulty.toLowerCase());
+      allQuestions = allQuestions.filter(q => q.difficulty?.toLowerCase() === difficulty.toLowerCase());
     }
 
     // If no questions match the filter, use all questions from the category
@@ -480,11 +480,12 @@ export class TriviaGame extends ui.UIComponent {
       return;
     }
 
-    this.isRunning = true;
-    this.currentQuestionIndex = 0;
-
     // Reset game state for new game
     this.resetGameState();
+
+    // Set running flag AFTER reset
+    this.isRunning = true;
+    this.currentQuestionIndex = 0;
 
     // Ensure questions are properly shuffled before starting
     this.shuffleQuestions();
@@ -537,8 +538,8 @@ export class TriviaGame extends ui.UIComponent {
     const serializableQuestion: SerializableQuestion = {
       id: shuffledQuestion.id,
       question: shuffledQuestion.question,
-      category: shuffledQuestion.category,
-      difficulty: shuffledQuestion.difficulty,
+      category: shuffledQuestion.category || 'General',
+      difficulty: shuffledQuestion.difficulty || 'easy',
       answers: shuffledQuestion.answers.map((answer: { text: string; correct: boolean }) => ({ text: answer.text, correct: answer.correct }))
     };
 
@@ -707,15 +708,13 @@ export class TriviaGame extends ui.UIComponent {
         return;
       }
       
-      const serializableQuestion: SerializableQuestion = {
-        id: this.currentQuestion.id,
-        question: this.currentQuestion.question,
-        category: this.currentQuestion.category,
-        difficulty: this.currentQuestion.difficulty,
-        answers: this.currentQuestion.answers
-      };
-      
-      // Prepare final leaderboard data for network event
+    const serializableQuestion: SerializableQuestion = {
+      id: this.currentQuestion.id,
+      question: this.currentQuestion.question,
+      category: this.currentQuestion.category || 'General',
+      difficulty: this.currentQuestion.difficulty || 'easy',
+      answers: this.currentQuestion.answers
+    };      // Prepare final leaderboard data for network event
       const networkLeaderboardData = finalLeaderboard.map(player => ({
         name: player.name,
         score: player.score,
@@ -872,8 +871,8 @@ export class TriviaGame extends ui.UIComponent {
     const serializableQuestion: SerializableQuestion = {
       id: this.currentQuestion.id,
       question: this.currentQuestion.question,
-      category: this.currentQuestion.category,
-      difficulty: this.currentQuestion.difficulty,
+      category: this.currentQuestion.category || 'General',
+      difficulty: this.currentQuestion.difficulty || 'easy',
       answers: this.currentQuestion.answers
     };
     
@@ -949,8 +948,8 @@ export class TriviaGame extends ui.UIComponent {
     const serializableQuestion: SerializableQuestion = {
       id: this.currentQuestion.id,
       question: this.currentQuestion.question,
-      category: this.currentQuestion.category,
-      difficulty: this.currentQuestion.difficulty,
+      category: this.currentQuestion.category || 'General',
+      difficulty: this.currentQuestion.difficulty || 'easy',
       answers: this.currentQuestion.answers
     };
     
@@ -1091,24 +1090,36 @@ export class TriviaGame extends ui.UIComponent {
     this.startContinuousGame();
   }
 
-  private onGameStart(data: { hostId: string, config: any }): void {
-    
+  private onGameStart(data: { hostId: string, config: any, questions?: any[] }): void {
     // Update configuration
     this.gameConfig = data.config;
     this.gameConfigBinding.set(this.gameConfig);
-    
+
+    // Use questions from TriviaApp if provided, otherwise use local questions
+    if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+      this.triviaQuestions = data.questions;
+    } else {
+      // Update questions based on the new configuration
+      this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
+    }
+
+    // Ensure we have questions available - fallback to default if needed
+    if (this.triviaQuestions.length === 0) {
+      this.triviaQuestions = [...defaultTriviaQuestions];
+    }
+
     // Reset all player points for new game (non-host players)
     if (!this.isLocalPlayerHost) {
       this.resetAllPlayerPoints();
     }
-    
+
     // Hide config screen
     this.showConfigBinding.set(false);
-    
+
     // Apply configuration
     this.timeRemaining = this.gameConfig.timeLimit;
     this.timerBinding.set(this.gameConfig.timeLimit.toString());
-    
+
     // Start the game if not already running
     if (!this.isRunning) {
       this.startContinuousGame();

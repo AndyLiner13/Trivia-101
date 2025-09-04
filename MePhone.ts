@@ -6,6 +6,7 @@ import { Social, AvatarImageType } from 'horizon/social';
 // Network events for trivia
 const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
 const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
+const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
 
 // Network event for keyboard input from separate KeyboardInputHandler (fallback)
 const mePhoneKeyboardTriggerEvent = new hz.NetworkEvent<{ playerId: string }>('mePhoneKeyboardTrigger');
@@ -87,7 +88,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     try {
       // Check if LocalCamera is available (accessed via camera module)
       if (!camera.default) {
-        console.log('LocalCamera not available - using fallback positioning');
         this.teleportToPlayerFallback(player);
         return;
       }
@@ -110,13 +110,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       const finalRotation = cameraRotation.mul(faceOppositeRotation);
       this.entity.rotation.set(finalRotation);
 
-      console.log(`MePhone positioned ${forwardOffset} units forward from camera position - Pos: (${desiredPosition.x.toFixed(2)}, ${desiredPosition.y.toFixed(2)}, ${desiredPosition.z.toFixed(2)})`);
-      console.log(`MePhone rotated to face towards user's viewport (opposite of camera direction)`);
-
     } catch (error) {
-      console.log('Error teleporting MePhone to camera:', error instanceof Error ? error.message : error);
       // Fallback to player position if camera access fails
-      console.log('Falling back to player position...');
       this.teleportToPlayerFallback(player);
     }
   }
@@ -140,16 +135,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       const finalRotation = playerRotation.mul(facePlayerRotation);
       this.entity.rotation.set(finalRotation);
 
-      console.log(`MePhone teleported to player fallback - Pos: (${desiredPosition.x.toFixed(2)}, ${desiredPosition.y.toFixed(2)}, ${desiredPosition.z.toFixed(2)})`);
-
     } catch (error) {
-      console.log('Error in fallback teleport:', error instanceof Error ? error.message : error);
     }
   }
 
   // Stop following the player (legacy method, now just logs)
   private stopFollowingPlayer(): void {
-    console.log('Stopped following player');
   }
 
   // Update method called every frame - using alternative polling approach
@@ -162,7 +153,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
         // If the MePhone was visible but is no longer visible, trigger restoration
         if (this.isPlayerFocusedOnUI && !isVisible) {
-          console.log('Player left MePhone UI (detected via visibility polling):', this.assignedPlayer.id);
 
           // Restore the camera position and rotation to what it was when the user started the interaction
           try {
@@ -174,25 +164,19 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
                 duration: 0.5 // 0.5 second transition for smooth restoration
               });
 
-              console.log('Restored camera to position and rotation from when H key was pressed');
-              console.log('Restored Pos:', this.cameraPositionAtHKeyPress, 'Restored Rot:', this.cameraRotationAtHKeyPress);
-
               // Clear the stored camera state
               this.cameraPositionAtHKeyPress = null;
               this.cameraRotationAtHKeyPress = null;
             }
           } catch (error) {
-            console.log('Failed to restore camera state:', error instanceof Error ? error.message : error);
           }
 
-          console.log('MePhone hidden for player:', this.assignedPlayer.id);
         }
 
         // Update the focus state based on visibility
         this.isPlayerFocusedOnUI = isVisible;
 
       } catch (error) {
-        console.log('Error in visibility polling:', error instanceof Error ? error.message : error);
       }
     }
   }  // Cleanup when component is destroyed
@@ -224,6 +208,12 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       }
     });
 
+    // Listen for trivia game start events (forward to TriviaGame component)
+    this.connectNetworkBroadcastEvent(triviaGameStartEvent, (eventData) => {
+      // TriviaGame component will receive this event directly since it's registered separately
+      // No additional handling needed here as TriviaGame listens for this event
+    });
+
   }
 
   // Set up keyboard input handling directly in the MePhone
@@ -231,8 +221,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     try {
       // Check if PlayerControls is available (should be since this is a CustomUI running locally)
       if (typeof hz.PlayerControls === 'undefined') {
-        console.log('PlayerControls not available - keyboard input disabled');
-        console.log('This may be because the CustomUI gizmo is not set up correctly');
         this.fallbackToSeparateComponent();
         return;
       }
@@ -240,7 +228,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       // Get the local player (owner of the MePhone)
       const localPlayer = this.world.getLocalPlayer();
       if (!localPlayer) {
-        console.log('No local player found - keyboard input disabled');
         this.fallbackToSeparateComponent();
         return;
       }
@@ -250,8 +237,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         // This will throw an error if not in the right context
         hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary);
       } catch (contextError) {
-        console.log('PlayerControls context error:', contextError instanceof Error ? contextError.message : contextError);
-        console.log('Falling back to separate keyboard input component...');
         this.fallbackToSeparateComponent();
         return;
       }
@@ -272,10 +257,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           }
         });
 
-        console.log('MePhone keyboard input connected successfully');
-        console.log('Press H key (or platform equivalent) to position MePhone exactly at camera location facing towards viewport');
-        console.log('Note: You still need to press E when near the CustomUI gizmo to open the interface');
-
         // Set up E key input for hiding MePhone when focused
         if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
           this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
@@ -292,32 +273,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
             }
           });
 
-          console.log('E key input connected for MePhone hiding when focused on UI');
         } else {
-          console.log('RightGrip input action (E key) not supported on this platform');
         }
       } else {
-        console.log('LeftTertiary input action not supported on this platform');
-        console.log('Falling back to separate keyboard input component...');
         this.fallbackToSeparateComponent();
       }
     } catch (error) {
-      console.log('MePhone keyboard input setup failed:', error instanceof Error ? error.message : error);
-      console.log('Falling back to separate keyboard input component...');
       this.fallbackToSeparateComponent();
     }
   }
 
   // Fallback to separate keyboard input component
   private fallbackToSeparateComponent(): void {
-    console.log('=== FALLBACK MODE: Using separate KeyboardInputHandler ===');
-    console.log('To enable keyboard input:');
-    console.log('1. Create a new entity in your world');
-    console.log('2. Attach the KeyboardInputHandler.ts script to it');
-    console.log('3. Set the script execution mode to Local');
-    console.log('4. Set the entity owner to the player');
-    console.log('5. The H key will position the MePhone exactly at your camera location facing towards your viewport (you still need to press E to open it)');
-    console.log('===================================================');
   }
 
 
@@ -326,34 +293,28 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   onFocus(player: hz.Player): void {
     // Mark that the player is now focused on the UI
     this.isPlayerFocusedOnUI = true;
-    console.log('Player started focusing on MePhone UI:', player.id);
 
     // Show the MePhone when focused - make it visible to all players
     this.entity.visible.set(true);
-    console.log('MePhone shown for player:', player.id);
   }
 
   // Handle when the UI loses focus
   onUnfocus(player: hz.Player): void {
     // Mark that the player is no longer focused on the UI
     this.isPlayerFocusedOnUI = false;
-    console.log('Player stopped focusing on MePhone UI:', player.id);
 
     // Hide the MePhone when unfocused - make it invisible to all players
     this.hideMePhone();
-    console.log('MePhone hidden for player:', player.id);
   }
 
   // Method to explicitly hide the MePhone
   private hideMePhone(): void {
     this.entity.visible.set(false);
-    console.log('MePhone explicitly hidden');
   }
 
   // Method to explicitly show the MePhone
   private showMePhone(): void {
     this.entity.visible.set(true);
-    console.log('MePhone explicitly shown');
   }
 
   // Handle MePhone assignment/toggle via keyboard input
@@ -363,11 +324,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       if (camera.default) {
         this.cameraPositionAtHKeyPress = camera.default.position.get().clone();
         this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
-        console.log('Captured camera position when H key was pressed');
-        console.log('H Key Camera Pos:', this.cameraPositionAtHKeyPress, 'H Key Camera Rot:', this.cameraRotationAtHKeyPress);
       }
     } catch (error) {
-      console.log('Failed to capture camera state when H key pressed:', error instanceof Error ? error.message : error);
     }
 
     // If phone is not assigned to anyone, assign it to this player and open UI
@@ -376,28 +334,22 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       this.teleportToPlayer(player);
       // Open and focus the MePhone UI on the player's device with delay
       this.openAndFocusUIForPlayer(player);
-      console.log('MePhone assigned to player via keyboard and UI opened/focused:', player.id);
-      console.log('MePhone positioned exactly at camera location facing towards viewport');
       return;
     }
 
-    // If phone is assigned to this player, teleport and focus the UI
+    // If phone is assigned to this player, teleport and focus the UI (keep current app)
     if (this.assignedPlayer.id === player.id) {
       this.teleportToPlayer(player);
       this.openAndFocusUIForPlayer(player);
-      console.log('MePhone teleported and UI opened/focused via keyboard for player:', player.id);
-      console.log('MePhone positioned exactly at camera location facing towards viewport');
     } else {
       // If phone is assigned to someone else, reassign it to this player and teleport/focus UI
-      console.log('MePhone reassigned from', this.assignedPlayer.id, 'to', player.id, 'via keyboard');
-      console.log('MePhone repositioned to new camera view');
 
       // Stop following the previous player
       this.stopFollowingPlayer();
 
-      // Assign to new player and teleport
+      // Assign to new player and teleport (keep current app state)
       this.assignedPlayer = player;
-      this.currentAppBinding.set('home');
+      // Removed: this.currentAppBinding.set('home'); - Keep current app instead of forcing home
       this.teleportToPlayer(player);
 
       this.openAndFocusUIForPlayer(player);
@@ -409,22 +361,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Always set the MePhone's y position to -1000 when E is pressed
     const currentPosition = this.entity.position.get();
     this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
-    console.log('E key pressed - MePhone y position set to -1000 for player:', player.id);
   }
 
   // Open the MePhone UI on the player's device
   private openUIForPlayer(player: hz.Player): void {
     try {
-      // Navigate to home screen first
-      this.currentAppBinding.set('home');
+      // Removed: this.currentAppBinding.set('home'); - Don't force home screen navigation
+      // Keep the current app state when opening UI
 
       // The UI should automatically be visible to the player if they're interacting with the CustomUI gizmo
       // This ensures the phone is ready when they look at it
-      console.log('MePhone UI prepared for player:', player.id);
-      console.log('Player should see the MePhone interface when looking at the CustomUI gizmo');
 
     } catch (error) {
-      console.log('Failed to prepare MePhone UI:', error instanceof Error ? error.message : error);
     }
   }
 
@@ -438,14 +386,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       this.async.setTimeout(() => {
         try {
           player.focusUI(this.entity, { duration: 0.1 });
-          console.log('MePhone UI focused for player:', player.id);
         } catch (focusError) {
-          console.log('Failed to focus MePhone UI after delay:', focusError instanceof Error ? focusError.message : focusError);
         }
       }, 25);
 
     } catch (error) {
-      console.log('Failed to prepare MePhone UI:', error instanceof Error ? error.message : error);
     }
   }
 
@@ -474,10 +419,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Load contacts for the assigned player
     this.ensureContactsApp().updateContacts(player);
 
-    // Reset to home screen when a new player is assigned
-    this.currentAppBinding.set('home');
+    // Removed: this.currentAppBinding.set('home'); - Keep current app state instead of forcing home
 
-    console.log('MePhone assigned to player and positioned exactly at camera location facing towards viewport:', player.id);
   }
 
   onPlayerUnassigned(player: hz.Player) {
@@ -494,14 +437,13 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Return to original position
     if (this.originalPosition) {
       this.entity.position.set(this.originalPosition.clone());
-      console.log('MePhone returned to original position');
     }
 
     // Clear the assigned player for TriviaApp
     this.triviaApp.setAssignedPlayer(null);
 
-    // Reset to home screen
-    this.currentAppBinding.set('home');
+    // Removed: this.currentAppBinding.set('home'); - Don't reset to home on unassignment
+
   }  // Initialize phone for a specific player
   public initializeForPlayer(player: hz.Player) {
     this.assignedPlayer = player;
@@ -510,16 +452,14 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Initialize contacts for this player
     this.ensureContactsApp().updateContacts(player);
 
-    // Reset to home screen for this player
-    this.currentAppBinding.set('home');
+    // Removed: this.currentAppBinding.set('home'); - Don't force home screen on initialization
+    // Keep whatever app was previously selected or default to home if this is the first time
 
-    console.log('MePhone initialized for player:', player.id);
   }
 
   // Method to release the MePhone back to its original position
   public releaseMePhone(): void {
     if (this.assignedPlayer) {
-      console.log('MePhone released by player:', this.assignedPlayer.id);
       this.onPlayerUnassigned(this.assignedPlayer);
     }
   }
@@ -532,7 +472,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       // Explicitly hide the MePhone after a short delay to ensure unfocus completes
       this.async.setTimeout(() => {
         this.hideMePhone();
-        console.log('MePhone unfocused and hidden for player:', playerId);
       }, 50);
     }
   }
@@ -543,7 +482,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       // For now, just hide it since we can't easily check focus state
       // This method can be called externally when unfocus is suspected
       this.hideMePhone();
-      console.log('MePhone checked and hidden if unfocused for player:', this.assignedPlayer.id);
     }
   }
 
@@ -560,23 +498,19 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   // Method to force hide the MePhone (can be called externally)
   public forceHide(): void {
     this.hideMePhone();
-    console.log('MePhone force hidden externally');
   }
 
   // Method to force show the MePhone (can be called externally)
   public forceShow(): void {
     this.showMePhone();
-    console.log('MePhone force shown externally');
   }
 
   // Method to handle external unfocus calls (when Player.unfocusUI() is called externally)
   public handleExternalUnfocus(): void {
     if (this.assignedPlayer) {
-      console.log('External unfocus detected for player:', this.assignedPlayer.id);
 
       // Hide the MePhone immediately when external unfocus is detected
       this.hideMePhone();
-      console.log('MePhone hidden due to external unfocus for player:', this.assignedPlayer.id);
     }
   }
 

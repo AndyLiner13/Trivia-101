@@ -27,58 +27,9 @@ interface Question {
   }[];
 }
 
-const sampleQuestions: Question[] = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    answers: [
-      { text: "London", correct: false },
-      { text: "Berlin", correct: false },
-      { text: "Paris", correct: true },
-      { text: "Madrid", correct: false }
-    ]
-  },
-  {
-    id: 2,
-    question: "Which planet is known as the Red Planet?",
-    answers: [
-      { text: "Mars", correct: true },
-      { text: "Venus", correct: false },
-      { text: "Jupiter", correct: false },
-      { text: "Saturn", correct: false }
-    ]
-  },
-  {
-    id: 3,
-    question: "What is 7 × 8?",
-    answers: [
-      { text: "54", correct: false },
-      { text: "56", correct: true },
-      { text: "64", correct: false },
-      { text: "48", correct: false }
-    ]
-  },
-  {
-    id: 4,
-    question: "Who painted the Mona Lisa?",
-    answers: [
-      { text: "Van Gogh", correct: false },
-      { text: "Picasso", correct: false },
-      { text: "Da Vinci", correct: true },
-      { text: "Monet", correct: false }
-    ]
-  },
-  {
-    id: 5,
-    question: "What is the largest ocean on Earth?",
-    answers: [
-      { text: "Atlantic", correct: false },
-      { text: "Pacific", correct: true },
-      { text: "Indian", correct: false },
-      { text: "Arctic", correct: false }
-    ]
-  }
-];
+interface TriviaQuestionsData {
+  questions: Question[];
+}
 
 const answerShapes = [
   { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
@@ -108,6 +59,11 @@ const quirkyWaitingMessages = [
 type GameState = 'waiting_for_game' | 'playing' | 'waiting' | 'answered' | 'leaderboard' | 'finished';
 
 export class TriviaApp {
+  // Props definition for the component
+  static propsDefinition = {
+    questionsAsset: { type: hz.PropTypes.Asset }
+  };
+
   // Game state bindings
   private currentQuestionIndex = 0;
   private score = 0;
@@ -124,8 +80,14 @@ export class TriviaApp {
   private persistentAnswerStorage: { [questionIndex: number]: number } = {};
   
   // Questions array - can be updated externally
-  private questions: Question[] = sampleQuestions;
+  private questions: Question[] = [];
   private useExternalQuestions = false;
+
+  // Asset for loading questions
+  private questionsAsset: hz.Asset | null = null;
+
+  // Answer texts for current question
+  private answerTexts: string[] = [];
 
   // Auto-progression timer
   private autoProgressTimer: any = null;
@@ -157,6 +119,10 @@ export class TriviaApp {
   private waitingMessageBinding = new ui.Binding('');
   private secondsRemainingBinding = new ui.Binding(5);
 
+  // Question display bindings
+  private questionBinding = new ui.Binding('');
+  private answerTextsBinding = new ui.Binding<string[]>([]);
+
   // Leaderboard bindings
   private playerRankBinding = new ui.Binding(1);
   private playerScoreBinding = new ui.Binding(0);
@@ -166,11 +132,14 @@ export class TriviaApp {
   // Host detection binding
   private isLocalPlayerHostBinding = new ui.Binding(false);
 
-  constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any) {
+  constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any, questionsAsset?: hz.Asset) {
     // Store world reference for network events
     this.world = world || null;
     this.sendNetworkCallback = sendNetworkCallback || null;
     this.asyncUtils = asyncUtils || null;
+    
+    // Store the questions asset
+    this.questionsAsset = questionsAsset || null;
     
     // Initialize variable groups for points tracking
     this.initializeVariableGroups();
@@ -185,6 +154,9 @@ export class TriviaApp {
     
     // Also register with global registry as backup
     (globalThis as any).triviaAppInstances.push(this);
+    
+    // Set up network event listeners
+    this.setupNetworkEvents();
     
     // Initialize host detection
     this.detectHostPlayer();
@@ -216,18 +188,139 @@ export class TriviaApp {
     }
   }
 
+  // Set up network event listeners to sync with TriviaGame
+  private setupNetworkEvents(): void {
+    // TriviaApp receives events through direct method calls from TriviaGame
+    // via the parent MePhone component that forwards the events
+    // No additional setup needed here as events are forwarded from MePhone
+  }
+
   // Handle starting the game (only for host)
-  private handleStartGame(): void {
-    // Send network event to start the game
-    this.sendNetworkEvent(triviaGameStartEvent, {
-      hostId: 'host', // This will be handled by TriviaGame
+  private async handleStartGame(): Promise<void> {
+    // Load questions first
+    await this.loadQuestionsFromData();
+
+    // Reset game state
+    this.resetGame();
+
+    // Send network event to start the game in TriviaGame component with questions
+    const gameStartData = {
+      hostId: this.world?.getLocalPlayer()?.id.toString() || 'local',
       config: {
-        timeLimit: 15, // Default time limit
-        category: 'General', // Default category
-        difficulty: 'easy', // Default difficulty
-        numQuestions: 10 // Default number of questions
-      }
-    });
+        timeLimit: 30,
+        category: 'General',
+        difficulty: 'easy',
+        numQuestions: 10
+      },
+      questions: this.questions // Send the loaded questions to TriviaGame
+    };
+    
+    this.sendNetworkEvent(triviaGameStartEvent, gameStartData);
+
+    // Instead of showing question directly, let TriviaGame handle it
+    // TriviaGame will send back the question via network event
+  }
+
+  // Method to show the next question
+  private showNextQuestion(): void {
+    // Check if we have questions loaded
+    if (this.questions.length === 0) {
+      return;
+    }
+    
+    // Check if we've reached the end of questions
+    if (this.currentQuestionIndex >= this.questions.length) {
+      this.gameState = 'finished';
+      this.gameStateBinding.set('finished');
+      return;
+    }
+    
+    // Get the current question
+    const currentQuestion = this.questions[this.currentQuestionIndex];
+    if (!currentQuestion) {
+      return;
+    }
+    
+    // Update the question display
+    this.questionBinding.set(currentQuestion.question);
+    
+    // Update answer options
+    this.answerTexts = currentQuestion.answers.map(answer => answer.text);
+    this.answerTextsBinding.set(this.answerTexts);
+    
+    // Reset answer state
+    this.selectedAnswer = null;
+    this.showResult = false;
+    this.gameState = 'playing';
+    this.questionStartTime = Date.now();
+    
+    // Update bindings
+    this.selectedAnswerBinding.set(null);
+    this.showResultBinding.set(false);
+    this.gameStateBinding.set('playing');
+  }
+
+  // Method to sync with external trivia system
+  public syncWithExternalTrivia(questionData: {
+    question: any;
+    questionIndex: number;
+    timeLimit?: number;
+  }): void {
+    // Clear any running timer since we're syncing with external system
+    this.clearAutoProgressTimer();
+
+    // Convert external question to our format
+    const externalQuestion: Question = {
+      id: questionData.question.id || questionData.questionIndex + 1,
+      question: questionData.question.question,
+      category: questionData.question.category,
+      difficulty: questionData.question.difficulty,
+      answers: questionData.question.answers || []
+    };
+
+    // Check if this is a new question or if we need to reset state
+    const isNewQuestion = questionData.questionIndex !== this.currentQuestionIndex;
+    const shouldResetState = this.selectedAnswer === null || this.showResult === true || isNewQuestion || this.gameState === 'leaderboard';
+
+    // Update our questions array and current index
+    this.questions[questionData.questionIndex] = externalQuestion;
+    this.currentQuestionIndex = questionData.questionIndex;
+
+    // Reset state for new question or when transitioning from leaderboard
+    if (shouldResetState) {
+      this.selectedAnswer = null;
+      this.showResult = false;
+      this.waitingMessage = '';
+      this.gameState = 'playing';
+      this.questionStartTime = Date.now(); // Record when question starts
+
+      // Reset tracking variables too
+      this.lastAnswerTimestamp = 0;
+      this.answerSelectionCount = 0;
+
+      // Clear any running timers when new question starts
+      this.clearAutoProgressTimer();
+
+      // Update bindings
+      this.selectedAnswerBinding.set(null);
+      this.showResultBinding.set(false);
+      this.isAnswerCorrectBinding.set(null);
+      this.waitingMessageBinding.set('');
+      this.gameStateBinding.set('playing');
+    } else {
+      // Just update the question-related bindings, keep the selected answer
+      this.questionStartTime = Date.now(); // Still update start time
+    }
+
+    // Always update these bindings regardless
+    this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
+    
+    // Update the question display with the new question data
+    this.questionBinding.set(externalQuestion.question);
+    
+    // Update answer options
+    this.answerTexts = externalQuestion.answers.map(answer => answer.text);
+    this.answerTextsBinding.set(this.answerTexts);
   }
 
   // Public method to manually trigger host detection (can be called by parent component)
@@ -473,202 +566,119 @@ export class TriviaApp {
     }
   }
 
-  private loadQuestionsFromData(): void {
+  private async loadQuestionsFromData(): Promise<void> {
     try {
-      // Load questions from the trivia-questions.json data
-      // In a real implementation, this could be loaded via asset system
-      const questionsData = [
+      // If we have a questions asset, load from it
+      if (this.questionsAsset) {
+        const assetData = await this.questionsAsset.fetchAsData();
+        const jsonData = assetData.asJSON<TriviaQuestionsData>();
+        
+        if (jsonData && jsonData.questions && Array.isArray(jsonData.questions)) {
+          this.questions = jsonData.questions.map((q: any) => ({
+            id: q.id,
+            question: q.question,
+            category: q.category,
+            difficulty: q.difficulty,
+            answers: q.answers
+          }));
+          this.useExternalQuestions = true;
+        }
+      } else {
+        // Fallback to hardcoded questions if no asset provided
+        const fallbackQuestions: Question[] = [
+          {
+            id: 1,
+            question: "What is the capital of France?",
+            category: "Geography",
+            difficulty: "easy",
+            answers: [
+              { text: "London", correct: false },
+              { text: "Berlin", correct: false },
+              { text: "Paris", correct: true },
+              { text: "Madrid", correct: false }
+            ]
+          },
+          {
+            id: 2,
+            question: "Which planet is known as the Red Planet?",
+            category: "Science",
+            difficulty: "easy",
+            answers: [
+              { text: "Mars", correct: true },
+              { text: "Venus", correct: false },
+              { text: "Jupiter", correct: false },
+              { text: "Saturn", correct: false }
+            ]
+          },
+          {
+            id: 3,
+            question: "What is 7 × 8?",
+            category: "Mathematics",
+            difficulty: "medium",
+            answers: [
+              { text: "54", correct: false },
+              { text: "56", correct: true },
+              { text: "64", correct: false },
+              { text: "48", correct: false }
+            ]
+          },
+          {
+            id: 4,
+            question: "Who painted the Mona Lisa?",
+            category: "Art",
+            difficulty: "medium",
+            answers: [
+              { text: "Van Gogh", correct: false },
+              { text: "Picasso", correct: false },
+              { text: "Da Vinci", correct: true },
+              { text: "Monet", correct: false }
+            ]
+          },
+          {
+            id: 5,
+            question: "What is the largest ocean on Earth?",
+            category: "Geography",
+            difficulty: "easy",
+            answers: [
+              { text: "Atlantic", correct: false },
+              { text: "Pacific", correct: true },
+              { text: "Indian", correct: false },
+              { text: "Arctic", correct: false }
+            ]
+          }
+        ];
+        
+        this.questions = fallbackQuestions;
+        this.useExternalQuestions = false;
+      }
+    } catch (error) {
+      // Could not load questions, use fallback
+      const fallbackQuestions: Question[] = [
         {
-          "id": 1,
-          "question": "What is the capital of France?",
-          "category": "Geography",
-          "difficulty": "easy",
-          "answers": [
-            { "text": "London", "correct": false },
-            { "text": "Berlin", "correct": false },
-            { "text": "Paris", "correct": true },
-            { "text": "Madrid", "correct": false }
+          id: 1,
+          question: "What is the capital of France?",
+          answers: [
+            { text: "London", correct: false },
+            { text: "Berlin", correct: false },
+            { text: "Paris", correct: true },
+            { text: "Madrid", correct: false }
           ]
         },
         {
-          "id": 2,
-          "question": "Which planet is known as the Red Planet?",
-          "category": "Science",
-          "difficulty": "easy",
-          "answers": [
-            { "text": "Mars", "correct": true },
-            { "text": "Venus", "correct": false },
-            { "text": "Jupiter", "correct": false },
-            { "text": "Saturn", "correct": false }
-          ]
-        },
-        {
-          "id": 3,
-          "question": "What is 7 × 8?",
-          "category": "Mathematics",
-          "difficulty": "medium",
-          "answers": [
-            { "text": "54", "correct": false },
-            { "text": "56", "correct": true },
-            { "text": "64", "correct": false },
-            { "text": "48", "correct": false }
-          ]
-        },
-        {
-          "id": 4,
-          "question": "Who painted the Mona Lisa?",
-          "category": "Art",
-          "difficulty": "medium",
-          "answers": [
-            { "text": "Van Gogh", "correct": false },
-            { "text": "Picasso", "correct": false },
-            { "text": "Da Vinci", "correct": true },
-            { "text": "Monet", "correct": false }
-          ]
-        },
-        {
-          "id": 5,
-          "question": "What is the largest ocean on Earth?",
-          "category": "Geography",
-          "difficulty": "easy",
-          "answers": [
-            { "text": "Atlantic", "correct": false },
-            { "text": "Pacific", "correct": true },
-            { "text": "Indian", "correct": false },
-            { "text": "Arctic", "correct": false }
-          ]
-        },
-        {
-          "id": 6,
-          "question": "In which year did World War II end?",
-          "category": "History",
-          "difficulty": "medium",
-          "answers": [
-            { "text": "1944", "correct": false },
-            { "text": "1945", "correct": true },
-            { "text": "1946", "correct": false },
-            { "text": "1947", "correct": false }
-          ]
-        },
-        {
-          "id": 7,
-          "question": "What is the chemical symbol for gold?",
-          "category": "Science",
-          "difficulty": "hard",
-          "answers": [
-            { "text": "Go", "correct": false },
-            { "text": "Gd", "correct": false },
-            { "text": "Au", "correct": true },
-            { "text": "Ag", "correct": false }
-          ]
-        },
-        {
-          "id": 8,
-          "question": "Which Shakespeare play features the character Romeo?",
-          "category": "Literature",
-          "difficulty": "easy",
-          "answers": [
-            { "text": "Hamlet", "correct": false },
-            { "text": "Macbeth", "correct": false },
-            { "text": "Romeo and Juliet", "correct": true },
-            { "text": "Othello", "correct": false }
-          ]
-        },
-        {
-          "id": 9,
-          "question": "What is the speed of light in a vacuum?",
-          "category": "Physics",
-          "difficulty": "hard",
-          "answers": [
-            { "text": "299,792,458 m/s", "correct": true },
-            { "text": "300,000,000 m/s", "correct": false },
-            { "text": "186,000 m/s", "correct": false },
-            { "text": "150,000,000 m/s", "correct": false }
-          ]
-        },
-        {
-          "id": 10,
-          "question": "Which country has the most natural lakes?",
-          "category": "Geography",
-          "difficulty": "hard",
-          "answers": [
-            { "text": "United States", "correct": false },
-            { "text": "Russia", "correct": false },
-            { "text": "Canada", "correct": true },
-            { "text": "Finland", "correct": false }
+          id: 2,
+          question: "Which planet is known as the Red Planet?",
+          answers: [
+            { text: "Mars", correct: true },
+            { text: "Venus", correct: false },
+            { text: "Jupiter", correct: false },
+            { text: "Saturn", correct: false }
           ]
         }
       ];
-
-      if (Array.isArray(questionsData) && questionsData.length > 0) {
-        this.questions = questionsData.map((q: any) => ({
-          id: q.id,
-          question: q.question,
-          category: q.category,
-          difficulty: q.difficulty,
-          answers: q.answers
-        }));
-        this.useExternalQuestions = true;
-      }
-    } catch (error) {
-      // Could not load external questions, using sample questions as fallback
+      
+      this.questions = fallbackQuestions;
+      this.useExternalQuestions = false;
     }
-  }
-
-  // Method to sync with external trivia system
-  public syncWithExternalTrivia(questionData: {
-    question: any;
-    questionIndex: number;
-    timeLimit?: number;
-  }): void {
-    // Clear any running timer since we're syncing with external system
-    this.clearAutoProgressTimer();
-    
-    // Convert external question to our format
-    const externalQuestion: Question = {
-      id: questionData.question.id || questionData.questionIndex + 1,
-      question: questionData.question.question,
-      category: questionData.question.category,
-      difficulty: questionData.question.difficulty,
-      answers: questionData.question.answers || []
-    };
-    
-    // Check if this is a new question or if we need to reset state
-    const isNewQuestion = questionData.questionIndex !== this.currentQuestionIndex;
-    const shouldResetState = this.selectedAnswer === null || this.showResult === true || isNewQuestion || this.gameState === 'leaderboard';
-    
-    // Update our questions array and current index
-    this.questions[questionData.questionIndex] = externalQuestion;
-    this.currentQuestionIndex = questionData.questionIndex;
-    
-    // Reset state for new question or when transitioning from leaderboard
-    if (shouldResetState) {
-      this.selectedAnswer = null;
-      this.showResult = false;
-      this.waitingMessage = '';
-      this.gameState = 'playing';
-      this.questionStartTime = Date.now(); // Record when question starts
-      
-      // Reset tracking variables too
-      this.lastAnswerTimestamp = 0;
-      this.answerSelectionCount = 0;
-      
-      // Clear any running timers when new question starts
-      this.clearAutoProgressTimer();
-      
-      // Update bindings
-      this.selectedAnswerBinding.set(null);
-      this.showResultBinding.set(false);
-      this.isAnswerCorrectBinding.set(null);
-      this.waitingMessageBinding.set('');
-      this.gameStateBinding.set('playing');
-    } else {
-      // Just update the question-related bindings, keep the selected answer
-      this.questionStartTime = Date.now(); // Still update start time
-    }
-    
-    // Always update these bindings regardless
-    this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
   }
 
   // Method to show results from external trivia system
@@ -1533,6 +1543,26 @@ export class TriviaApp {
                   flexDirection: 'column'
                 },
                 children: [
+                  // Question Text Display
+                  ui.View({
+                    style: {
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      marginBottom: 8
+                    },
+                    children: [
+                      ui.Text({
+                        text: this.questionBinding,
+                        style: {
+                          fontSize: 18,
+                          fontWeight: '600',
+                          color: '#FFFFFF',
+                          textAlign: 'center',
+                          lineHeight: 24
+                        }
+                      })
+                    ]
+                  }),
                   // Top row
                   ui.View({
                     style: {
@@ -1611,17 +1641,29 @@ export class TriviaApp {
         margin: 4,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 100
+        minHeight: 100,
+        padding: 8
       },
       onPress: () => this.handleAnswerSelect(answerIndex, assignedPlayer),
       children: [
         ui.Image({
           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
           style: {
-            width: 40,
-            height: 40,
+            width: 24,
+            height: 24,
             tintColor: '#FFFFFF',
+            marginBottom: 4,
             ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
+          }
+        }),
+        ui.Text({
+          text: ui.Binding.derive([this.answerTextsBinding], (texts) => texts[answerIndex] || ''),
+          style: {
+            fontSize: 12,
+            fontWeight: '600',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            lineHeight: 14
           }
         })
       ]
