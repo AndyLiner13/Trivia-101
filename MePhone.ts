@@ -98,7 +98,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
       // Position the MePhone in front of the camera with forward offset
       // This ensures the MePhone appears in front of where the user is looking
-      const forwardOffset = 1.5; // Move 1.5 units forward from camera position
+      const forwardOffset = 2.5; // Move 2.5 units forward from camera position (increased from 1.5)
       const desiredPosition = cameraPosition.add(cameraForward.mul(forwardOffset));
 
       // Update the MePhone's position to match the camera's position with forward offset
@@ -403,7 +403,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       // Wait 25ms for position change to take effect, then focus the UI (reduced from 100ms)
       this.async.setTimeout(() => {
         try {
-          player.focusUI(this.entity, { duration: 0 });
+          player.focusUI(this.entity, { duration: 0.1 });
           console.log('MePhone UI focused for player:', player.id);
         } catch (focusError) {
           console.log('Failed to focus MePhone UI after delay:', focusError instanceof Error ? focusError.message : focusError);
