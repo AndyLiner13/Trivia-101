@@ -326,15 +326,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     const currentPosition = this.entity.position.get();
     const isPositionedNormally = currentPosition.y > -500; // Not hidden far below
 
-    // Debug logging
-    console.log(`[MePhone] H key pressed - isVisible: ${isVisible}, isAssignedToPlayer: ${isAssignedToPlayer}, isPlayerFocusedOnUI: ${this.isPlayerFocusedOnUI}, positionY: ${currentPosition.y}`);
-
     if (isVisible && isAssignedToPlayer && isPositionedNormally) {
-      console.log(`[MePhone] Blocking H key - phone is visible, assigned to player, and positioned normally`);
       return; // Don't execute H key functionality if player is already using the phone
     }
-
-    console.log(`[MePhone] Allowing H key - proceeding with functionality`);
 
     // Capture camera position when H key is pressed
     try {
@@ -442,7 +436,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
     // Set the assigned player for TriviaApp
     this.triviaApp.setAssignedPlayer(player);
-    console.log(`[MePhone] Assigned player ${player.id} to TriviaApp`);
 
     // Load contacts for the assigned player
     this.ensureContactsApp().updateContacts(player);
