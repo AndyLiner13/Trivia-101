@@ -3,6 +3,13 @@ import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
 import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
 
+// Interface for tracking phone assignments
+interface PhoneAssignment {
+  phoneEntity: hz.Entity;
+  assignedPlayer: hz.Player | null;
+  isInUse: boolean;
+}
+
 // Interface for trivia question data from JSON asset
 interface TriviaQuestion {
   id: number;
@@ -318,12 +325,20 @@ export class TriviaGame extends ui.UIComponent {
   private playersAnswered: Set<string> = new Set();
   private hasLocalPlayerAnswered: boolean = false;
 
-  // Timer management
-  private timerInterval: number | null = null;
+  // Timer management properties
   private roundTimeoutId: number | null = null;
   private gameLoopTimeoutId: number | null = null;
+  private timerInterval: number | null = null;
+
+  // Phone management properties
+  private phoneAssignments: PhoneAssignment[] = [];
+  private maxPhones = 20; // Maximum number of phone entities we expect
 
   async start() {
+    
+    // Initialize phone management
+    this.discoverPhoneEntities();
+    this.setupPlayerEvents();
     
     // Register this TriviaGame instance with the world for TriviaApp access
     (this.world as any).triviaGame = this;
@@ -2323,15 +2338,157 @@ export class TriviaGame extends ui.UIComponent {
     this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
   }
 
-  // Debug method to check current game state
-  public debugGameState(): void {
-    console.log(`[TriviaGame] Debug - isRunning: ${this.isRunning}`);
-    console.log(`[TriviaGame] Debug - currentQuestion: ${!!this.currentQuestion}`);
-    console.log(`[TriviaGame] Debug - currentQuestionIndex: ${this.currentQuestionIndex}`);
-    console.log(`[TriviaGame] Debug - questions loaded: ${this.triviaQuestions.length}`);
-    
-    // Note: Binding values can't be directly accessed in debug method
-    // They are accessed through derive methods in the UI
+  // Phone management methods
+  private discoverPhoneEntities(): void {
+    // Find all entities in the world with the "MePhone" tag
+    const allEntitiesInWorld = this.world.getEntitiesWithTags(['MePhone']);
+
+    for (const entity of allEntitiesInWorld) {
+      this.phoneAssignments.push({
+        phoneEntity: entity,
+        assignedPlayer: null,
+        isInUse: false
+      });
+
+      // Initially set the phone to be invisible
+      entity.visible.set(false);
+    }
+  }
+
+  private setupPlayerEvents(): void {
+    // Connect to player events
+    this.connectCodeBlockEvent(
+      this.entity,
+      hz.CodeBlockEvents.OnPlayerEnterWorld,
+      (player: hz.Player) => this.onPlayerEnter(player)
+    );
+
+    this.connectCodeBlockEvent(
+      this.entity,
+      hz.CodeBlockEvents.OnPlayerExitWorld,
+      (player: hz.Player) => this.onPlayerExit(player)
+    );
+
+    // Assign phones to existing players
+    this.world.getPlayers().forEach(player => {
+      this.assignPhoneToPlayer(player);
+    });
+  }
+
+  private onPlayerEnter(player: hz.Player): void {
+    this.assignPhoneToPlayer(player);
+  }
+
+  private onPlayerExit(player: hz.Player): void {
+    this.releasePlayerPhone(player);
+  }
+
+  private assignPhoneToPlayer(player: hz.Player): void {
+    // Check if player already has a phone assigned
+    const existingAssignment = this.phoneAssignments.find(
+      assignment => assignment.assignedPlayer === player
+    );
+
+    if (existingAssignment) {
+      return;
+    }
+
+    // Find an available phone
+    const availablePhone = this.phoneAssignments.find(
+      assignment => !assignment.isInUse && assignment.assignedPlayer === null
+    );
+
+    if (availablePhone) {
+      // Assign the phone to the player
+      availablePhone.assignedPlayer = player;
+      availablePhone.isInUse = true;
+
+      // Make the phone visible only to this player
+      availablePhone.phoneEntity.visible.set(false); // Hide from everyone first
+      // Note: Player-specific visibility may need to be handled differently in Horizon
+      // You may need to use a different approach for per-player visibility
+      availablePhone.phoneEntity.visible.set(true);
+
+      // Set ownership of the phone entity to this player
+      availablePhone.phoneEntity.owner.set(player);
+
+      console.log(`[TriviaGame] Assigned phone to player ${player.name.get()}`);
+    } else {
+      console.warn(`[TriviaGame] No available phones for player ${player.name.get()}`);
+
+      // Optionally create a new phone entity dynamically if none available
+      // This would require instantiating a new CustomUI entity
+      this.createNewPhoneForPlayer(player);
+    }
+  }
+
+  private releasePlayerPhone(player: hz.Player): void {
+    const playerAssignment = this.phoneAssignments.find(
+      assignment => assignment.assignedPlayer === player
+    );
+
+    if (playerAssignment) {
+      // Hide the phone entity
+      playerAssignment.phoneEntity.visible.set(false);
+
+      // Note: Cannot set owner to null, so we'll leave it as is or set to another player
+      // playerAssignment.phoneEntity.owner.set(null); // This causes error
+
+      // Mark as available
+      playerAssignment.assignedPlayer = null;
+      playerAssignment.isInUse = false;
+
+      console.log(`[TriviaGame] Released phone from player ${player.name.get()}`);
+    } else {
+      console.warn(`[TriviaGame] No phone assignment found for player ${player.name.get()}`);
+    }
+  }
+
+  private createNewPhoneForPlayer(player: hz.Player): void {
+    // This is a placeholder for dynamic phone creation
+    // In Horizon Worlds, you would typically pre-place enough phone entities
+    // rather than creating them dynamically
+    console.warn(`[TriviaGame] Dynamic phone creation not implemented. Consider adding more phone entities to the world.`);
+  }
+
+  // Public method to get phone assignment for a player (for debugging)
+  public getPlayerPhone(player: hz.Player): hz.Entity | null {
+    const assignment = this.phoneAssignments.find(
+      assignment => assignment.assignedPlayer === player
+    );
+    return assignment ? assignment.phoneEntity : null;
+  }
+
+  // Public method to get all assignments (for debugging)
+  public getAssignments(): PhoneAssignment[] {
+    return [...this.phoneAssignments];
+  }
+
+  // Method to handle phone availability changes
+  public notifyPhoneAvailable(phoneEntity: hz.Entity): void {
+    const assignment = this.phoneAssignments.find(
+      assignment => assignment.phoneEntity === phoneEntity
+    );
+
+    if (assignment && assignment.isInUse) {
+      assignment.isInUse = false;
+
+      // Try to assign to any waiting players if needed
+      this.tryAssignWaitingPlayers();
+    }
+  }
+
+  private tryAssignWaitingPlayers(): void {
+    // Find players without phones and try to assign them
+    const playersWithoutPhones = this.world.getPlayers().filter(player => {
+      return !this.phoneAssignments.some(
+        assignment => assignment.assignedPlayer === player
+      );
+    });
+
+    for (const player of playersWithoutPhones) {
+      this.assignPhoneToPlayer(player);
+    }
   }
 }
 

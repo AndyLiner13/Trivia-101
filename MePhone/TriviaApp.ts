@@ -1063,104 +1063,6 @@ export class TriviaApp {
     this.gameStateBinding.set('finished');
   }
 
-  // Standardized Header Component
-  private createAppHeader(props: {
-    appName: string;
-    onHomePress: () => void;
-    onBackPress?: () => void;
-    showBackButton?: boolean;
-    rightElement?: ui.UINode;
-  }): ui.UINode {
-    return ui.View({
-      style: {
-        backgroundColor: '#F9FAFB',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        height: 36,
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10
-      },
-      children: [
-        ui.View({
-          style: {
-            flexDirection: 'row',
-            alignItems: 'center'
-          },
-          children: [
-            // Home button
-            ui.Pressable({
-              style: {
-                padding: 2
-              },
-              onPress: props.onHomePress,
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1942937076558477"))),
-                  style: {
-                    width: 20,
-                    height: 20,
-                    tintColor: '#9CA3AF'
-                  }
-                })
-              ]
-            }),
-            // Back button (conditional)
-            ...(props.showBackButton && props.onBackPress ? [
-              ui.Pressable({
-                style: {
-                  marginLeft: 0,
-                  padding: 2
-                },
-                onPress: props.onBackPress,
-                children: [
-                  ui.Image({
-                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt("1083116303985907"))),
-                    style: {
-                      width: 20,
-                      height: 20,
-                      tintColor: '#9CA3AF'
-                    }
-                  })
-                ]
-              })
-            ] : [])
-          ]
-        }),
-        // Right side container with text and optional right element
-        ui.View({
-          style: {
-            flexDirection: 'row',
-            alignItems: 'center'
-          },
-          children: [
-            ui.Text({
-              text: props.appName,
-              style: {
-                fontSize: 14,
-                fontWeight: '500',
-                color: '#111827'
-              }
-            }),
-            // Right element (if provided)
-            ...(props.rightElement ? [
-              ui.View({
-                style: {
-                  marginLeft: 8
-                },
-                children: [props.rightElement]
-              })
-            ] : [])
-          ]
-        })
-      ]
-    });
-  }
-
   private handleAnswerSelect(answerIndex: number, assignedPlayer?: hz.Player): void {
     // Only allow selection during playing state
     if (this.gameState !== 'playing') {
@@ -1496,20 +1398,13 @@ export class TriviaApp {
         flexDirection: 'column'
       },
       children: [
-        // Header
-        this.createAppHeader({
-          appName: 'Trivia',
-          onHomePress: onHomePress
-        }),
-
         // Main Content Area
         ui.View({
           style: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            padding: 20,
-            paddingTop: 48 // Space for header
+            padding: 20
           },
           children: [
             ui.View({
@@ -1617,23 +1512,13 @@ export class TriviaApp {
         flexDirection: 'column'
       },
       children: [
-        // Header
-        this.createAppHeader({
-          appName: 'Trivia',
-          onHomePress: () => {
-            onHomePress();
-            this.resetGame(assignedPlayer);
-          }
-        }),
-
         // Main Content Area
         ui.View({
           style: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            padding: 20,
-            paddingTop: 48 // Space for header
+            padding: 20
           },
           children: [
             ui.View({
@@ -1822,21 +1707,11 @@ export class TriviaApp {
         flexDirection: 'column'
       },
       children: [
-        // Header
-        this.createAppHeader({
-          appName: 'Trivia',
-          onHomePress: () => {
-            onHomePress();
-            this.resetGame(assignedPlayer);
-          }
-        }),
-
         // Main Content Area
         ui.View({
           style: {
             flex: 1,
             padding: 8,
-            paddingTop: 48, // Reduced gap below header
             paddingBottom: 12 // Match footer gap
           },
           children: [
