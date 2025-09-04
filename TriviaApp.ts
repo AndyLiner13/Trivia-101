@@ -15,6 +15,7 @@ const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answe
 
 // Network event for starting the game
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
+const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 
 interface Question {
   id: number;
@@ -131,6 +132,7 @@ export class TriviaApp {
 
   // Host detection binding
   private isLocalPlayerHostBinding = new ui.Binding(false);
+  private storedHostId: string | null = null;
 
   constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any, questionsAsset?: hz.Asset) {
     // Store world reference for network events
@@ -168,23 +170,35 @@ export class TriviaApp {
       this.isLocalPlayerHostBinding.set(false);
       return;
     }
-    
+
     const localPlayer = this.world.getLocalPlayer();
     if (!localPlayer) {
       this.isLocalPlayerHostBinding.set(false);
       return;
     }
-    
+
     const allPlayers = this.world.getPlayers();
-    
-    // Simple host detection: first player in the world is considered host
-    // In a real implementation, you might want more sophisticated host detection
+
+    // More robust host detection: check if local player is the one who started the game
+    // or if they're the first player to join (fallback)
     if (allPlayers.length > 0) {
-      const isHost = allPlayers[0].id.toString() === localPlayer.id.toString();
-      this.isLocalPlayerHostBinding.set(isHost);
+      // First, check if we have a stored host ID from game start
+      if (this.storedHostId) {
+        const isHost = this.storedHostId === localPlayer.id.toString();
+        this.isLocalPlayerHostBinding.set(isHost);
+      } else {
+        // Fallback: first player in the world is considered host
+        const isHost = allPlayers[0].id.toString() === localPlayer.id.toString();
+        this.isLocalPlayerHostBinding.set(isHost);
+        // Store this for future reference
+        if (isHost) {
+          this.storedHostId = localPlayer.id.toString();
+        }
+      }
     } else {
       // If no players yet, assume local player is host
       this.isLocalPlayerHostBinding.set(true);
+      this.storedHostId = localPlayer.id.toString();
     }
   }
 
@@ -245,6 +259,10 @@ export class TriviaApp {
       },
       questions: this.questions // Send the loaded questions to TriviaGame
     };
+    
+    // Store the host ID for consistent host detection throughout the game
+    this.storedHostId = gameStartData.hostId;
+    this.isLocalPlayerHostBinding.set(true); // The player starting the game is the host
     
     this.sendNetworkEvent(triviaGameStartEvent, gameStartData);
 
@@ -721,6 +739,14 @@ export class TriviaApp {
       this.questions = fallbackQuestions;
       this.useExternalQuestions = false;
     }
+  }
+
+  private handleNextQuestion(assignedPlayer?: hz.Player): void {
+    // Send network event to TriviaGame to advance to next question
+    // Use the stored host ID instead of assignedPlayer ID to ensure correct host validation
+    this.sendNetworkEvent(triviaNextQuestionEvent, {
+      playerId: this.storedHostId || assignedPlayer?.id.toString() || 'host'
+    });
   }
 
   // Method to show results from external trivia system
@@ -1267,6 +1293,8 @@ export class TriviaApp {
   }
 
   private renderLeaderboardScreen(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    // Ensure host detection is up to date when rendering the leaderboard screen
+    this.updateHostStatus();
     return ui.View({
       style: {
         width: '100%',
@@ -1413,7 +1441,44 @@ export class TriviaApp {
                     color: 'rgba(255, 255, 255, 0.7)',
                     textAlign: 'center'
                   }
-                })
+                }),
+
+                // Next Question Button (only for host)
+                ui.UINode.if(
+                  ui.Binding.derive([this.isLocalPlayerHostBinding], (isHost) => isHost),
+                  ui.View({
+                    style: {
+                      marginTop: 20,
+                      alignItems: 'center'
+                    },
+                    children: [
+                      ui.Pressable({
+                        style: {
+                          backgroundColor: '#3B82F6',
+                          borderRadius: 12,
+                          paddingHorizontal: 24,
+                          paddingVertical: 12,
+                          shadowColor: '#000000',
+                          shadowOffset: [0, 2],
+                          shadowOpacity: 0.3,
+                          shadowRadius: 4
+                        },
+                        onPress: () => this.handleNextQuestion(assignedPlayer),
+                        children: [
+                          ui.Text({
+                            text: 'Next Question',
+                            style: {
+                              fontSize: 16,
+                              fontWeight: '700',
+                              color: '#FFFFFF',
+                              textAlign: 'center'
+                            }
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                )
               ]
             })
           ]

@@ -43,6 +43,7 @@ const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: SerializableQues
 const triviaResultsEvent = new hz.NetworkEvent<{ question: SerializableQuestion, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: any }>('triviaGameStart');
+const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
@@ -427,6 +428,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Listen for game start events from host
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
+    this.connectNetworkBroadcastEvent(triviaNextQuestionEvent, this.onNextQuestionRequest.bind(this));
   }
 
   private resetGameState(): void {
@@ -1025,6 +1027,13 @@ export class TriviaGame extends ui.UIComponent {
     this.showNextQuestion();
   }
 
+  private onNextQuestionRequest(data: { playerId: string }): void {
+    // Only allow the host to advance to the next question
+    if (data.playerId === this.hostPlayerId) {
+      this.advanceToNextQuestion();
+    }
+  }
+
   private detectHostPlayer(): void {
     const localPlayer = this.world.getLocalPlayer();
     if (!localPlayer) return;
@@ -1091,6 +1100,15 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onGameStart(data: { hostId: string, config: any, questions?: any[] }): void {
+    // Store the host ID from the game start event
+    this.hostPlayerId = data.hostId;
+    this.hostPlayerIdBinding.set(this.hostPlayerId);
+    
+    // Update local player host status
+    const localPlayer = this.world.getLocalPlayer();
+    this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
+    this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
+    
     // Update configuration
     this.gameConfig = data.config;
     this.gameConfigBinding.set(this.gameConfig);
@@ -2030,36 +2048,6 @@ export class TriviaGame extends ui.UIComponent {
                                   }
                                 })
                               ]
-                            })
-                          ),
-
-                          // Next button (only visible to host)
-                          UINode.if(
-                            this.isLocalPlayerHostBinding,
-                            Pressable({
-                              onPress: () => {
-                                this.advanceToNextQuestion();
-                              },
-                              style: {
-                                backgroundColor: '#3B82F6',
-                                borderRadius: 8,
-                                paddingVertical: 12,
-                                paddingHorizontal: 24,
-                                marginTop: 16,
-                                alignItems: 'center',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.2,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 2]
-                              },
-                              children: Text({
-                                text: 'Next Question',
-                                style: {
-                                  fontSize: 16,
-                                  fontWeight: 'bold',
-                                  color: 'white'
-                                }
-                              })
                             })
                           )
                         ]
