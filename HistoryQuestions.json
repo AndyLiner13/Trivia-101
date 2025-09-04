@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "question": "In which year did World War II end?",
+    "category": "History",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "1944", "correct": false },
+      { "text": "1945", "correct": true },
+      { "text": "1946", "correct": false },
+      { "text": "1947", "correct": false }
+    ]
+  },
+  {
+    "id": 2,
+    "question": "Who was the first President of the United States?",
+    "category": "History",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "Thomas Jefferson", "correct": false },
+      { "text": "George Washington", "correct": true },
+      { "text": "Abraham Lincoln", "correct": false },
+      { "text": "John Adams", "correct": false }
+    ]
+  },
+  {
+    "id": 3,
+    "question": "Which ancient civilization built the pyramids at Giza?",
+    "category": "History",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "Romans", "correct": false },
+      { "text": "Greeks", "correct": false },
+      { "text": "Egyptians", "correct": true },
+      { "text": "Mesopotamians", "correct": false }
+    ]
+  },
+  {
+    "id": 4,
+    "question": "The Renaissance period began in which country?",
+    "category": "History",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "France", "correct": false },
+      { "text": "England", "correct": false },
+      { "text": "Italy", "correct": true },
+      { "text": "Spain", "correct": false }
+    ]
+  },
+  {
+    "id": 5,
+    "question": "Which war was fought between the North and South regions of the United States?",
+    "category": "History",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "World War I", "correct": false },
+      { "text": "World War II", "correct": false },
+      { "text": "Civil War", "correct": true },
+      { "text": "Revolutionary War", "correct": false }
+    ]
+  },
+  {
+    "id": 6,
+    "question": "Who was the British Prime Minister during most of World War II?",
+    "category": "History",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "Neville Chamberlain", "correct": false },
+      { "text": "Clement Attlee", "correct": false },
+      { "text": "Winston Churchill", "correct": true },
+      { "text": "Anthony Eden", "correct": false }
+    ]
+  },
+  {
+    "id": 7,
+    "question": "Which empire was ruled by Julius Caesar?",
+    "category": "History",
+    "difficulty": "medium",
+    "answers": [
+      { "text": "Greek Empire", "correct": false },
+      { "text": "Roman Empire", "correct": true },
+      { "text": "Persian Empire", "correct": false },
+      { "text": "Ottoman Empire", "correct": false }
+    ]
+  },
+  {
+    "id": 8,
+    "question": "The Berlin Wall fell in which year?",
+    "category": "History",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "1987", "correct": false },
+      { "text": "1988", "correct": false },
+      { "text": "1989", "correct": true },
+      { "text": "1990", "correct": false }
+    ]
+  },
+  {
+    "id": 9,
+    "question": "Which famous ship sank in 1912 after hitting an iceberg?",
+    "category": "History",
+    "difficulty": "easy",
+    "answers": [
+      { "text": "Lusitania", "correct": false },
+      { "text": "Olympic", "correct": false },
+      { "text": "Titanic", "correct": true },
+      { "text": "Britannic", "correct": false }
+    ]
+  },
+  {
+    "id": 10,
+    "question": "Who was the first woman to fly solo across the Atlantic Ocean?",
+    "category": "History",
+    "difficulty": "hard",
+    "answers": [
+      { "text": "Bessie Coleman", "correct": false },
+      { "text": "Amelia Earhart", "correct": true },
+      { "text": "Jacqueline Cochran", "correct": false },
+      { "text": "Harriet Quimby", "correct": false }
+    ]
+  }
+]

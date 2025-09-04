@@ -147,8 +147,10 @@ const defaultTriviaQuestions: TriviaQuestion[] = [
 export class TriviaGame extends ui.UIComponent {
   
   static propsDefinition = {
-    // Reference to the trivia questions JSON asset
-    triviaAsset: { type: hz.PropTypes.Asset, default: null },
+    // Reference to the trivia questions JSON assets
+    generalQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    historyQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    scienceQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     
     // Game configuration
     questionTimeLimit: { type: hz.PropTypes.Number, default: 30 },
@@ -183,6 +185,10 @@ export class TriviaGame extends ui.UIComponent {
   
   // Player scores tracking - now using real variables instead of local Map
   private playerScores = new Map<string, number>();
+
+  // Category and difficulty selection bindings
+  private selectedCategoryBinding = new Binding("General");
+  private selectedDifficultyBinding = new Binding("easy");
 
   // Methods to interact with the real variable system
   private getPlayerPoints(player: hz.Player): number {
@@ -226,7 +232,7 @@ export class TriviaGame extends ui.UIComponent {
     autoAdvance: true,
     numQuestions: 10,
     category: "General",
-    difficulty: "Medium"
+    difficulty: "easy"
   });
   private hostPlayerIdBinding = new Binding<string | null>(null);
   private isLocalPlayerHostBinding = new Binding(false);
@@ -247,10 +253,13 @@ export class TriviaGame extends ui.UIComponent {
     autoAdvance: true,
     numQuestions: 10,
     category: "General",
-    difficulty: "Medium"
+    difficulty: "easy"
   };
 
   // Game data
+  private generalQuestions: TriviaQuestion[] = [];
+  private historyQuestions: TriviaQuestion[] = [];
+  private scienceQuestions: TriviaQuestion[] = [];
   private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
   private currentQuestionIndex: number = 0;
   private currentQuestion: TriviaQuestion | null = null;
@@ -286,24 +295,103 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private async loadTriviaQuestions(): Promise<void> {
-    if (!this.props.triviaAsset) {
-      return;
-    }
-
-    try {
-      // Try to load data from the asset
-      const assetData = await (this.props.triviaAsset as any).fetchAsData();
-      const jsonData = assetData.asJSON() as TriviaQuestion[];
-      
-      if (!jsonData || !Array.isArray(jsonData)) {
-        throw new Error("Invalid JSON format - expected array of trivia questions");
+    // Load general questions
+    if (this.props.generalQuestionsAsset) {
+      try {
+        const assetData = await (this.props.generalQuestionsAsset as any).fetchAsData();
+        const jsonData = assetData.asJSON() as TriviaQuestion[];
+        if (Array.isArray(jsonData)) {
+          this.generalQuestions = jsonData;
+        }
+      } catch (error) {
+        console.log("Failed to load general questions, using defaults");
       }
-
-      this.triviaQuestions = jsonData;
-      
-    } catch (error) {
-      this.questionBinding.set("Failed to load trivia questions. Please check the JSON asset format.");
     }
+
+    // Load history questions
+    if (this.props.historyQuestionsAsset) {
+      try {
+        const assetData = await (this.props.historyQuestionsAsset as any).fetchAsData();
+        const jsonData = assetData.asJSON() as TriviaQuestion[];
+        if (Array.isArray(jsonData)) {
+          this.historyQuestions = jsonData;
+        }
+      } catch (error) {
+        console.log("Failed to load history questions, using defaults");
+      }
+    }
+
+    // Load science questions
+    if (this.props.scienceQuestionsAsset) {
+      try {
+        const assetData = await (this.props.scienceQuestionsAsset as any).fetchAsData();
+        const jsonData = assetData.asJSON() as TriviaQuestion[];
+        if (Array.isArray(jsonData)) {
+          this.scienceQuestions = jsonData;
+        }
+      } catch (error) {
+        console.log("Failed to load science questions, using defaults");
+      }
+    }
+
+    // If no assets loaded, use default questions
+    if (this.generalQuestions.length === 0 && this.historyQuestions.length === 0 && this.scienceQuestions.length === 0) {
+      this.generalQuestions = [...defaultTriviaQuestions];
+    }
+
+    // Set default category to General and filter questions
+    this.updateQuestionsForCategory("General", "easy");
+  }
+
+  private updateQuestionsForCategory(category: string, difficulty: string): void {
+    let allQuestions: TriviaQuestion[] = [];
+
+    // Collect questions from selected category
+    switch (category.toLowerCase()) {
+      case "general":
+        allQuestions = [...this.generalQuestions];
+        break;
+      case "history":
+        allQuestions = [...this.historyQuestions];
+        break;
+      case "science":
+        allQuestions = [...this.scienceQuestions];
+        break;
+      default:
+        allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions];
+        break;
+    }
+
+    // Filter by difficulty if specified
+    if (difficulty !== "all") {
+      allQuestions = allQuestions.filter(q => q.difficulty.toLowerCase() === difficulty.toLowerCase());
+    }
+
+    // If no questions match the filter, use all questions from the category
+    if (allQuestions.length === 0) {
+      switch (category.toLowerCase()) {
+        case "general":
+          allQuestions = [...this.generalQuestions];
+          break;
+        case "history":
+          allQuestions = [...this.historyQuestions];
+          break;
+        case "science":
+          allQuestions = [...this.scienceQuestions];
+          break;
+        default:
+          allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions];
+          break;
+      }
+    }
+
+    // If still no questions, use defaults
+    if (allQuestions.length === 0) {
+      allQuestions = [...defaultTriviaQuestions];
+    }
+
+    this.triviaQuestions = allQuestions;
+    this.currentQuestionIndex = 0;
   }
 
   private setupNetworkEvents(): void {
@@ -328,6 +416,10 @@ export class TriviaGame extends ui.UIComponent {
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    
+    // Initialize category and difficulty bindings with defaults
+    this.selectedCategoryBinding.set("General");
+    this.selectedDifficultyBinding.set("easy");
     
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -750,6 +842,13 @@ export class TriviaGame extends ui.UIComponent {
       return;
     }
     
+    // Get selected category and difficulty from gameConfig
+    const selectedCategory = this.gameConfig.category;
+    const selectedDifficulty = this.gameConfig.difficulty;
+    
+    // Update questions based on selection
+    this.updateQuestionsForCategory(selectedCategory, selectedDifficulty);
+    
     // Reset all player points to 0 for new game
     this.resetAllPlayerPoints();
     
@@ -800,6 +899,18 @@ export class TriviaGame extends ui.UIComponent {
     }
     
     this.gameConfig = { ...this.gameConfig, ...newConfig };
+    this.gameConfigBinding.set(this.gameConfig);
+  }
+
+  private handleCategoryChange(category: string): void {
+    this.gameConfig.category = category;
+    this.selectedCategoryBinding.set(category);
+    this.gameConfigBinding.set(this.gameConfig);
+  }
+
+  private handleDifficultyChange(difficulty: string): void {
+    this.gameConfig.difficulty = difficulty;
+    this.selectedDifficultyBinding.set(difficulty);
     this.gameConfigBinding.set(this.gameConfig);
   }
 
@@ -937,13 +1048,168 @@ export class TriviaGame extends ui.UIComponent {
                       ]
                     }),
 
+                    // Category selection
+                    View({
+                      style: {
+                        marginBottom: 12
+                      },
+                      children: [
+                        Text({
+                          text: 'Category:',
+                          style: {
+                            fontSize: 14,
+                            color: '#1F2937',
+                            marginBottom: 4
+                          }
+                        }),
+                        View({
+                          style: {
+                            flexDirection: 'row',
+                            justifyContent: 'space-between'
+                          },
+                          children: [
+                            // General button
+                            Pressable({
+                              onPress: () => this.handleCategoryChange('General'),
+                              style: {
+                                backgroundColor: this.selectedCategoryBinding.derive(cat => cat === 'General' ? '#6366F1' : '#E5E7EB'),
+                                borderRadius: 6,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                marginRight: 4
+                              },
+                              children: Text({
+                                text: 'General',
+                                style: {
+                                  fontSize: 12,
+                                  color: this.selectedCategoryBinding.derive(cat => cat === 'General' ? 'white' : '#1F2937')
+                                }
+                              })
+                            }),
+                            // History button
+                            Pressable({
+                              onPress: () => this.handleCategoryChange('History'),
+                              style: {
+                                backgroundColor: this.selectedCategoryBinding.derive(cat => cat === 'History' ? '#6366F1' : '#E5E7EB'),
+                                borderRadius: 6,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                marginRight: 4
+                              },
+                              children: Text({
+                                text: 'History',
+                                style: {
+                                  fontSize: 12,
+                                  color: this.selectedCategoryBinding.derive(cat => cat === 'History' ? 'white' : '#1F2937')
+                                }
+                              })
+                            }),
+                            // Science button
+                            Pressable({
+                              onPress: () => this.handleCategoryChange('Science'),
+                              style: {
+                                backgroundColor: this.selectedCategoryBinding.derive(cat => cat === 'Science' ? '#6366F1' : '#E5E7EB'),
+                                borderRadius: 6,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6
+                              },
+                              children: Text({
+                                text: 'Science',
+                                style: {
+                                  fontSize: 12,
+                                  color: this.selectedCategoryBinding.derive(cat => cat === 'Science' ? 'white' : '#1F2937')
+                                }
+                              })
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+
+                    // Difficulty selection
+                    View({
+                      style: {
+                        marginBottom: 12
+                      },
+                      children: [
+                        Text({
+                          text: 'Difficulty:',
+                          style: {
+                            fontSize: 14,
+                            color: '#1F2937',
+                            marginBottom: 4
+                          }
+                        }),
+                        View({
+                          style: {
+                            flexDirection: 'row',
+                            justifyContent: 'space-between'
+                          },
+                          children: [
+                            // Easy button
+                            Pressable({
+                              onPress: () => this.handleDifficultyChange('easy'),
+                              style: {
+                                backgroundColor: this.selectedDifficultyBinding.derive(diff => diff === 'easy' ? '#10B981' : '#E5E7EB'),
+                                borderRadius: 6,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                marginRight: 4
+                              },
+                              children: Text({
+                                text: 'Easy',
+                                style: {
+                                  fontSize: 12,
+                                  color: this.selectedDifficultyBinding.derive(diff => diff === 'easy' ? 'white' : '#1F2937')
+                                }
+                              })
+                            }),
+                            // Medium button
+                            Pressable({
+                              onPress: () => this.handleDifficultyChange('medium'),
+                              style: {
+                                backgroundColor: this.selectedDifficultyBinding.derive(diff => diff === 'medium' ? '#F59E0B' : '#E5E7EB'),
+                                borderRadius: 6,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                marginRight: 4
+                              },
+                              children: Text({
+                                text: 'Medium',
+                                style: {
+                                  fontSize: 12,
+                                  color: this.selectedDifficultyBinding.derive(diff => diff === 'medium' ? 'white' : '#1F2937')
+                                }
+                              })
+                            }),
+                            // Hard button
+                            Pressable({
+                              onPress: () => this.handleDifficultyChange('hard'),
+                              style: {
+                                backgroundColor: this.selectedDifficultyBinding.derive(diff => diff === 'hard' ? '#EF4444' : '#E5E7EB'),
+                                borderRadius: 6,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6
+                              },
+                              children: Text({
+                                text: 'Hard',
+                                style: {
+                                  fontSize: 12,
+                                  color: this.selectedDifficultyBinding.derive(diff => diff === 'hard' ? 'white' : '#1F2937')
+                                }
+                              })
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+
                     // Number of questions setting
                     View({
                       style: {
                         flexDirection: 'row',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 12
+                        justifyContent: 'space-between'
                       },
                       children: [
                         Text({
@@ -955,32 +1221,6 @@ export class TriviaGame extends ui.UIComponent {
                         }),
                         Text({
                           text: this.gameConfigBinding.derive(config => config.numQuestions.toString()),
-                          style: {
-                            fontSize: 14,
-                            fontWeight: 'bold',
-                            color: '#6366F1'
-                          }
-                        })
-                      ]
-                    }),
-
-                    // Difficulty setting
-                    View({
-                      style: {
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      },
-                      children: [
-                        Text({
-                          text: 'Difficulty:',
-                          style: {
-                            fontSize: 14,
-                            color: '#1F2937'
-                          }
-                        }),
-                        Text({
-                          text: this.gameConfigBinding.derive(config => config.difficulty),
                           style: {
                             fontSize: 14,
                             fontWeight: 'bold',
