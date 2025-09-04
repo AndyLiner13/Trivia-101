@@ -610,10 +610,11 @@ export class TriviaGame extends ui.UIComponent {
         question: customQuestion.question,
         category: "italian brainrot quiz", // Override category to ensure matching
         difficulty: "easy", // Default difficulty for Italian Brainrot Quiz
-        image: customQuestion.image_id ? `images/question_${customQuestion.id}.png` : undefined, // Convert image_id to image path
+        image: customQuestion.image_id, // Use image_id directly as texture ID
         answers: answers
       };
 
+      console.log(`Loading question ${customQuestion.id} with image_id: "${customQuestion.image_id}"`);
       convertedQuestions.push(triviaQuestion);
     }
 
@@ -623,7 +624,23 @@ export class TriviaGame extends ui.UIComponent {
   private getTextureIdForImage(imagePath: string): string | null {
     if (!imagePath) return null;
 
-    // Extract filename from path (e.g., "images/question_1.png" -> "question_1")
+    // If it's a hexadecimal texture ID (contains letters), convert to decimal
+    if (/^[0-9A-Fa-f]+$/.test(imagePath) && /[A-Fa-f]/.test(imagePath)) {
+      try {
+        const decimalId = parseInt(imagePath, 16).toString();
+        return decimalId;
+      } catch (error) {
+        console.error(`Error converting hex ${imagePath} to decimal:`, error);
+        return null;
+      }
+    }
+
+    // If it's already a numeric texture ID, use it directly
+    if (/^\d+$/.test(imagePath)) {
+      return imagePath;
+    }
+
+    // Otherwise, extract filename from path and look up in texture map
     const filename = imagePath.split('/').pop()?.split('.')[0];
     if (!filename) return null;
 
@@ -638,6 +655,7 @@ export class TriviaGame extends ui.UIComponent {
 
     // Collect questions from selected category - NO FALLBACKS
     const categoryLower = category.toLowerCase();
+    console.log(`Category (lowercase): "${categoryLower}"`);
     
     if (categoryLower === "general") {
       allQuestions = [...this.generalQuestions];
@@ -838,6 +856,7 @@ export class TriviaGame extends ui.UIComponent {
     // Create a copy of the question with shuffled answers
     const shuffledQuestion = this.shuffleQuestionAnswers(question);
     this.currentQuestion = shuffledQuestion;
+    console.log(`Question ${shuffledQuestion.id}: "${shuffledQuestion.question.substring(0, 30)}..." - Image: "${shuffledQuestion.image || 'none'}"`);
     this.timeRemaining = this.props.questionTimeLimit;
     this.totalAnswers = 0;
 
@@ -1931,7 +1950,7 @@ export class TriviaGame extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       left: '5%',
-                      top: '18%',
+                      top: '12%',
                       width: 35,
                       height: 35,
                       backgroundColor: '#FF6B35',
@@ -1958,7 +1977,7 @@ export class TriviaGame extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       right: '5%',
-                      top: '18%',
+                      top: '12%',
                       alignItems: 'center'
                     },
                     children: [
@@ -1980,76 +1999,93 @@ export class TriviaGame extends ui.UIComponent {
                     ]
                   }),
 
-                  // Question - positioned in center area
-                  View({
-                    style: {
-                      position: 'absolute',
-                      left: '12%',
-                      right: '12%',
-                      top: '22%',
-                      bottom: '48%',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    },
-                    children: View({
+                  // Question text - only shown when there's no image
+                  UINode.if(
+                    this.questionBinding.derive(() => {
+                      if (!this.currentQuestion) return false;
+                      const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
+                      return textureId === null;
+                    }),
+                    View({
                       style: {
-                        backgroundColor: 'white',
-                        borderRadius: 6,
-                        shadowColor: 'black',
-                        shadowOpacity: 0.15,
-                        shadowRadius: 6,
-                        shadowOffset: [0, 2],
-                        padding: 12,
+                        position: 'absolute',
+                        left: '12%',
+                        right: '12%',
+                        top: '12%',
+                        height: '15%',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '100%',
-                        flexDirection: 'column'
+                        justifyContent: 'center'
                       },
-                      children: [
-                        // Question image (if available)
-                        UINode.if(
-                          this.questionBinding.derive(() => {
-                            if (!this.currentQuestion) return false;
-                            const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
-                            return textureId !== null;
-                          }),
-                          View({
+                      children: View({
+                        style: {
+                          backgroundColor: 'white',
+                          borderRadius: 6,
+                          shadowColor: 'black',
+                          shadowOpacity: 0.15,
+                          shadowRadius: 6,
+                          shadowOffset: [0, 2],
+                          padding: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '100%'
+                        },
+                        children: [
+                          // Question text
+                          Text({
+                            text: this.questionBinding,
                             style: {
-                              marginBottom: 12,
-                              alignItems: 'center'
-                            },
-                            children: Image({
-                              source: this.questionBinding.derive(() => {
-                                if (!this.currentQuestion) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                                const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
-                                if (textureId) {
-                                  return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-                                }
-                                return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                              }),
-                              style: {
-                                width: 120,
-                                height: 120,
-                                borderRadius: 8
-                              }
-                            })
+                              fontSize: 14,
+                              fontWeight: '500',
+                              color: 'black',
+                              textAlign: 'center',
+                              lineHeight: 1.3
+                            }
                           })
-                        ),
-
-                        // Question text
-                        Text({
-                          text: this.questionBinding,
-                          style: {
-                            fontSize: 14,
-                            fontWeight: '500',
-                            color: 'black',
-                            textAlign: 'center',
-                            lineHeight: 1.3
-                          }
-                        })
-                      ]
+                        ]
+                      })
                     })
-                  }),
+                  ),
+
+                  // Question image - centered in middle area
+                  UINode.if(
+                    this.questionBinding.derive(() => {
+                      if (!this.currentQuestion) return false;
+                      const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
+                      return textureId !== null;
+                    }),
+                    View({
+                      style: {
+                        position: 'absolute',
+                        left: '25%',
+                        right: '25%',
+                        top: '30%',
+                        bottom: '35%',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      },
+                      children: Image({
+                        source: this.questionBinding.derive(() => {
+                          if (!this.currentQuestion) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                          const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
+                          if (textureId) {
+                            try {
+                              const bigIntId = BigInt(textureId);
+                              return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
+                            } catch (error) {
+                              console.error(`Error creating TextureAsset with ID ${textureId}:`, error);
+                              return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                            }
+                          }
+                          return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                        }),
+                        style: {
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: 8
+                        }
+                      })
+                    })
+                  ),
 
                   // Answer options grid - positioned at bottom
                   View({
