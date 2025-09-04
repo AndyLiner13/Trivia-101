@@ -2084,7 +2084,7 @@ export class TriviaGame extends ui.UIComponent {
                         left: '15%',
                         right: '15%',
                         top: '16%',
-                        bottom: '35%',
+                        bottom: this.answerCountTracking.derive(count => count === 2 ? '25%' : '35%'), // Larger area for 2-answer questions
                         alignItems: 'center',
                         justifyContent: 'center'
                       },
@@ -2106,7 +2106,7 @@ export class TriviaGame extends ui.UIComponent {
                         }),
                         style: {
                           width: 'auto',
-                          height: '80%',
+                          height: this.answerCountTracking.derive(count => count === 2 ? '90%' : '80%'), // Bigger image for 2-answer questions
                           aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
                           borderRadius: 8,
                           alignSelf: 'center'
