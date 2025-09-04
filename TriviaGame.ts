@@ -288,7 +288,7 @@ export class TriviaGame extends ui.UIComponent {
     this.setupNetworkEvents();
     
     // Initialize the UI (shows config screen by default)
-    this.initializeGameState();
+    this.resetGameState();
     
     // Detect host player (first player to join)
     this.detectHostPlayer();
@@ -408,26 +408,48 @@ export class TriviaGame extends ui.UIComponent {
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
   }
 
-  private initializeGameState(): void {
+  private resetGameState(): void {
+    // Reset all game state variables
+    this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
+    this.timeRemaining = this.props.questionTimeLimit;
+    this.totalAnswers = 0;
+    this.isRunning = false;
+
+    // Clear player tracking
+    this.playersAnswered.clear();
+    this.hasLocalPlayerAnswered = false;
+
+    // Reset UI bindings
     this.questionNumberBinding.set("Q1");
-    this.timerBinding.set("30");
+    this.timerBinding.set(this.props.questionTimeLimit.toString());
     this.answerCountBinding.set("0");
     this.questionBinding.set("Starting trivia game...");
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
-    
-    // Initialize category and difficulty bindings with defaults
-    this.selectedCategoryBinding.set("General");
-    this.selectedDifficultyBinding.set("easy");
-    
+
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
       this.answerTexts[i].set("");
     }
-    
-    // Reset leaderboard
-    this.leaderboardDataBinding.set([]);
+
+    // Reset answer button colors
+    this.answerButtonColors[0].set('#DC2626');
+    this.answerButtonColors[1].set('#2563EB');
+    this.answerButtonColors[2].set('#EAB308');
+    this.answerButtonColors[3].set('#16A34A');
+
+    // Clear any running timers
+    this.stopTimer();
+    if (this.roundTimeoutId) {
+      this.async.clearTimeout(this.roundTimeoutId);
+      this.roundTimeoutId = null;
+    }
+    if (this.gameLoopTimeoutId) {
+      this.async.clearTimeout(this.gameLoopTimeoutId);
+      this.gameLoopTimeoutId = null;
+    }
   }
 
   private startContinuousGame(): void {
@@ -438,10 +460,13 @@ export class TriviaGame extends ui.UIComponent {
 
     this.isRunning = true;
     this.currentQuestionIndex = 0;
-    
+
     // Reset game state for new game
-    this.initializeGameState();
-    
+    this.resetGameState();
+
+    // Ensure questions are properly shuffled before starting
+    this.shuffleQuestions();
+
     this.showNextQuestion();
   }
 
@@ -450,28 +475,31 @@ export class TriviaGame extends ui.UIComponent {
       return;
     }
 
-    // Get random question or cycle through questions
+    // Get the next question in the shuffled order
     if (this.currentQuestionIndex >= this.triviaQuestions.length) {
-      this.currentQuestionIndex = 0;
-      // Shuffle questions for variety
-      this.shuffleQuestions();
+      // If we've gone through all questions, end the game
+      this.endGame();
+      return;
     }
 
     const question = this.triviaQuestions[this.currentQuestionIndex];
-    this.currentQuestion = question;
+    
+    // Create a copy of the question with shuffled answers
+    const shuffledQuestion = this.shuffleQuestionAnswers(question);
+    this.currentQuestion = shuffledQuestion;
     this.timeRemaining = this.props.questionTimeLimit;
     this.totalAnswers = 0;
 
     // Update UI bindings
     this.questionNumberBinding.set(`Q${this.currentQuestionIndex + 1}`);
-    this.questionBinding.set(question.question);
+    this.questionBinding.set(shuffledQuestion.question);
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
 
-    // Update answer options
+    // Update answer options with shuffled answers
     for (let i = 0; i < 4; i++) {
-      if (i < question.answers.length) {
-        this.answerTexts[i].set(question.answers[i].text);
+      if (i < shuffledQuestion.answers.length) {
+        this.answerTexts[i].set(shuffledQuestion.answers[i].text);
       } else {
         this.answerTexts[i].set("");
       }
@@ -485,11 +513,11 @@ export class TriviaGame extends ui.UIComponent {
 
     // Send question to TriviaApp and other components
     const serializableQuestion: SerializableQuestion = {
-      id: question.id,
-      question: question.question,
-      category: question.category,
-      difficulty: question.difficulty,
-      answers: question.answers.map(a => ({ text: a.text, correct: a.correct }))
+      id: shuffledQuestion.id,
+      question: shuffledQuestion.question,
+      category: shuffledQuestion.category,
+      difficulty: shuffledQuestion.difficulty,
+      answers: shuffledQuestion.answers.map((answer: { text: string; correct: boolean }) => ({ text: answer.text, correct: answer.correct }))
     };
 
     this.sendNetworkBroadcastEvent(triviaQuestionShowEvent, {
@@ -509,11 +537,178 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private shuffleQuestions(): void {
-    // Simple shuffle algorithm
+    if (this.triviaQuestions.length <= 1) return;
+
+    // Use a more robust shuffling algorithm with better randomization
+    // Fisher-Yates shuffle with additional randomization techniques
+
+    // First, add some entropy by using current timestamp and player count
+    const seed = Date.now() + (this.world?.getPlayers().length || 0) + Math.random() * 1000;
+
+    // Create a seeded random function for more predictable but still random results
+    let seedValue = seed;
+    const seededRandom = () => {
+      seedValue = (seedValue * 9301 + 49297) % 233280;
+      return seedValue / 233280;
+    };
+
+    // Perform multiple shuffle passes for better randomization
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = this.triviaQuestions.length - 1; i > 0; i--) {
+        // Use a combination of seeded random and Math.random for maximum entropy
+        const randomValue = (seededRandom() + Math.random()) / 2;
+        const j = Math.floor(randomValue * (i + 1));
+
+        // Swap elements
+        [this.triviaQuestions[i], this.triviaQuestions[j]] = [this.triviaQuestions[j], this.triviaQuestions[i]];
+      }
+    }
+
+    // Additional randomization: reverse sections randomly
+    if (this.triviaQuestions.length > 3) {
+      const midPoint = Math.floor(this.triviaQuestions.length / 2);
+      if (Math.random() > 0.5) {
+        // Reverse first half
+        for (let i = 0; i < Math.floor(midPoint / 2); i++) {
+          const temp = this.triviaQuestions[i];
+          this.triviaQuestions[i] = this.triviaQuestions[midPoint - 1 - i];
+          this.triviaQuestions[midPoint - 1 - i] = temp;
+        }
+      }
+
+      if (Math.random() > 0.5) {
+        // Reverse second half
+        const start = midPoint;
+        const end = this.triviaQuestions.length - 1;
+        for (let i = 0; i < Math.floor((end - start + 1) / 2); i++) {
+          const temp = this.triviaQuestions[start + i];
+          this.triviaQuestions[start + i] = this.triviaQuestions[end - i];
+          this.triviaQuestions[end - i] = temp;
+        }
+      }
+    }
+
+    // Final randomization pass
     for (let i = this.triviaQuestions.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this.triviaQuestions[i], this.triviaQuestions[j]] = [this.triviaQuestions[j], this.triviaQuestions[i]];
     }
+  }
+
+  private shuffleQuestionAnswers(question: TriviaQuestion): TriviaQuestion {
+    // Create a copy of the question
+    const shuffledQuestion: TriviaQuestion = {
+      id: question.id,
+      question: question.question,
+      category: question.category,
+      difficulty: question.difficulty,
+      answers: [...question.answers]
+    };
+
+    // Use multiple randomization techniques for better shuffling
+    const answers = shuffledQuestion.answers;
+
+    // First pass: Fisher-Yates shuffle
+    for (let i = answers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [answers[i], answers[j]] = [answers[j], answers[i]];
+    }
+
+    // Second pass: Additional randomization with different approach
+    if (answers.length >= 3) {
+      // Randomly swap pairs
+      for (let i = 0; i < Math.min(3, answers.length - 1); i++) {
+        const idx1 = Math.floor(Math.random() * answers.length);
+        let idx2 = Math.floor(Math.random() * answers.length);
+        while (idx2 === idx1) {
+          idx2 = Math.floor(Math.random() * answers.length);
+        }
+        [answers[idx1], answers[idx2]] = [answers[idx2], answers[idx1]];
+      }
+    }
+
+    // Third pass: Ensure correct answer isn't always in the same position
+    // (This helps prevent players from memorizing positions)
+    const correctIndex = answers.findIndex(a => a.correct);
+    if (correctIndex !== -1 && Math.random() > 0.5) {
+      // 50% chance to move correct answer to a different position
+      const newPosition = Math.floor(Math.random() * answers.length);
+      if (newPosition !== correctIndex) {
+        [answers[correctIndex], answers[newPosition]] = [answers[newPosition], answers[correctIndex]];
+      }
+    }
+
+    return shuffledQuestion;
+  }
+
+  private endGame(): void {
+    this.isRunning = false;
+    this.stopTimer();
+
+    // Hide all game UI elements
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+
+    // Show final message
+    this.questionBinding.set("Game Complete! Thank you for playing.");
+
+    // Clear answer texts
+    for (let i = 0; i < 4; i++) {
+      this.answerTexts[i].set("");
+    }
+
+    // Reset timer display
+    this.timerBinding.set("0");
+
+    // Reset question index for next game
+    this.currentQuestionIndex = 0;
+
+    // Optionally show final leaderboard
+    this.async.setTimeout(() => {
+      this.showFinalLeaderboard();
+    }, 2000);
+  }
+
+  private showFinalLeaderboard(): void {
+    // Hide results, show final leaderboard
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(true);
+    
+    // Generate final leaderboard data
+    this.generateRealLeaderboard().then(finalLeaderboard => {
+      this.leaderboardDataBinding.set(finalLeaderboard);
+      
+      // Send final leaderboard data
+      if (!this.currentQuestion) {
+        return;
+      }
+      
+      const serializableQuestion: SerializableQuestion = {
+        id: this.currentQuestion.id,
+        question: this.currentQuestion.question,
+        category: this.currentQuestion.category,
+        difficulty: this.currentQuestion.difficulty,
+        answers: this.currentQuestion.answers
+      };
+      
+      // Prepare final leaderboard data for network event
+      const networkLeaderboardData = finalLeaderboard.map(player => ({
+        name: player.name,
+        score: player.score,
+        playerId: player.playerId
+      }));
+      
+      this.sendNetworkBroadcastEvent(triviaResultsEvent, {
+        question: serializableQuestion,
+        correctAnswerIndex: this.currentQuestion.answers.findIndex((answer: { correct: boolean }) => answer.correct),
+        answerCounts: [],
+        scores: {},
+        showLeaderboard: true,
+        leaderboardData: networkLeaderboardData
+      });
+    });
   }
 
   private scheduleNextQuestion(): void {
@@ -604,7 +799,7 @@ export class TriviaGame extends ui.UIComponent {
     // Clear results after a few seconds
     this.async.setTimeout(() => {
       this.showResultsBinding.set(false);
-      this.questionBinding.set("Waiting for next question...");
+      // Keep the current question visible - don't change to "Waiting for next question..."
     }, this.props.autoAdvanceTime * 1000);
   }
 
@@ -841,30 +1036,35 @@ export class TriviaGame extends ui.UIComponent {
     if (!this.isLocalPlayerHost) {
       return;
     }
-    
+
     // Get selected category and difficulty from gameConfig
     const selectedCategory = this.gameConfig.category;
     const selectedDifficulty = this.gameConfig.difficulty;
-    
+
     // Update questions based on selection
     this.updateQuestionsForCategory(selectedCategory, selectedDifficulty);
-    
+
+    // Shuffle questions for completely random order - do this multiple times for maximum randomness
+    this.shuffleQuestions();
+    // Additional shuffle pass for extra randomness
+    this.async.setTimeout(() => this.shuffleQuestions(), 10);
+
     // Reset all player points to 0 for new game
     this.resetAllPlayerPoints();
-    
+
     // Broadcast game start to all players
     this.sendNetworkBroadcastEvent(triviaGameStartEvent, {
       hostId: this.hostPlayerId!,
       config: this.gameConfig
     });
-    
+
     // Hide config screen and start game locally
     this.showConfigBinding.set(false);
-    
+
     // Apply current configuration
     this.timeRemaining = this.gameConfig.timeLimit;
     this.timerBinding.set(this.gameConfig.timeLimit.toString());
-    
+
     // Start the trivia game
     this.startContinuousGame();
   }
