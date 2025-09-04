@@ -2146,11 +2146,31 @@ export class TriviaGame extends ui.UIComponent {
                                   width: '100%',
                                   height: '100%',
                                   flexDirection: 'row',
+                                  flexWrap: 'wrap',
                                   justifyContent: 'center',
-                                  alignItems: 'center'
+                                  alignItems: 'flex-end' // Align to bottom of container
                                 },
                                 children: [
-                                  // Answer 2 (Yellow/Circle) - shows as Option 3
+                                  // Empty spacers for top row (where options 1 and 2 would be)
+                                  View({
+                                    style: {
+                                      width: '48%',
+                                      height: 42,
+                                      marginRight: '4%',
+                                      marginBottom: 6,
+                                      opacity: 0 // Invisible spacer
+                                    }
+                                  }),
+                                  View({
+                                    style: {
+                                      width: '48%',
+                                      height: 42,
+                                      marginBottom: 6,
+                                      opacity: 0 // Invisible spacer
+                                    }
+                                  }),
+                                  
+                                  // Answer 2 (Yellow/Circle) - shows as Option 3 in bottom row
                                   UINode.if(
                                     this.answerTexts[2].derive(text => text !== ''),
                                     View({
@@ -2162,7 +2182,7 @@ export class TriviaGame extends ui.UIComponent {
                                       children: this.createAnswerButton(2, '#EAB308', '797899126007085')
                                     })
                                   ),
-                                  // Answer 3 (Green/Square) - shows as Option 4
+                                  // Answer 3 (Green/Square) - shows as Option 4 in bottom row
                                   UINode.if(
                                     this.answerTexts[3].derive(text => text !== ''),
                                     View({
