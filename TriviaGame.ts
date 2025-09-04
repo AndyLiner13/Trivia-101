@@ -880,11 +880,20 @@ export class TriviaGame extends ui.UIComponent {
     this.showResultsBinding.set(false);
 
     // Update answer options with shuffled answers - support both 2 and 4 option questions
-    for (let i = 0; i < 4; i++) {
-      if (i < shuffledQuestion.answers.length) {
-        this.answerTexts[i].set(shuffledQuestion.answers[i].text);
-      } else {
-        this.answerTexts[i].set("");
+    if (shuffledQuestion.answers.length === 2) {
+      // For 2-answer questions, place answers in positions 2 and 3 (to show as options 3 and 4)
+      this.answerTexts[0].set(""); // Clear option 1
+      this.answerTexts[1].set(""); // Clear option 2
+      this.answerTexts[2].set(shuffledQuestion.answers[0].text); // Set option 3
+      this.answerTexts[3].set(shuffledQuestion.answers[1].text); // Set option 4
+    } else {
+      // For 3+ answer questions, place answers normally
+      for (let i = 0; i < 4; i++) {
+        if (i < shuffledQuestion.answers.length) {
+          this.answerTexts[i].set(shuffledQuestion.answers[i].text);
+        } else {
+          this.answerTexts[i].set("");
+        }
       }
     }
     
@@ -1159,11 +1168,20 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update answer options - support both 2 and 4 option questions
     const answers = eventData.question.answers;
-    for (let i = 0; i < 4; i++) {
-      if (i < answers.length) {
-        this.answerTexts[i].set(answers[i].text);
-      } else {
-        this.answerTexts[i].set("");
+    if (answers.length === 2) {
+      // For 2-answer questions, place answers in positions 2 and 3 (to show as options 3 and 4)
+      this.answerTexts[0].set(""); // Clear option 1
+      this.answerTexts[1].set(""); // Clear option 2
+      this.answerTexts[2].set(answers[0].text); // Set option 3
+      this.answerTexts[3].set(answers[1].text); // Set option 4
+    } else {
+      // For 3+ answer questions, place answers normally
+      for (let i = 0; i < 4; i++) {
+        if (i < answers.length) {
+          this.answerTexts[i].set(answers[i].text);
+        } else {
+          this.answerTexts[i].set("");
+        }
       }
     }
     
@@ -1248,17 +1266,32 @@ export class TriviaGame extends ui.UIComponent {
     // Update answer count to show how many players answered
     this.answerCountBinding.set(this.playersAnswered.size.toString());
     
-    // Update answer button colors for results - only for buttons with answers
-    for (let i = 0; i < 4; i++) {
-      if (i < this.currentQuestion.answers.length) {
-        if (i === correctAnswerIndex) {
-          this.answerButtonColors[i].set('#16A34A'); // Green for correct
+    // Update answer button colors for results - handle remapped positions for 2-answer questions
+    if (this.currentQuestion.answers.length === 2) {
+      // For 2-answer questions, answers are in positions 2 and 3
+      // Map the correct answer index from original (0 or 1) to display positions (2 or 3)
+      const displayCorrectIndex = correctAnswerIndex + 2; // Map 0->2, 1->3
+      
+      // Clear colors for unused positions 0 and 1
+      this.answerButtonColors[0].set('#6B7280'); // Gray for empty slot
+      this.answerButtonColors[1].set('#6B7280'); // Gray for empty slot
+      
+      // Set colors for positions 2 and 3
+      this.answerButtonColors[2].set(displayCorrectIndex === 2 ? '#16A34A' : '#DC2626');
+      this.answerButtonColors[3].set(displayCorrectIndex === 3 ? '#16A34A' : '#DC2626');
+    } else {
+      // For 3+ answer questions, use normal logic
+      for (let i = 0; i < 4; i++) {
+        if (i < this.currentQuestion.answers.length) {
+          if (i === correctAnswerIndex) {
+            this.answerButtonColors[i].set('#16A34A'); // Green for correct
+          } else {
+            this.answerButtonColors[i].set('#DC2626'); // Red for incorrect
+          }
         } else {
-          this.answerButtonColors[i].set('#DC2626'); // Red for incorrect
+          // Keep default colors for empty answer slots
+          this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
         }
-      } else {
-        // Keep default colors for empty answer slots
-        this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
       }
     }
     
@@ -2094,7 +2127,7 @@ export class TriviaGame extends ui.UIComponent {
                     children: [
                       // Dynamic layout based on number of answers
                       UINode.if(
-                        this.answerTexts[0].derive(text => text !== ''),
+                        this.answerCountTracking.derive(count => count > 0),
                         View({
                           style: {
                             width: '100%',
