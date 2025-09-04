@@ -2037,7 +2037,7 @@ export class TriviaGame extends ui.UIComponent {
                         position: 'absolute',
                         left: '15%',
                         right: '15%',
-                        top: '18%',
+                        top: '16%',
                         bottom: '35%',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -2059,8 +2059,8 @@ export class TriviaGame extends ui.UIComponent {
                           return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                         }),
                         style: {
-                          width: '70%',
-                          height: 'auto',
+                          width: 'auto',
+                          height: '80%',
                           aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
                           borderRadius: 8,
                           alignSelf: 'center'
