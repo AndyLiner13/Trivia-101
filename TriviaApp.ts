@@ -200,7 +200,38 @@ export class TriviaApp {
     // Load questions first
     await this.loadQuestionsFromData();
 
-    // Reset game state
+    // Ensure we have questions before proceeding
+    if (this.questions.length === 0) {
+      // Fallback to hardcoded questions if loading failed
+      this.questions = [
+        {
+          id: 1,
+          question: "What is the capital of France?",
+          category: "Geography",
+          difficulty: "easy",
+          answers: [
+            { text: "London", correct: false },
+            { text: "Berlin", correct: false },
+            { text: "Paris", correct: true },
+            { text: "Madrid", correct: false }
+          ]
+        },
+        {
+          id: 2,
+          question: "Which planet is known as the Red Planet?",
+          category: "Science",
+          difficulty: "easy",
+          answers: [
+            { text: "Mars", correct: true },
+            { text: "Venus", correct: false },
+            { text: "Jupiter", correct: false },
+            { text: "Saturn", correct: false }
+          ]
+        }
+      ];
+    }
+
+    // Reset game state BEFORE setting up the playing state
     this.resetGame();
 
     // Send network event to start the game in TriviaGame component with questions
@@ -217,8 +248,19 @@ export class TriviaApp {
     
     this.sendNetworkEvent(triviaGameStartEvent, gameStartData);
 
-    // Instead of showing question directly, let TriviaGame handle it
-    // TriviaGame will send back the question via network event
+    // Immediately transition to playing state and set up first question
+    this.gameState = 'playing';
+    this.currentQuestionIndex = 0;
+    this.gameStateBinding.set('playing', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    this.currentQuestionIndexBinding.set(0, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    
+    // Set up answer texts from the first question
+    if (this.questions.length > 0) {
+      this.answerTexts = this.questions[0].answers.map(answer => answer.text);
+      this.answerTextsBinding.set(this.answerTexts, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    }
+
+    // TriviaGame will send back the question via network event to sync any shuffled answers
   }
 
   // Method to show the next question
@@ -301,26 +343,26 @@ export class TriviaApp {
       // Clear any running timers when new question starts
       this.clearAutoProgressTimer();
 
-      // Update bindings
-      this.selectedAnswerBinding.set(null);
-      this.showResultBinding.set(false);
-      this.isAnswerCorrectBinding.set(null);
-      this.waitingMessageBinding.set('');
-      this.gameStateBinding.set('playing');
+      // Update bindings with assignedPlayer
+      this.selectedAnswerBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.showResultBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.isAnswerCorrectBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.waitingMessageBinding.set('', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.gameStateBinding.set('playing', this.assignedPlayer ? [this.assignedPlayer] : undefined);
     } else {
       // Just update the question-related bindings, keep the selected answer
       this.questionStartTime = Date.now(); // Still update start time
     }
 
     // Always update these bindings regardless
-    this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
+    this.currentQuestionIndexBinding.set(this.currentQuestionIndex, this.assignedPlayer ? [this.assignedPlayer] : undefined);
     
     // Update the question display with the new question data
-    this.questionBinding.set(externalQuestion.question);
+    this.questionBinding.set(externalQuestion.question, this.assignedPlayer ? [this.assignedPlayer] : undefined);
     
     // Update answer options
     this.answerTexts = externalQuestion.answers.map(answer => answer.text);
-    this.answerTextsBinding.set(this.answerTexts);
+    this.answerTextsBinding.set(this.answerTexts, this.assignedPlayer ? [this.assignedPlayer] : undefined);
   }
 
   // Public method to manually trigger host detection (can be called by parent component)
@@ -1540,35 +1582,16 @@ export class TriviaApp {
               ui.View({
                 style: {
                   flex: 1,
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  padding: 8
                 },
                 children: [
-                  // Question Text Display
-                  ui.View({
-                    style: {
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      marginBottom: 8
-                    },
-                    children: [
-                      ui.Text({
-                        text: this.questionBinding,
-                        style: {
-                          fontSize: 18,
-                          fontWeight: '600',
-                          color: '#FFFFFF',
-                          textAlign: 'center',
-                          lineHeight: 24
-                        }
-                      })
-                    ]
-                  }),
                   // Top row
                   ui.View({
                     style: {
                       flexDirection: 'row',
                       flex: 1,
-                      paddingBottom: 4
+                      marginBottom: 8
                     },
                     children: [
                       this.createAnswerButton(0, assignedPlayer),
@@ -1579,8 +1602,7 @@ export class TriviaApp {
                   ui.View({
                     style: {
                       flexDirection: 'row',
-                      flex: 1,
-                      paddingTop: 4
+                      flex: 1
                     },
                     children: [
                       this.createAnswerButton(2, assignedPlayer),
@@ -1628,9 +1650,6 @@ export class TriviaApp {
   }
 
   private createAnswerButton(answerIndex: number, assignedPlayer?: hz.Player): ui.UINode {
-    const currentQuestion = this.questions[this.currentQuestionIndex];
-    if (!currentQuestion) return ui.View({ children: [] });
-
     const shape = answerShapes[answerIndex];
 
     return ui.Pressable({
@@ -1649,21 +1668,10 @@ export class TriviaApp {
         ui.Image({
           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
           style: {
-            width: 24,
-            height: 24,
+            width: 32,
+            height: 32,
             tintColor: '#FFFFFF',
-            marginBottom: 4,
             ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
-          }
-        }),
-        ui.Text({
-          text: ui.Binding.derive([this.answerTextsBinding], (texts) => texts[answerIndex] || ''),
-          style: {
-            fontSize: 12,
-            fontWeight: '600',
-            color: '#FFFFFF',
-            textAlign: 'center',
-            lineHeight: 14
           }
         })
       ]
