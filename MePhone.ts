@@ -85,6 +85,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private calculatorApp = new CalculatorApp();
   private settingsApp = new SettingsApp();
 
+  // Flag to track when we're waiting for TriviaGame state before opening the app
+  private waitingToOpenTrivia = false;
+
   constructor() {
     super();
   }
@@ -232,7 +235,16 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Listen for trivia state responses
     this.connectNetworkBroadcastEvent(triviaStateResponseEvent, (eventData) => {
       console.log(`[MePhone] Received TriviaGame state response:`, eventData);
+      
+      // First send the state to TriviaApp
       this.ensureTriviaApp().onTriviaStateResponse(eventData);
+      
+      // If we were waiting to open trivia, now navigate to it
+      if (this.waitingToOpenTrivia) {
+        this.waitingToOpenTrivia = false;
+        this.navigateToApp('trivia');
+        console.log(`[MePhone] Opening TriviaApp after receiving state: ${eventData.gameState}`);
+      }
     });
 
   }
@@ -605,6 +617,17 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     
     // Store the request ID so we can match the response
     (this as any).pendingStateRequestId = requestId;
+    
+    // Add timeout fallback - if no response in 3 seconds, open trivia anyway
+    if (this.waitingToOpenTrivia) {
+      this.async.setTimeout(() => {
+        if (this.waitingToOpenTrivia) {
+          console.log(`[MePhone] Timeout waiting for TriviaGame state, opening anyway`);
+          this.waitingToOpenTrivia = false;
+          this.navigateToApp('trivia');
+        }
+      }, 3000);
+    }
   }
 
   // Create the home screen with app icons - restored original design
@@ -714,8 +737,9 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           this.navigateToApp(appId);
         } else if (appId === 'trivia') {
           // Request current state from TriviaGame before opening the app
+          this.waitingToOpenTrivia = true;
           this.requestTriviaGameState();
-          this.navigateToApp(appId);
+          // Don't navigate immediately - wait for state response
         } else {
           this.navigateToApp(appId);
         }
