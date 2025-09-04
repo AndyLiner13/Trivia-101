@@ -902,11 +902,21 @@ export class TriviaGame extends ui.UIComponent {
     
     // Reset answer button colors to defaults - handle variable answer count
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
-    for (let i = 0; i < 4; i++) {
-      if (i < shuffledQuestion.answers.length) {
-        this.answerButtonColors[i].set(defaultColors[i]);
-      } else {
-        this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
+    
+    if (shuffledQuestion.answers.length === 2) {
+      // For 2-answer questions, set colors for positions 2 and 3 (yellow and green)
+      this.answerButtonColors[0].set('#6B7280'); // Gray for empty slot
+      this.answerButtonColors[1].set('#6B7280'); // Gray for empty slot
+      this.answerButtonColors[2].set('#EAB308'); // Yellow for first answer (position 2)
+      this.answerButtonColors[3].set('#16A34A'); // Green for second answer (position 3)
+    } else {
+      // For 3+ answer questions, use normal logic
+      for (let i = 0; i < 4; i++) {
+        if (i < shuffledQuestion.answers.length) {
+          this.answerButtonColors[i].set(defaultColors[i]);
+        } else {
+          this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
+        }
       }
     }
 
@@ -1190,11 +1200,21 @@ export class TriviaGame extends ui.UIComponent {
     
     // Reset answer button colors to defaults - handle variable answer count
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
-    for (let i = 0; i < 4; i++) {
-      if (i < answers.length) {
-        this.answerButtonColors[i].set(defaultColors[i]);
-      } else {
-        this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
+    
+    if (answers.length === 2) {
+      // For 2-answer questions, set colors for positions 2 and 3 (yellow and green)
+      this.answerButtonColors[0].set('#6B7280'); // Gray for empty slot
+      this.answerButtonColors[1].set('#6B7280'); // Gray for empty slot
+      this.answerButtonColors[2].set('#EAB308'); // Yellow for first answer (position 2)
+      this.answerButtonColors[3].set('#16A34A'); // Green for second answer (position 3)
+    } else {
+      // For 3+ answer questions, use normal logic
+      for (let i = 0; i < 4; i++) {
+        if (i < answers.length) {
+          this.answerButtonColors[i].set(defaultColors[i]);
+        } else {
+          this.answerButtonColors[i].set('#6B7280'); // Gray for empty slots
+        }
       }
     }
     
