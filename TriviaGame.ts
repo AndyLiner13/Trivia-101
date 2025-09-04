@@ -16,21 +16,87 @@ interface TriviaQuestion {
   question: string;
   category?: string;
   difficulty?: string;
+  image?: string; // Path to image file
   answers: {
     text: string;
     correct: boolean;
   }[];
 }
 
+// Interface for custom quiz questions with images
+interface CustomQuizQuestion {
+  id: string;
+  type: string;
+  difficulty: string;
+  category: string;
+  question: string;
+  image?: string; // Path to image file
+  correct_answer: string;
+  incorrect_answers: string[];
+}
+
+// Image mapping for texture IDs
+const imageTextureMap: { [key: string]: string } = {
+  "question_1": "1288240819609445",
+  "question_2": "4044904872392022",
+  "question_3": "1079109144384248",
+  "question_4": "1938735963635235",
+  "question_5": "2003463393758622",
+  "question_6": "1752745952035062",
+  "question_7": "1475346350459077",
+  "question_8": "1326047915821520",
+  "question_9": "3683839291925288",
+  "question_10": "1196531019167806",
+  "question_11": "706209595799642",
+  "question_12": "1410039643419415",
+  "question_13": "780941904872970",
+  "question_14": "1118817693525283",
+  "question_15": "733906099468866",
+  "question_16": "1807349089859596",
+  "question_17": "794724089702968",
+  "question_18": "764689873142192",
+  "question_19": "1142213797826617",
+  "question_20": "1825083965112873",
+  "question_21": "1518489952663744",
+  "question_22": "3567219543420158",
+  "question_23": "2242739949472621",
+  "question_24": "757964650190705",
+  "question_25": "1063919718873051",
+  "question_26": "1861463731067102",
+  "question_27": "1120356200069522",
+  "question_28": "761075996785743",
+  "question_29": "799049209398883",
+  "question_30": "1268024794620567",
+  "question_31": "1156729086299686",
+  "question_32": "724986150558004",
+  "question_33": "2242739949472621",
+  "question_34": "764254719694219",
+  "question_35": "1696089904438279",
+  "question_36": "1438253267399666",
+  "question_37": "3139059593060314",
+  "question_38": "1516371323068225",
+  "question_39": "637378339431139",
+  "question_40": "774931355028832",
+  "question_41": "2031929627613049",
+  "question_42": "2031929627613049",
+  "question_43": "1319399849969407",
+  "question_44": "1121153766023567",
+  "question_45": "25519518710969579",
+  "question_46": "758425783750920",
+  "question_47": "783521360835887",
+  "question_48": "1872767513454306",
+  "question_49": "1422789575447123"
+};
+
 // SerializableState-compatible interfaces for network events
-interface SerializableQuestion {
-  [key: string]: hz.SerializableState;
+type SerializableQuestion = {
   id: number;
   question: string;
   category: string;
   difficulty: string;
+  image?: string; // Optional image path
   answers: Array<{ text: string; correct: boolean }>;
-}
+};
 
 // Props interface for TriviaGame component
 interface TriviaGameProps {
@@ -46,27 +112,69 @@ interface TriviaGameProps {
 }
 
 // Network events for syncing with the world trivia system
-const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: SerializableQuestion, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
-const triviaResultsEvent = new hz.NetworkEvent<{ question: SerializableQuestion, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
-const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
-const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: any }>('triviaGameStart');
-const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
-const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
+const triviaQuestionShowEvent = new hz.NetworkEvent<{
+  question: SerializableQuestion;
+  questionIndex: number;
+  timeLimit: number;
+}>('triviaQuestionShow');
+
+const triviaResultsEvent = new hz.NetworkEvent<{
+  question: SerializableQuestion;
+  correctAnswerIndex: number;
+  answerCounts: number[];
+  scores: { [key: string]: number };
+  showLeaderboard?: boolean;
+  leaderboardData?: Array<{name: string, score: number, playerId: string}>;
+}>('triviaResults');
+
+const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{
+  playerId: string;
+  answerIndex: number;
+  responseTime: number;
+}>('triviaAnswerSubmitted');
+
+const triviaGameStartEvent = new hz.NetworkEvent<{
+  hostId: string;
+  config: any;
+}>('triviaGameStart');
+
+const triviaNextQuestionEvent = new hz.NetworkEvent<{
+  playerId: string;
+}>('triviaNextQuestion');
+
+const triviaGameRegisteredEvent = new hz.NetworkEvent<{
+  isRunning: boolean;
+  hasQuestions: boolean;
+}>('triviaGameRegistered');
 
 // Request-response events for state synchronization
-const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
-const triviaStateResponseEvent = new hz.NetworkEvent<{ 
-  requesterId: string, 
-  gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended',
-  currentQuestion?: SerializableQuestion,
-  questionIndex?: number,
-  timeLimit?: number,
-  showLeaderboard?: boolean,
-  leaderboardData?: Array<{name: string, score: number, playerId: string}>
+const triviaStateRequestEvent = new hz.NetworkEvent<{
+  requesterId: string;
+}>('triviaStateRequest');
+
+const triviaStateResponseEvent = new hz.NetworkEvent<{
+  requesterId: string;
+  gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended';
+  currentQuestion?: SerializableQuestion;
+  questionIndex?: number;
+  timeLimit?: number;
+  showLeaderboard?: boolean;
+  leaderboardData?: Array<{name: string, score: number, playerId: string}>;
 }>('triviaStateResponse');
 
 // Settings update event for real-time sync with TriviaPhone
-const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }>('triviaSettingsUpdate');
+const triviaSettingsUpdateEvent = new hz.NetworkEvent<{
+  hostId: string;
+  settings: {
+    numberOfQuestions: number;
+    category: string;
+    difficulty: string;
+    timeLimit: number;
+    autoAdvance: boolean;
+    muteDuringQuestions: boolean;
+    isLocked: boolean;
+  };
+}>('triviaSettingsUpdate');
 
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
@@ -297,6 +405,7 @@ export class TriviaGame extends ui.UIComponent {
   private generalQuestions: TriviaQuestion[] = [];
   private historyQuestions: TriviaQuestion[] = [];
   private scienceQuestions: TriviaQuestion[] = [];
+  private customQuizQuestions: TriviaQuestion[] = []; // Custom quiz questions with images
   private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
   private currentQuestionIndex: number = 0;
   private currentQuestion: TriviaQuestion | null = null;
@@ -379,6 +488,9 @@ export class TriviaGame extends ui.UIComponent {
     // Load trivia questions from asset if provided, otherwise use defaults or JSON file
     await this.loadTriviaQuestions();
     
+    // Load custom quiz data
+    await this.loadCustomQuizData();
+    
     // Set up network event listeners
     this.setupNetworkEvents();
     
@@ -448,6 +560,661 @@ export class TriviaGame extends ui.UIComponent {
     this.updateQuestionsForCategory("General", "easy");
   }
 
+  private async loadCustomQuizData(): Promise<void> {
+    try {
+      // Load the full Italian Brainrot Quiz data
+      const quizData: CustomQuizQuestion[] = [
+        {
+          "id": "question_1",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_1.png",
+          "correct_answer": "bombardino coccodrillo",
+          "incorrect_answers": [
+            "Tung tung sahur",
+            "Bombardiro",
+            "Crocodiro"
+          ]
+        },
+        {
+          "id": "question_2",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_2.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_3",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_3.png",
+          "correct_answer": "Tung tung tung sahur",
+          "incorrect_answers": [
+            "bombombini gusini",
+            "Trippi Troppi",
+            "tralalero tralala"
+          ]
+        },
+        {
+          "id": "question_4",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_4.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_5",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_5.png",
+          "correct_answer": "Glorbo frutto drill",
+          "incorrect_answers": [
+            "Cappuccino assassino"
+          ]
+        },
+        {
+          "id": "question_6",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_6.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_7",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_7.png",
+          "correct_answer": "chimpanzini bananini",
+          "incorrect_answers": [
+            "Banana",
+            "El bobrito gangsterito",
+            "Turg trng tung sahut"
+          ]
+        },
+        {
+          "id": "question_8",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_8.png",
+          "correct_answer": "Brrr brr patapim",
+          "incorrect_answers": [
+            "Ballerina"
+          ]
+        },
+        {
+          "id": "question_9",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_9.png",
+          "correct_answer": "ballerina cappuccina",
+          "incorrect_answers": [
+            "Bombombini gusini",
+            "Cappuccino",
+            "Kawa"
+          ]
+        },
+        {
+          "id": "question_10",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_10.png",
+          "correct_answer": "Bombombini gusini",
+          "incorrect_answers": [
+            "Latająca kaczka",
+            "Kaczka",
+            "Brr brr patapim"
+          ]
+        }
+        ,
+        {
+          "id": "question_11",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_11.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_12",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_12.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_13",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_13.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_14",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_14.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_15",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_15.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_16",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_16.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_17",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_17.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_18",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_18.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_19",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_19.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_20",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_20.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_21",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_21.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_22",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_22.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_23",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_23.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_24",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_24.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_25",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_25.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_26",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_26.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_27",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_27.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_28",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_28.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_29",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_29.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_30",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_30.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_31",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_31.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_32",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_32.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_33",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_33.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_34",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_34.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_35",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_35.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_36",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_36.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_37",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_37.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_38",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_38.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_39",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_39.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_40",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_40.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_41",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_41.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_42",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_42.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_43",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_43.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_44",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_44.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_45",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_45.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_46",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_46.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_47",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_47.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        },
+        {
+          "id": "question_48",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_48.png",
+          "correct_answer": "False",
+          "incorrect_answers": [
+            "True"
+          ]
+        },
+        {
+          "id": "question_49",
+          "type": "multiple",
+          "difficulty": "easy",
+          "category": "Entertainment",
+          "question": "Who is this?",
+          "image": "images/question_49.png",
+          "correct_answer": "True",
+          "incorrect_answers": [
+            "False"
+          ]
+        }
+      ];
+
+      // Convert to standard TriviaQuestion format
+      this.customQuizQuestions = await this.loadCustomQuiz(quizData);
+      console.log(`Loaded ${this.customQuizQuestions.length} custom quiz questions`);
+    } catch (error) {
+      // If custom quiz loading fails, customQuizQuestions will remain empty
+      console.log('Failed to load custom quiz data:', error);
+    }
+  }
+
+  private async loadCustomQuiz(quizData: CustomQuizQuestion[]): Promise<TriviaQuestion[]> {
+    const convertedQuestions: TriviaQuestion[] = [];
+
+    for (const customQuestion of quizData) {
+      // Convert custom quiz format to standard TriviaQuestion format
+      const answers = [
+        { text: customQuestion.correct_answer, correct: true },
+        ...customQuestion.incorrect_answers.map(answer => ({ text: answer, correct: false }))
+      ];
+
+      // Shuffle answers for randomization
+      for (let i = answers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [answers[i], answers[j]] = [answers[j], answers[i]];
+      }
+
+      const triviaQuestion: TriviaQuestion = {
+        id: parseInt(customQuestion.id.replace('question_', '')),
+        question: customQuestion.question,
+        category: customQuestion.category,
+        difficulty: customQuestion.difficulty,
+        image: customQuestion.image, // Keep the image path
+        answers: answers
+      };
+
+      convertedQuestions.push(triviaQuestion);
+    }
+
+    return convertedQuestions;
+  }
+
+  private getTextureIdForImage(imagePath: string): string | null {
+    if (!imagePath) return null;
+
+    // Extract filename from path (e.g., "images/question_1.png" -> "question_1")
+    const filename = imagePath.split('/').pop()?.split('.')[0];
+    if (!filename) return null;
+
+    return imageTextureMap[filename] || null;
+  }
+
   private updateQuestionsForCategory(category: string, difficulty: string): void {
     let allQuestions: TriviaQuestion[] = [];
 
@@ -462,8 +1229,11 @@ export class TriviaGame extends ui.UIComponent {
       case "science":
         allQuestions = [...this.scienceQuestions];
         break;
+      case "italian brainrot quiz":
+        allQuestions = [...this.customQuizQuestions];
+        break;
       default:
-        allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions];
+        allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions, ...this.customQuizQuestions];
         break;
     }
 
@@ -484,8 +1254,11 @@ export class TriviaGame extends ui.UIComponent {
         case "science":
           allQuestions = [...this.scienceQuestions];
           break;
+        case "italian brainrot quiz":
+          allQuestions = [...this.customQuizQuestions];
+          break;
         default:
-          allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions];
+          allQuestions = [...this.generalQuestions, ...this.historyQuestions, ...this.scienceQuestions, ...this.customQuizQuestions];
           break;
       }
     }
@@ -1774,18 +2547,52 @@ export class TriviaGame extends ui.UIComponent {
                         padding: 12,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '100%'
+                        width: '100%',
+                        flexDirection: 'column'
                       },
-                      children: Text({
-                        text: this.questionBinding,
-                        style: {
-                          fontSize: 14,
-                          fontWeight: '500',
-                          color: 'black',
-                          textAlign: 'center',
-                          lineHeight: 1.3
-                        }
-                      })
+                      children: [
+                        // Question image (if available)
+                        UINode.if(
+                          this.questionBinding.derive(() => {
+                            if (!this.currentQuestion) return false;
+                            const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
+                            return textureId !== null;
+                          }),
+                          View({
+                            style: {
+                              marginBottom: 12,
+                              alignItems: 'center'
+                            },
+                            children: Image({
+                              source: this.questionBinding.derive(() => {
+                                if (!this.currentQuestion) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                const textureId = this.getTextureIdForImage(this.currentQuestion.image || '');
+                                if (textureId) {
+                                  return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+                                }
+                                return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                              }),
+                              style: {
+                                width: 120,
+                                height: 120,
+                                borderRadius: 8
+                              }
+                            })
+                          })
+                        ),
+
+                        // Question text
+                        Text({
+                          text: this.questionBinding,
+                          style: {
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: 'black',
+                            textAlign: 'center',
+                            lineHeight: 1.3
+                          }
+                        })
+                      ]
                     })
                   }),
 
