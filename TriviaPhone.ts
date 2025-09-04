@@ -10,6 +10,7 @@ const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { tim
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
+const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }>('triviaSettingsUpdate');
 
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
@@ -701,6 +702,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     (this.gameSettings as any)[key] = value;
     this.gameSettingsBinding.set({ ...this.gameSettings });
+
+    // Send settings update to TriviaGame immediately
+    this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
+      hostId: this.assignedPlayer?.id.toString() || 'host',
+      settings: { ...this.gameSettings }
+    });
   }
 
   private toggleSettingsLock(): void {
@@ -1194,34 +1201,39 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     marginBottom: 8
                   }
                 }),
-                ['General Knowledge', 'Italian Brainrot Quiz'].map(category =>
-                  ui.Pressable({
-                    style: {
-                      backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                        settings.category === category ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)'
-                      ),
-                      borderRadius: 8,
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                      marginBottom: 8,
-                      alignItems: 'center'
-                    },
-                    onPress: () => this.updateGameSetting('category', category),
-                    children: [
-                      ui.Text({
-                        text: category,
-                        style: {
-                          fontSize: 12,
-                          fontWeight: '600',
-                          color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                            settings.category === category ? '#6366F1' : '#FFFFFF'
-                          ),
-                          textAlign: 'center'
-                        }
-                      })
-                    ]
-                  })
-                )
+                ui.View({
+                  style: {
+                    flexDirection: 'column'
+                  },
+                  children: ['General Knowledge', 'Italian Brainrot Quiz'].map(category =>
+                    ui.Pressable({
+                      style: {
+                        backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === category ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)'
+                        ),
+                        borderRadius: 8,
+                        paddingVertical: 12,
+                        paddingHorizontal: 16,
+                        marginBottom: 8,
+                        alignItems: 'center'
+                      },
+                      onPress: () => this.updateGameSetting('category', category),
+                      children: [
+                        ui.Text({
+                          text: category,
+                          style: {
+                            fontSize: 12,
+                            fontWeight: '600',
+                            color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.category === category ? '#6366F1' : '#FFFFFF'
+                            ),
+                            textAlign: 'center'
+                          }
+                        })
+                      ]
+                    })
+                  )
+                })
               ]
             }),
 

@@ -65,6 +65,9 @@ const triviaStateResponseEvent = new hz.NetworkEvent<{
   leaderboardData?: Array<{name: string, score: number, playerId: string}>
 }>('triviaStateResponse');
 
+// Settings update event for real-time sync with TriviaPhone
+const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }>('triviaSettingsUpdate');
+
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
   {
@@ -509,6 +512,9 @@ export class TriviaGame extends ui.UIComponent {
     // Listen for game start events from host
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
     this.connectNetworkBroadcastEvent(triviaNextQuestionEvent, this.onNextQuestionRequest.bind(this));
+    
+    // Listen for settings updates from TriviaPhone
+    this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, this.onSettingsUpdate.bind(this));
     
     // Listen for state requests from MePhone/TriviaApp
     this.connectNetworkBroadcastEvent(triviaStateRequestEvent, this.onStateRequest.bind(this));
@@ -1173,6 +1179,23 @@ export class TriviaGame extends ui.UIComponent {
     
     // Show the next question (this will send network event to all TriviaApps)
     this.showNextQuestion();
+  }
+
+  private onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }): void {
+    // Update the game configuration immediately when settings change in TriviaPhone
+    this.gameConfig = {
+      timeLimit: eventData.settings.timeLimit,
+      autoAdvance: eventData.settings.autoAdvance,
+      numQuestions: eventData.settings.numberOfQuestions,
+      category: eventData.settings.category.toLowerCase().replace(' ', ''),
+      difficulty: eventData.settings.difficulty
+    };
+    
+    // Update the binding to reflect changes in the UI
+    this.gameConfigBinding.set(this.gameConfig);
+    
+    // Update questions based on new category and difficulty
+    this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
   }
 
   private onNextQuestionRequest(data: { playerId: string }): void {
