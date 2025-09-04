@@ -44,6 +44,19 @@ const triviaResultsEvent = new hz.NetworkEvent<{ question: SerializableQuestion,
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: any }>('triviaGameStart');
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
+const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
+
+// Request-response events for state synchronization
+const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
+const triviaStateResponseEvent = new hz.NetworkEvent<{ 
+  requesterId: string, 
+  gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended',
+  currentQuestion?: SerializableQuestion,
+  questionIndex?: number,
+  timeLimit?: number,
+  showLeaderboard?: boolean,
+  leaderboardData?: Array<{name: string, score: number, playerId: string}>
+}>('triviaStateResponse');
 
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
@@ -280,6 +293,25 @@ export class TriviaGame extends ui.UIComponent {
   private timeRemaining: number = 30;
   private totalAnswers: number = 0;
   private isRunning: boolean = false;
+  private isShowingLeaderboard: boolean = false;
+  private isShowingResults: boolean = false;
+  private lastCorrectAnswerIndex: number = -1;
+  private lastAnswerCounts: number[] = [];
+
+  // Public getter for currentQuestionIndex to allow TriviaApp sync
+  public getCurrentQuestionIndex(): number {
+    return this.currentQuestionIndex;
+  }
+
+  // Public getter for showLeaderboard state to allow TriviaApp sync
+  public getShowLeaderboard(): boolean {
+    return this.isShowingLeaderboard;
+  }
+
+  // Public getter for results state to allow TriviaApp sync
+  public getShowResults(): boolean {
+    return this.isShowingResults;
+  }
 
   // Player tracking for waiting logic
   private playersInWorld: Set<string> = new Set();
@@ -296,13 +328,41 @@ export class TriviaGame extends ui.UIComponent {
     // Register this TriviaGame instance with the world for TriviaApp access
     (this.world as any).triviaGame = this;
     console.log(`[TriviaGame] Registered with world reference`);
+    console.log(`[TriviaGame] World object:`, !!this.world, `World has triviaGame:`, !!(this.world as any).triviaGame);
     
-    // Also register with global registry as backup
+    // Also store game state in world for cross-script access
+    (this.world as any).triviaGameState = {
+      isRunning: this.isRunning,
+      hasQuestions: this.triviaQuestions.length > 0,
+      currentQuestion: this.currentQuestion,
+      currentQuestionIndex: this.currentQuestionIndex,
+      isShowingLeaderboard: this.isShowingLeaderboard,
+      timestamp: Date.now()
+    };
+    console.log(`[TriviaGame] Stored game state in world:`, (this.world as any).triviaGameState);
+    
+    // Send a network event to notify any TriviaApps that a game is available
+    this.sendNetworkBroadcastEvent(triviaGameRegisteredEvent, {
+      isRunning: this.isRunning,
+      hasQuestions: this.triviaQuestions.length > 0
+    });
+    
+    // Also register with global registry as backup (may not work across script contexts)
     if (!(globalThis as any).triviaGameInstances) {
       (globalThis as any).triviaGameInstances = [];
     }
     (globalThis as any).triviaGameInstances.push(this);
     console.log(`[TriviaGame] Registered with global registry. Total instances: ${(globalThis as any).triviaGameInstances.length}`);
+    
+    // Notify any existing TriviaApps about our registration
+    const globalTriviaApps = (globalThis as any).triviaAppInstances || [];
+    console.log(`[TriviaGame] Found ${globalTriviaApps.length} TriviaApp instances to notify`);
+    globalTriviaApps.forEach((triviaApp: any, index: number) => {
+      if (triviaApp && typeof triviaApp.forceSyncWithTriviaGame === 'function') {
+        console.log(`[TriviaGame] Notifying TriviaApp ${index} of registration`);
+        triviaApp.forceSyncWithTriviaGame();
+      }
+    });
     
     // Load trivia questions from asset if provided, otherwise use defaults or JSON file
     await this.loadTriviaQuestions();
@@ -440,6 +500,9 @@ export class TriviaGame extends ui.UIComponent {
     // Listen for game start events from host
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
     this.connectNetworkBroadcastEvent(triviaNextQuestionEvent, this.onNextQuestionRequest.bind(this));
+    
+    // Listen for state requests from MePhone/TriviaApp
+    this.connectNetworkBroadcastEvent(triviaStateRequestEvent, this.onStateRequest.bind(this));
   }
 
   private resetGameState(): void {
@@ -461,8 +524,10 @@ export class TriviaGame extends ui.UIComponent {
     this.answerCountBinding.set("0");
     this.questionBinding.set("Loading first question...");
     this.showResultsBinding.set(false);
+    this.isShowingResults = false;
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    this.isShowingLeaderboard = false;
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -506,8 +571,10 @@ export class TriviaGame extends ui.UIComponent {
     this.answerCountBinding.set("0");
     this.questionBinding.set("Loading first question...");
     this.showResultsBinding.set(false);
+    this.isShowingResults = false;
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    this.isShowingLeaderboard = false;
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -732,6 +799,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    this.isShowingLeaderboard = false;
 
     // Show final message
     this.questionBinding.set("Game Complete! Thank you for playing.");
@@ -758,6 +826,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(true);
+    this.isShowingLeaderboard = true;
     
     // Generate final leaderboard data
     this.generateRealLeaderboard().then(finalLeaderboard => {
@@ -825,7 +894,9 @@ export class TriviaGame extends ui.UIComponent {
     this.hasLocalPlayerAnswered = false;
     this.showWaitingBinding.set(false);
     this.showResultsBinding.set(false);
+    this.isShowingResults = false;
     this.showLeaderboardBinding.set(false);
+    this.isShowingLeaderboard = false;
     
     // Get current players in world
     const currentPlayers = this.world.getPlayers();
@@ -866,9 +937,14 @@ export class TriviaGame extends ui.UIComponent {
   private onQuestionResults(eventData: { question: SerializableQuestion, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }): void {
     
     this.showResultsBinding.set(true);
+    this.isShowingResults = true;
     this.showWaitingBinding.set(false); // Hide waiting screen when results come in
     this.correctAnswerBinding.set(eventData.correctAnswerIndex);
     this.answerCountsBinding.set(eventData.answerCounts);
+    
+    // Store the results data for state responses
+    this.lastCorrectAnswerIndex = eventData.correctAnswerIndex;
+    this.lastAnswerCounts = eventData.answerCounts;
     
     // Calculate total answers
     this.totalAnswers = eventData.answerCounts.reduce((sum, count) => sum + count, 0);
@@ -880,6 +956,7 @@ export class TriviaGame extends ui.UIComponent {
     // Clear results after a few seconds
     this.async.setTimeout(() => {
       this.showResultsBinding.set(false);
+      this.isShowingResults = false;
       // Keep the current question visible - don't change to "Waiting for next question..."
     }, this.props.autoAdvanceTime * 1000);
   }
@@ -983,6 +1060,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Show results without vote counts (just correct/incorrect indicators)
     this.showResultsBinding.set(true);
+    this.isShowingResults = true;
     
     // After 5 seconds, show leaderboard (but don't auto-advance to next question)
     this.async.setTimeout(() => {
@@ -994,7 +1072,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Hide results, show leaderboard
     this.showResultsBinding.set(false);
+    this.isShowingResults = false;
     this.showLeaderboardBinding.set(true);
+    this.isShowingLeaderboard = true;
     
     // Generate real leaderboard data from actual players
     const realLeaderboard = await this.generateRealLeaderboard();
@@ -1070,9 +1150,11 @@ export class TriviaGame extends ui.UIComponent {
     
     // Hide leaderboard
     this.showLeaderboardBinding.set(false);
+    this.isShowingLeaderboard = false;
     
     // Clear any previous results state
     this.showResultsBinding.set(false);
+    this.isShowingResults = false;
     this.showWaitingBinding.set(false);
     
     // Reset players answered tracking for new question
@@ -2183,6 +2265,62 @@ export class TriviaGame extends ui.UIComponent {
     }
     
     super.dispose();
+  }
+
+  // Handle state requests from MePhone/TriviaApp
+  private async onStateRequest(event: { requesterId: string }): Promise<void> {
+    console.log(`[TriviaGame] Received state request from: ${event.requesterId}`);
+    
+    // Determine current game state
+    let gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended' = 'waiting';
+    let responseData: any = {
+      requesterId: event.requesterId,
+      gameState: gameState
+    };
+
+    if (this.isRunning) {
+      if (this.isShowingLeaderboard) {
+        gameState = 'leaderboard';
+        responseData.gameState = gameState;
+        responseData.showLeaderboard = true;
+        // Get current leaderboard data
+        const leaderboardData = await this.generateRealLeaderboard();
+        responseData.leaderboardData = leaderboardData.map(player => ({
+          name: player.name,
+          score: player.score,
+          playerId: player.playerId
+        }));
+      } else if (this.isShowingResults) {
+        gameState = 'results';
+        responseData.gameState = gameState;
+        responseData.showResults = true;
+        if (this.currentQuestion) {
+          responseData.currentQuestion = this.currentQuestion;
+          responseData.questionIndex = this.currentQuestionIndex;
+          // Include result data needed for display
+          responseData.correctAnswerIndex = this.lastCorrectAnswerIndex;
+          responseData.answerCounts = this.lastAnswerCounts;
+        }
+      } else if (this.currentQuestion) {
+        gameState = 'playing';
+        responseData.gameState = gameState;
+        responseData.currentQuestion = this.currentQuestion;
+        responseData.questionIndex = this.currentQuestionIndex;
+        responseData.timeLimit = this.props.questionTimeLimit;
+      } else {
+        // Game is running but no current question - could be between questions
+        gameState = 'playing';
+        responseData.gameState = gameState;
+      }
+    } else {
+      gameState = 'waiting';
+      responseData.gameState = gameState;
+    }
+
+    console.log(`[TriviaGame] Responding with state: ${gameState}`);
+    
+    // Send the response
+    this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
   }
 
   // Debug method to check current game state

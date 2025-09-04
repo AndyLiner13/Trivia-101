@@ -8,6 +8,19 @@ const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionInd
 const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
+const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
+
+// Request-response events for state synchronization
+const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
+const triviaStateResponseEvent = new hz.NetworkEvent<{ 
+  requesterId: string, 
+  gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended',
+  currentQuestion?: any,
+  questionIndex?: number,
+  timeLimit?: number,
+  showLeaderboard?: boolean,
+  leaderboardData?: Array<{name: string, score: number, playerId: string}>
+}>('triviaStateResponse');
 
 // Network event for keyboard input from separate KeyboardInputHandler (fallback)
 const mePhoneKeyboardTriggerEvent = new hz.NetworkEvent<{ playerId: string }>('mePhoneKeyboardTrigger');
@@ -65,7 +78,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   private isSettingsAppBinding = ui.Binding.derive([this.currentAppBinding], (currentApp) => currentApp === 'settings');
 
   // App instances - one per app type
-  private triviaApp = new TriviaApp(this.world, (event, data) => this.sendNetworkBroadcastEvent(event, data), this.async);
+  private triviaApp: TriviaApp | null = null;
   private messagesApp = new MeChatApp();
   private contactsApp: ContactsApp | null = null; // Initialize lazily
   private mePayApp = new MePayApp();
@@ -196,22 +209,30 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
     // Listen for trivia question show events
     this.connectNetworkBroadcastEvent(triviaQuestionShowEvent, (eventData) => {
-      if (this.triviaApp) {
-        this.triviaApp.syncWithExternalTrivia(eventData);
-      }
+      this.ensureTriviaApp().syncWithExternalTrivia(eventData);
     });
 
     // Listen for trivia results events
     this.connectNetworkBroadcastEvent(triviaResultsEvent, (eventData) => {
-      if (this.triviaApp) {
-        this.triviaApp.onTriviaResults(eventData);
-      }
+      this.ensureTriviaApp().onTriviaResults(eventData);
     });
 
     // Listen for trivia game start events (forward to TriviaGame component)
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, (eventData) => {
       // TriviaGame component will receive this event directly since it's registered separately
       // No additional handling needed here as TriviaGame listens for this event
+    });
+
+    // Listen for trivia game registration events
+    this.connectNetworkBroadcastEvent(triviaGameRegisteredEvent, (eventData) => {
+      console.log(`[MePhone] Received TriviaGame registration event`);
+      this.ensureTriviaApp().onTriviaGameRegistered(eventData);
+    });
+
+    // Listen for trivia state responses
+    this.connectNetworkBroadcastEvent(triviaStateResponseEvent, (eventData) => {
+      console.log(`[MePhone] Received TriviaGame state response:`, eventData);
+      this.ensureTriviaApp().onTriviaStateResponse(eventData);
     });
 
   }
@@ -415,6 +436,18 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
   }
 
+  // Ensure TriviaApp is initialized with world context
+  private ensureTriviaApp(): TriviaApp {
+    if (!this.triviaApp) {
+      this.triviaApp = new TriviaApp(this.world, (event, data) => this.sendNetworkBroadcastEvent(event, data), this.async);
+      // Ensure world context is properly set
+      if (this.world) {
+        this.triviaApp.setWorldContext(this.world);
+      }
+    }
+    return this.triviaApp;
+  }
+
   // Ensure ContactsApp is initialized with world context
   private ensureContactsApp(): ContactsApp {
     if (!this.contactsApp) {
@@ -435,7 +468,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     this.teleportToPlayer(player);
 
     // Set the assigned player for TriviaApp
-    this.triviaApp.setAssignedPlayer(player);
+    this.ensureTriviaApp().setAssignedPlayer(player);
 
     // Load contacts for the assigned player
     this.ensureContactsApp().updateContacts(player);
@@ -461,7 +494,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     }
 
     // Clear the assigned player for TriviaApp
-    this.triviaApp.setAssignedPlayer(null);
+    this.ensureTriviaApp().setAssignedPlayer(null);
 
     // Removed: this.currentAppBinding.set('home'); - Don't reset to home on unassignment
 
@@ -559,6 +592,19 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   private navigateHome() {
     this.currentAppBinding.set('home');
+  }
+
+  // Request current state from TriviaGame before opening the app
+  private requestTriviaGameState() {
+    const requestId = `${this.assignedPlayer?.id || 'unknown'}_${Date.now()}`;
+    console.log(`[MePhone] Requesting TriviaGame state with ID: ${requestId}`);
+    
+    this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+      requesterId: requestId
+    });
+    
+    // Store the request ID so we can match the response
+    (this as any).pendingStateRequestId = requestId;
   }
 
   // Create the home screen with app icons - restored original design
@@ -667,8 +713,8 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
           this.ensureContactsApp().updateContacts(this.assignedPlayer ?? undefined);
           this.navigateToApp(appId);
         } else if (appId === 'trivia') {
-          // Force sync with TriviaGame when trivia app is opened
-          this.triviaApp.forceSyncWithTriviaGame();
+          // Request current state from TriviaGame before opening the app
+          this.requestTriviaGameState();
           this.navigateToApp(appId);
         } else {
           this.navigateToApp(appId);
@@ -747,7 +793,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
               children: [
                 // Dynamic content based on current app using conditional rendering
                 ui.UINode.if(this.isHomeBinding, this.createHomeScreen()),
-                ui.UINode.if(this.isTriviaAppBinding, this.triviaApp.render(() => this.navigateHome(), this.assignedPlayer ?? undefined)),
+                ui.UINode.if(this.isTriviaAppBinding, this.ensureTriviaApp().render(() => this.navigateHome(), this.assignedPlayer ?? undefined)),
                 ui.UINode.if(this.isMessagesAppBinding, this.messagesApp.render(() => this.navigateHome())),
                 ui.UINode.if(this.isContactsAppBinding, this.ensureContactsApp().render(() => this.navigateHome(), this.assignedPlayer ?? undefined)),
                 ui.UINode.if(this.isMePayAppBinding, this.mePayApp.render(() => this.navigateHome())),
