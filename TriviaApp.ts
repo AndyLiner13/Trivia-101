@@ -137,6 +137,9 @@ export class TriviaApp {
   private isLocalPlayerHostBinding = new ui.Binding(false);
   private storedHostId: string | null = null;
 
+  // TriviaGame state tracking
+  private triviaGameShowingLeaderboardBinding = new ui.Binding(false);
+
   constructor(world?: hz.World, sendNetworkCallback?: (event: hz.NetworkEvent<any>, data: any) => void, asyncUtils?: any, questionsAsset?: hz.Asset) {
     // Store world reference for network events
     this.world = world || null;
@@ -241,6 +244,8 @@ export class TriviaApp {
       case 'waiting':
         this.gameState = 'waiting_for_game';
         this.gameStateBinding.set('waiting_for_game', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        // Reset leaderboard tracking
+        this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         break;
         
       case 'playing':
@@ -254,16 +259,21 @@ export class TriviaApp {
             timeLimit: event.timeLimit || 30
           });
         }
+        // Reset leaderboard tracking when starting new question
+        this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         break;
         
       case 'leaderboard':
-        this.gameState = 'leaderboard';
-        this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        // Show results screen instead of leaderboard
+        this.gameState = 'answered';
+        this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
         
-        if (event.leaderboardData) {
-          // Update leaderboard display with current data
-          this.updateLeaderboardDisplay(event.leaderboardData);
-        }
+        // Set showResult to true to display correct/incorrect indicators
+        this.showResult = true;
+        this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+
+        // Track that TriviaGame is showing leaderboard
+        this.triviaGameShowingLeaderboardBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         break;
         
       case 'results':
@@ -320,11 +330,15 @@ export class TriviaApp {
           }
         }
         console.log(`[TriviaApp] Results state setup complete - gameState: ${this.gameState}, showResult: ${this.showResult}`);
+        // Reset leaderboard tracking when showing results
+        this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         break;
         
       case 'ended':
         this.gameState = 'finished';
         this.gameStateBinding.set('finished', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        // Reset leaderboard tracking when game ends
+        this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         break;
     }
   }
@@ -484,11 +498,18 @@ export class TriviaApp {
     if (gameIsActive) {
       // Game is active - determine the current state
 
-      // First check if showing leaderboard
+      // First check if showing leaderboard - show results instead
       if (isShowingLeaderboard) {
-        console.log(`[TriviaApp] Detected leaderboard state`);
-        this.gameState = 'leaderboard';
-        this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        console.log(`[TriviaApp] Detected leaderboard state, showing results screen`);
+        this.gameState = 'answered';
+        this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+        
+        // Set showResult to true to display correct/incorrect indicators
+        this.showResult = true;
+        this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+
+        // Track that TriviaGame is showing leaderboard
+        this.triviaGameShowingLeaderboardBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         return;
       }
 
@@ -506,6 +527,8 @@ export class TriviaApp {
           questionIndex: this.currentQuestionIndex,
           timeLimit: triviaGame.props?.questionTimeLimit || 30
         });
+        // Reset leaderboard tracking when in playing state
+        this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
         return;
       }
 
@@ -514,6 +537,8 @@ export class TriviaApp {
       console.log(`[TriviaApp] Game active but no current question detected, defaulting to playing`);
       this.gameState = 'playing';
       this.gameStateBinding.set('playing', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      // Reset leaderboard tracking
+      this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
     } else {
       // Game is not active - show waiting screen
       console.log(`[TriviaApp] Game not active, showing waiting screen`);
@@ -584,6 +609,9 @@ export class TriviaApp {
       this.isAnswerCorrectBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
       this.waitingMessageBinding.set('', this.assignedPlayer ? [this.assignedPlayer] : undefined);
       this.gameStateBinding.set('playing', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+
+      // Reset leaderboard tracking when starting new question
+      this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
     } else {
       // Just update the question-related bindings, keep the selected answer
       this.questionStartTime = Date.now(); // Still update start time
@@ -797,12 +825,20 @@ export class TriviaApp {
 
   // Called by TriviaGame when trivia results are available
   public async onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }): Promise<void> {
-    // Check if this is a leaderboard event
+    // Check if this is a leaderboard event - show results screen instead
     if (eventData.showLeaderboard && eventData.leaderboardData) {
-      await this.handleLeaderboardData(eventData.leaderboardData);
+      // Show the right/wrong screen instead of leaderboard
+      this.gameState = 'answered';
+      this.showResult = true;
+      this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+      
+      // Track that TriviaGame is showing leaderboard
+      this.triviaGameShowingLeaderboardBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
       return;
     }
     
+    // Handle regular results (not leaderboard)
     // Try to recover answer from persistent storage if selectedAnswer is null
     let effectiveSelectedAnswer = this.selectedAnswer;
     if (effectiveSelectedAnswer === null && this.persistentAnswerStorage[this.currentQuestionIndex] !== undefined) {
@@ -828,6 +864,9 @@ export class TriviaApp {
     this.showResult = true;
     this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
     this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+
+    // Reset leaderboard tracking for regular results
+    this.triviaGameShowingLeaderboardBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
   }
 
   // Called when leaderboard data is received for this specific player
@@ -863,67 +902,11 @@ export class TriviaApp {
   }
 
   private async handleLeaderboardData(leaderboardData: Array<{name: string, score: number, playerId: string}>): Promise<void> {
-    // Try multiple ways to get the current player ID
-    let currentPlayerId: string | null = null;
-    
-    // Method 1: Use assigned player
-    if (this.assignedPlayer) {
-      currentPlayerId = this.assignedPlayer.id.toString();
-    }
-    
-    // Method 2: If no assigned player, but we have leaderboard data with only one player, use that
-    if (!currentPlayerId && leaderboardData.length === 1) {
-      currentPlayerId = leaderboardData[0].playerId;
-    }
-    
-    // Method 3: Check if there's a player ID we can derive from previous interactions
-    if (!currentPlayerId) {
-      if (leaderboardData.length > 0) {
-        currentPlayerId = leaderboardData[0].playerId;
-      }
-    }
-    
-    if (!currentPlayerId) {
-      return;
-    }
-    
-    // Find player's rank and score
-    const playerIndex = leaderboardData.findIndex(player => player.playerId === currentPlayerId);
-    if (playerIndex === -1) {
-      return;
-    }
-    
-    const playerData = leaderboardData[playerIndex];
-    const rank = playerIndex + 1; // Rank is 1-based
-    const totalPlayers = leaderboardData.length;
-    
-    // Update leaderboard bindings
-    this.playerRankBinding.set(rank, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    this.playerScoreBinding.set(playerData.score, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    this.totalPlayersBinding.set(totalPlayers, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    
-    // Get headshot using Social API - try to use assignedPlayer or get current player from world
-    try {
-      let playerForHeadshot = this.assignedPlayer;
-      
-      if (playerForHeadshot) {
-        const headshotImageSource = await Social.getAvatarImageSource(playerForHeadshot, {
-          type: AvatarImageType.HEADSHOT,
-          highRes: true
-        });
-        this.playerHeadshotBinding.set(headshotImageSource, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-      } else {
-        this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-      }
-    } catch (error) {
-      this.playerHeadshotBinding.set(null, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    }
-    
-    // Transition to leaderboard state
-    this.gameState = 'leaderboard';
-    this.showResult = false; // Hide answer result screen
-    this.gameStateBinding.set('leaderboard', this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    this.showResultBinding.set(false, this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    // Instead of showing leaderboard, show the results screen
+    this.gameState = 'answered';
+    this.showResult = true;
+    this.gameStateBinding.set('answered', this.assignedPlayer ? [this.assignedPlayer] : undefined);
+    this.showResultBinding.set(true, this.assignedPlayer ? [this.assignedPlayer] : undefined);
   }
 
   // Method to send network events (requires callback from parent component)
@@ -1221,6 +1204,9 @@ export class TriviaApp {
       // Update bindings to show waiting state
       this.gameStateBinding.set('waiting', assignedPlayer ? [assignedPlayer] : undefined);
       this.waitingMessageBinding.set(waitingMessage, assignedPlayer ? [assignedPlayer] : undefined);
+
+      // Reset leaderboard tracking when entering waiting state
+      this.triviaGameShowingLeaderboardBinding.set(false, assignedPlayer ? [assignedPlayer] : undefined);
     }
     
     // Store the correct answer for scoring when results come back
@@ -1291,6 +1277,9 @@ export class TriviaApp {
     this.showResultBinding.set(false, assignedPlayer ? [assignedPlayer] : undefined);
     this.waitingMessageBinding.set('', assignedPlayer ? [assignedPlayer] : undefined);
     this.gameStateBinding.set('playing', assignedPlayer ? [assignedPlayer] : undefined);
+
+    // Reset leaderboard tracking when advancing to next question
+    this.triviaGameShowingLeaderboardBinding.set(false, assignedPlayer ? [assignedPlayer] : undefined);
   }
 
   private checkGameEnd(assignedPlayer?: hz.Player): void {
@@ -1326,6 +1315,9 @@ export class TriviaApp {
     this.isAnswerCorrectBinding.set(null, assignedPlayer ? [assignedPlayer] : undefined);
     this.waitingMessageBinding.set('', assignedPlayer ? [assignedPlayer] : undefined);
     this.secondsRemainingBinding.set(5, assignedPlayer ? [assignedPlayer] : undefined);
+
+    // Reset leaderboard tracking when resetting game
+    this.triviaGameShowingLeaderboardBinding.set(false, assignedPlayer ? [assignedPlayer] : undefined);
   }
 
   private getOrdinalSuffix(num: number): string {
@@ -1393,15 +1385,11 @@ export class TriviaApp {
           this.renderFinishedScreen(onHomePress, assignedPlayer)
         ),
         ui.UINode.if(
-          ui.Binding.derive([this.gameStateBinding], (state) => state === 'leaderboard'),
-          this.renderLeaderboardScreen(onHomePress, assignedPlayer)
-        ),
-        ui.UINode.if(
           ui.Binding.derive([this.gameStateBinding], (state) => state === 'waiting_for_game'),
           this.renderWaitingForGameScreen(onHomePress, assignedPlayer)
         ),
         ui.UINode.if(
-          ui.Binding.derive([this.gameStateBinding], (state) => state !== 'finished' && state !== 'leaderboard' && state !== 'waiting_for_game'),
+          ui.Binding.derive([this.gameStateBinding], (state) => state !== 'finished' && state !== 'waiting_for_game'),
           this.renderGameScreen(onHomePress, assignedPlayer)
         )
       ]
@@ -1958,7 +1946,46 @@ export class TriviaApp {
                               opacity: 0.7,
                               marginTop: 12
                             }
-                          })
+                          }),
+
+                          // Next Question button (only for host when TriviaGame is showing leaderboard)
+                          ui.UINode.if(
+                            ui.Binding.derive([this.isLocalPlayerHostBinding, this.triviaGameShowingLeaderboardBinding], 
+                              (isHost, triviaGameShowingLeaderboard) => isHost && triviaGameShowingLeaderboard
+                            ),
+                            ui.View({
+                              style: {
+                                marginTop: 20,
+                                alignItems: 'center'
+                              },
+                              children: [
+                                ui.Pressable({
+                                  style: {
+                                    backgroundColor: '#3B82F6',
+                                    borderRadius: 12,
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 10,
+                                    shadowColor: '#000000',
+                                    shadowOffset: [0, 2],
+                                    shadowOpacity: 0.3,
+                                    shadowRadius: 4
+                                  },
+                                  onPress: () => this.handleNextQuestion(assignedPlayer),
+                                  children: [
+                                    ui.Text({
+                                      text: 'Next Question',
+                                      style: {
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        color: '#FFFFFF',
+                                        textAlign: 'center'
+                                      }
+                                    })
+                                  ]
+                                })
+                              ]
+                            })
+                          )
                         ]
                       })
                     ]
