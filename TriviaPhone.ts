@@ -521,9 +521,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private isHost(): boolean {
-    // For now, the first player to claim the phone becomes the host
-    // In a more complex implementation, this could be determined by network events
-    return this.assignedPlayer !== null;
+    // The host is the first player in the world (player with index 0)
+    const localPlayer = this.world.getLocalPlayer();
+    if (!localPlayer) return false;
+
+    const allPlayers = this.world.getPlayers();
+    if (allPlayers.length === 0) return false;
+
+    // Check if local player is the first player (host)
+    return allPlayers[0].id === localPlayer.id;
   }
 
   private handleStartGame(): void {
