@@ -1370,12 +1370,13 @@ export class TriviaGame extends ui.UIComponent {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: '#F3F4F6',
+                  backgroundColor: 'linear-gradient(180deg, #7C3AED 0%, #3B82F6 100%)',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  padding: 16
                 },
                 children: [
-                  // Title
+                  // Header
                   View({
                     style: {
                       position: 'absolute',
@@ -1385,278 +1386,256 @@ export class TriviaGame extends ui.UIComponent {
                       alignItems: 'center'
                     },
                     children: Text({
-                      text: 'Trivia Game Configuration',
+                      text: 'Waiting for Host...',
                       style: {
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: 'bold',
-                        color: '#1F2937',
+                        color: 'black',
                         textAlign: 'center'
                       }
                     })
                   }),
 
-                  // Host indicator
+                  // Players Section
                   View({
                     style: {
                       position: 'absolute',
                       top: '18%',
-                      left: 0,
-                      right: 0,
+                      left: '8%',
+                      right: '8%',
+                      bottom: '35%',
                       alignItems: 'center'
                     },
-                    children: Text({
-                      text: this.isLocalPlayerHostBinding.derive(isHost =>
-                        isHost ? '👑 You are the host' : '👥 Waiting for host to start...'
-                      ),
-                      style: {
-                        fontSize: 14,
-                        color: '#6B7280',
-                        textAlign: 'center'
-                      }
-                    })
+                    children: [
+                      // Player count header
+                      View({
+                        style: {
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: 12
+                        },
+                        children: [
+                          Text({
+                            text: '👥',
+                            style: {
+                              fontSize: 16,
+                              marginRight: 8
+                            }
+                          }),
+                          Text({
+                            text: 'Players',
+                            style: {
+                              fontSize: 16,
+                              fontWeight: '600',
+                              color: 'black'
+                            }
+                          })
+                        ]
+                      }),
+
+                      // Players grid
+                      View({
+                        style: {
+                          flex: 1,
+                          width: '100%'
+                        },
+                        children: this.createPlayersGrid()
+                      })
+                    ]
                   }),
 
-                  // Configuration panel (only visible to host)
-                  UINode.if(
-                    this.isLocalPlayerHostBinding,
-                    View({
-                      style: {
-                        position: 'absolute',
-                        top: '28%',
-                        left: '12%',
-                        right: '12%',
-                        backgroundColor: 'white',
-                        borderRadius: 8,
-                        padding: 12,
-                        shadowColor: 'black',
-                        shadowOpacity: 0.1,
-                        shadowRadius: 6,
-                        shadowOffset: [0, 2]
-                      },
-                      children: [
-                        // Time limit setting
-                        View({
-                          style: {
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 10
-                          },
-                          children: [
-                            Text({
-                              text: 'Time per question:',
-                              style: {
-                                fontSize: 12,
-                                color: '#1F2937'
-                              }
-                            }),
-                            Text({
-                              text: this.gameConfigBinding.derive(config => `${config.timeLimit}s`),
-                              style: {
-                                fontSize: 12,
-                                fontWeight: 'bold',
-                                color: '#6366F1'
-                              }
-                            })
-                          ]
-                        }),
+                  // Game Settings Panel - Bottom
+                  View({
+                    style: {
+                      position: 'absolute',
+                      bottom: '8%',
+                      left: '8%',
+                      right: '8%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      borderRadius: 12,
+                      padding: 12
+                    },
+                    children: [
+                      View({
+                        style: {
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        },
+                        children: [
+                          // Category
+                          View({
+                            style: {
+                              alignItems: 'center',
+                              flex: 1
+                            },
+                            children: [
+                              Text({
+                                text: 'Category:',
+                                style: {
+                                  fontSize: 10,
+                                  color: '#6B7280',
+                                  marginBottom: 4
+                                }
+                              }),
+                              Text({
+                                text: this.gameConfigBinding.derive(config => config.category),
+                                style: {
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  color: '#1F2937'
+                                }
+                              })
+                            ]
+                          }),
 
-                        // Category selection
-                        View({
-                          style: {
-                            marginBottom: 10
-                          },
-                          children: [
-                            Text({
-                              text: 'Category:',
-                              style: {
-                                fontSize: 12,
-                                color: '#1F2937',
-                                marginBottom: 6
-                              }
-                            }),
-                            View({
-                              style: {
-                                flexDirection: 'row',
-                                justifyContent: 'space-between'
-                              },
-                              children: [
-                                // General button
-                                Pressable({
-                                  onPress: () => this.handleCategoryChange('General'),
-                                  style: {
-                                    backgroundColor: this.selectedCategoryBinding.derive(cat => cat === 'General' ? '#6366F1' : '#E5E7EB'),
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 6,
-                                    marginRight: 4,
-                                    flex: 1
-                                  },
-                                  children: Text({
-                                    text: 'General',
-                                    style: {
-                                      fontSize: 11,
-                                      color: this.selectedCategoryBinding.derive(cat => cat === 'General' ? 'white' : '#1F2937'),
-                                      textAlign: 'center'
-                                    }
-                                  })
-                                }),
-                                // History button
-                                Pressable({
-                                  onPress: () => this.handleCategoryChange('History'),
-                                  style: {
-                                    backgroundColor: this.selectedCategoryBinding.derive(cat => cat === 'History' ? '#6366F1' : '#E5E7EB'),
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 6,
-                                    marginRight: 4,
-                                    flex: 1
-                                  },
-                                  children: Text({
-                                    text: 'History',
-                                    style: {
-                                      fontSize: 11,
-                                      color: this.selectedCategoryBinding.derive(cat => cat === 'History' ? 'white' : '#1F2937'),
-                                      textAlign: 'center'
-                                    }
-                                  })
-                                }),
-                                // Science button
-                                Pressable({
-                                  onPress: () => this.handleCategoryChange('Science'),
-                                  style: {
-                                    backgroundColor: this.selectedCategoryBinding.derive(cat => cat === 'Science' ? '#6366F1' : '#E5E7EB'),
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 6,
-                                    flex: 1
-                                  },
-                                  children: Text({
-                                    text: 'Science',
-                                    style: {
-                                      fontSize: 11,
-                                      color: this.selectedCategoryBinding.derive(cat => cat === 'Science' ? 'white' : '#1F2937'),
-                                      textAlign: 'center'
-                                    }
-                                  })
-                                })
-                              ]
-                            })
-                          ]
-                        }),
+                          // Questions
+                          View({
+                            style: {
+                              alignItems: 'center',
+                              flex: 1
+                            },
+                            children: [
+                              Text({
+                                text: 'Questions:',
+                                style: {
+                                  fontSize: 10,
+                                  color: '#6B7280',
+                                  marginBottom: 4
+                                }
+                              }),
+                              Text({
+                                text: this.gameConfigBinding.derive(config => `Q${config.numQuestions}`),
+                                style: {
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  color: '#1F2937'
+                                }
+                              })
+                            ]
+                          }),
 
-                        // Difficulty selection
-                        View({
-                          style: {
-                            marginBottom: 10
-                          },
-                          children: [
-                            Text({
-                              text: 'Difficulty:',
-                              style: {
-                                fontSize: 12,
-                                color: '#1F2937',
-                                marginBottom: 6
-                              }
-                            }),
-                            View({
-                              style: {
-                                flexDirection: 'row',
-                                justifyContent: 'space-between'
-                              },
-                              children: [
-                                // Easy button
-                                Pressable({
-                                  onPress: () => this.handleDifficultyChange('easy'),
-                                  style: {
-                                    backgroundColor: this.selectedDifficultyBinding.derive(diff => diff === 'easy' ? '#10B981' : '#E5E7EB'),
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 6,
-                                    marginRight: 4,
-                                    flex: 1
-                                  },
-                                  children: Text({
-                                    text: 'Easy',
+                          // Time
+                          View({
+                            style: {
+                              alignItems: 'center',
+                              flex: 1
+                            },
+                            children: [
+                              Text({
+                                text: 'Time:',
+                                style: {
+                                  fontSize: 10,
+                                  color: '#6B7280',
+                                  marginBottom: 4
+                                }
+                              }),
+                              View({
+                                style: {
+                                  flexDirection: 'row',
+                                  alignItems: 'center'
+                                },
+                                children: [
+                                  Text({
+                                    text: '⏱️',
                                     style: {
-                                      fontSize: 11,
-                                      color: this.selectedDifficultyBinding.derive(diff => diff === 'easy' ? 'white' : '#1F2937'),
-                                      textAlign: 'center'
+                                      fontSize: 12,
+                                      marginRight: 4
+                                    }
+                                  }),
+                                  Text({
+                                    text: this.gameConfigBinding.derive(config => `${config.timeLimit}s`),
+                                    style: {
+                                      fontSize: 12,
+                                      fontWeight: '600',
+                                      color: '#1F2937'
                                     }
                                   })
-                                }),
-                                // Medium button
-                                Pressable({
-                                  onPress: () => this.handleDifficultyChange('medium'),
-                                  style: {
-                                    backgroundColor: this.selectedDifficultyBinding.derive(diff => diff === 'medium' ? '#F59E0B' : '#E5E7EB'),
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 6,
-                                    marginRight: 4,
-                                    flex: 1
-                                  },
-                                  children: Text({
-                                    text: 'Medium',
-                                    style: {
-                                      fontSize: 11,
-                                      color: this.selectedDifficultyBinding.derive(diff => diff === 'medium' ? 'white' : '#1F2937'),
-                                      textAlign: 'center'
-                                    }
-                                  })
-                                }),
-                                // Hard button
-                                Pressable({
-                                  onPress: () => this.handleDifficultyChange('hard'),
-                                  style: {
-                                    backgroundColor: this.selectedDifficultyBinding.derive(diff => diff === 'hard' ? '#EF4444' : '#E5E7EB'),
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 6,
-                                    flex: 1
-                                  },
-                                  children: Text({
-                                    text: 'Hard',
-                                    style: {
-                                      fontSize: 11,
-                                      color: this.selectedDifficultyBinding.derive(diff => diff === 'hard' ? 'white' : '#1F2937'),
-                                      textAlign: 'center'
-                                    }
-                                  })
-                                })
-                              ]
-                            })
-                          ]
-                        }),
+                                ]
+                              })
+                            ]
+                          }),
 
-                        // Number of questions setting
-                        View({
-                          style: {
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between'
-                          },
-                          children: [
-                            Text({
-                              text: 'Number of questions:',
-                              style: {
-                                fontSize: 12,
-                                color: '#1F2937'
-                              }
-                            }),
-                            Text({
-                              text: this.gameConfigBinding.derive(config => config.numQuestions.toString()),
-                              style: {
-                                fontSize: 12,
-                                fontWeight: 'bold',
-                                color: '#6366F1'
-                              }
-                            })
-                          ]
-                        })
-                      ]
-                    })
-                  )
+                          // Difficulty
+                          View({
+                            style: {
+                              alignItems: 'center',
+                              flex: 1
+                            },
+                            children: [
+                              Text({
+                                text: 'Difficulty:',
+                                style: {
+                                  fontSize: 10,
+                                  color: '#6B7280',
+                                  marginBottom: 4
+                                }
+                              }),
+                              Text({
+                                text: this.gameConfigBinding.derive(config => {
+                                  const diff = config.difficulty;
+                                  return diff.charAt(0).toUpperCase() + diff.slice(1);
+                                }),
+                                style: {
+                                  fontSize: 12,
+                                  fontWeight: '600',
+                                  color: '#1F2937'
+                                }
+                              })
+                            ]
+                          }),
+
+                          // Auto-Advance
+                          View({
+                            style: {
+                              alignItems: 'center',
+                              flex: 1
+                            },
+                            children: [
+                              Text({
+                                text: 'Auto:',
+                                style: {
+                                  fontSize: 10,
+                                  color: '#6B7280',
+                                  marginBottom: 4
+                                }
+                              }),
+                              Text({
+                                text: this.gameConfigBinding.derive(config => config.autoAdvance ? '▶️' : '⏸️'),
+                                style: {
+                                  fontSize: 14
+                                }
+                              })
+                            ]
+                          }),
+
+                          // Mute
+                          View({
+                            style: {
+                              alignItems: 'center',
+                              flex: 1
+                            },
+                            children: [
+                              Text({
+                                text: 'Audio:',
+                                style: {
+                                  fontSize: 10,
+                                  color: '#6B7280',
+                                  marginBottom: 4
+                                }
+                              }),
+                              Text({
+                                text: '🔊',
+                                style: {
+                                  fontSize: 14
+                                }
+                              })
+                            ]
+                          })
+                        ]
+                      })
+                    ]
+                  })
                 ]
               })
             ),
@@ -2211,7 +2190,84 @@ export class TriviaGame extends ui.UIComponent {
     });
   }
 
-  private createAnswerButton(index: number, color: string, iconTextureId: string) {
+  private createPlayersGrid(): UINode {
+    // Get current players in the world
+    const currentPlayers = this.world.getPlayers();
+    
+    if (currentPlayers.length === 0) {
+      return View({
+        style: {
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 20
+        },
+        children: Text({
+          text: 'No players yet...',
+          style: {
+            fontSize: 14,
+            color: 'black',
+            textAlign: 'center'
+          }
+        })
+      });
+    }
+
+    // Create player avatar components
+    const playerComponents = currentPlayers.map((player, index) => {
+      return View({
+        style: {
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: 8,
+          marginRight: 12
+        },
+        children: [
+          // Player avatar (placeholder for now)
+          View({
+            style: {
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 4
+            },
+            children: Text({
+              text: player.name.get().charAt(0).toUpperCase(),
+              style: {
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: 'black'
+              }
+            })
+          }),
+          // Player name
+          Text({
+            text: player.name.get(),
+            style: {
+              fontSize: 10,
+              color: 'black',
+              textAlign: 'center',
+              maxWidth: 60,
+              overflow: 'hidden'
+            }
+          })
+        ]
+      });
+    });
+
+    return View({
+      style: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      },
+      children: playerComponents
+    });
+  }
+
+  private createAnswerButton(index: number, color: string, iconTextureId: string): UINode {
     const textureAsset = new hz.TextureAsset(BigInt(iconTextureId));
 
     return View({
