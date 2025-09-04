@@ -2061,10 +2061,10 @@ export class TriviaGame extends ui.UIComponent {
                     View({
                       style: {
                         position: 'absolute',
-                        left: '25%',
-                        right: '25%',
-                        top: '30%',
-                        bottom: '35%',
+                        left: '20%',
+                        right: '20%',
+                        top: '20%',
+                        bottom: '45%',
                         alignItems: 'center',
                         justifyContent: 'center'
                       },
@@ -2085,9 +2085,11 @@ export class TriviaGame extends ui.UIComponent {
                           return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
                         }),
                         style: {
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: 8
+                          width: '80%',
+                          height: 'auto',
+                          aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
+                          borderRadius: 8,
+                          alignSelf: 'center'
                         }
                       })
                     })
