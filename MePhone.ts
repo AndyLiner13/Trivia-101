@@ -48,6 +48,7 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
   // Keyboard input connection
   private inputConnection: hz.PlayerInput | null = null;
+  private eKeyInputConnection: hz.PlayerInput | null = null;
 
   // State management for current app - PLAYER SPECIFIC
   private currentAppBinding = new ui.Binding('home');
@@ -200,6 +201,10 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       this.inputConnection.disconnect();
       this.inputConnection = null;
     }
+    if (this.eKeyInputConnection) {
+      this.eKeyInputConnection.disconnect();
+      this.eKeyInputConnection = null;
+    }
   }
 
   // Set up network event listeners for trivia events
@@ -270,6 +275,27 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
         console.log('MePhone keyboard input connected successfully');
         console.log('Press H key (or platform equivalent) to position MePhone exactly at camera location facing towards viewport');
         console.log('Note: You still need to press E when near the CustomUI gizmo to open the interface');
+
+        // Set up E key input for hiding MePhone when focused
+        if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
+          this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
+            hz.PlayerInputAction.RightGrip,
+            hz.ButtonIcon.Interact,
+            this,
+            { preferredButtonPlacement: hz.ButtonPlacement.Center }
+          );
+
+          this.eKeyInputConnection.registerCallback((action, pressed) => {
+            if (pressed) {
+              // Handle E key trigger - hide MePhone if player is focused on UI
+              this.handleEKeyTrigger(localPlayer);
+            }
+          });
+
+          console.log('E key input connected for MePhone hiding when focused on UI');
+        } else {
+          console.log('RightGrip input action (E key) not supported on this platform');
+        }
       } else {
         console.log('LeftTertiary input action not supported on this platform');
         console.log('Falling back to separate keyboard input component...');
@@ -376,6 +402,14 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
       this.openAndFocusUIForPlayer(player);
     }
+  }
+
+  // Handle E key press - always hide MePhone by setting y position to -1000
+  private handleEKeyTrigger(player: hz.Player): void {
+    // Always set the MePhone's y position to -1000 when E is pressed
+    const currentPosition = this.entity.position.get();
+    this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
+    console.log('E key pressed - MePhone y position set to -1000 for player:', player.id);
   }
 
   // Open the MePhone UI on the player's device
