@@ -58,6 +58,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Keyboard input connection
   private eKeyInputConnection: hz.PlayerInput | null = null;
   private rightSecondaryInputConnection: hz.PlayerInput | null = null;
+  private leftSecondaryInputConnection: hz.PlayerInput | null = null;
   private leftTertiaryInputConnection: hz.PlayerInput | null = null;
 
   // Game state
@@ -289,6 +290,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.rightSecondaryInputConnection.disconnect();
       this.rightSecondaryInputConnection = null;
     }
+    if (this.leftSecondaryInputConnection) {
+      this.leftSecondaryInputConnection.disconnect();
+      this.leftSecondaryInputConnection = null;
+    }
     if (this.leftTertiaryInputConnection) {
       this.leftTertiaryInputConnection.disconnect();
       this.leftTertiaryInputConnection = null;
@@ -431,6 +436,30 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.rightSecondaryInputConnection.registerCallback((action: hz.PlayerInputAction, pressed: boolean) => {
             if (pressed) {
               // Handle RightSecondary trigger - show/hide TriviaPhone for VR users
+              this.handleRightSecondaryTrigger(localPlayer);
+            }
+          });
+        } else {
+        }
+      } else {
+      }
+
+      // Set up LeftSecondary input for VR users only (same functionality as RightSecondary)
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftSecondary)) {
+        // Check if the local player IS a VR user
+        const isVRUser = localPlayer.deviceType.get() === hz.PlayerDeviceType.VR;
+
+        if (isVRUser) {
+          this.leftSecondaryInputConnection = hz.PlayerControls.connectLocalInput(
+            hz.PlayerInputAction.LeftSecondary,
+            hz.ButtonIcon.Menu,
+            this,
+            { preferredButtonPlacement: hz.ButtonPlacement.Default }
+          );
+
+          this.leftSecondaryInputConnection.registerCallback((action: hz.PlayerInputAction, pressed: boolean) => {
+            if (pressed) {
+              // Handle LeftSecondary trigger - same as RightSecondary for VR users
               this.handleRightSecondaryTrigger(localPlayer);
             }
           });
