@@ -1047,7 +1047,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 },
                 children: [
                   ui.Text({
-                    text: '🎮 Trivia Game',
+                    text: ui.Binding.derive([], () => this.isHost() ? '🎮 You are the Host' : '👤 You are a Participant'),
                     style: {
                       fontSize: 24,
                       fontWeight: '700',

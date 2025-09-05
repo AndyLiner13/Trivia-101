@@ -1398,6 +1398,196 @@ export class TriviaApp {
         flexDirection: 'column'
       },
       children: [
+        // Host Screen
+        ui.UINode.if(
+          ui.Binding.derive([this.isLocalPlayerHostBinding], (isHost) => isHost),
+          this.renderHostScreen(onHomePress, assignedPlayer)
+        ),
+        // Participant Screen
+        ui.UINode.if(
+          ui.Binding.derive([this.isLocalPlayerHostBinding], (isHost) => !isHost),
+          this.renderParticipantScreen(onHomePress, assignedPlayer)
+        )
+      ]
+    });
+  }
+
+  private renderHostScreen(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#6366F1',
+        flexDirection: 'column'
+      },
+      children: [
+        // Header
+        ui.View({
+          style: {
+            padding: 20,
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '🎮 You are the Host',
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 8
+              }
+            }),
+            ui.Text({
+              text: 'Configure and start the trivia game',
+              style: {
+                fontSize: 14,
+                color: 'rgba(255, 255, 255, 0.8)',
+                textAlign: 'center'
+              }
+            })
+          ]
+        }),
+
+        // Main Content Area
+        ui.View({
+          style: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20
+          },
+          children: [
+            ui.View({
+              style: {
+                alignItems: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 20,
+                padding: 32,
+                width: '90%',
+                maxWidth: 300
+              },
+              children: [
+                ui.Text({
+                  text: '⚙️',
+                  style: {
+                    fontSize: 48,
+                    textAlign: 'center',
+                    marginBottom: 16
+                  }
+                }),
+                ui.Text({
+                  text: 'Game Settings',
+                  style: {
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    marginBottom: 8
+                  }
+                }),
+                ui.Text({
+                  text: 'Configure your trivia game settings and start when ready.',
+                  style: {
+                    fontSize: 14,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textAlign: 'center',
+                    marginBottom: 24,
+                    lineHeight: 1.4
+                  }
+                }),
+
+                // Start Game Button
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#22C55E',
+                    borderRadius: 12,
+                    paddingHorizontal: 24,
+                    paddingVertical: 12,
+                    shadowColor: '#000000',
+                    shadowOffset: [0, 2],
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4
+                  },
+                  onPress: () => this.handleStartGame(),
+                  children: [
+                    ui.Text({
+                      text: '🎯 Start Game',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Footer with player count
+        ui.View({
+          style: {
+            padding: 16,
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: ui.Binding.derive([], () => {
+                const players = this.world?.getPlayers() || [];
+                return `👥 ${players.length} player${players.length !== 1 ? 's' : ''} connected`;
+              }),
+              style: {
+                fontSize: 12,
+                color: 'rgba(255, 255, 255, 0.7)',
+                textAlign: 'center'
+              }
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderParticipantScreen(onHomePress: () => void, assignedPlayer?: hz.Player): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#6366F1',
+        flexDirection: 'column'
+      },
+      children: [
+        // Header
+        ui.View({
+          style: {
+            padding: 20,
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '👤 You are a Participant',
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 8
+              }
+            }),
+            ui.Text({
+              text: 'Wait for the host to start the game',
+              style: {
+                fontSize: 14,
+                color: 'rgba(255, 255, 255, 0.8)',
+                textAlign: 'center'
+              }
+            })
+          ]
+        }),
+
         // Main Content Area
         ui.View({
           style: {
@@ -1426,7 +1616,7 @@ export class TriviaApp {
                   }
                 }),
                 ui.Text({
-                  text: 'Waiting for Game to Start',
+                  text: 'Waiting for Host',
                   style: {
                     fontSize: 20,
                     fontWeight: '700',
@@ -1436,64 +1626,68 @@ export class TriviaApp {
                   }
                 }),
                 ui.Text({
-                  text: 'A trivia game will begin shortly.',
+                  text: 'The game will begin shortly. Get ready to test your knowledge!',
                   style: {
                     fontSize: 14,
                     color: 'rgba(255, 255, 255, 0.8)',
                     textAlign: 'center',
-                    marginBottom: 16
-                  }
-                }),
-                ui.Text({
-                  text: 'Get ready to test your knowledge!',
-                  style: {
-                    fontSize: 12,
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    textAlign: 'center'
+                    marginBottom: 16,
+                    lineHeight: 1.4
                   }
                 }),
 
-                // Start Game Button (only for host)
+                // Player info
                 ui.UINode.if(
-                  ui.Binding.derive([this.isLocalPlayerHostBinding], (isHost) => {
-                    // Show button if user is host OR if no assigned player (fallback for single-player)
-                    const shouldShow = isHost || !this.assignedPlayer;
-                    return shouldShow;
-                  }),
+                  ui.Binding.derive([], () => !!assignedPlayer),
                   ui.View({
                     style: {
-                      marginTop: 24,
+                      marginTop: 16,
                       alignItems: 'center'
                     },
                     children: [
-                      ui.Pressable({
+                      ui.Text({
+                        text: 'Welcome,',
                         style: {
-                          backgroundColor: '#22C55E',
-                          borderRadius: 12,
-                          paddingHorizontal: 24,
-                          paddingVertical: 12,
-                          shadowColor: '#000000',
-                          shadowOffset: [0, 2],
-                          shadowOpacity: 0.3,
-                          shadowRadius: 4
-                        },
-                        onPress: () => this.handleStartGame(),
-                        children: [
-                          ui.Text({
-                            text: '🎮 Start Game',
-                            style: {
-                              fontSize: 16,
-                              fontWeight: '700',
-                              color: '#FFFFFF',
-                              textAlign: 'center'
-                            }
-                          })
-                        ]
+                          fontSize: 12,
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          textAlign: 'center',
+                          marginBottom: 4
+                        }
+                      }),
+                      ui.Text({
+                        text: ui.Binding.derive([], () => assignedPlayer?.name.get() || 'Player'),
+                        style: {
+                          fontSize: 16,
+                          fontWeight: '600',
+                          color: '#FFFFFF',
+                          textAlign: 'center'
+                        }
                       })
                     ]
                   })
                 )
               ]
+            })
+          ]
+        }),
+
+        // Footer with player count
+        ui.View({
+          style: {
+            padding: 16,
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: ui.Binding.derive([], () => {
+                const players = this.world?.getPlayers() || [];
+                return `👥 ${players.length} player${players.length !== 1 ? 's' : ''} in game`;
+              }),
+              style: {
+                fontSize: 12,
+                color: 'rgba(255, 255, 255, 0.7)',
+                textAlign: 'center'
+              }
             })
           ]
         })
