@@ -200,7 +200,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       const desiredPosition = playerPosition
         .add(cameraForward.mul(1.0))
         .add(playerLeft.mul(0.0)); // Small positive value moves phone to the left
-      desiredPosition.y += 0.4;
+      // Set Y position based on user's body position (ground level + offset)
+      desiredPosition.y = playerPosition.y + 0.4;
 
       // Calculate direction to player and rotation BEFORE setting position
       const directionToPlayer = playerPosition.sub(desiredPosition).normalize();
