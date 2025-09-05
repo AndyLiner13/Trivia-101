@@ -420,17 +420,17 @@ export class TriviaGame extends ui.UIComponent {
   private lastCorrectAnswerIndex: number = -1;
   private lastAnswerCounts: number[] = [];
 
-  // Public getter for currentQuestionIndex to allow TriviaApp sync
+  // Public getter for currentQuestionIndex to allow TriviaPhone sync
   public getCurrentQuestionIndex(): number {
     return this.currentQuestionIndex;
   }
 
-  // Public getter for showLeaderboard state to allow TriviaApp sync
+  // Public getter for showLeaderboard state to allow TriviaPhone sync
   public getShowLeaderboard(): boolean {
     return this.isShowingLeaderboard;
   }
 
-  // Public getter for results state to allow TriviaApp sync
+  // Public getter for results state to allow TriviaPhone sync
   public getShowResults(): boolean {
     return this.isShowingResults;
   }
@@ -455,7 +455,7 @@ export class TriviaGame extends ui.UIComponent {
     this.discoverPhoneEntities();
     this.setupPlayerEvents();
     
-    // Register this TriviaGame instance with the world for TriviaApp access
+    // Register this TriviaGame instance with the world for TriviaPhone access
     (this.world as any).triviaGame = this;
     
     // Also store game state in world for cross-script access
@@ -468,23 +468,23 @@ export class TriviaGame extends ui.UIComponent {
       timestamp: Date.now()
     };
     
-    // Send a network event to notify any TriviaApps that a game is available
+    // Send a network event to notify any TriviaPhones that a game is available
     this.sendNetworkBroadcastEvent(triviaGameRegisteredEvent, {
       isRunning: this.isRunning,
       hasQuestions: this.triviaQuestions.length > 0
     });
     
     // Also register with global registry as backup (may not work across script contexts)
-    if (!(globalThis as any).triviaGameInstances) {
-      (globalThis as any).triviaGameInstances = [];
+    if (!(globalThis as any).triviaPhoneInstances) {
+      (globalThis as any).triviaPhoneInstances = [];
     }
-    (globalThis as any).triviaGameInstances.push(this);
+    (globalThis as any).triviaPhoneInstances.push(this);
     
-    // Notify any existing TriviaApps about our registration
-    const globalTriviaApps = (globalThis as any).triviaAppInstances || [];
-    globalTriviaApps.forEach((triviaApp: any, index: number) => {
-      if (triviaApp && typeof triviaApp.forceSyncWithTriviaGame === 'function') {
-        triviaApp.forceSyncWithTriviaGame();
+    // Notify any existing TriviaPhones about our registration
+    const globalTriviaPhones = (globalThis as any).triviaPhoneInstances || [];
+    globalTriviaPhones.forEach((triviaPhone: any, index: number) => {
+      if (triviaPhone && typeof triviaPhone.forceSyncWithTriviaGame === 'function') {
+        triviaPhone.forceSyncWithTriviaGame();
       }
     });
     
@@ -696,7 +696,7 @@ export class TriviaGame extends ui.UIComponent {
     // Listen for settings updates from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, this.onSettingsUpdate.bind(this));
     
-    // Listen for state requests from MePhone/TriviaApp
+    // Listen for state requests from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaStateRequestEvent, this.onStateRequest.bind(this));
   }
 
@@ -893,7 +893,7 @@ export class TriviaGame extends ui.UIComponent {
       }
     }
 
-    // Send question to TriviaApp and other components
+    // Send question to TriviaPhone and other components
     const serializableQuestion: SerializableQuestion = {
       id: shuffledQuestion.id,
       question: shuffledQuestion.question,
@@ -1297,23 +1297,23 @@ export class TriviaGame extends ui.UIComponent {
       answers: this.currentQuestion.answers
     };
     
-    // Call TriviaApp instances directly via world reference
-    const triviaApps = (this.world as any).triviaApps;
+    // Call TriviaPhone instances directly via world reference
+    const triviaPhones = (this.world as any).triviaPhones;
     
     // Also check global registry as backup
-    const globalTriviaApps = (globalThis as any).triviaAppInstances || [];
+    const globalTriviaPhones = (globalThis as any).triviaPhoneInstances || [];
     
-    // Also send network event for TriviaApp instances that might be listening
+    // Also send network event for TriviaPhone instances that might be listening
     // Use actual answer count in a way that won't reset our display
     // Create answer counts array based on the number of answers for this question
     const actualAnswerCounts = new Array(this.currentQuestion.answers.length).fill(0);
     actualAnswerCounts[correctAnswerIndex] = this.playersAnswered.size;
     
     // Try world registry first
-    if (triviaApps && Array.isArray(triviaApps)) {
-      triviaApps.forEach((triviaApp: any, index: number) => {
-        if (triviaApp && typeof triviaApp.onTriviaResults === 'function') {
-          triviaApp.onTriviaResults({
+    if (triviaPhones && Array.isArray(triviaPhones)) {
+      triviaPhones.forEach((triviaPhone: any, index: number) => {
+        if (triviaPhone && typeof triviaPhone.onTriviaResults === 'function') {
+          triviaPhone.onTriviaResults({
             question: serializableQuestion,
             correctAnswerIndex: correctAnswerIndex,
             answerCounts: actualAnswerCounts,
@@ -1321,11 +1321,11 @@ export class TriviaGame extends ui.UIComponent {
           });
         }
       });
-    } else if (globalTriviaApps.length > 0) {
+    } else if (globalTriviaPhones.length > 0) {
       // Fallback to global registry
-      globalTriviaApps.forEach((triviaApp: any, index: number) => {
-        if (triviaApp && typeof triviaApp.onTriviaResults === 'function') {
-          triviaApp.onTriviaResults({
+      globalTriviaPhones.forEach((triviaPhone: any, index: number) => {
+        if (triviaPhone && typeof triviaPhone.onTriviaResults === 'function') {
+          triviaPhone.onTriviaResults({
             question: serializableQuestion,
             correctAnswerIndex: correctAnswerIndex,
             answerCounts: actualAnswerCounts,
@@ -1449,7 +1449,7 @@ export class TriviaGame extends ui.UIComponent {
     // Move to next question
     this.currentQuestionIndex++;
     
-    // Show the next question (this will send network event to all TriviaApps)
+    // Show the next question (this will send network event to all TriviaPhones)
     this.showNextQuestion();
   }
 
@@ -1564,7 +1564,7 @@ export class TriviaGame extends ui.UIComponent {
     this.gameConfig = data.config;
     this.gameConfigBinding.set(this.gameConfig);
 
-    // Use questions from TriviaApp if provided, otherwise use local questions
+    // Use questions from TriviaPhone if provided, otherwise use local questions
     if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
       this.triviaQuestions = data.questions;
     } else {
@@ -2873,17 +2873,17 @@ export class TriviaGame extends ui.UIComponent {
     }
     
     // Clean up global registry
-    if ((globalThis as any).triviaGameInstances) {
-      const index = (globalThis as any).triviaGameInstances.indexOf(this);
+    if ((globalThis as any).triviaPhoneInstances) {
+      const index = (globalThis as any).triviaPhoneInstances.indexOf(this);
       if (index > -1) {
-        (globalThis as any).triviaGameInstances.splice(index, 1);
+        (globalThis as any).triviaPhoneInstances.splice(index, 1);
       }
     }
     
     super.dispose();
   }
 
-  // Handle state requests from MePhone/TriviaApp
+  // Handle state requests from TriviaPhone
   private async onStateRequest(event: { requesterId: string }): Promise<void> {
     
     // Determine current game state
@@ -2938,8 +2938,8 @@ export class TriviaGame extends ui.UIComponent {
 
   // Phone management methods
   private discoverPhoneEntities(): void {
-    // Find all entities in the world with the "MePhone" tag
-    const allEntitiesInWorld = this.world.getEntitiesWithTags(['MePhone']);
+    // Find all entities in the world with the "TriviaPhone" tag
+    const allEntitiesInWorld = this.world.getEntitiesWithTags(['TriviaPhone']);
 
     for (const entity of allEntitiesInWorld) {
       this.phoneAssignments.push({

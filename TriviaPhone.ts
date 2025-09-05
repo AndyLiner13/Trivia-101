@@ -128,6 +128,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   async start() {
+    // Register this TriviaPhone instance with the world for TriviaGame access
+    (this.world as any).triviaPhones = (this.world as any).triviaPhones || [];
+    (this.world as any).triviaPhones.push(this);
+    
+    // Also register with global registry as backup
+    if (!(globalThis as any).triviaPhoneInstances) {
+      (globalThis as any).triviaPhoneInstances = [];
+    }
+    (globalThis as any).triviaPhoneInstances.push(this);
+    
     this.setupNetworkEvents();
     this.setupKeyboardInput();
 
@@ -233,6 +243,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (this.eKeyInputConnection) {
       this.eKeyInputConnection.disconnect();
       this.eKeyInputConnection = null;
+    }
+    
+    // Clean up global registry
+    if ((globalThis as any).triviaPhoneInstances) {
+      const index = (globalThis as any).triviaPhoneInstances.indexOf(this);
+      if (index > -1) {
+        (globalThis as any).triviaPhoneInstances.splice(index, 1);
+      }
+    }
+    
+    // Clean up world registry
+    if ((this.world as any).triviaPhones) {
+      const index = (this.world as any).triviaPhones.indexOf(this);
+      if (index > -1) {
+        (this.world as any).triviaPhones.splice(index, 1);
+      }
     }
   }
 
@@ -594,7 +620,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.showResultBinding.set(false);
   }
 
-  private onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }): void {
+  public forceSyncWithTriviaGame(): void {
+    // This method can be called by TriviaGame to force a sync
+    // For now, we'll rely on network events for synchronization
+  }
+
+  public onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }): void {
     this.showResult = true;
     this.showResultBinding.set(true);
 
