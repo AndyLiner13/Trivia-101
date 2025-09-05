@@ -87,6 +87,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
   private gameStartedBinding = new ui.Binding(false);
+  private isCorrectAnswerBinding = new ui.Binding(false);
+  private correctAnswerIndexBinding = new ui.Binding<number | null>(null);
+  private showLeaderboardBinding = new ui.Binding(false);
 
   // Game settings bindings
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
@@ -575,6 +578,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.scoreBinding.set(0);
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
+    this.isCorrectAnswerBinding.set(false);
+    this.correctAnswerIndexBinding.set(null);
   }
 
   private syncWithExternalTrivia(questionData: { question: any, questionIndex: number, timeLimit: number }): void {
@@ -585,6 +590,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentQuestionIndexBinding.set(questionData.questionIndex);
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
+    this.isCorrectAnswerBinding.set(false);
+    this.correctAnswerIndexBinding.set(null);
   }
 
   public forceSyncWithTriviaGame(): void {
@@ -592,15 +599,31 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // For now, we'll rely on network events for synchronization
   }
 
-  public onTriviaResults(eventData: { question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number } }): void {
+  public onTriviaResults(eventData: { 
+    question: any, 
+    correctAnswerIndex: number, 
+    answerCounts: number[], 
+    scores: { [key: string]: number },
+    showLeaderboard?: boolean,
+    leaderboardData?: Array<{name: string, score: number, playerId: string}>
+  }): void {
     this.showResult = true;
     this.showResultBinding.set(true);
+    
+    // Store the correct answer index
+    this.correctAnswerIndexBinding.set(eventData.correctAnswerIndex);
 
     // Check if player's answer was correct
-    if (this.selectedAnswer === eventData.correctAnswerIndex) {
+    const isCorrect = this.selectedAnswer === eventData.correctAnswerIndex;
+    this.isCorrectAnswerBinding.set(isCorrect);
+    
+    if (isCorrect) {
       this.score++;
       this.scoreBinding.set(this.score);
     }
+
+    // Update leaderboard binding
+    this.showLeaderboardBinding.set(eventData.showLeaderboard || false);
   }
 
   private onTriviaStateResponse(event: {
@@ -661,6 +684,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
+    this.showLeaderboardBinding.set(false);
 
     // Send next question event
     this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
@@ -681,6 +705,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.scoreBinding.set(0);
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
+    this.showLeaderboardBinding.set(false);
   }
 
   // Game settings methods
@@ -767,25 +792,138 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         height: '100%',
         backgroundColor: ui.Binding.derive([
           this.showResultBinding,
-          this.selectedAnswerBinding
-        ], (showResult, selectedAnswer) => {
-          if (showResult && selectedAnswer !== null && this.currentQuestion) {
-            const isCorrect = selectedAnswer === this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
-            return isCorrect ? '#22C55E' : '#EF4444';
+          this.isCorrectAnswerBinding
+        ], (showResult, isCorrect) => {
+          if (showResult) {
+            return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
           }
-          return '#6366F1';
+          return '#6366F1'; // Default blue
         }),
         flexDirection: 'column'
       },
       children: [
-        // Main content area
-        ui.View({
-          style: {
-            flex: 1,
-            padding: 8,
-            paddingBottom: 12
-          },
-          children: [
+        // Show feedback screen when results are being displayed
+        ui.UINode.if(
+          ui.Binding.derive([this.showResultBinding], (showResult) => showResult),
+          ui.View({
+            style: {
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 16
+            },
+            children: [
+              // Large emoji icon
+              ui.Text({
+                text: ui.Binding.derive([
+                  this.isCorrectAnswerBinding
+                ], (isCorrect) => {
+                  return isCorrect ? '✅' : '❌';
+                }),
+                style: {
+                  fontSize: 80,
+                  textAlign: 'center',
+                  marginBottom: 16
+                }
+              }),
+              
+              // "Correct!" or "Wrong!" text
+              ui.Text({
+                text: ui.Binding.derive([
+                  this.isCorrectAnswerBinding
+                ], (isCorrect) => {
+                  return isCorrect ? 'Correct!' : 'Wrong!';
+                }),
+                style: {
+                  fontSize: 32,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                  textAlign: 'center',
+                  marginBottom: 12
+                }
+              }),
+
+              // Show the question text
+              ui.Text({
+                text: ui.Binding.derive([], () => {
+                  return this.currentQuestion ? this.currentQuestion.question : '';
+                }),
+                numberOfLines: 2,
+                style: {
+                  fontSize: 18,
+                  color: '#FFFFFF',
+                  textAlign: 'center',
+                  marginBottom: 12,
+                  opacity: 0.9,
+                  lineHeight: 24
+                }
+              }),
+
+              // Show correct answer if wrong
+              ui.UINode.if(
+                ui.Binding.derive([this.isCorrectAnswerBinding], (isCorrect) => !isCorrect),
+                ui.Text({
+                  text: ui.Binding.derive([
+                    this.correctAnswerIndexBinding
+                  ], (correctIndex) => {
+                    if (correctIndex !== null && this.currentQuestion && this.currentQuestion.answers[correctIndex]) {
+                      return `Correct answer: ${this.currentQuestion.answers[correctIndex].text}`;
+                    }
+                    return '';
+                  }),
+                  numberOfLines: 2,
+                  style: {
+                    fontSize: 16,
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    opacity: 0.8,
+                    lineHeight: 22
+                  }
+                })
+              ),
+
+              // Next Question button - only show for host when leaderboard is displayed
+              ui.UINode.if(
+                ui.Binding.derive([this.showLeaderboardBinding], (showLeaderboard) => 
+                  showLeaderboard && this.isHost()
+                ),
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    marginTop: 16,
+                    alignSelf: 'center'
+                  },
+                  onPress: () => this.nextQuestion(),
+                  children: [
+                    ui.Text({
+                      text: '➡️ Next Question',
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: '#6366F1',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              )
+            ]
+          })
+        ),
+
+        // Show normal game content when NOT showing results
+        ui.UINode.if(
+          ui.Binding.derive([this.showResultBinding], (showResult) => !showResult),
+          ui.View({
+            style: {
+              flex: 1,
+              padding: 8,
+              paddingBottom: 12
+            },
+            children: [
             // Waiting for game screen
             ui.UINode.if(
               ui.Binding.derive([this.gameStartedBinding], (started) => !started),
@@ -875,159 +1013,55 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               })
             ),
 
-            // Game screen
-            ui.UINode.if(
-              ui.Binding.derive([this.gameStartedBinding], (started) => started),
-              ui.View({
-                style: {
-                  flex: 1,
-                  flexDirection: 'column'
-                },
-                children: [
-                  // Answer buttons
-                  ui.View({
-                    style: {
-                      flex: 1,
-                      flexDirection: 'column',
-                      padding: 4
-                    },
-                    children: [
-                      // Top row
-                      ui.View({
-                        style: {
-                          flexDirection: 'row',
-                          flex: 1,
-                          marginBottom: 4
-                        },
-                        children: [
-                          this.createAnswerButton(0),
-                          this.createAnswerButton(1)
-                        ]
-                      }),
-                      // Bottom row
-                      ui.View({
-                        style: {
-                          flexDirection: 'row',
-                          flex: 1
-                        },
-                        children: [
-                          this.createAnswerButton(2),
-                          this.createAnswerButton(3)
-                        ]
-                      })
-                    ]
-                  }),
-
-                  // Result screen
-                  ui.UINode.if(
-                    ui.Binding.derive([this.showResultBinding], (showResult) => showResult),
+              // Game screen
+              ui.UINode.if(
+                ui.Binding.derive([this.gameStartedBinding], (started) => started),
+                ui.View({
+                  style: {
+                    flex: 1,
+                    flexDirection: 'column'
+                  },
+                  children: [
+                    // Answer buttons container
                     ui.View({
                       style: {
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)'
+                        flex: 1,
+                        flexDirection: 'column',
+                        padding: 4
                       },
                       children: [
+                        // Top row (buttons 0 and 1)
                         ui.View({
                           style: {
-                            alignItems: 'center',
-                            padding: 16
+                            flexDirection: 'row',
+                            flex: 1,
+                            marginBottom: 2
                           },
                           children: [
-                            ui.Text({
-                              text: ui.Binding.derive([
-                                this.selectedAnswerBinding,
-                                this.currentQuestionIndexBinding
-                              ], (selectedAnswer, questionIndex) => {
-                                if (selectedAnswer === null || !this.currentQuestion) return '⏰ No Answer';
-                                const isCorrect = selectedAnswer === this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
-                                return isCorrect ? '✅ Correct!' : '❌ Wrong!';
-                              }),
-                              style: {
-                                fontSize: 20,
-                                fontWeight: '700',
-                                color: '#FFFFFF',
-                                textAlign: 'center',
-                                marginBottom: 8
-                              }
-                            }),
-                            ui.Text({
-                              text: ui.Binding.derive([
-                                this.selectedAnswerBinding,
-                                this.currentQuestionIndexBinding
-                              ], (selectedAnswer, questionIndex) => {
-                                if (selectedAnswer !== null && this.currentQuestion) {
-                                  const isCorrect = selectedAnswer === this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
-                                  if (!isCorrect) {
-                                    const correctIndex = this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
-                                    return `Correct: ${this.currentQuestion.answers[correctIndex].text}`;
-                                  }
-                                }
-                                return '';
-                              }),
-                              style: {
-                                fontSize: 14,
-                                color: '#FFFFFF',
-                                textAlign: 'center',
-                                opacity: 0.9,
-                                marginBottom: 12
-                              }
-                            }),
-                            ui.Text({
-                              text: "Waiting for next question...",
-                              style: {
-                                fontSize: 12,
-                                color: '#FFFFFF',
-                                textAlign: 'center',
-                                opacity: 0.7
-                              }
-                            }),
-                            ui.UINode.if(
-                              ui.Binding.derive([], () => this.isHost()),
-                              ui.View({
-                                style: {
-                                  marginTop: 20,
-                                  alignItems: 'center'
-                                },
-                                children: [
-                                  ui.Pressable({
-                                    style: {
-                                      backgroundColor: '#3B82F6',
-                                      borderRadius: 12,
-                                      paddingHorizontal: 20,
-                                      paddingVertical: 10
-                                    },
-                                    onPress: () => this.nextQuestion(),
-                                    children: [
-                                      ui.Text({
-                                        text: 'Next Question',
-                                        style: {
-                                          fontSize: 14,
-                                          fontWeight: '600',
-                                          color: '#FFFFFF',
-                                          textAlign: 'center'
-                                        }
-                                      })
-                                    ]
-                                  })
-                                ]
-                              })
-                            )
+                            this.createAnswerButton(0),
+                            this.createAnswerButton(1)
+                          ]
+                        }),
+                        // Bottom row (buttons 2 and 3)
+                        ui.View({
+                          style: {
+                            flexDirection: 'row',
+                            flex: 1,
+                            marginTop: 2
+                          },
+                          children: [
+                            this.createAnswerButton(2),
+                            this.createAnswerButton(3)
                           ]
                         })
                       ]
                     })
-                  )
-                ]
-              })
-            )
-          ]
-        }),
+                  ]
+                })
+              )
+            ]
+          })
+        ),
 
         // Bottom status bar
         ui.View({
@@ -1482,7 +1516,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         margin: 2,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 140,
+        minHeight: 150,
         padding: 8
       },
       onPress: () => this.handleAnswerSelect(answerIndex),
@@ -1490,8 +1524,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.Image({
           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
           style: {
-            width: 48,
-            height: 48,
+            width: 60,
+            height: 60,
             tintColor: '#FFFFFF',
             ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
           }
