@@ -1643,40 +1643,77 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         padding: 4
                       },
                       children: [
-                        // Answer buttons container - always show 2x2 grid but hide buttons based on answer count
-                        ui.View({
-                          style: {
-                            flex: 1,
-                            flexDirection: 'column',
-                            padding: 4
-                          },
-                          children: [
-                            // Top row (buttons 0 and 1)
-                            ui.View({
-                              style: {
-                                flexDirection: 'row',
-                                flex: 1,
-                                marginBottom: 2
-                              },
-                              children: [
-                                this.createAnswerButton(0),
-                                this.createAnswerButton(1)
-                              ]
-                            }),
-                            // Bottom row (buttons 2 and 3)
-                            ui.View({
-                              style: {
-                                flexDirection: 'row',
-                                flex: 1,
-                                marginTop: 2
-                              },
-                              children: [
-                                this.createAnswerButton(2),
-                                this.createAnswerButton(3)
-                              ]
-                            })
-                          ]
-                        })
+                        // Conditional layout based on answer count
+                        ui.UINode.if(
+                          ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
+                            return this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2;
+                          }),
+                          // 2-answer layout: Single column filling full height
+                          ui.View({
+                            style: {
+                              flex: 1,
+                              flexDirection: 'column',
+                              padding: 4
+                            },
+                            children: [
+                              // Button 2 (first answer)
+                              ui.View({
+                                style: {
+                                  flex: 1,
+                                  marginBottom: 4
+                                },
+                                children: [this.createAnswerButton(2)]
+                              }),
+                              // Button 3 (second answer)
+                              ui.View({
+                                style: {
+                                  flex: 1,
+                                  marginTop: 4
+                                },
+                                children: [this.createAnswerButton(3)]
+                              })
+                            ]
+                          })
+                        ),
+                        // Default 2x2 grid layout for 3+ answers
+                        ui.UINode.if(
+                          ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
+                            return !(this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2);
+                          }),
+                          ui.View({
+                            style: {
+                              flex: 1,
+                              flexDirection: 'column',
+                              padding: 4
+                            },
+                            children: [
+                              // Top row (buttons 0 and 1)
+                              ui.View({
+                                style: {
+                                  flexDirection: 'row',
+                                  flex: 1,
+                                  marginBottom: 2
+                                },
+                                children: [
+                                  this.createAnswerButton(0),
+                                  this.createAnswerButton(1)
+                                ]
+                              }),
+                              // Bottom row (buttons 2 and 3)
+                              ui.View({
+                                style: {
+                                  flexDirection: 'row',
+                                  flex: 1,
+                                  marginTop: 2
+                                },
+                                children: [
+                                  this.createAnswerButton(2),
+                                  this.createAnswerButton(3)
+                                ]
+                              })
+                            ]
+                          })
+                        )
                       ]
                     })
                   ]
