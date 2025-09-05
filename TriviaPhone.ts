@@ -199,13 +199,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       const playerLeft = cameraForward.cross(hz.Vec3.up).normalize();
       const desiredPosition = playerPosition
         .add(cameraForward.mul(1.0))
-        .add(playerLeft.mul(0.25));
+        .add(playerLeft.mul(0.0)); // Small positive value moves phone to the left
       desiredPosition.y += 0.4;
 
       // Calculate direction to player and rotation BEFORE setting position
       const directionToPlayer = playerPosition.sub(desiredPosition).normalize();
       const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
       const desiredRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
+
 
       // Set position and rotation at the same time
       this.entity.position.set(desiredPosition);
