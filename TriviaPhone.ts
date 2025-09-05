@@ -1113,7 +1113,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         // Start Game Button
                         ui.Pressable({
                           style: {
-                            backgroundColor: '#6366F1',
+                            backgroundColor: '#FFFFFF',
                             borderRadius: 8,
                             paddingHorizontal: 16,
                             paddingVertical: 12,
@@ -1122,7 +1122,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             alignItems: 'center',
                             shadowColor: '#000000',
                             shadowOffset: [0, 2],
-                            shadowOpacity: 0.2,
+                            shadowOpacity: 0.1,
                             shadowRadius: 4
                           },
                           onPress: () => this.handleStartGame(),
@@ -1132,7 +1132,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                               style: {
                                 fontSize: 14,
                                 fontWeight: '600',
-                                color: '#FFFFFF',
+                                color: '#6366F1',
                                 textAlign: 'center'
                               }
                             })
