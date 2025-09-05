@@ -1966,7 +1966,7 @@ export class TriviaGame extends ui.UIComponent {
                       alignItems: 'center'
                     },
                     children: Text({
-                      text: 'Waiting for Host...',
+                      text: 'Players Ready',
                       style: {
                         fontSize: 18,
                         fontWeight: 'bold',
