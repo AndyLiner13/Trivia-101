@@ -180,27 +180,33 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private teleportDirectlyInFrontOfVRUser(player: hz.Player): void {
     try {
-      // Get the player's current position and rotation
+      // Position the phone in front of the player using world space positioning
       const playerPosition = player.position.get();
-      const playerRotation = player.rotation.get();
+      const playerForward = player.forward.get();
 
-      // Calculate forward direction by rotating the forward vector with player's rotation
-      const forwardDirection = hz.Quaternion.mulVec3(playerRotation, hz.Vec3.forward);
+      // Position 1 unit in front of player at eye level
+      const desiredPosition = playerPosition.add(playerForward.mul(1.0));
+      desiredPosition.y += 0.1; // Slight upward offset for eye level
+      // Allow Z position to change based on user location
 
-      // Position the phone 1.0 units directly in front of the player (reduced from 1.5 for closer positioning)
-      const forwardOffset = 1.0;
-      const desiredPosition = playerPosition.add(forwardDirection.mul(forwardOffset));
-
-      // Add slight upward offset so it's at eye level
-      desiredPosition.y += 0.2;
-
-      // Update the TriviaPhone's position
       this.entity.position.set(desiredPosition);
 
-      // Make the TriviaPhone face the player (rotate 180 degrees from player's direction)
-      const facePlayerRotation = hz.Quaternion.fromAxisAngle(hz.Vec3.up, Math.PI);
-      const finalRotation = playerRotation.mul(facePlayerRotation);
-      this.entity.rotation.set(finalRotation);
+      // Disable physics and collision
+      this.entity.simulated.set(false);
+      this.entity.collidable.set(false);
+
+      // Calculate direction to player and set rotation manually
+      const playerPos = player.position.get();
+      const phonePos = this.entity.position.get();
+      const directionToPlayer = playerPos.sub(phonePos).normalize();
+
+      // Create a quaternion that rotates the phone to face the player
+      // First, get the angle in the XZ plane
+      const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+
+      // Create rotation quaternion
+      const rotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
+      this.entity.rotation.set(rotation);
 
     } catch (error) {
       // Fallback to the original method if something goes wrong
@@ -217,26 +223,36 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
         // If the TriviaPhone was visible but is no longer visible, trigger restoration
         if (this.isPlayerFocusedOnUI && !isVisible) {
-
-          // Restore the camera position and rotation to what it was when the user started the interaction
-          try {
-            if (camera.default && this.cameraPositionAtHKeyPress && this.cameraRotationAtHKeyPress) {
-              // Restore camera position and rotation with a smooth transition
-              camera.default.setCameraModeFixed({
-                position: this.cameraPositionAtHKeyPress,
-                rotation: this.cameraRotationAtHKeyPress,
-                duration: 0.5 // 0.5 second transition for smooth restoration
-              });
-
-              // Clear the stored camera state
-              this.cameraPositionAtHKeyPress = null;
-              this.cameraRotationAtHKeyPress = null;
-            }
-          } catch (error) {
-          }
-
           // Mark that the player is no longer focused on the UI
           this.isPlayerFocusedOnUI = false;
+        }
+
+        // Keep VR phone positioned and ensure bottom points down
+        if (this.assignedPlayer.deviceType.get() === hz.PlayerDeviceType.VR && isVisible) {
+          // Disable physics/simulation
+          this.entity.simulated.set(false);
+          this.entity.collidable.set(false);
+
+          // Maintain position 1 unit in front of player
+          const playerPosition = this.assignedPlayer.position.get();
+          const playerForward = this.assignedPlayer.forward.get();
+          const desiredPosition = playerPosition.add(playerForward.mul(1.0));
+          desiredPosition.y += 0.1;
+          // Allow Z position to change based on user location
+          this.entity.position.set(desiredPosition);
+
+          // Calculate direction to player and set rotation manually
+          const playerPos = this.assignedPlayer.position.get();
+          const phonePos = this.entity.position.get();
+          const directionToPlayer = playerPos.sub(phonePos).normalize();
+
+          // Create a quaternion that rotates the phone to face the player
+          // First, get the angle in the XZ plane
+          const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+
+          // Create rotation quaternion
+          const rotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
+          this.entity.rotation.set(rotation);
         }
 
       } catch (error) {
@@ -336,56 +352,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         return;
       }
 
-<<<<<<< HEAD
-      // Get the player's device type
-      const deviceType = localPlayer.deviceType.get();
-
-      // Set up H key input for desktop and mobile users only
-      if (deviceType === hz.PlayerDeviceType.Desktop || deviceType === hz.PlayerDeviceType.Mobile) {
-        if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary)) {
-          this.inputConnection = hz.PlayerControls.connectLocalInput(
-            hz.PlayerInputAction.LeftTertiary,
-            hz.ButtonIcon.Menu,
-            this,
-            { preferredButtonPlacement: hz.ButtonPlacement.Center }
-          );
-
-          this.inputConnection.registerCallback((action, pressed) => {
-            if (pressed) {
-              // Handle keyboard trigger directly
-              this.handleKeyboardTrigger(localPlayer);
-            }
-          });
-
-          // Set up E key input for hiding TriviaPhone when focused
-          if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
-            this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
-              hz.PlayerInputAction.RightGrip,
-              hz.ButtonIcon.None,
-              this,
-              { preferredButtonPlacement: hz.ButtonPlacement.Default }
-            );
-
-            this.eKeyInputConnection.registerCallback((action, pressed) => {
-              if (pressed) {
-                // Handle E key trigger - hide TriviaPhone if player is focused on UI
-                this.handleEKeyTrigger(localPlayer);
-              }
-            });
-
-          } else {
-          }
-        } else {
-          this.fallbackToSeparateComponent();
-        }
-      }
-
-      // Set up RightSecondary input for VR users only
-      if (deviceType === hz.PlayerDeviceType.VR) {
-        if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightSecondary)) {
-          this.leftSecondaryInputConnection = hz.PlayerControls.connectLocalInput(
-            hz.PlayerInputAction.RightSecondary,
-=======
       // Set up E key input for hiding TriviaPhone when focused
       if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
         this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
@@ -413,21 +379,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         if (!isVRUser) {
           this.leftTertiaryInputConnection = hz.PlayerControls.connectLocalInput(
             hz.PlayerInputAction.LeftTertiary,
->>>>>>> 4efe9ea3049e5e5b33f9a0ec8507b3ee2806933c
+
             hz.ButtonIcon.Menu,
             this,
             { preferredButtonPlacement: hz.ButtonPlacement.Center }
           );
 
-          this.leftTertiaryInputConnection.registerCallback((action, pressed) => {
+          this.leftTertiaryInputConnection.registerCallback((action: hz.PlayerInputAction, pressed: boolean) => {
             if (pressed) {
-<<<<<<< HEAD
-              // Handle RightSecondary trigger directly
-              this.handleRightSecondaryTrigger(localPlayer);
-=======
               // Handle H key trigger - show TriviaPhone for non-VR users
               this.handleLeftTertiaryTrigger(localPlayer);
->>>>>>> 4efe9ea3049e5e5b33f9a0ec8507b3ee2806933c
             }
           });
         } else {
@@ -449,7 +410,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             { preferredButtonPlacement: hz.ButtonPlacement.Default }
           );
 
-          this.rightSecondaryInputConnection.registerCallback((action, pressed) => {
+          this.rightSecondaryInputConnection.registerCallback((action: hz.PlayerInputAction, pressed: boolean) => {
             if (pressed) {
               // Handle RightSecondary trigger - show/hide TriviaPhone for VR users
               this.handleRightSecondaryTrigger(localPlayer);
@@ -458,10 +419,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         } else {
           console.log("🖥️ TriviaPhone: Non-VR user detected, skipping RightSecondary input registration");
         }
-<<<<<<< HEAD
-=======
       } else {
->>>>>>> 4efe9ea3049e5e5b33f9a0ec8507b3ee2806933c
       }
     } catch (error) {
       this.fallbackToSeparateComponent();
@@ -533,7 +491,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.assignedPlayer = player;
       }
 
-      this.teleportToPlayer(player);
+      // Use VR-specific teleport method for VR users
+      this.teleportDirectlyInFrontOfVRUser(player);
       this.openAndFocusUIForPlayer(player);
     } else {
       // Phone is within 10 meters, hide it by setting y to -1000
@@ -546,32 +505,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
   }
 
-<<<<<<< HEAD
-  private handleRightSecondaryTrigger(player: hz.Player): void {
-    const currentPosition = this.entity.position.get();
-    const playerPosition = player.position.get();
-    const distance = currentPosition.distance(playerPosition);
-
-    // Check if phone is within 10 meters of the player
-    if (distance <= 10 && this.assignedPlayer?.id === player.id) {
-      // Phone is within 10 meters and assigned to this player - hide it
-      this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
-      this.isPlayerFocusedOnUI = false;
-      console.log("📱 TriviaPhone: Hiding phone (within 10m range)");
-    } else {
-      // Phone is not within 10 meters or not assigned - spawn it in front of the player
-      if (!this.assignedPlayer) {
-        this.initializeForPlayer(player);
-      } else if (this.assignedPlayer.id !== player.id) {
-        // Reassign to new player
-        this.assignedPlayer = player;
-      }
-
-      this.teleportDirectlyInFrontOfVRUser(player);
-      this.openAndFocusUIForPlayer(player);
-      console.log("📱 TriviaPhone: Spawning phone directly in front of VR user");
-    }
-=======
   private handleLeftTertiaryTrigger(player: hz.Player): void {
     // This method is only called for non-VR users (desktop, web, mobile) since we only register the input for them
     console.log("🖥️ TriviaPhone: Non-VR user pressed H key, showing TriviaPhone");
@@ -587,7 +520,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Show the TriviaPhone and focus the UI for non-VR users
     this.teleportToPlayer(player);
     this.openAndFocusUIForPlayer(player);
->>>>>>> 4efe9ea3049e5e5b33f9a0ec8507b3ee2806933c
   }
 
   private openUIForPlayer(player: hz.Player): void {
@@ -631,8 +563,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.assignedPlayer = player;
     this.isInitialized = true;
 
-    // Teleport to the player
-    this.teleportToPlayer(player);
+    // Use VR-specific teleport method for VR users, regular method for others
+    if (player.deviceType.get() === hz.PlayerDeviceType.VR) {
+      this.teleportDirectlyInFrontOfVRUser(player);
+    } else {
+      this.teleportToPlayer(player);
+    }
   }
 
   onPlayerUnassigned(player: hz.Player) {
