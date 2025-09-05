@@ -18,3 +18,5 @@ Use the MePhone folder to make the apps & components (to keep the code clean), b
 Only use console.log sparringly, and when you're done troubleshooting remove any console.logs used during the troubleshooting process.
 
 Do not try to run npx tsc checks.
+
+Include emojis in console.logs. A check should go at the beginning of good logs and an x should go at the beginning of bad logs.

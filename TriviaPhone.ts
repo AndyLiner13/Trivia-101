@@ -27,49 +27,8 @@ const triviaStateResponseEvent = new hz.NetworkEvent<{
 // Network event for keyboard input from separate KeyboardInputHandler (fallback)
 const mePhoneKeyboardTriggerEvent = new hz.NetworkEvent<{ playerId: string }>('mePhoneKeyboardTrigger');
 
-// Built-in trivia questions
-const triviaQuestions = [
-  {
-    question: "What is the capital of France?",
-    answers: ["London", "Berlin", "Paris", "Madrid"],
-    correctIndex: 2
-  },
-  {
-    question: "Which planet is known as the Red Planet?",
-    answers: ["Mars", "Venus", "Jupiter", "Saturn"],
-    correctIndex: 0
-  },
-  {
-    question: "What is 7 × 8?",
-    answers: ["54", "56", "64", "48"],
-    correctIndex: 1
-  },
-  {
-    question: "Who painted the Mona Lisa?",
-    answers: ["Van Gogh", "Picasso", "Da Vinci", "Monet"],
-    correctIndex: 2
-  },
-  {
-    question: "What is the largest ocean on Earth?",
-    answers: ["Atlantic", "Pacific", "Indian", "Arctic"],
-    correctIndex: 1
-  },
-  {
-    question: "What year did World War II end?",
-    answers: ["1944", "1945", "1946", "1947"],
-    correctIndex: 1
-  },
-  {
-    question: "What is the chemical symbol for gold?",
-    answers: ["Go", "Gd", "Au", "Ag"],
-    correctIndex: 2
-  },
-  {
-    question: "Which country is known as the Land of the Rising Sun?",
-    answers: ["China", "Japan", "Thailand", "South Korea"],
-    correctIndex: 1
-  }
-];
+// Built-in trivia questions (fallback only - TriviaGame provides the actual questions)
+const triviaQuestions: any[] = [];
 
 const answerShapes = [
   { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
@@ -105,10 +64,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showResult = false;
   private gameStarted = false;
 
+  // Current question data from TriviaGame
+  private currentQuestion: any = null;
+
   // Game settings state
   private gameSettings = {
     numberOfQuestions: 5,
-    category: 'General Knowledge',
+    category: 'General',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     timeLimit: 30,
     autoAdvance: false,
@@ -587,9 +549,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleStartGame(): void {
     if (!this.isHost()) return;
 
-    // Start the game locally
-    this.startGame();
-
     // Send network event to start the game for all players with configured settings
     this.sendNetworkBroadcastEvent(triviaGameStartEvent, {
       hostId: this.assignedPlayer?.id.toString() || 'host',
@@ -606,6 +565,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private startGame(): void {
     this.gameStarted = true;
     this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
     this.score = 0;
     this.selectedAnswer = null;
     this.showResult = false;
@@ -694,25 +654,24 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private nextQuestion(): void {
-    if (this.currentQuestionIndex < triviaQuestions.length - 1) {
-      this.currentQuestionIndex++;
-      this.selectedAnswer = null;
-      this.showResult = false;
+    this.currentQuestionIndex++;
+    this.selectedAnswer = null;
+    this.showResult = false;
 
-      this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
-      this.selectedAnswerBinding.set(null);
-      this.showResultBinding.set(false);
+    this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
+    this.selectedAnswerBinding.set(null);
+    this.showResultBinding.set(false);
 
-      // Send next question event
-      this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
-        playerId: this.assignedPlayer?.id.toString() || 'host'
-      });
-    }
+    // Send next question event
+    this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
+      playerId: this.assignedPlayer?.id.toString() || 'host'
+    });
   }
 
   private resetGame(): void {
     this.gameStarted = false;
     this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
     this.score = 0;
     this.selectedAnswer = null;
     this.showResult = false;
@@ -810,9 +769,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.showResultBinding,
           this.selectedAnswerBinding
         ], (showResult, selectedAnswer) => {
-          if (showResult && selectedAnswer !== null) {
-            const currentQuestion = triviaQuestions[this.currentQuestionIndex];
-            const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+          if (showResult && selectedAnswer !== null && this.currentQuestion) {
+            const isCorrect = selectedAnswer === this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
             return isCorrect ? '#22C55E' : '#EF4444';
           }
           return '#6366F1';
@@ -986,9 +944,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                                 this.selectedAnswerBinding,
                                 this.currentQuestionIndexBinding
                               ], (selectedAnswer, questionIndex) => {
-                                if (selectedAnswer === null) return '⏰ No Answer';
-                                const currentQuestion = triviaQuestions[questionIndex];
-                                const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+                                if (selectedAnswer === null || !this.currentQuestion) return '⏰ No Answer';
+                                const isCorrect = selectedAnswer === this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
                                 return isCorrect ? '✅ Correct!' : '❌ Wrong!';
                               }),
                               style: {
@@ -1004,11 +961,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                                 this.selectedAnswerBinding,
                                 this.currentQuestionIndexBinding
                               ], (selectedAnswer, questionIndex) => {
-                                if (selectedAnswer !== null) {
-                                  const currentQuestion = triviaQuestions[questionIndex];
-                                  const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+                                if (selectedAnswer !== null && this.currentQuestion) {
+                                  const isCorrect = selectedAnswer === this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
                                   if (!isCorrect) {
-                                    return `Correct: ${currentQuestion.answers[currentQuestion.correctIndex]}`;
+                                    const correctIndex = this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
+                                    return `Correct: ${this.currentQuestion.answers[correctIndex].text}`;
                                   }
                                 }
                                 return '';
@@ -1085,7 +1042,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           children: [
             ui.Text({
               text: ui.Binding.derive([this.currentQuestionIndexBinding], (index) =>
-                `Question ${index + 1} of ${triviaQuestions.length}`
+                `Question ${index + 1}`
               ),
               style: {
                 fontSize: 12,
@@ -1246,7 +1203,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     flexDirection: 'column'
                   },
-                  children: ['General Knowledge', 'Italian Brainrot Quiz'].map(category =>
+                  children: ['General', 'Italian Brainrot Quiz'].map(category =>
                     ui.Pressable({
                       style: {
                         backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
@@ -1510,9 +1467,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.selectedAnswerBinding,
           this.currentQuestionIndexBinding
         ], (showResult, selectedAnswer, questionIndex) => {
-          if (showResult) {
-            const currentQuestion = triviaQuestions[questionIndex];
-            const isCorrect = answerIndex === currentQuestion.correctIndex;
+          if (showResult && this.currentQuestion) {
+            const correctIndex = this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
+            const isCorrect = answerIndex === correctIndex;
             const isSelected = answerIndex === selectedAnswer;
 
             if (isCorrect) return '#22C55E'; // Green for correct

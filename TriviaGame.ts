@@ -420,6 +420,10 @@ export class TriviaGame extends ui.UIComponent {
   private lastCorrectAnswerIndex: number = -1;
   private lastAnswerCounts: number[] = [];
 
+  // Lazy loading cache - track which categories have been loaded
+  private loadedCategories: Set<string> = new Set();
+  private isLoadingCategory: boolean = false;
+
   // Public getter for currentQuestionIndex to allow TriviaPhone sync
   public getCurrentQuestionIndex(): number {
     return this.currentQuestionIndex;
@@ -505,79 +509,84 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private async loadTriviaQuestions(): Promise<void> {
-    // Load general questions
-    if (this.props.generalQuestionsAsset) {
-      try {
-        const assetData = await (this.props.generalQuestionsAsset as any).fetchAsData();
-        const jsonData = assetData.asJSON() as TriviaQuestion[];
-        if (Array.isArray(jsonData)) {
-          this.generalQuestions = jsonData;
+    console.log("✅ TriviaGame: Trivia questions loading initialized (lazy loading enabled)");
+    // No longer loading all JSON files upfront - will load on demand when categories are selected
+  }
+
+  private parseOpenTriviaFormat(jsonData: any, expectedCategory: string): TriviaQuestion[] {
+    console.log("🔄 TriviaGame: Parsing Open Trivia Database format for category:", expectedCategory);
+    const convertedQuestions: TriviaQuestion[] = [];
+    
+    // Extract questions from all difficulty levels
+    const difficulties = ['easy', 'medium', 'hard'];
+    
+    for (const difficulty of difficulties) {
+      if (jsonData.questions[difficulty] && Array.isArray(jsonData.questions[difficulty])) {
+        console.log("✅ TriviaGame: Processing", jsonData.questions[difficulty].length, "questions for difficulty:", difficulty);
+        for (const question of jsonData.questions[difficulty]) {
+          try {
+            // Convert Open Trivia Database format to TriviaQuestion format
+            const answers = [
+              { text: question.correct_answer, correct: true },
+              ...question.incorrect_answers.map((answer: string) => ({ text: answer, correct: false }))
+            ];
+
+            // Shuffle answers for randomization
+            for (let i = answers.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [answers[i], answers[j]] = [answers[j], answers[i]];
+            }
+
+            const triviaQuestion: TriviaQuestion = {
+              id: parseInt(question.id) || Math.floor(Math.random() * 1000000),
+              question: question.question,
+              category: expectedCategory,
+              difficulty: difficulty,
+              image: undefined, // Open Trivia Database doesn't have images
+              answers: answers
+            };
+
+            convertedQuestions.push(triviaQuestion);
+          } catch (error) {
+            console.log("❌ TriviaGame: Error parsing question:", question, "Error:", error);
+            // Skip malformed questions
+            continue;
+          }
         }
-      } catch (error) {
-        // Failed to load general questions, using defaults
+      } else {
+        console.log("⚠️ TriviaGame: No questions found for difficulty:", difficulty);
       }
     }
 
-    // Load history questions
-    if (this.props.historyQuestionsAsset) {
-      try {
-        const assetData = await (this.props.historyQuestionsAsset as any).fetchAsData();
-        const jsonData = assetData.asJSON() as TriviaQuestion[];
-        if (Array.isArray(jsonData)) {
-          this.historyQuestions = jsonData;
-        }
-      } catch (error) {
-        // Failed to load history questions, using defaults
-      }
-    }
-
-    // Load science questions
-    if (this.props.scienceQuestionsAsset) {
-      try {
-        const assetData = await (this.props.scienceQuestionsAsset as any).fetchAsData();
-        const jsonData = assetData.asJSON() as TriviaQuestion[];
-        if (Array.isArray(jsonData)) {
-          this.scienceQuestions = jsonData;
-        }
-      } catch (error) {
-        // Failed to load science questions, using defaults
-      }
-    }
-
-    // If no assets loaded, use default questions
-    if (this.generalQuestions.length === 0 && this.historyQuestions.length === 0 && this.scienceQuestions.length === 0) {
-      // Categorize default questions by category
-      this.generalQuestions = defaultTriviaQuestions.filter(q =>
-        (q.category?.toLowerCase().includes('geography')) ||
-        (q.category?.toLowerCase().includes('general')) ||
-        (q.category?.toLowerCase().includes('math')) ||
-        (q.category?.toLowerCase().includes('literature')) ||
-        (q.category?.toLowerCase().includes('art')) ||
-        (!q.category || !['science', 'history'].includes(q.category.toLowerCase()))
-      );
-      this.historyQuestions = defaultTriviaQuestions.filter(q => q.category?.toLowerCase().includes('history'));
-      this.scienceQuestions = defaultTriviaQuestions.filter(q => q.category?.toLowerCase().includes('science'));
-    }
-
-    // Set default category to General and filter questions
-    this.updateQuestionsForCategory("General", "easy");
+    console.log("✅ TriviaGame: Successfully converted", convertedQuestions.length, "questions for category:", expectedCategory);
+    return convertedQuestions;
   }
 
   private async loadCustomQuizData(): Promise<void> {
+    console.log("🔄 TriviaGame: Loading custom quiz data...");
     try {
       // Load the Italian Brainrot Quiz from the asset
       if (this.props.ItalianBrainrotQuiz) {
+        console.log("✅ TriviaGame: Italian Brainrot Quiz asset found, loading...");
         const assetData = await (this.props.ItalianBrainrotQuiz as any).fetchAsData();
         const quizData = assetData.asJSON() as CustomQuizQuestion[];
+        console.log("✅ TriviaGame: Italian Brainrot Quiz data loaded, type:", typeof quizData, "isArray:", Array.isArray(quizData), "length:", Array.isArray(quizData) ? quizData.length : 'N/A');
         
         if (Array.isArray(quizData) && quizData.length > 0) {
+          console.log("🔄 TriviaGame: Converting Italian Brainrot Quiz questions...");
           // Convert to standard TriviaQuestion format
           this.customQuizQuestions = await this.loadCustomQuiz(quizData);
+          console.log("✅ TriviaGame: Italian Brainrot Quiz conversion complete, questions:", this.customQuizQuestions.length);
+          // Mark Italian Brainrot Quiz as loaded
+          this.loadedCategories.add("italian brainrot quiz");
         } else {
+          console.log("❌ TriviaGame: Italian Brainrot Quiz data is not a valid array or is empty");
         }
       } else {
+        console.log("❌ TriviaGame: No Italian Brainrot Quiz asset provided");
       }
     } catch (error) {
+      console.log("❌ TriviaGame: Error loading Italian Brainrot Quiz:", error);
       // If custom quiz loading fails, customQuizQuestions will remain empty
     }
   }
@@ -638,45 +647,117 @@ export class TriviaGame extends ui.UIComponent {
     return imageTextureMap[filename] || null;
   }
 
-  private updateQuestionsForCategory(category: string, difficulty: string): void {
-    let allQuestions: TriviaQuestion[] = [];
+  private async updateQuestionsForCategory(category: string, difficulty: string): Promise<void> {
+    console.log("🔍 TriviaGame: Updating questions for category:", category, "difficulty:", difficulty);
 
-    // Collect questions from selected category - NO FALLBACKS
-    const categoryLower = category.toLowerCase();
-    
-    if (categoryLower === "general") {
-      allQuestions = [...this.generalQuestions];
-    } else if (categoryLower === "history") {
-      allQuestions = [...this.historyQuestions];
-    } else if (categoryLower === "science") {
-      allQuestions = [...this.scienceQuestions];
-    } else if (categoryLower === "italian brainrot quiz" || categoryLower === "italianbrainrot quiz" || categoryLower.includes("italian") && categoryLower.includes("brainrot")) {
-      allQuestions = [...this.customQuizQuestions];
-    } else {
-      // For unknown categories, don't fall back - show error
-      allQuestions = [];
+    // Prevent multiple simultaneous loads
+    if (this.isLoadingCategory) {
+      console.log("⚠️ TriviaGame: Category loading already in progress, skipping...");
+      return;
     }
 
-    // Filter by difficulty if specified (but NOT for Italian Brainrot Quiz)
-    const isItalianBrainrot = categoryLower === "italian brainrot quiz" || categoryLower === "italianbrainrot quiz" || (categoryLower.includes("italian") && categoryLower.includes("brainrot"));
-    
-    if (!isItalianBrainrot && difficulty !== "all" && allQuestions.length > 0) {
-      const beforeFilter = allQuestions.length;
-      allQuestions = allQuestions.filter(q => q.difficulty?.toLowerCase() === difficulty.toLowerCase());
-    } else if (isItalianBrainrot) {
+    this.isLoadingCategory = true;
+
+    try {
+      let allQuestions: TriviaQuestion[] = [];
+
+      // Check if category has already been loaded
+      const categoryKey = category.toLowerCase();
+      if (this.loadedCategories.has(categoryKey)) {
+        console.log("✅ TriviaGame: Category already loaded, using cached questions");
+        // Use cached questions
+        if (categoryKey === "general") {
+          allQuestions = [...this.generalQuestions];
+        } else if (categoryKey === "history") {
+          allQuestions = [...this.historyQuestions];
+        } else if (categoryKey === "science") {
+          allQuestions = [...this.scienceQuestions];
+        } else if (categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || categoryKey.includes("italian") && categoryKey.includes("brainrot")) {
+          allQuestions = [...this.customQuizQuestions];
+        }
+      } else {
+        // Load category on-demand
+        console.log("🔄 TriviaGame: Loading category on-demand:", categoryKey);
+
+        if (categoryKey === "general") {
+          if (this.props.generalQuestionsAsset) {
+            console.log("✅ TriviaGame: General questions asset found, loading...");
+            const assetData = await (this.props.generalQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.generalQuestions = this.parseOpenTriviaFormat(jsonData, "General");
+            allQuestions = [...this.generalQuestions];
+            this.loadedCategories.add(categoryKey);
+            console.log("✅ TriviaGame: General questions loaded and cached");
+          } else {
+            console.log("❌ TriviaGame: No general questions asset provided");
+          }
+        } else if (categoryKey === "history") {
+          if (this.props.historyQuestionsAsset) {
+            console.log("✅ TriviaGame: History questions asset found, loading...");
+            const assetData = await (this.props.historyQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.historyQuestions = this.parseOpenTriviaFormat(jsonData, "History");
+            allQuestions = [...this.historyQuestions];
+            this.loadedCategories.add(categoryKey);
+            console.log("✅ TriviaGame: History questions loaded and cached");
+          } else {
+            console.log("❌ TriviaGame: No history questions asset provided");
+          }
+        } else if (categoryKey === "science") {
+          if (this.props.scienceQuestionsAsset) {
+            console.log("✅ TriviaGame: Science questions asset found, loading...");
+            const assetData = await (this.props.scienceQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.scienceQuestions = this.parseOpenTriviaFormat(jsonData, "Science");
+            allQuestions = [...this.scienceQuestions];
+            this.loadedCategories.add(categoryKey);
+            console.log("✅ TriviaGame: Science questions loaded and cached");
+          } else {
+            console.log("❌ TriviaGame: No science questions asset provided");
+          }
+        } else if (categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || categoryKey.includes("italian") && categoryKey.includes("brainrot")) {
+          // Italian Brainrot Quiz is already loaded in loadCustomQuizData
+          allQuestions = [...this.customQuizQuestions];
+          this.loadedCategories.add(categoryKey);
+          console.log("✅ TriviaGame: Italian Brainrot Quiz already loaded");
+        } else {
+          console.log("❌ TriviaGame: Unknown category:", category, "- no questions loaded");
+          allQuestions = [];
+        }
+      }
+
+      // Filter by difficulty if specified (but NOT for Italian Brainrot Quiz)
+      const isItalianBrainrot = categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || (categoryKey.includes("italian") && categoryKey.includes("brainrot"));
+
+      if (!isItalianBrainrot && difficulty !== "all" && allQuestions.length > 0) {
+        const beforeFilter = allQuestions.length;
+        allQuestions = allQuestions.filter(q => q.difficulty?.toLowerCase() === difficulty.toLowerCase());
+        console.log("🔍 TriviaGame: Filtered by difficulty '" + difficulty + "', before:", beforeFilter, "after:", allQuestions.length);
+      } else if (isItalianBrainrot) {
+        console.log("ℹ️ TriviaGame: Skipping difficulty filter for Italian Brainrot Quiz");
+      }
+
+      // NO FALLBACKS - if no questions match the exact criteria, keep empty array
+      // This will trigger error handling in handleStartGame
+
+      // Limit number of questions (but NOT for Italian Brainrot Quiz)
+      if (!isItalianBrainrot && this.gameConfig && this.gameConfig.numQuestions && allQuestions.length > this.gameConfig.numQuestions) {
+        console.log("✂️ TriviaGame: Limiting questions to", this.gameConfig.numQuestions, "from", allQuestions.length);
+        allQuestions = allQuestions.slice(0, this.gameConfig.numQuestions);
+      } else if (isItalianBrainrot) {
+        console.log("ℹ️ TriviaGame: Not limiting questions for Italian Brainrot Quiz");
+      }
+
+      this.triviaQuestions = allQuestions;
+      this.currentQuestionIndex = 0;
+      console.log("📊 TriviaGame: Final trivia questions count:", this.triviaQuestions.length);
+
+    } catch (error) {
+      console.log("❌ TriviaGame: Error loading category:", category, "Error:", error);
+      this.triviaQuestions = [];
+    } finally {
+      this.isLoadingCategory = false;
     }
-
-    // NO FALLBACKS - if no questions match the exact criteria, keep empty array
-    // This will trigger error handling in handleStartGame
-
-    // Limit number of questions (but NOT for Italian Brainrot Quiz)
-    if (!isItalianBrainrot && this.gameConfig && this.gameConfig.numQuestions && allQuestions.length > this.gameConfig.numQuestions) {
-      allQuestions = allQuestions.slice(0, this.gameConfig.numQuestions);
-    } else if (isItalianBrainrot) {
-    }
-
-    this.triviaQuestions = allQuestions;
-    this.currentQuestionIndex = 0;
   }
 
   private setupNetworkEvents(): void {
@@ -1453,7 +1534,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showNextQuestion();
   }
 
-  private onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }): void {
+  private async onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }): Promise<void> {
     
     // Update the game configuration immediately when settings change in TriviaPhone
     this.gameConfig = {
@@ -1467,8 +1548,8 @@ export class TriviaGame extends ui.UIComponent {
     // Update the binding to reflect changes in the UI
     this.gameConfigBinding.set(this.gameConfig);
     
-    // Update questions based on new category and difficulty
-    this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
+    // Update questions based on new category and difficulty (now async with lazy loading)
+    await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
   }
 
   private onNextQuestionRequest(data: { playerId: string }): void {
@@ -1506,23 +1587,31 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
-  private handleStartGame(): void {
+  private async handleStartGame(): Promise<void> {
     if (!this.isLocalPlayerHost) {
+      console.log("🚫 TriviaGame: Non-host player attempted to start game - ignoring");
       return;
     }
+
+    console.log("🎮 TriviaGame: Host starting game...");
 
     // Get selected category and difficulty from gameConfig
     const selectedCategory = this.gameConfig.category;
     const selectedDifficulty = this.gameConfig.difficulty;
+    console.log("🔍 TriviaGame: Selected category:", selectedCategory, "difficulty:", selectedDifficulty);
 
-    // Update questions based on selection
-    this.updateQuestionsForCategory(selectedCategory, selectedDifficulty);
+    // Update questions based on selection (now async with lazy loading)
+    await this.updateQuestionsForCategory(selectedCategory, selectedDifficulty);
 
     // Check if we have questions for the selected category
+    console.log("📊 TriviaGame: Questions available after category selection:", this.triviaQuestions.length);
     if (this.triviaQuestions.length === 0) {
+      console.log("❌ TriviaGame: ERROR - No questions available for category:", selectedCategory);
       this.showErrorScreen(`No questions available for "${selectedCategory}". Please check your category selection and ensure the data source is properly configured.`);
       return;
     }
+
+    console.log("✅ TriviaGame: Starting game with", this.triviaQuestions.length, "questions");
 
     // Shuffle questions for completely random order - do this multiple times for maximum randomness
     this.shuffleQuestions();
@@ -1550,7 +1639,7 @@ export class TriviaGame extends ui.UIComponent {
     this.startContinuousGame();
   }
 
-  private onGameStart(data: { hostId: string, config: any, questions?: any[] }): void {
+  private async onGameStart(data: { hostId: string, config: any, questions?: any[] }): Promise<void> {
     // Store the host ID from the game start event
     this.hostPlayerId = data.hostId;
     this.hostPlayerIdBinding.set(this.hostPlayerId);
@@ -1564,12 +1653,12 @@ export class TriviaGame extends ui.UIComponent {
     this.gameConfig = data.config;
     this.gameConfigBinding.set(this.gameConfig);
 
-    // Use questions from TriviaPhone if provided, otherwise use local questions
+    // Use questions from TriviaPhone if provided, otherwise update questions based on the new configuration
     if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
       this.triviaQuestions = data.questions;
     } else {
-      // Update questions based on the new configuration
-      this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
+      // Update questions based on the new configuration (now async with lazy loading)
+      await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
     }
 
     // Check if we have questions available - NO FALLBACKS
