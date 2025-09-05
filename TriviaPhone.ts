@@ -1644,7 +1644,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         // Conditional layout based on answer count
                         ui.UINode.if(
                           ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
-                            return this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2;
+                            return !!(this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2);
                           }),
                           // 2-answer layout: Single column filling full height
                           ui.View({
@@ -1676,7 +1676,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         // Default 2x2 grid layout for 3+ answers
                         ui.UINode.if(
                           ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
-                            return !(this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2);
+                            return !!(this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length !== 2);
                           }),
                           ui.View({
                             style: {
