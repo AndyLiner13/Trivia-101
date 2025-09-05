@@ -117,57 +117,29 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     super();
   }
 
-  // Methods to interact with persistent storage
+  // Methods to interact with the native leaderboard system
   private isPersistentStorageReady(): boolean {
-    try {
-      return this.world.persistentStorage !== undefined && this.world.persistentStorage !== null;
-    } catch (error) {
-      return false;
-    }
+    // Since we're no longer using persistent storage, this is always true
+    return true;
   }
 
   private getPlayerPoints(player: hz.Player): number {
     try {
-      // Check if persistent storage is available and ready
-      if (!this.world.persistentStorage) {
-        console.log("⚠️ TriviaPhone: Persistent storage not available, returning 0");
-        return 0;
-      }
-
-      const points = this.world.persistentStorage.getPlayerVariable(player, 'Trivia:Points');
-      
-      // If points is undefined or null, it might be because the variable hasn't been set yet or storage is initializing
-      if (points === undefined || points === null) {
-        console.log("⏳ TriviaPhone: Player points not found or still initializing, returning 0");
-        return 0;
-      }
-      
-      return points;
+      // Get score from native leaderboard system (if available)
+      // Note: Native leaderboard doesn't have getScoreForPlayer, so we return the local score
+      return this.score;
     } catch (error) {
-      // Check if the error is due to persistent storage not being ready
-      if (error instanceof Error && (error.message.includes('initializing') || error.message.includes('Returning empty state'))) {
-        console.log("⏳ TriviaPhone: Persistent storage still initializing, will retry later");
-        return 0;
-      }
-      
-      console.log("❌ TriviaPhone: Error reading player points:", error);
+      console.log("❌ TriviaPhone: Error getting player points:", error);
       return 0;
     }
   }
 
   private updateScoreDisplay(): void {
     if (this.assignedPlayer) {
-      const persistentScore = this.getPlayerPoints(this.assignedPlayer);
-      const currentLocalScore = this.score;
-      
-      // Only update if persistent score is higher than or equal to current local score
-      if (persistentScore >= currentLocalScore) {
-        this.score = persistentScore;
-        this.scoreBinding.set(persistentScore);
-        console.log("📱 TriviaPhone: Updated score display to", persistentScore);
-      } else {
-        console.log(`📱 TriviaPhone: Keeping local score ${currentLocalScore} (persistent: ${persistentScore})`);
-      }
+      // Use local score since we can't read from native leaderboard
+      const currentScore = this.score;
+      this.scoreBinding.set(currentScore);
+      console.log("📱 TriviaPhone: Updated score display to", currentScore);
     }
   }
 
@@ -178,81 +150,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private updateScoreDisplayWithRetry(retryCount: number = 0): void {
-    if (retryCount >= 10) { // Increased max retries from 3 to 10
-      console.log("❌ TriviaPhone: Max retries reached for score update");
-      return;
-    }
-
-    try {
-      if (this.assignedPlayer) {
-        const persistentScore = this.getPlayerPoints(this.assignedPlayer);
-        const currentLocalScore = this.score; // Use the component's score property instead of binding
-        
-        // Check if we got a meaningful score or if storage might still be initializing
-        if (persistentScore === 0 && retryCount < 5) {
-          console.log(`⏳ TriviaPhone: Persistent score is 0, retry ${retryCount + 1}/10 - waiting for persistent storage`);
-          this.async.setTimeout(() => {
-            this.updateScoreDisplayWithRetry(retryCount + 1);
-          }, 500 + (retryCount * 200)); // Progressive delay: 500ms, 700ms, 900ms, etc.
-          return;
-        }
-        
-        // Only update if persistent score is higher than current local score
-        // This prevents overriding recent local increments with stale persistent data
-        if (persistentScore >= currentLocalScore) {
-          this.score = persistentScore;
-          this.scoreBinding.set(persistentScore);
-          console.log(`✅ TriviaPhone: Updated score display to ${persistentScore} (was ${currentLocalScore}, retry ${retryCount})`);
-        } else {
-          console.log(`📱 TriviaPhone: Keeping local score ${currentLocalScore} (persistent: ${persistentScore})`);
-        }
-      }
-    } catch (error) {
-      console.log("❌ TriviaPhone: Error in updateScoreDisplayWithRetry:", error);
-      // Retry on error too
-      if (retryCount < 10) {
-        this.async.setTimeout(() => {
-          this.updateScoreDisplayWithRetry(retryCount + 1);
-        }, 1000);
-      }
-    }
+    // Since we're not using persistent storage anymore, just update with current local score
+    this.updateScoreDisplay();
   }
 
   private waitForPersistentStorageAndUpdateScore(): void {
-    const checkStorage = (attempt: number = 0) => {
-      if (attempt >= 20) { // Max 20 attempts = 10 seconds
-        console.log("❌ TriviaPhone: Persistent storage timeout after 10 seconds");
-        return;
-      }
-
-      try {
-        if (this.assignedPlayer && this.world.persistentStorage) {
-          // Try to read the score
-          const testRead = this.world.persistentStorage.getPlayerVariable(this.assignedPlayer, 'Trivia:Points');
-          
-          // If we get a result (even 0), storage is ready
-          if (testRead !== undefined && testRead !== null) {
-            console.log("✅ TriviaPhone: Persistent storage is ready, updating score");
-            this.updateScoreDisplay();
-            return;
-          }
-        }
-        
-        // Storage not ready yet, try again
-        console.log(`⏳ TriviaPhone: Waiting for persistent storage... (attempt ${attempt + 1}/20)`);
-        this.async.setTimeout(() => checkStorage(attempt + 1), 500);
-        
-      } catch (error) {
-        if (error instanceof Error && (error.message.includes('initializing') || error.message.includes('Returning empty state'))) {
-          // Storage still initializing, try again
-          this.async.setTimeout(() => checkStorage(attempt + 1), 500);
-        } else {
-          console.log("❌ TriviaPhone: Error checking persistent storage:", error);
-        }
-      }
-    };
-
-    checkStorage();
+    // Since we're not using persistent storage anymore, just update the score display
+    this.updateScoreDisplay();
   }
 
   async start() {
@@ -277,9 +181,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.isHostBinding.set(this.currentHostStatus);
 
     // Log persistent storage status for debugging
-    console.log("📱 TriviaPhone: Started, persistent storage ready:", this.isPersistentStorageReady());
+    console.log("📱 TriviaPhone: Started, using native leaderboard system");
     
-    // Wait for persistent storage to be ready and then update score
+    // Update score display
     this.waitForPersistentStorageAndUpdateScore();
   }
 

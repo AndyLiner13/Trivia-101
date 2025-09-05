@@ -716,14 +716,9 @@ export class TriviaApp {
     if (!this.assignedPlayer || !this.world) {
       return 0;
     }
-    
-    try {
-      const points = this.world.persistentStorage.getPlayerVariable(this.assignedPlayer, 'Trivia:Points');
-      const numericPoints = points || 0;
-      return numericPoints;
-    } catch (error) {
-      return 0;
-    }
+
+    // Return local score instead of reading from persistent storage
+    return this.score;
   }
 
   // Set player's points in the variable group
@@ -732,15 +727,9 @@ export class TriviaApp {
       return;
     }
     
-    try {
-      this.world.persistentStorage.setPlayerVariable(this.assignedPlayer, 'Trivia:Points', points);
-      
-      // Update local score and binding
-      this.score = points;
-      this.scoreBinding.set(points, this.assignedPlayer ? [this.assignedPlayer] : undefined);
-    } catch (error) {
-      // Failed to set player points
-    }
+    // Update local score and binding instead of persistent storage
+    this.score = points;
+    this.scoreBinding.set(points, this.assignedPlayer ? [this.assignedPlayer] : undefined);
   }
 
   // Add points to player's current total
@@ -755,17 +744,8 @@ export class TriviaApp {
 
   // Add points to the world total
   private addToWorldTotalPoints(points: number): void {
-    if (!this.world) {
-      return;
-    }
-    
-    try {
-      const currentTotal = (this.world.persistentStorageWorld.getWorldVariable('Trivia:TotalPoints') as number) || 0;
-      const newTotal = currentTotal + points;
-      this.world.persistentStorageWorld.setWorldVariableAcrossAllInstancesAsync('Trivia:TotalPoints', newTotal);
-    } catch (error) {
-      // Failed to update world total points
-    }
+    // Note: Native leaderboard doesn't have a concept of "total points" across all players
+    // This functionality is removed as it's not supported by the native leaderboard system
   }
 
   // Reset points to 0 (called at game start)
