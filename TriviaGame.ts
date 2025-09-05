@@ -359,6 +359,15 @@ export class TriviaGame extends ui.UIComponent {
   // Leaderboard data
   private leaderboardDataBinding = new Binding<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>>([]);
   
+  // Players list binding for reactive UI updates
+  private playersListBinding = new Binding<Array<{id: string, name: string}>>([]);
+  
+  // Simple binding to trigger UI updates when players change
+  private playersUpdateTrigger = new Binding<number>(0);
+  
+  // Counter to track UI update triggers
+  private updateTriggerCounter: number = 0;
+  
   // Player scores tracking - now using real variables instead of local Map
   private playerScores = new Map<string, number>();
 
@@ -497,6 +506,9 @@ export class TriviaGame extends ui.UIComponent {
   private phoneAssignments: PhoneAssignment[] = [];
   private maxPhones = 20; // Maximum number of phone entities we expect
 
+  // Player headshot cache - maps player ID to ImageSource
+  private playerHeadshots = new Map<string, ImageSource | null>();
+
   async start() {
     
     // Initialize phone management
@@ -554,6 +566,11 @@ export class TriviaGame extends ui.UIComponent {
       id: player.id.toString(),
       name: player.name.get()
     }));
+
+    // Load headshots for existing players
+    for (const player of initialPlayers) {
+      await this.loadPlayerHeadshot(player);
+    }
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -2041,7 +2058,7 @@ export class TriviaGame extends ui.UIComponent {
                           flex: 1,
                           width: '100%'
                         },
-                        children: this.createPlayersGrid()
+                        children: this.createReactivePlayersGrid()
                       })
                     ]
                   }),
@@ -3155,23 +3172,31 @@ export class TriviaGame extends ui.UIComponent {
     });
   }
 
-  private async loadPlayerHeadshot(player: hz.Player, headshotBinding: Binding<ImageSource | null>): Promise<void> {
+  private async loadPlayerHeadshot(player: hz.Player): Promise<void> {
+    const playerId = player.id.toString();
+    
     try {
       const headshotImageSource = await Social.getAvatarImageSource(player, {
         type: AvatarImageType.HEADSHOT,
         highRes: true
       });
 
-      if (headshotImageSource) {
-        headshotBinding.set(headshotImageSource);
-      }
+      // Cache the headshot for this player
+      this.playerHeadshots.set(playerId, headshotImageSource);
+      
+      // Trigger UI update to show the new headshot
+      this.updateTriggerCounter++;
+      this.playersUpdateTrigger.set(this.updateTriggerCounter);
+      
     } catch (error) {
-      // Could not get headshot for player, binding will remain null and show fallback
+      // Could not get headshot for player, cache as null
+      this.playerHeadshots.set(playerId, null);
+      console.log("❌ TriviaGame: Could not load headshot for player", player.name.get(), error);
     }
   }
 
-  private createPlayersGrid(): UINode {
-    // Ensure currentPlayers is populated with latest players
+  private createReactivePlayersGrid(): UINode {
+    // Get current players from the world directly
     const currentPlayers = this.world.getPlayers().map(player => ({
       id: player.id.toString(),
       name: player.name.get()
@@ -3196,7 +3221,7 @@ export class TriviaGame extends ui.UIComponent {
     }
 
     // Create player components for current players
-    const playerComponents = currentPlayers.map((playerData, index) => 
+    const playerComponents = currentPlayers.map((playerData: {id: string, name: string}, index: number) =>
       this.createPlayerComponent(playerData, index)
     );
 
@@ -3214,14 +3239,15 @@ export class TriviaGame extends ui.UIComponent {
     // Find the actual player object from the world
     const player = this.world.getPlayers().find(p => p.id.toString() === playerData.id);
     if (!player) {
-      return View({}); // Return empty view if player not found
+      return View({
+        style: {
+          width: 48,
+          height: 48,
+          marginBottom: 8,
+          marginRight: 12
+        }
+      });
     }
-
-    // Create a binding for the headshot image
-    const headshotBinding = new Binding<ImageSource | null>(null);
-
-    // Load headshot asynchronously
-    this.loadPlayerHeadshot(player, headshotBinding);
 
     return View({
       style: {
@@ -3231,45 +3257,58 @@ export class TriviaGame extends ui.UIComponent {
         marginRight: 12
       },
       children: [
-        // Player avatar with headshot or fallback
-        View({
-          style: {
-            width: 48,
-            height: 48,
-            borderRadius: 8,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 4,
-            overflow: 'hidden'
-          },
-          children: [
-            // Try to show headshot image first
-            UINode.if(
-              headshotBinding.derive(image => image !== null),
-              Image({
-                source: headshotBinding.derive(image => image || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)))),
-                style: {
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8
-                }
-              })
-            ),
-            // Fallback to initial letter if no headshot
-            UINode.if(
-              headshotBinding.derive(image => image === null),
-              Text({
-                text: playerData.name.charAt(0).toUpperCase(),
-                style: {
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: 'black'
-                }
-              })
-            )
-          ]
-        }),
+        // Player avatar - use conditional display based on headshot availability
+        UINode.if(
+          this.playersUpdateTrigger.derive(() => {
+            // Check if headshot is available for this player
+            return this.playerHeadshots.has(playerData.id) && this.playerHeadshots.get(playerData.id) !== null;
+          }),
+          // Show headshot
+          View({
+            style: {
+              width: 48,
+              height: 48,
+              borderRadius: 8,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 4,
+              overflow: 'hidden'
+            },
+            children: Image({
+              source: this.playersUpdateTrigger.derive(() => {
+                const headshot = this.playerHeadshots.get(playerData.id);
+                return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+              }),
+              style: {
+                width: 48,
+                height: 48,
+                borderRadius: 8
+              }
+            })
+          }),
+          // Show initial letter as fallback
+          View({
+            style: {
+              width: 48,
+              height: 48,
+              borderRadius: 8,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 4,
+              overflow: 'hidden'
+            },
+            children: Text({
+              text: playerData.name.charAt(0).toUpperCase(),
+              style: {
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: 'black'
+              }
+            })
+          })
+        ),
         // Player name
         Text({
           text: playerData.name,
@@ -3507,6 +3546,10 @@ export class TriviaGame extends ui.UIComponent {
       id: player.id.toString(),
       name: player.name.get()
     }));
+    
+    // Initialize the reactive binding with current players
+    this.playersListBinding.set([...this.currentPlayers]);
+    
     existingPlayers.forEach(player => {
       this.assignPhoneToPlayer(player);
     });
@@ -3515,16 +3558,30 @@ export class TriviaGame extends ui.UIComponent {
   private onPlayerEnter(player: hz.Player): void {
     this.assignPhoneToPlayer(player);
     
+    // Load player headshot using Social API
+    this.loadPlayerHeadshot(player);
+    
     // Update players list for UI
     const currentPlayers = this.world.getPlayers();
     this.currentPlayers = currentPlayers.map(p => ({
       id: p.id.toString(),
       name: p.name.get()
     }));
+    
+    // Update the reactive binding for UI updates
+    this.playersListBinding.set([...this.currentPlayers]);
+    
+    // Trigger UI update
+    this.updateTriggerCounter++;
+    this.playersUpdateTrigger.set(this.updateTriggerCounter);
   }
 
   private onPlayerExit(player: hz.Player): void {
     this.releasePlayerPhone(player);
+    
+    // Clean up player headshot from cache
+    const playerId = player.id.toString();
+    this.playerHeadshots.delete(playerId);
     
     // Update players list for UI
     const currentPlayers = this.world.getPlayers().filter(p => p.id.toString() !== player.id.toString());
@@ -3532,6 +3589,13 @@ export class TriviaGame extends ui.UIComponent {
       id: p.id.toString(),
       name: p.name.get()
     }));
+    
+    // Update the reactive binding for UI updates
+    this.playersListBinding.set([...this.currentPlayers]);
+    
+    // Trigger UI update
+    this.updateTriggerCounter++;
+    this.playersUpdateTrigger.set(this.updateTriggerCounter);
     
     // Check if the leaving player was the host
     if (this.hostPlayerId === player.id.toString()) {
