@@ -1,6 +1,7 @@
 # Project specific
 .backups/
 .operations.log
+.editor
 
 # Node modules
 node_modules/
