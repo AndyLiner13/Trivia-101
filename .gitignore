@@ -2,6 +2,7 @@
 .backups/
 .operations.log
 .editor
+HorizonWorldSnippets/
 
 # Node modules
 node_modules/
