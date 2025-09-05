@@ -202,38 +202,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         .add(playerLeft.mul(0.25));
       desiredPosition.y += 0.4;
 
-      // Set position first
+      // Calculate direction to player and rotation BEFORE setting position
+      const directionToPlayer = playerPosition.sub(desiredPosition).normalize();
+      const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+      const desiredRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
+
+      // Set position and rotation at the same time
       this.entity.position.set(desiredPosition);
+      this.entity.rotation.set(desiredRotation);
 
       // Disable physics and collision
       this.entity.simulated.set(false);
       this.entity.collidable.set(false);
 
-      // Now get the most current camera forward direction after position is set
-      try {
-        if (camera.default) {
-          cameraForward = camera.default.forward.get();
-        } else {
-          cameraForward = player.forward.get();
-        }
-      } catch (error) {
-        cameraForward = player.forward.get();
-      }
-
-      // Calculate direction to player and set rotation after position is set (run 3 times for maximum consistency)
-      for (let i = 0; i < 3; i++) {
-        const playerPos = player.position.get();
-        const phonePos = this.entity.position.get();
-        const directionToPlayer = playerPos.sub(phonePos).normalize();
-
-        // Create a quaternion that rotates the phone to face the player
-        const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
-        const rotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
-        
-        // Set rotation after position is set
-        console.log(`📱 TriviaPhone: Setting TriviaPhone rotation (${i + 1}/3) - x: ${rotation.x.toFixed(4)}, y: ${rotation.y.toFixed(4)}, z: ${rotation.z.toFixed(4)}, w: ${rotation.w.toFixed(4)}`);
-        this.entity.rotation.set(rotation);
-      }
+      console.log(`📱 TriviaPhone: Setting TriviaPhone rotation - x: ${desiredRotation.x.toFixed(4)}, y: ${desiredRotation.y.toFixed(4)}, z: ${desiredRotation.z.toFixed(4)}, w: ${desiredRotation.w.toFixed(4)}`);
 
     } catch (error) {
       // Fallback to the original method if something goes wrong
