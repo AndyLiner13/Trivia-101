@@ -2002,9 +2002,12 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                           flex: 1,
-                          width: '100%'
+                          width: '100%',
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center'
                         },
-                        children: this.createReactivePlayersGrid()
+                        children: this.createStaticPlayersComponents()
                       })
                     ]
                   }),
@@ -3145,6 +3148,162 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
+  private createStaticPlayersComponents(): UINode[] {
+    // Create static slots for up to 8 players that will reactively show/hide based on current players
+    const maxSlots = 8;
+    const components: UINode[] = [];
+    
+    for (let i = 0; i < maxSlots; i++) {
+      components.push(
+        UINode.if(
+          this.playersUpdateTrigger.derive(() => {
+            const currentPlayers = this.world.getPlayers();
+            const hasPlayerAtIndex = i < currentPlayers.length;
+            if (hasPlayerAtIndex) {
+              console.log(`[UI] ✅ Showing player slot ${i} for player: ${currentPlayers[i].name.get()}`);
+            }
+            return hasPlayerAtIndex;
+          }),
+          View({
+            style: {
+              flexDirection: 'column',
+              alignItems: 'center',
+              marginBottom: 8,
+              marginRight: 12
+            },
+            children: [
+              // Player avatar - reactive based on current player at this index
+              View({
+                style: {
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8,
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 4,
+                  overflow: 'hidden'
+                },
+                children: [
+                  // Show headshot if available
+                  UINode.if(
+                    this.playersUpdateTrigger.derive(() => {
+                      const currentPlayers = this.world.getPlayers();
+                      if (i < currentPlayers.length) {
+                        const player = currentPlayers[i];
+                        const playerId = player.id.toString();
+                        const hasHeadshot = this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
+                        console.log(`[UI] ✅ Checking headshot for slot ${i} player ${player.name.get()}: ${hasHeadshot}`);
+                        return hasHeadshot;
+                      }
+                      return false;
+                    }),
+                    Image({
+                      source: this.playersUpdateTrigger.derive(() => {
+                        const currentPlayers = this.world.getPlayers();
+                        if (i < currentPlayers.length) {
+                          const player = currentPlayers[i];
+                          const playerId = player.id.toString();
+                          const headshot = this.playerHeadshots.get(playerId);
+                          console.log(`[UI] ✅ Using cached headshot for slot ${i} player ${player.name.get()}`);
+                          return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                        }
+                        return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                      }),
+                      style: {
+                        width: 48,
+                        height: 48,
+                        borderRadius: 8
+                      }
+                    })
+                  ),
+                  // Show initial letter as fallback
+                  UINode.if(
+                    this.playersUpdateTrigger.derive(() => {
+                      const currentPlayers = this.world.getPlayers();
+                      if (i < currentPlayers.length) {
+                        const player = currentPlayers[i];
+                        const playerId = player.id.toString();
+                        const hasHeadshot = this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
+                        return !hasHeadshot; // Show letter when no headshot
+                      }
+                      return false;
+                    }),
+                    Text({
+                      text: this.playersUpdateTrigger.derive(() => {
+                        const currentPlayers = this.world.getPlayers();
+                        if (i < currentPlayers.length) {
+                          const player = currentPlayers[i];
+                          return player.name.get().charAt(0).toUpperCase();
+                        }
+                        return "";
+                      }),
+                      style: {
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: 'black'
+                      }
+                    })
+                  )
+                ]
+              }),
+              // Player name
+              Text({
+                text: this.playersUpdateTrigger.derive(() => {
+                  const currentPlayers = this.world.getPlayers();
+                  if (i < currentPlayers.length) {
+                    const player = currentPlayers[i];
+                    return player.name.get();
+                  }
+                  return "";
+                }),
+                style: {
+                  fontSize: 10,
+                  color: 'black',
+                  textAlign: 'center',
+                  maxWidth: 60,
+                  overflow: 'hidden'
+                }
+              })
+            ]
+          })
+        )
+      );
+    }
+    
+    // Add empty state when no players
+    components.push(
+      UINode.if(
+        this.playersUpdateTrigger.derive(() => {
+          const currentPlayers = this.world.getPlayers();
+          const isEmpty = currentPlayers.length === 0;
+          if (isEmpty) {
+            console.log(`[UI] ✅ Showing empty state - no players in world`);
+          }
+          return isEmpty;
+        }),
+        View({
+          style: {
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            width: '100%'
+          },
+          children: Text({
+            text: 'No players yet...',
+            style: {
+              fontSize: 14,
+              color: 'black',
+              textAlign: 'center'
+            }
+          })
+        })
+      )
+    );
+    
+    return components;
+  }
+
   private createReactivePlayersGrid(): UINode {
     // Get current players from the world directly
     const currentPlayers = this.world.getPlayers().map(player => ({
@@ -3152,7 +3311,7 @@ export class TriviaGame extends ui.UIComponent {
       name: player.name.get()
     }));
 
-    console.log(`[UI] ✅ Retrieved ${currentPlayers.length} players from the world for pre-game display`);
+    console.log(`[UI] ✅ Retrieved ${currentPlayers.length} players from the world for pre-game display (triggered by update)`);
 
     if (currentPlayers.length === 0) {
       console.log(`[UI] ❌ No players found in the world, showing empty state message`);
@@ -3178,7 +3337,7 @@ export class TriviaGame extends ui.UIComponent {
       this.createPlayerComponent(playerData, index)
     );
 
-    console.log(`[UI] ✅ Created ${playerComponents.length} player components for the grid display`);
+    console.log(`[UI] ✅ Created ${playerComponents.length} player components for the grid display (triggered by update)`);
 
     return View({
       style: {
@@ -3194,7 +3353,7 @@ export class TriviaGame extends ui.UIComponent {
     // Find the actual player object from the world
     const player = this.world.getPlayers().find(p => p.id.toString() === playerData.id);
     if (!player) {
-      console.log(`[UI] ❌ Could not find player object for ${playerData.name} (ID: ${playerData.id})`);
+      console.log(`[UI] ❌ Could not find player object for ${playerData.name} (ID: ${playerData.id}) during UI render`);
       return View({
         style: {
           width: 48,
@@ -3205,7 +3364,7 @@ export class TriviaGame extends ui.UIComponent {
       });
     }
 
-    console.log(`[UI] ✅ Creating player component for ${playerData.name} at index ${index}`);
+    console.log(`[UI] ✅ Creating player component for ${playerData.name} at index ${index} during UI render`);
 
     return View({
       style: {
@@ -3219,7 +3378,9 @@ export class TriviaGame extends ui.UIComponent {
         UINode.if(
           this.playersUpdateTrigger.derive(() => {
             // Check if headshot is available for this player
-            return this.playerHeadshots.has(playerData.id) && this.playerHeadshots.get(playerData.id) !== null;
+            const hasHeadshot = this.playerHeadshots.has(playerData.id) && this.playerHeadshots.get(playerData.id) !== null;
+            console.log(`[UI] ✅ Checking headshot availability for ${playerData.name}: ${hasHeadshot}`);
+            return hasHeadshot;
           }),
           // Show headshot
           View({
@@ -3236,6 +3397,7 @@ export class TriviaGame extends ui.UIComponent {
             children: Image({
               source: this.playersUpdateTrigger.derive(() => {
                 const headshot = this.playerHeadshots.get(playerData.id);
+                console.log(`[UI] ✅ Using cached headshot for ${playerData.name}`);
                 return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
               }),
               style: {
