@@ -174,43 +174,63 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.entity.rotation.set(finalRotation);
 
     } catch (error) {
-      console.log("❌ TriviaPhone: Error in teleportToPlayerFallback", error);
+      // Fallback to player position if camera access fails
     }
   }
 
   private teleportDirectlyInFrontOfVRUser(player: hz.Player): void {
     try {
-      // Position the phone in front of the player using world space positioning
+      // Get player position first
       const playerPosition = player.position.get();
-      const playerForward = player.forward.get();
 
-      // Calculate left direction (cross product of forward and up)
-      const playerLeft = playerForward.cross(hz.Vec3.up).normalize();
+      // Set position first (using fallback player forward for initial positioning)
+      let cameraForward: hz.Vec3;
+      try {
+        if (camera.default) {
+          cameraForward = camera.default.forward.get();
+        } else {
+          cameraForward = player.forward.get();
+        }
+      } catch (error) {
+        cameraForward = player.forward.get();
+      }
 
-      // Position 1 unit in front and 0.25 units to the right of player
+      // Calculate left direction and desired position
+      const playerLeft = cameraForward.cross(hz.Vec3.up).normalize();
       const desiredPosition = playerPosition
-        .add(playerForward.mul(1.0))
-        .add(playerLeft.mul(0.25)); // Positive for right
-      desiredPosition.y += 0.4; // Slight upward offset for eye level
-      // Allow Z position to change based on user location
+        .add(cameraForward.mul(1.0))
+        .add(playerLeft.mul(0.25));
+      desiredPosition.y += 0.4;
 
+      // Set position first
       this.entity.position.set(desiredPosition);
 
       // Disable physics and collision
       this.entity.simulated.set(false);
       this.entity.collidable.set(false);
 
-      // Calculate direction to player and set rotation manually
+      // Now get the most current camera forward direction after position is set
+      try {
+        if (camera.default) {
+          cameraForward = camera.default.forward.get();
+        } else {
+          cameraForward = player.forward.get();
+        }
+      } catch (error) {
+        cameraForward = player.forward.get();
+      }
+
+      // Calculate direction to player and set rotation after position is set
       const playerPos = player.position.get();
       const phonePos = this.entity.position.get();
       const directionToPlayer = playerPos.sub(phonePos).normalize();
 
       // Create a quaternion that rotates the phone to face the player
-      // First, get the angle in the XZ plane
       const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
-
-      // Create rotation quaternion
       const rotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
+      
+      // Set rotation after position is set
+      console.log(`📱 TriviaPhone: Setting TriviaPhone rotation - x: ${rotation.x.toFixed(4)}, y: ${rotation.y.toFixed(4)}, z: ${rotation.z.toFixed(4)}, w: ${rotation.w.toFixed(4)}`);
       this.entity.rotation.set(rotation);
 
     } catch (error) {
@@ -399,8 +419,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               this.handleLeftTertiaryTrigger(localPlayer);
             }
           });
-        } else {
-          console.log("🎮 TriviaPhone: VR user detected, skipping H key input registration");
         }
       } else {
       }
@@ -425,7 +443,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }
           });
         } else {
-          console.log("🖥️ TriviaPhone: Non-VR user detected, skipping RightSecondary input registration");
         }
       } else {
       }
@@ -472,21 +489,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private handleRightSecondaryTrigger(player: hz.Player): void {
     // This method is only called for VR users since we only register the input for them
+    console.log("🎮 TriviaPhone: PlayerInputAction.RightSecondary clicked - getting current head rotation");
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
     const distance = phonePosition.distance(playerPosition);
 
-    console.log(`🎮 TriviaPhone: VR user distance to phone: ${distance.toFixed(2)} meters`);
-
     if (distance > 10) {
       // Phone is more than 10 meters away, teleport it in front of the user
-      console.log("📱 TriviaPhone: Phone is far from VR user, teleporting to front");
 
       // Capture camera position when RightSecondary is pressed
       try {
         if (camera.default) {
           this.cameraPositionAtHKeyPress = camera.default.position.get().clone();
           this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
+          console.log(`🎯 TriviaPhone: Detected head rotation - x: ${this.cameraRotationAtHKeyPress.x.toFixed(4)}, y: ${this.cameraRotationAtHKeyPress.y.toFixed(4)}, z: ${this.cameraRotationAtHKeyPress.z.toFixed(4)}, w: ${this.cameraRotationAtHKeyPress.w.toFixed(4)}`);
         }
       } catch (error) {
       }
@@ -504,7 +520,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.openAndFocusUIForPlayer(player);
     } else {
       // Phone is within 10 meters, hide it by setting y to -1000
-      console.log("📱 TriviaPhone: Phone is close to VR user, hiding");
       const currentPosition = this.entity.position.get();
       this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
 
@@ -515,7 +530,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private handleLeftTertiaryTrigger(player: hz.Player): void {
     // This method is only called for non-VR users (desktop, web, mobile) since we only register the input for them
-    console.log("🖥️ TriviaPhone: Non-VR user pressed H key, showing TriviaPhone");
 
     // If phone is not assigned to anyone, assign it to this player
     if (!this.assignedPlayer) {
@@ -795,8 +809,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     hostId: string, 
     finalLeaderboard?: Array<{name: string, score: number, playerId: string}> 
   }): void {
-    console.log("✅ TriviaPhone: Game ended, returning to Start Game screen");
-    
+
     // Reset game state to show Start Game screen
     this.gameStarted = false;
     this.gameStartedBinding.set(false);
@@ -823,8 +836,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private onTriviaGameReset(eventData: { hostId: string }): void {
-    console.log("🔄 TriviaPhone: Game reset requested, returning to pre-game state");
-    
+
     // Reset all game state to pre-game
     this.gameStarted = false;
     this.gameStartedBinding.set(false);
@@ -846,12 +858,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private endGame(): void {
     if (!this.isHost()) {
-      console.log("🚫 TriviaPhone: Non-host attempted to end game");
       return;
     }
-    
-    console.log("🔚 TriviaPhone: Host ending game and resetting to pre-game state");
-    
+
     // Send reset event to TriviaGame and all TriviaPhones
     this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
       hostId: this.assignedPlayer?.id.toString() || 'unknown'
