@@ -71,6 +71,13 @@ const triviaQuestions = [
   }
 ];
 
+const answerShapes = [
+  { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
+  { iconId: '1286736292915198', color: '#3B82F6', shape: 'Square' },
+  { iconId: '1290982519195562', color: '#EAB308', shape: 'Triangle' },
+  { iconId: '1286736292915198', color: '#22C55E', shape: 'Diamond', rotation: 45 }
+];
+
 class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   static propsDefinition = {};
 
@@ -817,7 +824,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             flex: 1,
-            padding: 16
+            padding: 8,
+            paddingBottom: 12
           },
           children: [
             // Waiting for game screen
@@ -918,40 +926,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   flexDirection: 'column'
                 },
                 children: [
-                  // Question
-                  ui.View({
-                    style: {
-                      marginBottom: 20
-                    },
-                    children: [
-                      ui.Text({
-                        text: ui.Binding.derive([this.currentQuestionIndexBinding], (index) =>
-                          triviaQuestions[index]?.question || 'Loading...'
-                        ),
-                        style: {
-                          fontSize: 18,
-                          fontWeight: '600',
-                          color: '#FFFFFF',
-                          textAlign: 'center',
-                          lineHeight: 1.4
-                        }
-                      })
-                    ]
-                  }),
-
                   // Answer buttons
                   ui.View({
                     style: {
                       flex: 1,
                       flexDirection: 'column',
-                      justifyContent: 'space-around'
+                      padding: 4
                     },
                     children: [
                       // Top row
                       ui.View({
                         style: {
                           flexDirection: 'row',
-                          marginBottom: 12
+                          flex: 1,
+                          marginBottom: 4
                         },
                         children: [
                           this.createAnswerButton(0),
@@ -961,7 +949,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       // Bottom row
                       ui.View({
                         style: {
-                          flexDirection: 'row'
+                          flexDirection: 'row',
+                          flex: 1
                         },
                         children: [
                           this.createAnswerButton(2),
@@ -989,7 +978,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.View({
                           style: {
                             alignItems: 'center',
-                            padding: 20
+                            padding: 16
                           },
                           children: [
                             ui.Text({
@@ -1003,11 +992,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                                 return isCorrect ? '✅ Correct!' : '❌ Wrong!';
                               }),
                               style: {
-                                fontSize: 24,
+                                fontSize: 20,
                                 fontWeight: '700',
                                 color: '#FFFFFF',
                                 textAlign: 'center',
-                                marginBottom: 12
+                                marginBottom: 8
                               }
                             }),
                             ui.Text({
@@ -1029,28 +1018,49 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                                 color: '#FFFFFF',
                                 textAlign: 'center',
                                 opacity: 0.9,
-                                marginBottom: 20
+                                marginBottom: 12
                               }
                             }),
-                            ui.Pressable({
+                            ui.Text({
+                              text: "Waiting for next question...",
                               style: {
-                                backgroundColor: '#FFFFFF',
-                                borderRadius: 12,
-                                paddingHorizontal: 20,
-                                paddingVertical: 10
-                              },
-                              onPress: () => this.nextQuestion(),
-                              children: [
-                                ui.Text({
-                                  text: 'Next Question',
-                                  style: {
-                                    fontSize: 16,
-                                    fontWeight: '600',
-                                    color: '#6366F1'
-                                  }
-                                })
-                              ]
-                            })
+                                fontSize: 12,
+                                color: '#FFFFFF',
+                                textAlign: 'center',
+                                opacity: 0.7
+                              }
+                            }),
+                            ui.UINode.if(
+                              ui.Binding.derive([], () => this.isHost()),
+                              ui.View({
+                                style: {
+                                  marginTop: 20,
+                                  alignItems: 'center'
+                                },
+                                children: [
+                                  ui.Pressable({
+                                    style: {
+                                      backgroundColor: '#3B82F6',
+                                      borderRadius: 12,
+                                      paddingHorizontal: 20,
+                                      paddingVertical: 10
+                                    },
+                                    onPress: () => this.nextQuestion(),
+                                    children: [
+                                      ui.Text({
+                                        text: 'Next Question',
+                                        style: {
+                                          fontSize: 14,
+                                          fontWeight: '600',
+                                          color: '#FFFFFF',
+                                          textAlign: 'center'
+                                        }
+                                      })
+                                    ]
+                                  })
+                                ]
+                              })
+                            )
                           ]
                         })
                       ]
@@ -1490,7 +1500,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private createAnswerButton(answerIndex: number): ui.UINode {
-    const colors = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E'];
+    const shape = answerShapes[answerIndex];
 
     return ui.Pressable({
       style: {
@@ -1509,26 +1519,24 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
             return '#9CA3AF'; // Gray for other answers
           }
-          return colors[answerIndex];
+          return shape.color;
         }),
         borderRadius: 12,
-        margin: 4,
+        margin: 2,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 60,
+        minHeight: 140,
         padding: 8
       },
       onPress: () => this.handleAnswerSelect(answerIndex),
       children: [
-        ui.Text({
-          text: ui.Binding.derive([this.currentQuestionIndexBinding], (index) =>
-            triviaQuestions[index]?.answers[answerIndex] || ''
-          ),
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
           style: {
-            fontSize: 14,
-            fontWeight: '600',
-            color: '#FFFFFF',
-            textAlign: 'center'
+            width: 48,
+            height: 48,
+            tintColor: '#FFFFFF',
+            ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
           }
         })
       ]
