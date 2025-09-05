@@ -385,6 +385,9 @@ export class TriviaGame extends ui.UIComponent {
   private hostPlayerIdBinding = new Binding<string | null>(null);
   private isLocalPlayerHostBinding = new Binding(false);
   
+  // Layout mode binding - determines if question should be centered (true) or at top (false)
+  private centerQuestionBinding = new Binding(false);
+  
   // Answer button color bindings for results state
   private answerButtonColors = [
     new Binding('#DC2626'), // Default red
@@ -800,6 +803,7 @@ export class TriviaGame extends ui.UIComponent {
     this.answerCountBinding.set("0");
     this.questionBinding.set("Loading first question...");
     this.questionImageBinding.set(null); // Clear image binding
+    this.centerQuestionBinding.set(false); // Reset to top layout
     this.showResultsBinding.set(false);
     this.isShowingResults = false;
     this.showWaitingBinding.set(false);
@@ -852,6 +856,7 @@ export class TriviaGame extends ui.UIComponent {
     this.answerCountBinding.set("0");
     this.questionBinding.set("Loading first question...");
     this.questionImageBinding.set(null); // Clear image binding
+    this.centerQuestionBinding.set(false); // Reset to top layout
     this.showResultsBinding.set(false);
     this.isShowingResults = false;
     this.showWaitingBinding.set(false);
@@ -929,7 +934,11 @@ export class TriviaGame extends ui.UIComponent {
     this.questionNumberBinding.set(`Q${this.currentQuestionIndex + 1}`);
     this.questionBinding.set(shuffledQuestion.question);
     // Set the image binding for stable image display
-    this.questionImageBinding.set(shuffledQuestion.image || null);
+    const imageValue = shuffledQuestion.image;
+    this.questionImageBinding.set(imageValue && imageValue.trim() !== "" ? imageValue : null);
+    
+    // Set layout mode - center question if no image
+    this.centerQuestionBinding.set(!imageValue || imageValue.trim() === "");
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
 
@@ -1226,6 +1235,9 @@ export class TriviaGame extends ui.UIComponent {
     this.questionBinding.set(eventData.question.question);
     // Set the image binding for stable image display
     this.questionImageBinding.set((eventData.question as any).image || null);
+    // Set layout mode - center question if no image
+    const imageValue = (eventData.question as any).image;
+    this.centerQuestionBinding.set(!imageValue || imageValue.trim() === "");
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
     
@@ -2108,47 +2120,145 @@ export class TriviaGame extends ui.UIComponent {
                     ]
                   }),
 
-                  // Question text - always shown at the top
-                  View({
-                    style: {
-                      position: 'absolute',
-                      left: '12%',
-                      right: '12%',
-                      top: '2%',
-                      height: '15%',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    },
-                    children: View({
-                      style: {
-                        backgroundColor: 'white',
-                        borderRadius: 6,
-                        shadowColor: 'black',
-                        shadowOpacity: 0.15,
-                        shadowRadius: 6,
-                        shadowOffset: [0, 2],
-                        padding: 12,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '100%'
-                      },
-                      children: [
-                        // Question text
-                        Text({
-                          text: this.questionBinding,
+                  // Question text - conditional positioning based on image presence
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
+                    // No image - center the question (2-answer questions)
+                    UINode.if(
+                      this.answerCountTracking.derive(count => count === 2),
+                      View({
+                        style: {
+                          position: 'absolute',
+                          left: '15%',
+                          right: '15%',
+                          top: '20%',
+                          height: '55%',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        },
+                        children: View({
                           style: {
-                            fontSize: 14,
-                            fontWeight: '500',
-                            color: 'black',
-                            textAlign: 'center',
-                            lineHeight: 1.3
-                          }
+                            backgroundColor: 'white',
+                            borderRadius: 6,
+                            shadowColor: 'black',
+                            shadowOpacity: 0.15,
+                            shadowRadius: 6,
+                            shadowOffset: [0, 2],
+                            padding: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%',
+                            height: '100%'
+                          },
+                          children: [
+                            // Question text
+                            Text({
+                              text: this.questionBinding,
+                              style: {
+                                fontSize: 16,
+                                fontWeight: '500',
+                                color: 'black',
+                                textAlign: 'center',
+                                lineHeight: 1.3
+                              }
+                            })
+                          ]
                         })
-                      ]
-                    })
-                  }),
+                      })
+                    )
+                  ),
 
-                  // Question image - centered in middle area
+                  // No image - center the question (3+ answer questions)
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
+                    UINode.if(
+                      this.answerCountTracking.derive(count => count !== 2),
+                      View({
+                        style: {
+                          position: 'absolute',
+                          left: '15%',
+                          right: '15%',
+                          top: '16%',
+                          height: '45%',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        },
+                        children: View({
+                          style: {
+                            backgroundColor: 'white',
+                            borderRadius: 6,
+                            shadowColor: 'black',
+                            shadowOpacity: 0.15,
+                            shadowRadius: 6,
+                            shadowOffset: [0, 2],
+                            padding: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%',
+                            height: '100%'
+                          },
+                          children: [
+                            // Question text
+                            Text({
+                              text: this.questionBinding,
+                              style: {
+                                fontSize: 16,
+                                fontWeight: '500',
+                                color: 'black',
+                                textAlign: 'center',
+                                lineHeight: 1.3
+                              }
+                            })
+                          ]
+                        })
+                      })
+                    )
+                  ),
+
+                  // Question text with image - positioned at top
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId !== null && imageId !== ""),
+                    View({
+                      style: {
+                        position: 'absolute',
+                        left: '12%',
+                        right: '12%',
+                        top: '2%',
+                        height: '15%',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      },
+                      children: View({
+                        style: {
+                          backgroundColor: 'white',
+                          borderRadius: 6,
+                          shadowColor: 'black',
+                          shadowOpacity: 0.15,
+                          shadowRadius: 6,
+                          shadowOffset: [0, 2],
+                          padding: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '100%'
+                        },
+                        children: [
+                          // Question text
+                          Text({
+                            text: this.questionBinding,
+                            style: {
+                              fontSize: 14,
+                              fontWeight: '500',
+                              color: 'black',
+                              textAlign: 'center',
+                              lineHeight: 1.3
+                            }
+                          })
+                        ]
+                      })
+                    })
+                  ),
+
+                  // Question image - positioned below question when both exist
                   UINode.if(
                     this.questionImageBinding.derive(imageId => imageId !== null),
                     View({
@@ -2156,7 +2266,7 @@ export class TriviaGame extends ui.UIComponent {
                         position: 'absolute',
                         left: '15%',
                         right: '15%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '20%' : '16%'), // Lower position for 2-answer questions
+                        top: '18%', // Fixed position below the question
                         bottom: this.answerCountTracking.derive(count => count === 2 ? '25%' : '35%'), // Larger area for 2-answer questions
                         alignItems: 'center',
                         justifyContent: 'center'
