@@ -156,6 +156,12 @@ const triviaGameResetEvent = new hz.NetworkEvent<{
   hostId: string;
 }>('triviaGameReset');
 
+// Award points event from TriviaPhone
+const triviaAwardPointsEvent = new hz.NetworkEvent<{
+  playerId: string;
+  points: number;
+}>('triviaAwardPoints');
+
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{
   requesterId: string;
@@ -367,9 +373,10 @@ export class TriviaGame extends ui.UIComponent {
 
   private setPlayerPoints(player: hz.Player, points: number): void {
     try {
-      this.world.persistentStorage.setPlayerVariable(player, 'Trivia:Points', points);
+      // Set the Trivia:Points player variable using the correct persistent storage API
+      this.world.persistentStorage.setPlayerVariable(player, "Trivia:Points", points);
     } catch (error) {
-      // Failed to set player points
+      console.log("❌ TriviaGame: Error setting player points:", error);
     }
   }
 
@@ -826,6 +833,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Listen for game reset requests from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaGameResetEvent, this.onGameReset.bind(this));
+
+    // Listen for award points requests from TriviaPhone
+    this.connectNetworkBroadcastEvent(triviaAwardPointsEvent, this.onAwardPoints.bind(this));
   }
 
   private resetGameState(): void {
@@ -1604,7 +1614,7 @@ export class TriviaGame extends ui.UIComponent {
       const playerId = player.id.toString();
       if (this.playersInWorld.has(playerId)) {
         // Get actual score from the variable system
-        const score = this.getPlayerPoints(player);
+        const score = await this.getPlayerPoints(player);
         
         // Get player headshot using Social API
         let headshotImageSource: ImageSource | undefined;
@@ -1628,7 +1638,9 @@ export class TriviaGame extends ui.UIComponent {
 
     // Sort by score descending
     return leaderboard.sort((a, b) => b.score - a.score);
-  }  private advanceToNextQuestion(): void {
+  }
+
+  private advanceToNextQuestion(): void {
     
     // Hide leaderboard
     this.showLeaderboardBinding.set(false);
@@ -3378,6 +3390,33 @@ export class TriviaGame extends ui.UIComponent {
     this.playerScores.clear();
     
     console.log("✅ TriviaGame: Reset to pre-game configuration screen");
+  }
+
+  private async onAwardPoints(event: { playerId: string; points: number }): Promise<void> {
+    console.log("✅ TriviaGame: Awarding", event.points, "points to player", event.playerId);
+    
+    try {
+      // Find the player by ID
+      const player = this.world.getPlayers().find(p => p.id.toString() === event.playerId);
+      
+      if (player) {
+        // Get current points
+        const currentPoints = this.getPlayerPoints(player);
+        const newPoints = currentPoints + event.points;
+        
+        // Set new points
+        this.setPlayerPoints(player, newPoints);
+        
+        // Update total points world variable
+        this.addToTotalPoints(event.points);
+        
+        console.log("✅ TriviaGame: Successfully awarded", event.points, "points to", player.name.get(), "- new total:", newPoints);
+      } else {
+        console.log("❌ TriviaGame: Could not find player with ID", event.playerId);
+      }
+    } catch (error) {
+      console.log("❌ TriviaGame: Error awarding points:", error);
+    }
   }
 
   // Phone management methods

@@ -13,6 +13,7 @@ const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answe
 const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }>('triviaSettingsUpdate');
 const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
 const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
+const triviaAwardPointsEvent = new hz.NetworkEvent<{ playerId: string; points: number }>('triviaAwardPoints');
 
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
@@ -829,11 +830,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isCorrect = this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
-    if (isCorrect) {
-      this.score++;
-      this.scoreBinding.set(this.score);
+    if (isCorrect && this.assignedPlayer) {
+      // Send network event to TriviaGame to award points using persistent storage
+      this.sendNetworkBroadcastEvent(triviaAwardPointsEvent, {
+        playerId: this.assignedPlayer.id.toString(),
+        points: 1
+      });
+      
+      console.log("✅ Sent point award request for player:", this.assignedPlayer.id.toString());
     }
-
+    
     // Update leaderboard binding
     this.showLeaderboardBinding.set(eventData.showLeaderboard || false);
   }
