@@ -1185,36 +1185,51 @@ export class TriviaGame extends ui.UIComponent {
       answers: [...question.answers]
     };
 
-    // Use multiple randomization techniques for better shuffling
     const answers = shuffledQuestion.answers;
 
-    // First pass: Fisher-Yates shuffle
-    for (let i = answers.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [answers[i], answers[j]] = [answers[j], answers[i]];
-    }
+    // Check if this is a true/false question
+    const isTrueFalseQuestion = answers.length === 2 && 
+      answers.some(a => a.text.toLowerCase().includes('true')) && 
+      answers.some(a => a.text.toLowerCase().includes('false'));
 
-    // Second pass: Additional randomization with different approach
-    if (answers.length >= 3) {
-      // Randomly swap pairs
-      for (let i = 0; i < Math.min(3, answers.length - 1); i++) {
-        const idx1 = Math.floor(Math.random() * answers.length);
-        let idx2 = Math.floor(Math.random() * answers.length);
-        while (idx2 === idx1) {
-          idx2 = Math.floor(Math.random() * answers.length);
-        }
-        [answers[idx1], answers[idx2]] = [answers[idx2], answers[idx1]];
+    if (isTrueFalseQuestion) {
+      // For true/false questions, ensure "True" is always first and "False" is always second
+      const trueAnswer = answers.find(a => a.text.toLowerCase().includes('true'));
+      const falseAnswer = answers.find(a => a.text.toLowerCase().includes('false'));
+      
+      if (trueAnswer && falseAnswer) {
+        shuffledQuestion.answers = [trueAnswer, falseAnswer];
       }
-    }
+    } else {
+      // For non-true/false questions, use the existing shuffling logic
+      // First pass: Fisher-Yates shuffle
+      for (let i = answers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [answers[i], answers[j]] = [answers[j], answers[i]];
+      }
 
-    // Third pass: Ensure correct answer isn't always in the same position
-    // (This helps prevent players from memorizing positions)
-    const correctIndex = answers.findIndex(a => a.correct);
-    if (correctIndex !== -1 && Math.random() > 0.5) {
-      // 50% chance to move correct answer to a different position
-      const newPosition = Math.floor(Math.random() * answers.length);
-      if (newPosition !== correctIndex) {
-        [answers[correctIndex], answers[newPosition]] = [answers[newPosition], answers[correctIndex]];
+      // Second pass: Additional randomization with different approach
+      if (answers.length >= 3) {
+        // Randomly swap pairs
+        for (let i = 0; i < Math.min(3, answers.length - 1); i++) {
+          const idx1 = Math.floor(Math.random() * answers.length);
+          let idx2 = Math.floor(Math.random() * answers.length);
+          while (idx2 === idx1) {
+            idx2 = Math.floor(Math.random() * answers.length);
+          }
+          [answers[idx1], answers[idx2]] = [answers[idx2], answers[idx1]];
+        }
+      }
+
+      // Third pass: Ensure correct answer isn't always in the same position
+      // (This helps prevent players from memorizing positions)
+      const correctIndex = answers.findIndex(a => a.correct);
+      if (correctIndex !== -1 && Math.random() > 0.5) {
+        // 50% chance to move correct answer to a different position
+        const newPosition = Math.floor(Math.random() * answers.length);
+        if (newPosition !== correctIndex) {
+          [answers[correctIndex], answers[newPosition]] = [answers[newPosition], answers[correctIndex]];
+        }
       }
     }
 
