@@ -565,14 +565,14 @@ export class TriviaGame extends ui.UIComponent {
       name: player.name.get()
     }));
 
-    console.log(`✅ Initialized players list with ${initialPlayers.length} players for pre-game display`);
+    console.log(`[INIT] ✅ Initialized players list with ${initialPlayers.length} players for pre-game display`);
 
     // Load headshots for existing players
     for (const player of initialPlayers) {
-      await this.loadPlayerHeadshot(player);
+      await this.loadPlayerHeadshot(player, 'INIT');
     }
     
-    console.log(`✅ Completed loading headshots for all existing players`);
+    console.log(`[INIT] ✅ Completed loading headshots for all existing players`);
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -3118,10 +3118,10 @@ export class TriviaGame extends ui.UIComponent {
     });
   }
 
-  private async loadPlayerHeadshot(player: hz.Player): Promise<void> {
+  private async loadPlayerHeadshot(player: hz.Player, stage: 'INIT' | 'RUNTIME' = 'RUNTIME'): Promise<void> {
     const playerId = player.id.toString();
     
-    console.log(`✅ Starting to load headshot for player: ${player.name.get()} (ID: ${playerId})`);
+    console.log(`[${stage}] ✅ Starting to load headshot for player: ${player.name.get()} (ID: ${playerId})`);
     
     try {
       const headshotImageSource = await Social.getAvatarImageSource(player, {
@@ -3136,12 +3136,12 @@ export class TriviaGame extends ui.UIComponent {
       this.updateTriggerCounter++;
       this.playersUpdateTrigger.set(this.updateTriggerCounter);
       
-      console.log(`✅ Successfully loaded and cached headshot for player: ${player.name.get()}`);
+      console.log(`[${stage}] ✅ Successfully loaded and cached headshot for player: ${player.name.get()}`);
       
     } catch (error) {
       // Could not get headshot for player, cache as null
       this.playerHeadshots.set(playerId, null);
-      console.log(`❌ Failed to load headshot for player: ${player.name.get()}, using fallback`);
+      console.log(`[${stage}] ❌ Failed to load headshot for player: ${player.name.get()}, using fallback`);
     }
   }
 
@@ -3152,10 +3152,10 @@ export class TriviaGame extends ui.UIComponent {
       name: player.name.get()
     }));
 
-    console.log(`✅ Retrieved ${currentPlayers.length} players from the world for pre-game display`);
+    console.log(`[UI] ✅ Retrieved ${currentPlayers.length} players from the world for pre-game display`);
 
     if (currentPlayers.length === 0) {
-      console.log(`❌ No players found in the world, showing empty state message`);
+      console.log(`[UI] ❌ No players found in the world, showing empty state message`);
       return View({
         style: {
           alignItems: 'center',
@@ -3178,7 +3178,7 @@ export class TriviaGame extends ui.UIComponent {
       this.createPlayerComponent(playerData, index)
     );
 
-    console.log(`✅ Created ${playerComponents.length} player components for the grid display`);
+    console.log(`[UI] ✅ Created ${playerComponents.length} player components for the grid display`);
 
     return View({
       style: {
@@ -3194,7 +3194,7 @@ export class TriviaGame extends ui.UIComponent {
     // Find the actual player object from the world
     const player = this.world.getPlayers().find(p => p.id.toString() === playerData.id);
     if (!player) {
-      console.log(`❌ Could not find player object for ${playerData.name} (ID: ${playerData.id})`);
+      console.log(`[UI] ❌ Could not find player object for ${playerData.name} (ID: ${playerData.id})`);
       return View({
         style: {
           width: 48,
@@ -3205,7 +3205,7 @@ export class TriviaGame extends ui.UIComponent {
       });
     }
 
-    console.log(`✅ Creating player component for ${playerData.name} at index ${index}`);
+    console.log(`[UI] ✅ Creating player component for ${playerData.name} at index ${index}`);
 
     return View({
       style: {
@@ -3475,7 +3475,7 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private setupPlayerEvents(): void {
-    console.log(`✅ Setting up player events and initializing player tracking`);
+    console.log(`[INIT] ✅ Setting up player events and initializing player tracking`);
     
     // Connect to player events
     this.connectCodeBlockEvent(
@@ -3497,7 +3497,7 @@ export class TriviaGame extends ui.UIComponent {
       name: player.name.get()
     }));
     
-    console.log(`✅ Found ${existingPlayers.length} existing players in the world`);
+    console.log(`[INIT] ✅ Found ${existingPlayers.length} existing players in the world`);
     
     // Initialize the reactive binding with current players
     this.playersListBinding.set([...this.currentPlayers]);
@@ -3506,16 +3506,16 @@ export class TriviaGame extends ui.UIComponent {
       this.assignPhoneToPlayer(player);
     });
     
-    console.log(`✅ Initialized player tracking and phone assignments for pre-game display`);
+    console.log(`[INIT] ✅ Initialized player tracking and phone assignments for pre-game display`);
   }
 
   private onPlayerEnter(player: hz.Player): void {
-    console.log(`✅ Player entered: ${player.name.get()} (ID: ${player.id.toString()})`);
+    console.log(`[PLAYER_EVENT] ✅ Player entered: ${player.name.get()} (ID: ${player.id.toString()})`);
     
     this.assignPhoneToPlayer(player);
     
     // Load player headshot using Social API
-    this.loadPlayerHeadshot(player);
+    this.loadPlayerHeadshot(player, 'RUNTIME');
     
     // Update players list for UI
     const currentPlayers = this.world.getPlayers();
@@ -3531,11 +3531,11 @@ export class TriviaGame extends ui.UIComponent {
     this.updateTriggerCounter++;
     this.playersUpdateTrigger.set(this.updateTriggerCounter);
     
-    console.log(`✅ Updated players list with ${this.currentPlayers.length} players for pre-game display`);
+    console.log(`[PLAYER_EVENT] ✅ Updated players list with ${this.currentPlayers.length} players for pre-game display`);
   }
 
   private onPlayerExit(player: hz.Player): void {
-    console.log(`✅ Player exited: ${player.name.get()} (ID: ${player.id.toString()})`);
+    console.log(`[PLAYER_EVENT] ✅ Player exited: ${player.name.get()} (ID: ${player.id.toString()})`);
     
     this.releasePlayerPhone(player);
     
@@ -3557,7 +3557,7 @@ export class TriviaGame extends ui.UIComponent {
     this.updateTriggerCounter++;
     this.playersUpdateTrigger.set(this.updateTriggerCounter);
     
-    console.log(`✅ Updated players list after exit, now ${this.currentPlayers.length} players remaining`);
+    console.log(`[PLAYER_EVENT] ✅ Updated players list after exit, now ${this.currentPlayers.length} players remaining`);
     
     // Check if the leaving player was the host
     if (this.hostPlayerId === player.id.toString()) {
