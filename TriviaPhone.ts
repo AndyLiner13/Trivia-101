@@ -942,6 +942,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private syncWithExternalTrivia(questionData: { question: any, questionIndex: number, timeLimit: number }): void {
     this.currentQuestionIndex = questionData.questionIndex;
+    this.currentQuestion = questionData.question; // Store the current question data
     this.selectedAnswer = null;
     this.showResult = false;
     this.answerSubmitted = false;
@@ -969,6 +970,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }): void {
     this.showResult = true;
     this.showResultBinding.set(true);
+    
+    // Store the current question data
+    this.currentQuestion = eventData.question;
     
     // Store the correct answer index
     this.correctAnswerIndexBinding.set(eventData.correctAnswerIndex);
@@ -1131,15 +1135,37 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleAnswerSelect(answerIndex: number): void {
     if (this.showResult) return;
 
-    this.selectedAnswer = answerIndex;
-    this.selectedAnswerBinding.set(answerIndex);
+    // Check if this button should be visible for the current question
+    if (this.currentQuestion && this.currentQuestion.answers) {
+      const answerCount = this.currentQuestion.answers.length;
+      if (answerCount === 2) {
+        // For 2-answer questions, only buttons 2 and 3 are active
+        if (answerIndex !== 2 && answerIndex !== 3) return;
+      } else {
+        // For 3+ answer questions, check if answerIndex is within bounds
+        if (answerIndex >= answerCount) return;
+      }
+    }
+
+    // For 2-answer questions, map button indices 2 and 3 to answer indices 0 and 1
+    let actualAnswerIndex = answerIndex;
+    if (this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2) {
+      if (answerIndex === 2) {
+        actualAnswerIndex = 0;
+      } else if (answerIndex === 3) {
+        actualAnswerIndex = 1;
+      }
+    }
+
+    this.selectedAnswer = actualAnswerIndex;
+    this.selectedAnswerBinding.set(actualAnswerIndex);
     this.answerSubmitted = true;
     this.answerSubmittedBinding.set(true);
 
-    // Send network event
+    // Send network event with the mapped answer index
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
       playerId: this.assignedPlayer?.id.toString() || 'local',
-      answerIndex: answerIndex,
+      answerIndex: actualAnswerIndex,
       responseTime: 0
     });
   }
@@ -1617,28 +1643,38 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         padding: 4
                       },
                       children: [
-                        // Top row (buttons 0 and 1)
+                        // Answer buttons container - always show 2x2 grid but hide buttons based on answer count
                         ui.View({
                           style: {
-                            flexDirection: 'row',
                             flex: 1,
-                            marginBottom: 2
+                            flexDirection: 'column',
+                            padding: 4
                           },
                           children: [
-                            this.createAnswerButton(0),
-                            this.createAnswerButton(1)
-                          ]
-                        }),
-                        // Bottom row (buttons 2 and 3)
-                        ui.View({
-                          style: {
-                            flexDirection: 'row',
-                            flex: 1,
-                            marginTop: 2
-                          },
-                          children: [
-                            this.createAnswerButton(2),
-                            this.createAnswerButton(3)
+                            // Top row (buttons 0 and 1)
+                            ui.View({
+                              style: {
+                                flexDirection: 'row',
+                                flex: 1,
+                                marginBottom: 2
+                              },
+                              children: [
+                                this.createAnswerButton(0),
+                                this.createAnswerButton(1)
+                              ]
+                            }),
+                            // Bottom row (buttons 2 and 3)
+                            ui.View({
+                              style: {
+                                flexDirection: 'row',
+                                flex: 1,
+                                marginTop: 2
+                              },
+                              children: [
+                                this.createAnswerButton(2),
+                                this.createAnswerButton(3)
+                              ]
+                            })
                           ]
                         })
                       ]
@@ -2090,8 +2126,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ], (showResult, selectedAnswer, questionIndex) => {
           if (showResult && this.currentQuestion) {
             const correctIndex = this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
-            const isCorrect = answerIndex === correctIndex;
-            const isSelected = answerIndex === selectedAnswer;
+            
+            // For 2-answer questions, map the correct index to button indices
+            let mappedCorrectIndex = correctIndex;
+            let mappedSelectedAnswer = selectedAnswer;
+            if (this.currentQuestion.answers.length === 2) {
+              if (correctIndex === 0) mappedCorrectIndex = 2;
+              else if (correctIndex === 1) mappedCorrectIndex = 3;
+              
+              if (selectedAnswer === 0) mappedSelectedAnswer = 2;
+              else if (selectedAnswer === 1) mappedSelectedAnswer = 3;
+            }
+            
+            const isCorrect = answerIndex === mappedCorrectIndex;
+            const isSelected = answerIndex === mappedSelectedAnswer;
 
             if (isCorrect) return '#22C55E'; // Green for correct
             if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
@@ -2104,7 +2152,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: 150,
-        padding: 8
+        padding: 8,
+        // Hide buttons that shouldn't be shown based on answer count
+        opacity: ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
+          if (!this.currentQuestion || !this.currentQuestion.answers) {
+            return answerIndex < 4 ? 1 : 0; // Show first 4 buttons by default
+          }
+          
+          const answerCount = this.currentQuestion.answers.length;
+          if (answerCount === 2) {
+            // For 2-answer questions, only show buttons 2 and 3
+            return (answerIndex === 2 || answerIndex === 3) ? 1 : 0;
+          } else {
+            // For 3+ answer questions, show all buttons
+            return answerIndex < answerCount ? 1 : 0;
+          }
+        })
       },
       onPress: () => this.handleAnswerSelect(answerIndex),
       children: [
