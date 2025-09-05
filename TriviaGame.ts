@@ -485,6 +485,9 @@ export class TriviaGame extends ui.UIComponent {
   private playersAnswered: Set<string> = new Set();
   private hasLocalPlayerAnswered: boolean = false;
 
+  // Current players list for UI (not a binding to avoid circular reference issues)
+  private currentPlayers: Array<{id: string, name: string}> = [];
+
   // Timer management properties
   private roundTimeoutId: number | null = null;
   private gameLoopTimeoutId: number | null = null;
@@ -545,8 +548,12 @@ export class TriviaGame extends ui.UIComponent {
     // Initialize the UI (shows config screen by default)
     this.resetGameState();
     
-    // Detect host player (first player to join)
-    this.detectHostPlayer();
+    // Initialize players list
+    const initialPlayers = this.world.getPlayers();
+    this.currentPlayers = initialPlayers.map(player => ({
+      id: player.id.toString(),
+      name: player.name.get()
+    }));
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -1657,7 +1664,7 @@ export class TriviaGame extends ui.UIComponent {
         }
         
         leaderboard.push({
-          name: player.name.get() || `Player ${leaderboard.length + 1}`,
+          name: playerId,
           score: score,
           playerId: playerId,
           headshotImageSource: headshotImageSource
@@ -3164,8 +3171,11 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private createPlayersGrid(): UINode {
-    // Get current players in the world
-    const currentPlayers = this.world.getPlayers();
+    // Ensure currentPlayers is populated with latest players
+    const currentPlayers = this.world.getPlayers().map(player => ({
+      id: player.id.toString(),
+      name: player.name.get()
+    }));
 
     if (currentPlayers.length === 0) {
       return View({
@@ -3185,75 +3195,10 @@ export class TriviaGame extends ui.UIComponent {
       });
     }
 
-    // Create player avatar components
-    const playerComponents = currentPlayers.map((player, index) => {
-      // Create a binding for the headshot image
-      const headshotBinding = new Binding<ImageSource | null>(null);
-
-      // Load headshot asynchronously
-      this.loadPlayerHeadshot(player, headshotBinding);
-
-      return View({
-        style: {
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginBottom: 8,
-          marginRight: 12
-        },
-        children: [
-          // Player avatar with headshot or fallback
-          View({
-            style: {
-              width: 48,
-              height: 48,
-              borderRadius: 8,
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 4,
-              overflow: 'hidden'
-            },
-            children: [
-              // Try to show headshot image first
-              UINode.if(
-                headshotBinding.derive(image => image !== null),
-                Image({
-                  source: headshotBinding.derive(image => image || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)))),
-                  style: {
-                    width: 48,
-                    height: 48,
-                    borderRadius: 8
-                  }
-                })
-              ),
-              // Fallback to initial letter if no headshot
-              UINode.if(
-                headshotBinding.derive(image => image === null),
-                Text({
-                  text: player.name.get().charAt(0).toUpperCase(),
-                  style: {
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: 'black'
-                  }
-                })
-              )
-            ]
-          }),
-          // Player name
-          Text({
-            text: player.name.get(),
-            style: {
-              fontSize: 10,
-              color: 'black',
-              textAlign: 'center',
-              maxWidth: 60,
-              overflow: 'hidden'
-            }
-          })
-        ]
-      });
-    });
+    // Create player components for current players
+    const playerComponents = currentPlayers.map((playerData, index) => 
+      this.createPlayerComponent(playerData, index)
+    );
 
     return View({
       style: {
@@ -3262,6 +3207,81 @@ export class TriviaGame extends ui.UIComponent {
         justifyContent: 'center'
       },
       children: playerComponents
+    });
+  }
+
+  private createPlayerComponent(playerData: {id: string, name: string}, index: number): UINode {
+    // Find the actual player object from the world
+    const player = this.world.getPlayers().find(p => p.id.toString() === playerData.id);
+    if (!player) {
+      return View({}); // Return empty view if player not found
+    }
+
+    // Create a binding for the headshot image
+    const headshotBinding = new Binding<ImageSource | null>(null);
+
+    // Load headshot asynchronously
+    this.loadPlayerHeadshot(player, headshotBinding);
+
+    return View({
+      style: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        marginBottom: 8,
+        marginRight: 12
+      },
+      children: [
+        // Player avatar with headshot or fallback
+        View({
+          style: {
+            width: 48,
+            height: 48,
+            borderRadius: 8,
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 4,
+            overflow: 'hidden'
+          },
+          children: [
+            // Try to show headshot image first
+            UINode.if(
+              headshotBinding.derive(image => image !== null),
+              Image({
+                source: headshotBinding.derive(image => image || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)))),
+                style: {
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8
+                }
+              })
+            ),
+            // Fallback to initial letter if no headshot
+            UINode.if(
+              headshotBinding.derive(image => image === null),
+              Text({
+                text: playerData.name.charAt(0).toUpperCase(),
+                style: {
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: 'black'
+                }
+              })
+            )
+          ]
+        }),
+        // Player name
+        Text({
+          text: playerData.name,
+          style: {
+            fontSize: 10,
+            color: 'black',
+            textAlign: 'center',
+            maxWidth: 60,
+            overflow: 'hidden'
+          }
+        })
+      ]
     });
   }
 
@@ -3481,18 +3501,37 @@ export class TriviaGame extends ui.UIComponent {
       (player: hz.Player) => this.onPlayerExit(player)
     );
 
-    // Assign phones to existing players
-    this.world.getPlayers().forEach(player => {
+    // Assign phones to existing players and update players list
+    const existingPlayers = this.world.getPlayers();
+    this.currentPlayers = existingPlayers.map(player => ({
+      id: player.id.toString(),
+      name: player.name.get()
+    }));
+    existingPlayers.forEach(player => {
       this.assignPhoneToPlayer(player);
     });
   }
 
   private onPlayerEnter(player: hz.Player): void {
     this.assignPhoneToPlayer(player);
+    
+    // Update players list for UI
+    const currentPlayers = this.world.getPlayers();
+    this.currentPlayers = currentPlayers.map(p => ({
+      id: p.id.toString(),
+      name: p.name.get()
+    }));
   }
 
   private onPlayerExit(player: hz.Player): void {
     this.releasePlayerPhone(player);
+    
+    // Update players list for UI
+    const currentPlayers = this.world.getPlayers().filter(p => p.id.toString() !== player.id.toString());
+    this.currentPlayers = currentPlayers.map(p => ({
+      id: p.id.toString(),
+      name: p.name.get()
+    }));
     
     // Check if the leaving player was the host
     if (this.hostPlayerId === player.id.toString()) {
