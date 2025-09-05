@@ -66,6 +66,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private selectedAnswer: number | null = null;
   private showResult = false;
   private gameStarted = false;
+  private answerSubmitted = false;
 
   // Current question data from TriviaGame
   private currentQuestion: any = null;
@@ -94,6 +95,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private isCorrectAnswerBinding = new ui.Binding(false);
   private correctAnswerIndexBinding = new ui.Binding<number | null>(null);
   private showLeaderboardBinding = new ui.Binding(false);
+  private answerSubmittedBinding = new ui.Binding(false);
 
   // Game settings bindings
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
@@ -216,8 +218,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // Disable physics and collision
       this.entity.simulated.set(false);
       this.entity.collidable.set(false);
-
-      console.log(`📱 TriviaPhone: Setting TriviaPhone rotation - x: ${desiredRotation.x.toFixed(4)}, y: ${desiredRotation.y.toFixed(4)}, z: ${desiredRotation.z.toFixed(4)}, w: ${desiredRotation.w.toFixed(4)}`);
 
     } catch (error) {
       // Fallback to the original method if something goes wrong
@@ -475,7 +475,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private handleRightSecondaryTrigger(player: hz.Player): void {
     // Handle RightSecondary trigger - show/hide TriviaPhone for VR users
-    console.log(`🎮 TriviaPhone: PlayerInputAction.RightSecondary clicked - getting current head rotation`);
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
     const distance = phonePosition.distance(playerPosition);
@@ -488,7 +487,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         if (camera.default) {
           this.cameraPositionAtHKeyPress = camera.default.position.get().clone();
           this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
-          console.log(`🎯 TriviaPhone: Detected head rotation - x: ${this.cameraRotationAtHKeyPress.x.toFixed(4)}, y: ${this.cameraRotationAtHKeyPress.y.toFixed(4)}, z: ${this.cameraRotationAtHKeyPress.z.toFixed(4)}, w: ${this.cameraRotationAtHKeyPress.w.toFixed(4)}`);
         }
       } catch (error) {
       }
@@ -700,6 +698,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.score = 0;
     this.selectedAnswer = null;
     this.showResult = false;
+    this.answerSubmitted = false;
 
     this.gameStartedBinding.set(true);
     this.gameEndedBinding.set(false); // Reset game ended state
@@ -709,18 +708,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.showResultBinding.set(false);
     this.isCorrectAnswerBinding.set(false);
     this.correctAnswerIndexBinding.set(null);
+    this.answerSubmittedBinding.set(false);
   }
 
   private syncWithExternalTrivia(questionData: { question: any, questionIndex: number, timeLimit: number }): void {
     this.currentQuestionIndex = questionData.questionIndex;
     this.selectedAnswer = null;
     this.showResult = false;
+    this.answerSubmitted = false;
 
     this.currentQuestionIndexBinding.set(questionData.questionIndex);
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
     this.isCorrectAnswerBinding.set(false);
     this.correctAnswerIndexBinding.set(null);
+    this.answerSubmittedBinding.set(false);
   }
 
   public forceSyncWithTriviaGame(): void {
@@ -807,6 +809,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswerBinding.set(null);
     this.currentQuestionIndex = 0;
     this.currentQuestionIndexBinding.set(0);
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
     
     // Clear current question data
     this.currentQuestion = null;
@@ -834,6 +838,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswerBinding.set(null);
     this.currentQuestionIndex = 0;
     this.currentQuestionIndexBinding.set(0);
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
     
     // Clear current question data
     this.currentQuestion = null;
@@ -858,6 +864,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     this.selectedAnswer = answerIndex;
     this.selectedAnswerBinding.set(answerIndex);
+    this.answerSubmitted = true;
+    this.answerSubmittedBinding.set(true);
 
     // Send network event
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
@@ -871,11 +879,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentQuestionIndex++;
     this.selectedAnswer = null;
     this.showResult = false;
+    this.answerSubmitted = false;
 
     this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    this.answerSubmittedBinding.set(false);
 
     // Send next question event
     this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
@@ -890,6 +900,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.score = 0;
     this.selectedAnswer = null;
     this.showResult = false;
+    this.answerSubmitted = false;
 
     this.gameStartedBinding.set(false);
     this.currentQuestionIndexBinding.set(0);
@@ -897,6 +908,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    this.answerSubmittedBinding.set(false);
   }
 
   // Game settings methods
@@ -983,10 +995,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         height: '100%',
         backgroundColor: ui.Binding.derive([
           this.showResultBinding,
-          this.isCorrectAnswerBinding
-        ], (showResult, isCorrect) => {
+          this.isCorrectAnswerBinding,
+          this.answerSubmittedBinding
+        ], (showResult, isCorrect, answerSubmitted) => {
           if (showResult) {
             return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
+          }
+          if (answerSubmitted) {
+            return '#F59E0B'; // Orange for answer submitted
           }
           return '#6366F1'; // Default blue
         }),
@@ -1136,9 +1152,56 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           })
         ),
 
-        // Show normal game content when NOT showing results
+        // Show answer submitted screen when answer is submitted but waiting for others
         ui.UINode.if(
-          ui.Binding.derive([this.showResultBinding], (showResult) => !showResult),
+          ui.Binding.derive([this.answerSubmittedBinding, this.showResultBinding], (answerSubmitted, showResult) => answerSubmitted && !showResult),
+          ui.View({
+            style: {
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 16
+            },
+            children: [
+              // Large checkmark icon
+              ui.Text({
+                text: '✅',
+                style: {
+                  fontSize: 80,
+                  textAlign: 'center',
+                  marginBottom: 16
+                }
+              }),
+              
+              // "Answer Submitted!" text
+              ui.Text({
+                text: 'Answer Submitted!',
+                style: {
+                  fontSize: 32,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                  textAlign: 'center',
+                  marginBottom: 12
+                }
+              }),
+
+              // Waiting message
+              ui.Text({
+                text: 'Waiting for other players...',
+                style: {
+                  fontSize: 18,
+                  color: '#FFFFFF',
+                  textAlign: 'center',
+                  opacity: 0.9
+                }
+              })
+            ]
+          })
+        ),
+
+        // Show normal game content when NOT showing results and answer not submitted
+        ui.UINode.if(
+          ui.Binding.derive([this.showResultBinding, this.answerSubmittedBinding], (showResult, answerSubmitted) => !showResult && !answerSubmitted),
           ui.View({
             style: {
               flex: 1,
