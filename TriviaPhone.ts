@@ -1042,7 +1042,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ui.View({
                 style: {
                   flex: 1,
-                  backgroundColor: '#667eea',
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: 20
@@ -1079,8 +1078,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Binding.derive([], () => this.isHost()),
                     ui.View({
                       style: {
-                        width: '100%',
-                        maxWidth: 280,
                         alignItems: 'center'
                       },
                       children: [
@@ -1088,12 +1085,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Pressable({
                           style: {
                             backgroundColor: '#FFFFFF',
-                            borderRadius: 12,
-                            paddingHorizontal: 24,
-                            paddingVertical: 16,
-                            width: '100%',
+                            borderRadius: 8,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            width: 150,
+                            justifyContent: 'center',
                             alignItems: 'center',
-                            marginBottom: 12,
+                            marginBottom: 8,
                             shadowColor: '#000000',
                             shadowOffset: [0, 2],
                             shadowOpacity: 0.1,
@@ -1104,9 +1102,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             ui.Text({
                               text: '⚙️ Game Settings',
                               style: {
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: '600',
-                                color: '#6366F1'
+                                color: '#6366F1',
+                                textAlign: 'center'
                               }
                             })
                           ]
@@ -1115,10 +1114,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Pressable({
                           style: {
                             backgroundColor: '#6366F1',
-                            borderRadius: 12,
-                            paddingHorizontal: 24,
-                            paddingVertical: 16,
-                            width: '100%',
+                            borderRadius: 8,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            width: 150,
+                            justifyContent: 'center',
                             alignItems: 'center',
                             shadowColor: '#000000',
                             shadowOffset: [0, 2],
@@ -1130,9 +1130,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             ui.Text({
                               text: '🎯 Start Game',
                               style: {
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: '600',
-                                color: '#FFFFFF'
+                                color: '#FFFFFF',
+                                textAlign: 'center'
                               }
                             })
                           ]
