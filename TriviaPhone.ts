@@ -11,6 +11,8 @@ const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('trivi
 const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }>('triviaSettingsUpdate');
+const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
+const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
 
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
@@ -69,7 +71,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Game settings state
   private gameSettings = {
-    numberOfQuestions: 5,
+    numberOfQuestions: 1,
     category: 'General',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     timeLimit: 30,
@@ -87,6 +89,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
   private gameStartedBinding = new ui.Binding(false);
+  private gameEndedBinding = new ui.Binding(false);
   private isCorrectAnswerBinding = new ui.Binding(false);
   private correctAnswerIndexBinding = new ui.Binding<number | null>(null);
   private showLeaderboardBinding = new ui.Binding(false);
@@ -258,6 +261,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Listen for trivia state responses
     this.connectNetworkBroadcastEvent(triviaStateResponseEvent, (eventData) => {
       this.onTriviaStateResponse(eventData);
+    });
+
+    // Listen for trivia game end events
+    this.connectNetworkBroadcastEvent(triviaGameEndEvent, (eventData) => {
+      this.onTriviaGameEnd(eventData);
+    });
+
+    // Listen for trivia game reset events
+    this.connectNetworkBroadcastEvent(triviaGameResetEvent, (eventData) => {
+      this.onTriviaGameReset(eventData);
     });
   }
 
@@ -574,6 +587,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.showResult = false;
 
     this.gameStartedBinding.set(true);
+    this.gameEndedBinding.set(false); // Reset game ended state
     this.currentQuestionIndexBinding.set(0);
     this.scoreBinding.set(0);
     this.selectedAnswerBinding.set(null);
@@ -660,6 +674,73 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.gameStartedBinding.set(false);
         break;
     }
+  }
+
+  private onTriviaGameEnd(eventData: { 
+    hostId: string, 
+    finalLeaderboard?: Array<{name: string, score: number, playerId: string}> 
+  }): void {
+    console.log("✅ TriviaPhone: Game ended, returning to Start Game screen");
+    
+    // Reset game state to show Start Game screen
+    this.gameStarted = false;
+    this.gameStartedBinding.set(false);
+    this.gameEndedBinding.set(true); // Mark game as ended
+    this.showResult = false;
+    this.showResultBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.selectedAnswer = null;
+    this.selectedAnswerBinding.set(null);
+    this.currentQuestionIndex = 0;
+    this.currentQuestionIndexBinding.set(0);
+    
+    // Clear current question data
+    this.currentQuestion = null;
+    
+    // Show final leaderboard data if provided
+    if (eventData.finalLeaderboard && eventData.finalLeaderboard.length > 0) {
+      // Briefly show final leaderboard, then return to start screen
+      this.showLeaderboardBinding.set(true);
+      this.async.setTimeout(() => {
+        this.showLeaderboardBinding.set(false);
+      }, 5000); // Show for 5 seconds
+    }
+  }
+
+  private onTriviaGameReset(eventData: { hostId: string }): void {
+    console.log("🔄 TriviaPhone: Game reset requested, returning to pre-game state");
+    
+    // Reset all game state to pre-game
+    this.gameStarted = false;
+    this.gameStartedBinding.set(false);
+    this.gameEndedBinding.set(false); // Clear ended state
+    this.showResult = false;
+    this.showResultBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.selectedAnswer = null;
+    this.selectedAnswerBinding.set(null);
+    this.currentQuestionIndex = 0;
+    this.currentQuestionIndexBinding.set(0);
+    
+    // Clear current question data
+    this.currentQuestion = null;
+    
+    // Reset to pre-game view mode
+    this.currentViewModeBinding.set('pre-game');
+  }
+
+  private endGame(): void {
+    if (!this.isHost()) {
+      console.log("🚫 TriviaPhone: Non-host attempted to end game");
+      return;
+    }
+    
+    console.log("🔚 TriviaPhone: Host ending game and resetting to pre-game state");
+    
+    // Send reset event to TriviaGame and all TriviaPhones
+    this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
+      hostId: this.assignedPlayer?.id.toString() || 'unknown'
+    });
   }
 
   private handleAnswerSelect(answerIndex: number): void {
@@ -882,10 +963,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 })
               ),
 
-              // Next Question button - only show for host when leaderboard is displayed
+              // Next Question button - only show for host during active game when leaderboard is displayed (not last question)
               ui.UINode.if(
-                ui.Binding.derive([this.showLeaderboardBinding], (showLeaderboard) => 
-                  showLeaderboard && this.isHost()
+                ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding], 
+                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings) => 
+                    showLeaderboard && gameStarted && !gameEnded && this.isHost() && (currentIndex + 1) < settings.numberOfQuestions
                 ),
                 ui.Pressable({
                   style: {
@@ -904,6 +986,36 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         fontSize: 14,
                         fontWeight: '600',
                         color: '#6366F1',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ),
+
+              // End Game button - only show for host when on last question or when game has ended
+              ui.UINode.if(
+                ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding], 
+                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings) => 
+                    showLeaderboard && gameStarted && !gameEnded && this.isHost() && (currentIndex + 1) >= settings.numberOfQuestions
+                ),
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#FF6B35',
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    marginTop: 16,
+                    alignSelf: 'center'
+                  },
+                  onPress: () => this.endGame(),
+                  children: [
+                    ui.Text({
+                      text: '🔚 End Game',
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: '#FFFFFF',
                         textAlign: 'center'
                       }
                     })
@@ -1183,7 +1295,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     flexDirection: 'row',
                     justifyContent: 'space-between'
                   },
-                  children: [5, 10, 15, 20].map(count =>
+                  children: [1, 5, 10, 15, 20].map(count =>
                     ui.Pressable({
                       style: {
                         flex: 1,

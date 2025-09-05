@@ -145,6 +145,17 @@ const triviaGameRegisteredEvent = new hz.NetworkEvent<{
   hasQuestions: boolean;
 }>('triviaGameRegistered');
 
+// Game end event to notify TriviaPhones that the game has ended
+const triviaGameEndEvent = new hz.NetworkEvent<{
+  hostId: string;
+  finalLeaderboard?: Array<{name: string, score: number, playerId: string}>;
+}>('triviaGameEnd');
+
+// Game reset event to reset TriviaGame to pre-game state
+const triviaGameResetEvent = new hz.NetworkEvent<{
+  hostId: string;
+}>('triviaGameReset');
+
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{
   requesterId: string;
@@ -668,7 +679,7 @@ export class TriviaGame extends ui.UIComponent {
       const categoryKey = category.toLowerCase();
       if (this.loadedCategories.has(categoryKey)) {
         console.log("✅ TriviaGame: Category already loaded, using cached questions");
-        // Use cached questions
+        // Use cached questions - but shuffle them first for variety
         if (categoryKey === "general") {
           allQuestions = [...this.generalQuestions];
         } else if (categoryKey === "history") {
@@ -677,6 +688,13 @@ export class TriviaGame extends ui.UIComponent {
           allQuestions = [...this.scienceQuestions];
         } else if (categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || categoryKey.includes("italian") && categoryKey.includes("brainrot")) {
           allQuestions = [...this.customQuizQuestions];
+        }
+        
+        // Pre-shuffle cached questions to ensure different subset each game
+        console.log("🔀 TriviaGame: Pre-shuffling cached questions for variety");
+        for (let i = allQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
         }
       } else {
         // Load category on-demand
@@ -743,9 +761,26 @@ export class TriviaGame extends ui.UIComponent {
       // NO FALLBACKS - if no questions match the exact criteria, keep empty array
       // This will trigger error handling in handleStartGame
 
-      // Limit number of questions (but NOT for Italian Brainrot Quiz)
+      // IMPORTANT: Shuffle the entire question pool BEFORE limiting to ensure variety
+      if (allQuestions.length > 1) {
+        console.log("🔀 TriviaGame: Pre-shuffling entire question pool for maximum variety");
+        // Use the same ultra-randomization algorithm as shuffleQuestions but for the full pool
+        for (let i = allQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+        }
+        
+        // Additional randomization pass with timestamp entropy
+        const entropy = Date.now() % 1000;
+        for (let i = allQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor((Math.random() + entropy / 1000) * (i + 1)) % (i + 1);
+          [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+        }
+      }
+
+      // Limit number of questions AFTER shuffling (but NOT for Italian Brainrot Quiz)
       if (!isItalianBrainrot && this.gameConfig && this.gameConfig.numQuestions && allQuestions.length > this.gameConfig.numQuestions) {
-        console.log("✂️ TriviaGame: Limiting questions to", this.gameConfig.numQuestions, "from", allQuestions.length);
+        console.log("✂️ TriviaGame: Taking random", this.gameConfig.numQuestions, "questions from shuffled pool of", allQuestions.length);
         allQuestions = allQuestions.slice(0, this.gameConfig.numQuestions);
       } else if (isItalianBrainrot) {
         console.log("ℹ️ TriviaGame: Not limiting questions for Italian Brainrot Quiz");
@@ -782,6 +817,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Listen for state requests from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaStateRequestEvent, this.onStateRequest.bind(this));
+    
+    // Listen for game reset requests from TriviaPhone
+    this.connectNetworkBroadcastEvent(triviaGameResetEvent, this.onGameReset.bind(this));
   }
 
   private resetGameState(): void {
@@ -1017,7 +1055,7 @@ export class TriviaGame extends ui.UIComponent {
 
     // Generate multiple entropy sources for ultra-random shuffling
     const timestamp = Date.now();
-    const microseconds = performance.now() * 1000; // Higher precision timing
+    const microseconds = (Date.now() * Math.random() * 1000) % 1000000; // Alternative high-precision timing
     const playerCount = this.world?.getPlayers().length || 0;
     const randomBase = Math.random() * 999999;
     const gameSessionId = Math.floor(Math.random() * 1000000); // Unique per game session
@@ -1154,6 +1192,9 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private endGame(): void {
+    console.log("🔚 TriviaGame: Game ending, resetting to pre-game state");
+    
+    // Reset the game to pre-game configuration screen
     this.isRunning = false;
     this.stopTimer();
 
@@ -1163,8 +1204,12 @@ export class TriviaGame extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
 
-    // Show final message
-    this.questionBinding.set("Game Complete! Thank you for playing.");
+    // Show the configuration screen instead of "Game Complete!" message
+    this.showConfigBinding.set(true);
+    this.showErrorBinding.set(false);
+    
+    // Reset question display to config message
+    this.questionBinding.set("Configure your trivia game settings and press Start when ready!");
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -1173,14 +1218,20 @@ export class TriviaGame extends ui.UIComponent {
 
     // Reset timer display
     this.timerBinding.set("0");
+    this.answerCountBinding.set("0");
 
     // Reset question index for next game
     this.currentQuestionIndex = 0;
 
-    // Optionally show final leaderboard
-    this.async.setTimeout(() => {
-      this.showFinalLeaderboard();
-    }, 2000);
+    // Clear player tracking
+    this.playersAnswered.clear();
+
+    // Notify TriviaPhones that the game has ended and reset to pre-game
+    this.sendNetworkBroadcastEvent(triviaGameEndEvent, {
+      hostId: this.hostPlayerId || 'unknown'
+    });
+
+    console.log("✅ TriviaGame: Reset to pre-game configuration screen");
   }
 
   private showFinalLeaderboard(): void {
@@ -1206,7 +1257,9 @@ export class TriviaGame extends ui.UIComponent {
       difficulty: this.currentQuestion.difficulty || 'easy',
       image: this.currentQuestion.image, // Include the image field
       answers: this.currentQuestion.answers
-    };      // Prepare final leaderboard data for network event
+    };      
+
+      // Prepare final leaderboard data for network event
       const networkLeaderboardData = finalLeaderboard.map(player => ({
         name: player.name,
         score: player.score,
@@ -1220,6 +1273,12 @@ export class TriviaGame extends ui.UIComponent {
         scores: {},
         showLeaderboard: true,
         leaderboardData: networkLeaderboardData
+      });
+
+      // Send additional game end event with final leaderboard to ensure TriviaPhones show Start Game screen
+      this.sendNetworkBroadcastEvent(triviaGameEndEvent, {
+        hostId: this.hostPlayerId || 'unknown',
+        finalLeaderboard: networkLeaderboardData
       });
     });
   }
@@ -3247,6 +3306,45 @@ export class TriviaGame extends ui.UIComponent {
     
     // Send the response
     this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
+  }
+
+  private onGameReset(event: { hostId: string }): void {
+    console.log("🔄 TriviaGame: Game reset requested, returning to pre-game state");
+    
+    // Reset the game to pre-game configuration screen
+    this.isRunning = false;
+    this.stopTimer();
+    
+    // Reset all game state
+    this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
+    this.isShowingResults = false;
+    this.isShowingLeaderboard = false;
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    
+    // Show the configuration screen
+    this.showConfigBinding.set(true);
+    this.showErrorBinding.set(false);
+    
+    // Reset question display
+    this.questionBinding.set("Configure your trivia game settings and press Start when ready!");
+    
+    // Clear answer texts
+    for (let i = 0; i < 4; i++) {
+      this.answerTexts[i].set("");
+    }
+    
+    // Reset timer display
+    this.timerBinding.set("0");
+    this.answerCountBinding.set("0");
+    
+    // Clear player tracking
+    this.playersAnswered.clear();
+    this.playerScores.clear();
+    
+    console.log("✅ TriviaGame: Reset to pre-game configuration screen");
   }
 
   // Phone management methods
