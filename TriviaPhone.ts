@@ -220,18 +220,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         cameraForward = player.forward.get();
       }
 
-      // Calculate direction to player and set rotation after position is set
-      const playerPos = player.position.get();
-      const phonePos = this.entity.position.get();
-      const directionToPlayer = playerPos.sub(phonePos).normalize();
+      // Calculate direction to player and set rotation after position is set (run 3 times for maximum consistency)
+      for (let i = 0; i < 3; i++) {
+        const playerPos = player.position.get();
+        const phonePos = this.entity.position.get();
+        const directionToPlayer = playerPos.sub(phonePos).normalize();
 
-      // Create a quaternion that rotates the phone to face the player
-      const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
-      const rotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
-      
-      // Set rotation after position is set
-      console.log(`📱 TriviaPhone: Setting TriviaPhone rotation - x: ${rotation.x.toFixed(4)}, y: ${rotation.y.toFixed(4)}, z: ${rotation.z.toFixed(4)}, w: ${rotation.w.toFixed(4)}`);
-      this.entity.rotation.set(rotation);
+        // Create a quaternion that rotates the phone to face the player
+        const angleY = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+        const rotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), angleY);
+        
+        // Set rotation after position is set
+        console.log(`📱 TriviaPhone: Setting TriviaPhone rotation (${i + 1}/3) - x: ${rotation.x.toFixed(4)}, y: ${rotation.y.toFixed(4)}, z: ${rotation.z.toFixed(4)}, w: ${rotation.w.toFixed(4)}`);
+        this.entity.rotation.set(rotation);
+      }
 
     } catch (error) {
       // Fallback to the original method if something goes wrong
@@ -487,9 +489,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.isPlayerFocusedOnUI = false;
   }
 
-  private handleRightSecondaryTrigger(player: hz.Player): void {
+  private handleRightSecondaryTrigger(player: hz.Player, clickCount: number = 0): void {
+    // Simulate clicking the button 3 times by calling this method recursively
+    if (clickCount >= 3) return; // Prevent infinite recursion
+
     // This method is only called for VR users since we only register the input for them
-    console.log("🎮 TriviaPhone: PlayerInputAction.RightSecondary clicked - getting current head rotation");
+    console.log(`🎮 TriviaPhone: PlayerInputAction.RightSecondary clicked (simulated click ${clickCount + 1}/3) - getting current head rotation`);
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
     const distance = phonePosition.distance(playerPosition);
@@ -502,7 +507,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         if (camera.default) {
           this.cameraPositionAtHKeyPress = camera.default.position.get().clone();
           this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
-          console.log(`🎯 TriviaPhone: Detected head rotation - x: ${this.cameraRotationAtHKeyPress.x.toFixed(4)}, y: ${this.cameraRotationAtHKeyPress.y.toFixed(4)}, z: ${this.cameraRotationAtHKeyPress.z.toFixed(4)}, w: ${this.cameraRotationAtHKeyPress.w.toFixed(4)}`);
+          console.log(`🎯 TriviaPhone: Detected head rotation (simulated click ${clickCount + 1}/3) - x: ${this.cameraRotationAtHKeyPress.x.toFixed(4)}, y: ${this.cameraRotationAtHKeyPress.y.toFixed(4)}, z: ${this.cameraRotationAtHKeyPress.z.toFixed(4)}, w: ${this.cameraRotationAtHKeyPress.w.toFixed(4)}`);
         }
       } catch (error) {
       }
@@ -526,6 +531,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // Reset focus state since player is no longer actively using the phone
       this.isPlayerFocusedOnUI = false;
     }
+
+    // Simulate the next button click
+    this.async.setTimeout(() => {
+      this.handleRightSecondaryTrigger(player, clickCount + 1);
+    }, 100); // 100ms delay between simulated clicks
   }
 
   private handleLeftTertiaryTrigger(player: hz.Player): void {
