@@ -26,8 +26,11 @@ const triviaStateResponseEvent = new hz.NetworkEvent<{
   leaderboardData?: Array<{name: string, score: number, playerId: string}>
 }>('triviaStateResponse');
 
-// Network event for keyboard input from separate KeyboardInputHandler (fallback)
-const mePhoneKeyboardTriggerEvent = new hz.NetworkEvent<{ playerId: string }>('mePhoneKeyboardTrigger');
+// Network event for host management
+const hostChangedEvent = new hz.NetworkEvent<{
+  newHostId: string;
+  oldHostId?: string;
+}>('hostChanged');
 
 // Built-in trivia questions (fallback only - TriviaGame provides the actual questions)
 const triviaQuestions: any[] = [];
@@ -102,6 +105,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
   private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
 
+  // Host status binding
+  private isHostBinding = new ui.Binding(false);
+  private currentHostStatus = false;
+
   constructor() {
     super();
   }
@@ -122,6 +129,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Store the original position when the component starts
     this.originalPosition = this.entity.position.get().clone();
+
+    // Initialize host status binding
+    this.currentHostStatus = this.isHost();
+    this.isHostBinding.set(this.currentHostStatus);
   }
 
   private teleportToPlayer(player: hz.Player): void {
@@ -227,6 +238,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   update(dt: number) {
+    // Update host status binding if it has changed
+    const currentHostStatus = this.isHost();
+    if (currentHostStatus !== this.currentHostStatus) {
+      this.currentHostStatus = currentHostStatus;
+      this.isHostBinding.set(currentHostStatus);
+    }
+
     // Alternative polling approach: Check if UI is still visible/active
     if (this.assignedPlayer) {
       try {
@@ -350,6 +368,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Listen for trivia game reset events
     this.connectNetworkBroadcastEvent(triviaGameResetEvent, (eventData) => {
       this.onTriviaGameReset(eventData);
+    });
+
+    // Listen for host changed events
+    this.connectNetworkBroadcastEvent(hostChangedEvent, (eventData) => {
+      this.onHostChanged(eventData);
     });
   }
 
@@ -729,15 +752,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private isHost(): boolean {
-    // The host is the first player in the world (player with index 0)
-    const localPlayer = this.world.getLocalPlayer();
-    if (!localPlayer) return false;
-
-    const allPlayers = this.world.getPlayers();
-    if (allPlayers.length === 0) return false;
-
-    // Check if local player is the first player (host)
-    return allPlayers[0].id === localPlayer.id;
+    // Use centralized host status from TriviaGame
+    return this.currentHostStatus;
   }
 
   private handleStartGame(): void {
@@ -891,26 +907,41 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private onTriviaGameReset(eventData: { hostId: string }): void {
-
-    // Reset all game state to pre-game
+    console.log("📱 TriviaPhone: Game reset requested by host", eventData.hostId);
+    
+    // Reset all game state to initial values
     this.gameStarted = false;
-    this.gameStartedBinding.set(false);
-    this.gameEndedBinding.set(false); // Clear ended state
+    this.gameEndedBinding.set(false);
+    this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
+    this.score = 0;
+    this.selectedAnswer = null;
     this.showResult = false;
+    this.answerSubmitted = false;
+
+    // Reset all bindings
+    this.gameStartedBinding.set(false);
+    this.currentQuestionIndexBinding.set(0);
+    this.scoreBinding.set(0);
+    this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
     this.showLeaderboardBinding.set(false);
-    this.selectedAnswer = null;
-    this.selectedAnswerBinding.set(null);
-    this.currentQuestionIndex = 0;
-    this.currentQuestionIndexBinding.set(0);
-    this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
     
-    // Clear current question data
-    this.currentQuestion = null;
-    
-    // Reset to pre-game view mode
+    // Navigate back to pre-game screen
+    this.currentViewMode = 'pre-game';
     this.currentViewModeBinding.set('pre-game');
+  }
+
+  private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
+    console.log("📱 TriviaPhone: Host changed from", eventData.oldHostId, "to", eventData.newHostId);
+    
+    // Update host status based on centralized host management
+    const localPlayer = this.world.getLocalPlayer();
+    const isLocalPlayerHost = localPlayer ? eventData.newHostId === localPlayer.id.toString() : false;
+    
+    this.currentHostStatus = isLocalPlayerHost;
+    this.isHostBinding.set(isLocalPlayerHost);
   }
 
   private endGame(): void {
@@ -1156,9 +1187,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
               // Next Question button - only show for host during active game when leaderboard is displayed (not last question)
               ui.UINode.if(
-                ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding], 
-                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings) => 
-                    showLeaderboard && gameStarted && !gameEnded && this.isHost() && (currentIndex + 1) < settings.numberOfQuestions
+                ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding], 
+                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) => 
+                    showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) < settings.numberOfQuestions
                 ),
                 ui.Pressable({
                   style: {
@@ -1186,9 +1217,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
               // End Game button - only show for host when on last question or when game has ended
               ui.UINode.if(
-                ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding], 
-                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings) => 
-                    showLeaderboard && gameStarted && !gameEnded && this.isHost() && (currentIndex + 1) >= settings.numberOfQuestions
+                ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding], 
+                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) => 
+                    showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions
                 ),
                 ui.Pressable({
                   style: {
@@ -1301,7 +1332,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     },
                     children: [
                       ui.Text({
-                        text: ui.Binding.derive([], () => this.isHost() ? '👑 You are the Host' : '👤 You are a Participant'),
+                        text: ui.Binding.derive([this.isHostBinding], (isHost) => isHost ? '👑 You are the Host' : '👤 You are a Participant'),
                         style: {
                           fontSize: 18,
                           fontWeight: '600',
@@ -1313,7 +1344,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }),
                   // Host Controls
                   ui.UINode.if(
-                    ui.Binding.derive([], () => this.isHost()),
+                    this.isHostBinding.derive(isHost => isHost),
                     ui.View({
                       style: {
                         alignItems: 'center'
@@ -1381,7 +1412,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ),
                   // Participant Waiting Message
                   ui.UINode.if(
-                    ui.Binding.derive([], () => !this.isHost()),
+                    ui.Binding.derive([this.isHostBinding], (isHost) => !isHost),
                     ui.Text({
                       text: 'Waiting for host to start the game...',
                       style: {

@@ -171,7 +171,13 @@ const triviaStateResponseEvent = new hz.NetworkEvent<{
   leaderboardData?: Array<{name: string, score: number, playerId: string}>;
 }>('triviaStateResponse');
 
-// Settings update event for real-time sync with TriviaPhone
+// Host management event
+const hostChangedEvent = new hz.NetworkEvent<{
+  newHostId: string;
+  oldHostId?: string;
+}>('hostChanged');
+
+// Settings update event
 const triviaSettingsUpdateEvent = new hz.NetworkEvent<{
   hostId: string;
   settings: {
@@ -812,8 +818,8 @@ export class TriviaGame extends ui.UIComponent {
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
     this.connectNetworkBroadcastEvent(triviaNextQuestionEvent, this.onNextQuestionRequest.bind(this));
     
-    // Listen for settings updates from TriviaPhone
-    this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, this.onSettingsUpdate.bind(this));
+    // Listen for host management events
+    this.connectNetworkBroadcastEvent(hostChangedEvent, this.onHostChanged.bind(this));
     
     // Listen for state requests from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaStateRequestEvent, this.onStateRequest.bind(this));
@@ -1661,6 +1667,19 @@ export class TriviaGame extends ui.UIComponent {
     await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
   }
 
+  private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
+    console.log("👑 TriviaGame: Host changed from", eventData.oldHostId, "to", eventData.newHostId);
+    
+    // Update host information
+    this.hostPlayerId = eventData.newHostId;
+    this.hostPlayerIdBinding.set(this.hostPlayerId);
+    
+    // Update local player host status
+    const localPlayer = this.world.getLocalPlayer();
+    this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
+    this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
+  }
+
   private onNextQuestionRequest(data: { playerId: string }): void {
     // Only allow the host to advance to the next question
     if (data.playerId === this.hostPlayerId) {
@@ -1669,30 +1688,41 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private detectHostPlayer(): void {
-    const localPlayer = this.world.getLocalPlayer();
-    if (!localPlayer) return;
-    
     const allPlayers = this.world.getPlayers();
+    const localPlayer = this.world.getLocalPlayer();
     
     if (allPlayers.length === 0) {
-      // No players yet, local player becomes host
-      this.hostPlayerId = localPlayer.id.toString();
-      this.isLocalPlayerHost = true;
+      console.log("👑 TriviaGame: No players in world");
+      return;
+    }
+
+    // If no host is set yet, assign the player with the lowest ID as host
+    if (!this.hostPlayerId) {
+      // Sort players by ID and pick the first one (lowest ID)
+      const sortedPlayers = allPlayers.sort((a, b) => {
+        const idA = parseInt(a.id.toString());
+        const idB = parseInt(b.id.toString());
+        return idA - idB;
+      });
+      
+      const newHost = sortedPlayers[0];
+      this.hostPlayerId = newHost.id.toString();
       this.hostPlayerIdBinding.set(this.hostPlayerId);
-      this.isLocalPlayerHostBinding.set(true);
+      
+      // Update local player host status
+      this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
+      this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
+      
+      console.log("👑 TriviaGame: Assigned new host:", this.hostPlayerId);
+      
+      // Broadcast the host change to all clients
+      this.sendNetworkBroadcastEvent(hostChangedEvent, {
+        newHostId: this.hostPlayerId
+      });
     } else {
-      // Check if there's already a host or if local player is first
-      if (!this.hostPlayerId) {
-        // No host set yet, local player becomes host
-        this.hostPlayerId = localPlayer.id.toString();
-        this.isLocalPlayerHost = true;
-        this.hostPlayerIdBinding.set(this.hostPlayerId);
-        this.isLocalPlayerHostBinding.set(true);
-      } else {
-        // Host already exists
-        this.isLocalPlayerHost = this.hostPlayerId === localPlayer.id.toString();
-        this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
-      }
+      // Update local player host status based on current host
+      this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
+      this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
     }
   }
 
@@ -3393,6 +3423,48 @@ export class TriviaGame extends ui.UIComponent {
 
   private onPlayerExit(player: hz.Player): void {
     this.releasePlayerPhone(player);
+    
+    // Check if the leaving player was the host
+    if (this.hostPlayerId === player.id.toString()) {
+      console.log("👑 TriviaGame: Host left, reassigning host role");
+      
+      // Clear current host
+      const oldHostId = this.hostPlayerId;
+      this.hostPlayerId = null;
+      this.isLocalPlayerHost = false;
+      this.isLocalPlayerHostBinding.set(false);
+      
+      // Reassign host to the player with the lowest ID among remaining players
+      const remainingPlayers = this.world.getPlayers().filter(p => p.id.toString() !== player.id.toString());
+      
+      if (remainingPlayers.length > 0) {
+        // Sort remaining players by ID and pick the first one
+        const sortedPlayers = remainingPlayers.sort((a, b) => {
+          const idA = parseInt(a.id.toString());
+          const idB = parseInt(b.id.toString());
+          return idA - idB;
+        });
+        
+        const newHost = sortedPlayers[0];
+        this.hostPlayerId = newHost.id.toString();
+        this.hostPlayerIdBinding.set(this.hostPlayerId);
+        
+        // Update local player host status
+        const localPlayer = this.world.getLocalPlayer();
+        this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
+        this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
+        
+        console.log("👑 TriviaGame: Reassigned host to:", this.hostPlayerId);
+        
+        // Broadcast the host change to all clients
+        this.sendNetworkBroadcastEvent(hostChangedEvent, {
+          newHostId: this.hostPlayerId,
+          oldHostId: oldHostId
+        });
+      } else {
+        console.log("👑 TriviaGame: No players remaining, host will be assigned when players join");
+      }
+    }
   }
 
   private assignPhoneToPlayer(player: hz.Player): void {
