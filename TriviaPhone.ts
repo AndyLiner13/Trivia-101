@@ -186,7 +186,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
       // Position 1 unit in front of player at eye level
       const desiredPosition = playerPosition.add(playerForward.mul(1.0));
-      desiredPosition.y += 0.1; // Slight upward offset for eye level
+      desiredPosition.y += 0.4; // Slight upward offset for eye level
       // Allow Z position to change based on user location
 
       this.entity.position.set(desiredPosition);
@@ -237,7 +237,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           const playerPosition = this.assignedPlayer.position.get();
           const playerForward = this.assignedPlayer.forward.get();
           const desiredPosition = playerPosition.add(playerForward.mul(1.0));
-          desiredPosition.y += 0.1;
+          desiredPosition.y += 0.4;
           // Allow Z position to change based on user location
           this.entity.position.set(desiredPosition);
 
