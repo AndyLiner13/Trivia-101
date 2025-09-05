@@ -129,7 +129,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // Note: Native leaderboard doesn't have getScoreForPlayer, so we return the local score
       return this.score;
     } catch (error) {
-      console.log("❌ TriviaPhone: Error getting player points:", error);
       return 0;
     }
   }
@@ -139,7 +138,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // Use local score since we can't read from native leaderboard
       const currentScore = this.score;
       this.scoreBinding.set(currentScore);
-      console.log("📱 TriviaPhone: Updated score display to", currentScore);
     }
   }
 
@@ -180,9 +178,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentHostStatus = this.isHost();
     this.isHostBinding.set(this.currentHostStatus);
 
-    // Log persistent storage status for debugging
-    console.log("📱 TriviaPhone: Started, using native leaderboard system");
-    
     // Update score display
     this.waitForPersistentStorageAndUpdateScore();
   }
@@ -892,13 +887,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         playerId: this.assignedPlayer.id.toString(),
         points: 1
       });
-      
-      console.log("✅ Sent point award request for player:", this.assignedPlayer.id.toString());
 
       // Immediate local score increment for instant feedback
       this.score += 1;
       this.scoreBinding.set(this.score);
-      console.log("📱 TriviaPhone: Immediate local score increment to", this.score);
 
       // DON'T update from persistent storage immediately after a correct answer
       // The local increment is the source of truth until the next game event
@@ -986,7 +978,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private onTriviaGameReset(eventData: { hostId: string }): void {
-    console.log("📱 TriviaPhone: Game reset requested by host", eventData.hostId);
     
     // Reset all game state to initial values
     this.gameStarted = false;
@@ -1016,7 +1007,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
-    console.log("📱 TriviaPhone: Host changed from", eventData.oldHostId, "to", eventData.newHostId);
     
     // Update host status based on centralized host management
     const localPlayer = this.world.getLocalPlayer();

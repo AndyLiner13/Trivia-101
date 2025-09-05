@@ -228,13 +228,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
 
     // Listen for trivia game registration events
     this.connectNetworkBroadcastEvent(triviaGameRegisteredEvent, (eventData) => {
-      console.log(`[MePhone] Received TriviaGame registration event`);
       this.ensureTriviaApp().onTriviaGameRegistered(eventData);
     });
 
     // Listen for trivia state responses
     this.connectNetworkBroadcastEvent(triviaStateResponseEvent, (eventData) => {
-      console.log(`[MePhone] Received TriviaGame state response:`, eventData);
       
       // First send the state to TriviaApp
       this.ensureTriviaApp().onTriviaStateResponse(eventData);
@@ -243,7 +241,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
       if (this.waitingToOpenTrivia) {
         this.waitingToOpenTrivia = false;
         this.navigateToApp('trivia');
-        console.log(`[MePhone] Opening TriviaApp after receiving state: ${eventData.gameState}`);
       }
     });
 
@@ -614,7 +611,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
   // Request current state from TriviaGame before opening the app
   private requestTriviaGameState() {
     const requestId = `${this.assignedPlayer?.id || 'unknown'}_${Date.now()}`;
-    console.log(`[MePhone] Requesting TriviaGame state with ID: ${requestId}`);
     
     this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
       requesterId: requestId
@@ -627,7 +623,6 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     if (this.waitingToOpenTrivia) {
       this.async.setTimeout(() => {
         if (this.waitingToOpenTrivia) {
-          console.log(`[MePhone] Timeout waiting for TriviaGame state, opening anyway`);
           this.waitingToOpenTrivia = false;
           this.navigateToApp('trivia');
         }

@@ -28,30 +28,21 @@ export class NativeLeaderboard extends ui.UIComponent {
   };
 
   async start() {
-    console.log("🏆 NativeLeaderboard: Starting leaderboard system for", this.props.leaderboardName);
-
     // Validate leaderboard name
     const leaderboardName = this.props.leaderboardName as string;
     if (!leaderboardName || leaderboardName.trim() === '') {
-      console.log("❌ NativeLeaderboard: ERROR - Leaderboard name is empty! Please set the leaderboard name in the gizmo properties.");
-      console.log("ℹ️ NativeLeaderboard: Set leaderboardName property to 'Trivia' or your desired leaderboard name.");
       return;
     }
 
     // Listen for score updates from TriviaGame
     this.connectNetworkBroadcastEvent(leaderboardScoreUpdateEvent, this.onScoreUpdate.bind(this));
-
-    console.log("✅ NativeLeaderboard: Leaderboard system initialized for", leaderboardName);
   }
 
   private onScoreUpdate(eventData: { playerId: string; score: number; leaderboardName: string }) {
     // Only handle updates for our leaderboard
     const leaderboardName = this.props.leaderboardName as string;
-    console.log("🔍 NativeLeaderboard: Checking leaderboard name match:", eventData.leaderboardName, "vs", leaderboardName);
 
     if (eventData.leaderboardName === leaderboardName) {
-      console.log("🔄 NativeLeaderboard: Received score update for player", eventData.playerId, "score:", eventData.score);
-
       try {
         // Find the player
         const player = this.world.getPlayers().find(p => p.id.toString() === eventData.playerId);
@@ -64,18 +55,9 @@ export class NativeLeaderboard extends ui.UIComponent {
             eventData.score,
             true // Override previous score
           );
-
-          console.log("✅ NativeLeaderboard: Successfully set score for", player.name.get());
-        } else {
-          console.log("❌ NativeLeaderboard: Could not find player with ID", eventData.playerId);
-          console.log("📋 NativeLeaderboard: Available players:", this.world.getPlayers().map(p => `${p.name.get()} (${p.id})`).join(', '));
         }
       } catch (error) {
-        console.log("❌ NativeLeaderboard: Error setting leaderboard score:", error);
-        console.log("🔧 NativeLeaderboard: Make sure the leaderboard gizmo has the correct leaderboard name configured.");
       }
-    } else {
-      console.log("⚠️ NativeLeaderboard: Ignoring score update for different leaderboard:", eventData.leaderboardName);
     }
   }
 
@@ -92,9 +74,7 @@ export class NativeLeaderboard extends ui.UIComponent {
           score,
           true
         );
-        console.log("✅ NativeLeaderboard: Manually set score for", player.name.get(), "to", score);
       } catch (error) {
-        console.log("❌ NativeLeaderboard: Error setting manual score:", error);
       }
     }
   }
