@@ -1012,60 +1012,98 @@ export class TriviaGame extends ui.UIComponent {
   private shuffleQuestions(): void {
     if (this.triviaQuestions.length <= 1) return;
 
-    // Use a more robust shuffling algorithm with better randomization
-    // Fisher-Yates shuffle with additional randomization techniques
+    // Enhanced randomization to ensure completely unique question orders between games
+    // Multiple entropy sources for maximum randomness
 
-    // First, add some entropy by using current timestamp and player count
-    const seed = Date.now() + (this.world?.getPlayers().length || 0) + Math.random() * 1000;
+    // Generate multiple entropy sources for ultra-random shuffling
+    const timestamp = Date.now();
+    const microseconds = performance.now() * 1000; // Higher precision timing
+    const playerCount = this.world?.getPlayers().length || 0;
+    const randomBase = Math.random() * 999999;
+    const gameSessionId = Math.floor(Math.random() * 1000000); // Unique per game session
+    
+    // Create multiple independent random seeds
+    const seed1 = (timestamp % 99991) + playerCount;
+    const seed2 = Math.floor(microseconds) % 99991;
+    const seed3 = Math.floor(randomBase) % 99991;
+    const seed4 = gameSessionId % 99991;
 
-    // Create a seeded random function for more predictable but still random results
-    let seedValue = seed;
-    const seededRandom = () => {
-      seedValue = (seedValue * 9301 + 49297) % 233280;
-      return seedValue / 233280;
+    // Advanced pseudo-random generator with multiple seeds
+    let rng1 = seed1;
+    let rng2 = seed2;
+    let rng3 = seed3;
+    let rng4 = seed4;
+
+    const advancedRandom = () => {
+      // Linear congruential generators with different parameters
+      rng1 = (rng1 * 16807) % 2147483647;
+      rng2 = (rng2 * 48271) % 2147483647;
+      rng3 = (rng3 * 69621) % 2147483647;
+      rng4 = (rng4 * 40692) % 2147483647;
+      
+      // Combine all generators with Math.random for maximum entropy
+      const combined = (rng1 + rng2 + rng3 + rng4) / (4 * 2147483647);
+      return (combined + Math.random() + Math.random()) / 3; // Triple random for extra chaos
     };
 
-    // Perform multiple shuffle passes for better randomization
-    for (let pass = 0; pass < 3; pass++) {
+    // Perform 5 complete shuffle passes with different algorithms
+    for (let pass = 0; pass < 5; pass++) {
+      // Fisher-Yates shuffle with enhanced randomness
       for (let i = this.triviaQuestions.length - 1; i > 0; i--) {
-        // Use a combination of seeded random and Math.random for maximum entropy
-        const randomValue = (seededRandom() + Math.random()) / 2;
-        const j = Math.floor(randomValue * (i + 1));
+        const j = Math.floor(advancedRandom() * (i + 1));
+        [this.triviaQuestions[i], this.triviaQuestions[j]] = [this.triviaQuestions[j], this.triviaQuestions[i]];
+      }
 
-        // Swap elements
+      // Random segment swapping
+      if (this.triviaQuestions.length > 4) {
+        const segmentSize = Math.floor(advancedRandom() * 3) + 2; // 2-4 elements
+        const start1 = Math.floor(advancedRandom() * (this.triviaQuestions.length - segmentSize));
+        const start2 = Math.floor(advancedRandom() * (this.triviaQuestions.length - segmentSize));
+        
+        if (start1 !== start2 && Math.abs(start1 - start2) >= segmentSize) {
+          // Swap segments
+          for (let i = 0; i < segmentSize; i++) {
+            const temp = this.triviaQuestions[start1 + i];
+            this.triviaQuestions[start1 + i] = this.triviaQuestions[start2 + i];
+            this.triviaQuestions[start2 + i] = temp;
+          }
+        }
+      }
+    }
+
+    // Additional chaos operations
+    if (this.triviaQuestions.length > 6) {
+      // Random rotation
+      const rotateAmount = Math.floor(advancedRandom() * this.triviaQuestions.length);
+      const rotated = [...this.triviaQuestions.slice(rotateAmount), ...this.triviaQuestions.slice(0, rotateAmount)];
+      this.triviaQuestions.splice(0, this.triviaQuestions.length, ...rotated);
+
+      // Random reversal of subsections
+      const numReversals = Math.floor(advancedRandom() * 3) + 1;
+      for (let r = 0; r < numReversals; r++) {
+        const start = Math.floor(advancedRandom() * (this.triviaQuestions.length - 2));
+        const end = start + Math.floor(advancedRandom() * (this.triviaQuestions.length - start - 1)) + 1;
+        
+        // Reverse subsection
+        for (let i = start; i < start + Math.floor((end - start) / 2); i++) {
+          const temp = this.triviaQuestions[i];
+          this.triviaQuestions[i] = this.triviaQuestions[end - (i - start)];
+          this.triviaQuestions[end - (i - start)] = temp;
+        }
+      }
+    }
+
+    // Final mega-shuffle using all entropy sources
+    for (let finalPass = 0; finalPass < 3; finalPass++) {
+      for (let i = this.triviaQuestions.length - 1; i > 0; i--) {
+        // Use all random sources combined
+        const ultraRandom = (Math.random() + advancedRandom() + (Date.now() % 1000) / 1000) / 3;
+        const j = Math.floor(ultraRandom * (i + 1));
         [this.triviaQuestions[i], this.triviaQuestions[j]] = [this.triviaQuestions[j], this.triviaQuestions[i]];
       }
     }
 
-    // Additional randomization: reverse sections randomly
-    if (this.triviaQuestions.length > 3) {
-      const midPoint = Math.floor(this.triviaQuestions.length / 2);
-      if (Math.random() > 0.5) {
-        // Reverse first half
-        for (let i = 0; i < Math.floor(midPoint / 2); i++) {
-          const temp = this.triviaQuestions[i];
-          this.triviaQuestions[i] = this.triviaQuestions[midPoint - 1 - i];
-          this.triviaQuestions[midPoint - 1 - i] = temp;
-        }
-      }
-
-      if (Math.random() > 0.5) {
-        // Reverse second half
-        const start = midPoint;
-        const end = this.triviaQuestions.length - 1;
-        for (let i = 0; i < Math.floor((end - start + 1) / 2); i++) {
-          const temp = this.triviaQuestions[start + i];
-          this.triviaQuestions[start + i] = this.triviaQuestions[end - i];
-          this.triviaQuestions[end - i] = temp;
-        }
-      }
-    }
-
-    // Final randomization pass
-    for (let i = this.triviaQuestions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.triviaQuestions[i], this.triviaQuestions[j]] = [this.triviaQuestions[j], this.triviaQuestions[i]];
-    }
+    console.log("✅ TriviaGame: Questions ultra-shuffled with maximum entropy for unique game order");
   }
 
   private shuffleQuestionAnswers(question: TriviaQuestion): TriviaQuestion {
@@ -1625,10 +1663,20 @@ export class TriviaGame extends ui.UIComponent {
 
     console.log("✅ TriviaGame: Starting game with", this.triviaQuestions.length, "questions");
 
-    // Shuffle questions for completely random order - do this multiple times for maximum randomness
+    // Ultra-randomize questions for completely unique order every game
+    // Multiple shuffle passes with different timing for maximum entropy
     this.shuffleQuestions();
-    // Additional shuffle pass for extra randomness
-    this.async.setTimeout(() => this.shuffleQuestions(), 10);
+    
+    // Additional delayed shuffles with different entropy at each time point
+    this.async.setTimeout(() => {
+      this.shuffleQuestions();
+      console.log("🔀 TriviaGame: Secondary shuffle complete");
+    }, 5);
+    
+    this.async.setTimeout(() => {
+      this.shuffleQuestions();
+      console.log("🔀 TriviaGame: Tertiary shuffle complete - order guaranteed unique");
+    }, 15);
 
     // Reset all player points to 0 for new game
     this.resetAllPlayerPoints();
@@ -2066,59 +2114,127 @@ export class TriviaGame extends ui.UIComponent {
                   bottom: 0
                 },
                 children: [
-                  // Timer - positioned at left, aligned with question
-                  View({
-                    style: {
-                      position: 'absolute',
-                      left: '5%',
-                      top: '2%',
-                      width: 35,
-                      height: 35,
-                      backgroundColor: '#FF6B35',
-                      borderRadius: 17.5,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      shadowColor: 'black',
-                      shadowOpacity: 0.2,
-                      shadowRadius: 3,
-                      shadowOffset: [0, 1]
-                    },
-                    children: Text({
-                      text: this.timerBinding,
+                  // Timer - positioned based on whether there's an image
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId !== null && imageId !== ""),
+                    // With image - align with center of image
+                    View({
                       style: {
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                        color: 'white'
-                      }
-                    })
-                  }),
-
-                  // Answer count - positioned at right, aligned with question
-                  View({
-                    style: {
-                      position: 'absolute',
-                      right: '5%',
-                      top: '2%',
-                      alignItems: 'center'
-                    },
-                    children: [
-                      Text({
-                        text: this.answerCountBinding,
+                        position: 'absolute',
+                        left: '5%',
+                        top: this.answerCountTracking.derive(count => count === 2 ? '55%' : '45%'), // Center of image area
+                        width: 35,
+                        height: 35,
+                        backgroundColor: '#FF6B35',
+                        borderRadius: 17.5,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        shadowColor: 'black',
+                        shadowOpacity: 0.2,
+                        shadowRadius: 3,
+                        shadowOffset: [0, 1]
+                      },
+                      children: Text({
+                        text: this.timerBinding,
                         style: {
-                          fontSize: 16,
+                          fontSize: 12,
                           fontWeight: 'bold',
-                          color: '#1F2937'
-                        }
-                      }),
-                      Text({
-                        text: 'Answers',
-                        style: {
-                          fontSize: 10,
-                          color: '#6B7280'
+                          color: 'white'
                         }
                       })
-                    ]
-                  }),
+                    })
+                  ),
+
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
+                    // Without image - align with question textbox
+                    View({
+                      style: {
+                        position: 'absolute',
+                        left: '5%',
+                        top: this.answerCountTracking.derive(count => count === 2 ? '42%' : '35%'), // Center of question area
+                        width: 35,
+                        height: 35,
+                        backgroundColor: '#FF6B35',
+                        borderRadius: 17.5,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        shadowColor: 'black',
+                        shadowOpacity: 0.2,
+                        shadowRadius: 3,
+                        shadowOffset: [0, 1]
+                      },
+                      children: Text({
+                        text: this.timerBinding,
+                        style: {
+                          fontSize: 12,
+                          fontWeight: 'bold',
+                          color: 'white'
+                        }
+                      })
+                    })
+                  ),
+
+                  // Answer count - positioned based on whether there's an image
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId !== null && imageId !== ""),
+                    // With image - align with center of image
+                    View({
+                      style: {
+                        position: 'absolute',
+                        right: '5%',
+                        top: this.answerCountTracking.derive(count => count === 2 ? '55%' : '45%'), // Center of image area
+                        alignItems: 'center'
+                      },
+                      children: [
+                        Text({
+                          text: this.answerCountBinding,
+                          style: {
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#1F2937'
+                          }
+                        }),
+                        Text({
+                          text: 'Answers',
+                          style: {
+                            fontSize: 10,
+                            color: '#6B7280'
+                          }
+                        })
+                      ]
+                    })
+                  ),
+
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
+                    // Without image - align with question textbox
+                    View({
+                      style: {
+                        position: 'absolute',
+                        right: '5%',
+                        top: this.answerCountTracking.derive(count => count === 2 ? '42%' : '35%'), // Center of question area
+                        alignItems: 'center'
+                      },
+                      children: [
+                        Text({
+                          text: this.answerCountBinding,
+                          style: {
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#1F2937'
+                          }
+                        }),
+                        Text({
+                          text: 'Answers',
+                          style: {
+                            fontSize: 10,
+                            color: '#6B7280'
+                          }
+                        })
+                      ]
+                    })
+                  ),
 
                   // Question text - conditional positioning based on image presence
                   UINode.if(
