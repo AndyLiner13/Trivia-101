@@ -1042,36 +1042,62 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ui.View({
                 style: {
                   flex: 1,
+                  backgroundColor: '#667eea',
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  padding: 20
                 },
                 children: [
-                  ui.Text({
-                    text: ui.Binding.derive([], () => this.isHost() ? '🎮 You are the Host' : '👤 You are a Participant'),
+                  // Role Badge
+                  ui.View({
                     style: {
-                      fontSize: 24,
-                      fontWeight: '700',
-                      color: '#FFFFFF',
-                      textAlign: 'center',
-                      marginBottom: 16
-                    }
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      borderRadius: 20,
+                      paddingHorizontal: 24,
+                      paddingVertical: 16,
+                      alignItems: 'center',
+                      shadowColor: '#000000',
+                      shadowOffset: [0, 4],
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      marginBottom: 32
+                    },
+                    children: [
+                      ui.Text({
+                        text: ui.Binding.derive([], () => this.isHost() ? '👑 You are the Host' : '👤 You are a Participant'),
+                        style: {
+                          fontSize: 18,
+                          fontWeight: '600',
+                          color: '#4B5563',
+                          textAlign: 'center'
+                        }
+                      })
+                    ]
                   }),
-                  // Show Game Settings and Start Game buttons only for host
+                  // Host Controls
                   ui.UINode.if(
                     ui.Binding.derive([], () => this.isHost()),
                     ui.View({
                       style: {
+                        width: '100%',
+                        maxWidth: 280,
                         alignItems: 'center'
                       },
                       children: [
-                        // Game Settings button
+                        // Game Settings Button
                         ui.Pressable({
                           style: {
                             backgroundColor: '#FFFFFF',
                             borderRadius: 12,
                             paddingHorizontal: 24,
-                            paddingVertical: 12,
-                            marginBottom: 8
+                            paddingVertical: 16,
+                            width: '100%',
+                            alignItems: 'center',
+                            marginBottom: 12,
+                            shadowColor: '#000000',
+                            shadowOffset: [0, 2],
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4
                           },
                           onPress: () => this.navigateToGameSettings(),
                           children: [
@@ -1085,22 +1111,28 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             })
                           ]
                         }),
-                        // Start Game button
+                        // Start Game Button
                         ui.Pressable({
                           style: {
-                            backgroundColor: '#FFFFFF',
+                            backgroundColor: '#6366F1',
                             borderRadius: 12,
                             paddingHorizontal: 24,
-                            paddingVertical: 12
+                            paddingVertical: 16,
+                            width: '100%',
+                            alignItems: 'center',
+                            shadowColor: '#000000',
+                            shadowOffset: [0, 2],
+                            shadowOpacity: 0.2,
+                            shadowRadius: 4
                           },
                           onPress: () => this.handleStartGame(),
                           children: [
                             ui.Text({
                               text: '🎯 Start Game',
                               style: {
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: '600',
-                                color: '#6366F1'
+                                color: '#FFFFFF'
                               }
                             })
                           ]
@@ -1108,16 +1140,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     })
                   ),
-                  // Show waiting message for non-host players
+                  // Participant Waiting Message
                   ui.UINode.if(
                     ui.Binding.derive([], () => !this.isHost()),
                     ui.Text({
-                      text: 'Waiting for host to start...',
+                      text: 'Waiting for host to start the game...',
                       style: {
                         fontSize: 16,
                         color: '#FFFFFF',
                         textAlign: 'center',
-                        opacity: 0.8
+                        opacity: 0.9
                       }
                     })
                   )
