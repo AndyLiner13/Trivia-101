@@ -58,6 +58,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Keyboard input connection
   private inputConnection: hz.PlayerInput | null = null;
   private eKeyInputConnection: hz.PlayerInput | null = null;
+  private leftSecondaryInputConnection: hz.PlayerInput | null = null;
 
   // Game state
   private currentQuestionIndex = 0;
@@ -174,6 +175,24 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
   }
 
+  private teleportToPlayerForLeftSecondary(player: hz.Player): void {
+    try {
+      // Detect if the player is a VR user
+      const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+
+      if (isVRUser) {
+        // For VR users, spawn the TriviaPhone in front of the VR user (similar to player positioning)
+        this.teleportToPlayerFallback(player);
+      } else {
+        // For non-VR users (desktop/mobile), spawn in front of the camera
+        this.teleportToPlayer(player);
+      }
+    } catch (error) {
+      // Fallback to camera positioning if detection fails
+      this.teleportToPlayer(player);
+    }
+  }
+
   update(dt: number) {
     // Alternative polling approach: Check if UI is still visible/active
     if (this.assignedPlayer) {
@@ -218,6 +237,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (this.eKeyInputConnection) {
       this.eKeyInputConnection.disconnect();
       this.eKeyInputConnection = null;
+    }
+    if (this.leftSecondaryInputConnection) {
+      this.leftSecondaryInputConnection.disconnect();
+      this.leftSecondaryInputConnection = null;
     }
     
     // Clean up global registry
@@ -332,6 +355,24 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
         } else {
         }
+
+        // Set up LeftSecondary input for opening TriviaPhone (similar to H key)
+        if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftSecondary)) {
+          this.leftSecondaryInputConnection = hz.PlayerControls.connectLocalInput(
+            hz.PlayerInputAction.LeftSecondary,
+            hz.ButtonIcon.Menu,
+            this,
+            { preferredButtonPlacement: hz.ButtonPlacement.Center }
+          );
+
+          this.leftSecondaryInputConnection.registerCallback((action, pressed) => {
+            if (pressed) {
+              // Handle LeftSecondary trigger directly
+              this.handleLeftSecondaryTrigger(localPlayer);
+            }
+          });
+        } else {
+        }
       } else {
         this.fallbackToSeparateComponent();
       }
@@ -417,6 +458,49 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Reset focus state since player is no longer actively using the phone
     this.isPlayerFocusedOnUI = false;
+  }
+
+  private handleLeftSecondaryTrigger(player: hz.Player): void {
+    // Check if the TriviaPhone is currently visible and assigned to this player
+    // Also check if it's positioned normally (not hidden by E key)
+    const isVisible = this.entity.visible.get();
+    const isAssignedToPlayer = this.assignedPlayer?.id === player.id;
+    const currentPosition = this.entity.position.get();
+    const isPositionedNormally = currentPosition.y > -500; // Not hidden far below
+
+    if (isVisible && isAssignedToPlayer && isPositionedNormally) {
+      return; // Don't execute LeftSecondary functionality if player is already using the phone
+    }
+
+    // Capture camera position when LeftSecondary is pressed
+    try {
+      if (camera.default) {
+        this.cameraPositionAtHKeyPress = camera.default.position.get().clone();
+        this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
+      }
+    } catch (error) {
+    }
+
+    // If phone is not assigned to anyone, assign it to this player and open UI
+    if (!this.assignedPlayer) {
+      this.initializeForPlayer(player);
+      this.teleportToPlayerForLeftSecondary(player);
+      // Open and focus the TriviaPhone UI on the player's device with delay
+      this.openAndFocusUIForPlayer(player);
+      return;
+    }
+
+    // If phone is assigned to this player, teleport and focus the UI
+    if (this.assignedPlayer.id === player.id) {
+      this.teleportToPlayerForLeftSecondary(player);
+      this.openAndFocusUIForPlayer(player);
+    } else {
+      // If phone is assigned to someone else, reassign it to this player and teleport/focus UI
+      // Assign to new player and teleport
+      this.assignedPlayer = player;
+      this.teleportToPlayerForLeftSecondary(player);
+      this.openAndFocusUIForPlayer(player);
+    }
   }
 
   private openUIForPlayer(player: hz.Player): void {
