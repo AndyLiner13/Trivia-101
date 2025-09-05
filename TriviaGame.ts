@@ -156,13 +156,18 @@ const triviaGameResetEvent = new hz.NetworkEvent<{
   hostId: string;
 }>('triviaGameReset');
 
-// Award points event from TriviaPhone
-const triviaAwardPointsEvent = new hz.NetworkEvent<{
-  playerId: string;
-  points: number;
-}>('triviaAwardPoints');
+  // Network event for leaderboard score updates
+  const leaderboardScoreUpdateEvent = new hz.NetworkEvent<{
+    playerId: string;
+    score: number;
+    leaderboardName: string;
+  }>('leaderboardScoreUpdate');
 
-// Request-response events for state synchronization
+  // Network event for awarding points
+  const triviaAwardPointsEvent = new hz.NetworkEvent<{
+    playerId: string;
+    points: number;
+  }>('triviaAwardPoints');// Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{
   requesterId: string;
 }>('triviaStateRequest');
@@ -364,6 +369,7 @@ export class TriviaGame extends ui.UIComponent {
   // Methods to interact with the real variable system
   private getPlayerPoints(player: hz.Player): number {
     try {
+      // Read from persistent storage (since native leaderboard doesn't have getScoreForPlayer)
       const points = this.world.persistentStorage.getPlayerVariable(player, 'Trivia:Points');
       return points || 0;
     } catch (error) {
@@ -375,6 +381,16 @@ export class TriviaGame extends ui.UIComponent {
     try {
       // Set the Trivia:Points player variable using the correct persistent storage API
       this.world.persistentStorage.setPlayerVariable(player, "Trivia:Points", points);
+      
+      // Also update the native leaderboard system
+      this.world.leaderboards.setScoreForPlayer("Trivia", player, points, true);
+      
+      // Send network event to update leaderboard.ts
+      this.sendNetworkBroadcastEvent(leaderboardScoreUpdateEvent, {
+        playerId: player.id.toString(),
+        score: points,
+        leaderboardName: "Trivia"
+      });
     } catch (error) {
       console.log("❌ TriviaGame: Error setting player points:", error);
     }
@@ -385,6 +401,9 @@ export class TriviaGame extends ui.UIComponent {
       const currentTotal = (this.world.persistentStorageWorld.getWorldVariable('Trivia:TotalPoints') as number) || 0;
       const newTotal = currentTotal + points;
       this.world.persistentStorageWorld.setWorldVariableAcrossAllInstancesAsync('Trivia:TotalPoints', newTotal);
+      
+      // Also update the native leaderboard system for the total
+      // Note: This is for individual player scores, not totals
     } catch (error) {
       // Failed to update total points
     }
@@ -395,6 +414,9 @@ export class TriviaGame extends ui.UIComponent {
     currentPlayers.forEach(player => {
       this.setPlayerPoints(player, 0);
     });
+    
+    // Also reset the native leaderboard for all players
+    // Note: The setPlayerPoints method already handles this
   }
 
   // Game configuration state
