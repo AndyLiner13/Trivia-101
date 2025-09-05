@@ -2154,12 +2154,13 @@ export class TriviaGame extends ui.UIComponent {
                             // Question text
                             Text({
                               text: this.questionBinding,
+                              numberOfLines: 3,
                               style: {
                                 fontSize: 16,
                                 fontWeight: '500',
                                 color: 'black',
                                 textAlign: 'center',
-                                lineHeight: 1.3
+                                lineHeight: 24
                               }
                             })
                           ]
@@ -2201,12 +2202,13 @@ export class TriviaGame extends ui.UIComponent {
                             // Question text
                             Text({
                               text: this.questionBinding,
+                              numberOfLines: 3,
                               style: {
                                 fontSize: 16,
                                 fontWeight: '500',
                                 color: 'black',
                                 textAlign: 'center',
-                                lineHeight: 1.3
+                                lineHeight: 24
                               }
                             })
                           ]
@@ -2245,12 +2247,13 @@ export class TriviaGame extends ui.UIComponent {
                           // Question text
                           Text({
                             text: this.questionBinding,
+                            numberOfLines: 2,
                             style: {
                               fontSize: 14,
                               fontWeight: '500',
                               color: 'black',
                               textAlign: 'center',
-                              lineHeight: 1.3
+                              lineHeight: 20
                             }
                           })
                         ]
