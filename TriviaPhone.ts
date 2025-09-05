@@ -93,6 +93,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // UI bindings
   private currentQuestionIndexBinding = new ui.Binding(0);
   private scoreBinding = new ui.Binding(0);
+  
+  // Stable question index for footer (prevents updates during leaderboard transition)
+  private stableQuestionIndex: number = 0;
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
   private gameStartedBinding = new ui.Binding(false);
@@ -975,11 +978,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Store the correct answer index
     this.correctAnswerIndexBinding.set(eventData.correctAnswerIndex);
 
-    // Check if player's answer was correct
+    // Check if player's answer was correct - only award points during answer reveal (not leaderboard transition)
     const isCorrect = this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
-    if (isCorrect && this.assignedPlayer) {
+    if (isCorrect && this.assignedPlayer && !eventData.showLeaderboard) {
       // Send network event to TriviaGame to award points using persistent storage
       this.sendNetworkBroadcastEvent(triviaAwardPointsEvent, {
         playerId: this.assignedPlayer.id.toString(),
@@ -1733,9 +1736,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           },
           children: [
             ui.Text({
-              text: ui.Binding.derive([this.currentQuestionIndexBinding], (index) =>
-                `Question ${index + 1}`
-              ),
+              text: ui.Binding.derive([this.currentQuestionIndexBinding, this.showLeaderboardBinding], (index, showLeaderboard) => {
+                // Only update the question number when not showing leaderboard to prevent footer updates during transition
+                if (!showLeaderboard) {
+                  this.stableQuestionIndex = index;
+                }
+                return `Question ${this.stableQuestionIndex + 1}`;
+              }),
               style: {
                 fontSize: 12,
                 color: '#6B7280'
