@@ -576,15 +576,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // Set focus state immediately to prevent H key from working during the transition
       this.isPlayerFocusedOnUI = true;
 
-      // Wait 25ms for position change to take effect, then focus the UI (reduced from 100ms)
-      this.async.setTimeout(() => {
-        try {
-          player.focusUI(this.entity, { duration: 0.1 });
-        } catch (focusError) {
-          // If focus fails, reset the focus state
-          this.isPlayerFocusedOnUI = false;
-        }
-      }, 25);
+      // For VR users, skip focusUI to avoid hiding other players
+      const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+      if (!isVRUser) {
+        // Wait 25ms for position change to take effect, then focus the UI (reduced from 100ms)
+        this.async.setTimeout(() => {
+          try {
+            player.focusUI(this.entity, { duration: 0.1 });
+          } catch (focusError) {
+            // If focus fails, reset the focus state
+            this.isPlayerFocusedOnUI = false;
+          }
+        }, 25);
+      }
+      // For VR users, we skip the focusUI call to prevent the player invisibility bug
 
     } catch (error) {
       // If something goes wrong, reset the focus state
