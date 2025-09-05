@@ -661,7 +661,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.syncWithExternalTrivia({
             question: event.currentQuestion,
             questionIndex: event.questionIndex || 0,
-            timeLimit: event.timeLimit || 30
+            timeLimit: event.timeLimit || this.gameSettings.timeLimit
           });
         }
         break;

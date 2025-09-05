@@ -1797,6 +1797,9 @@ export class TriviaGame extends ui.UIComponent {
     // Apply configuration
     this.timeRemaining = this.gameConfig.timeLimit;
     this.timerBinding.set(this.gameConfig.timeLimit.toString());
+    
+    // Update the props to reflect the new time limit
+    (this.props as any).questionTimeLimit = this.gameConfig.timeLimit;
 
     // Start the game if not already running
     if (!this.isRunning) {
