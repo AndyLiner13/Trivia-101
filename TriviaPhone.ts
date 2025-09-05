@@ -240,6 +240,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
         // Keep VR phone positioned and ensure bottom points down
         if (this.assignedPlayer.deviceType.get() === hz.PlayerDeviceType.VR && isVisible) {
+          // Check if phone is currently "hidden" at y=0 (don't reposition if hidden)
+          const currentPosition = this.entity.position.get();
+          if (currentPosition.y === 0) {
+            return; // Don't reposition if hidden
+          }
+
           // Disable physics/simulation
           this.entity.simulated.set(false);
           this.entity.collidable.set(false);
@@ -465,9 +471,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleEKeyTrigger(player: hz.Player): void {
-    // Always set the TriviaPhone's y position to -1000 when E is pressed
-    const currentPosition = this.entity.position.get();
-    this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
+    // Check if the player is a VR user
+    const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+
+    if (isVRUser) {
+      // For VR users: Rotate to face ground and set y to 0
+      const currentPosition = this.entity.position.get();
+      this.entity.position.set(new hz.Vec3(currentPosition.x, 0, currentPosition.z));
+
+      // Rotate to face the ground (90 degrees around X-axis)
+      const groundRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(1, 0, 0), Math.PI / 2);
+      this.entity.rotation.set(groundRotation);
+    } else {
+      // For non-VR users: Set y to -1000 as before
+      const currentPosition = this.entity.position.get();
+      this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
+    }
 
     // Reset focus state since player is no longer actively using the phone
     this.isPlayerFocusedOnUI = false;
@@ -477,10 +496,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Handle RightSecondary trigger - show/hide TriviaPhone for VR users
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
-    const distance = phonePosition.distance(playerPosition);
 
-    if (distance > 10) {
-      // Phone is more than 10 meters away, teleport it in front of the user
+    // For VR users, check if y position is 0 instead of distance
+    const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+    const shouldShow = isVRUser ? (phonePosition.y === 0) : (phonePosition.distance(playerPosition) > 10);
+
+    if (shouldShow) {
+      // Phone is hidden (y=0 for VR, or >10 units away for others), teleport it in front of the user
 
       // Capture camera position when RightSecondary is pressed
       try {
@@ -503,9 +525,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.teleportDirectlyInFrontOfVRUser(player);
       this.openAndFocusUIForPlayer(player);
     } else {
-      // Phone is within 10 meters, hide it by setting y to -1000
-      const currentPosition = this.entity.position.get();
-      this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
+      // Phone is visible (within range), hide it
+      if (isVRUser) {
+        // For VR users: Rotate to face ground and set y to 0
+        this.entity.position.set(new hz.Vec3(phonePosition.x, 0, phonePosition.z));
+
+        // Rotate to face the ground (90 degrees around X-axis)
+        const groundRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(1, 0, 0), Math.PI / 2);
+        this.entity.rotation.set(groundRotation);
+      } else {
+        // For non-VR users: Set y to -1000
+        this.entity.position.set(new hz.Vec3(phonePosition.x, -1000, phonePosition.z));
+      }
 
       // Reset focus state since player is no longer actively using the phone
       this.isPlayerFocusedOnUI = false;
