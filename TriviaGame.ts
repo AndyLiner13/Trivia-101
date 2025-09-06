@@ -433,6 +433,10 @@ export class TriviaGame extends ui.UIComponent {
       const currentCorrectAnswers = this.persistentLeaderboardScores.get(playerId) || 0;
       this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + 1);
       
+      // Update local score for current game leaderboard
+      const currentLocalScore = this.localPlayerScores.get(playerId) || 0;
+      this.localPlayerScores.set(playerId, currentLocalScore + 1);
+      
       // Update native leaderboard with total correct answers
       const leaderboardName = "Trivia";
       this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + 1, true);
@@ -1726,12 +1730,12 @@ export class TriviaGame extends ui.UIComponent {
     const currentPlayers = this.world.getPlayers();
     const leaderboard: Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}> = [];
     
-    // Create leaderboard entries for each real player using persistent leaderboard scores
+    // Create leaderboard entries for each real player using local game scores
     for (const player of currentPlayers) {
       const playerId = player.id.toString();
       if (this.playersInWorld.has(playerId)) {
-        // Get persistent leaderboard score (total correct answers across all games)
-        const score = this.persistentLeaderboardScores.get(playerId) || 0;
+        // Get local game score (current game points)
+        const score = this.localPlayerScores.get(playerId) || 0;
         
         // Get player headshot using Social API
         let headshotImageSource: ImageSource | undefined;
