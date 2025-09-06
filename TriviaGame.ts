@@ -1541,8 +1541,9 @@ export class TriviaGame extends ui.UIComponent {
       answerCount: this.playersAnswered.size
     });
     
-    // Check if all players have answered
+    // Check if all current players have answered (use dynamic player count)
     if (this.playersAnswered.size >= this.playersInWorld.size && this.playersInWorld.size > 0) {
+      console.log('✅ All players answered - showing results');
       this.showCorrectAnswersAndLeaderboard();
     }
   }
@@ -3824,6 +3825,18 @@ export class TriviaGame extends ui.UIComponent {
     // Update the reactive binding for UI updates
     this.playersListBinding.set([...this.currentPlayers]);
     
+    // Update playersInWorld Set for dynamic answer counting during active questions
+    this.playersInWorld.add(player.id.toString());
+    
+    console.log(`👥 Player joined: ${player.name.get()}, total players: ${this.playersInWorld.size}`);
+    
+    // Broadcast updated player tracking to all clients
+    this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
+      playersInWorld: Array.from(this.playersInWorld),
+      playersAnswered: Array.from(this.playersAnswered),
+      answerCount: this.playersAnswered.size
+    });
+    
     // Trigger UI update
     this.updateTriggerCounter++;
     this.playersUpdateTrigger.set(this.updateTriggerCounter);
@@ -3848,6 +3861,24 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update the reactive binding for UI updates
     this.playersListBinding.set([...this.currentPlayers]);
+    
+    // Update playersInWorld Set for dynamic answer counting during active questions
+    this.playersInWorld.delete(playerId);
+    
+    // Remove player from answered set if they were answering
+    this.playersAnswered.delete(playerId);
+    
+    console.log(`👋 Player left: ${player.name.get()}, total players: ${this.playersInWorld.size}`);
+    
+    // Broadcast updated player tracking to all clients
+    this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
+      playersInWorld: Array.from(this.playersInWorld),
+      playersAnswered: Array.from(this.playersAnswered),
+      answerCount: this.playersAnswered.size
+    });
+    
+    // Update answer count binding
+    this.answerCountBinding.set(this.playersAnswered.size.toString());
     
     // Trigger UI update
     this.updateTriggerCounter++;
