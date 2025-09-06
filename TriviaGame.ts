@@ -4059,8 +4059,7 @@ export class TriviaGame extends ui.UIComponent {
       // You may need to use a different approach for per-player visibility
       availablePhone.phoneEntity.visible.set(true);
 
-      // Set ownership of the phone entity to this player
-      availablePhone.phoneEntity.owner.set(player);
+      // Asset Pool Gizmo will handle ownership assignment automatically
     } else {
       // Optionally create a new phone entity dynamically if none available
       // This would require instantiating a new CustomUI entity
@@ -4077,8 +4076,7 @@ export class TriviaGame extends ui.UIComponent {
       // Hide the phone entity
       playerAssignment.phoneEntity.visible.set(false);
 
-      // Note: Cannot set owner to null, so we'll leave it as is or set to another player
-      // playerAssignment.phoneEntity.owner.set(null); // This causes error
+      // Asset Pool Gizmo will handle ownership removal automatically
 
       // Mark as available
       playerAssignment.assignedPlayer = null;

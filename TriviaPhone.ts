@@ -48,8 +48,7 @@ const answerShapes = [
 class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   static propsDefinition = {};
 
-  // Player ownership tracking
-  private assignedPlayer: hz.Player | null = null;
+  // Asset Pool Gizmo will handle ownership automatically
   private isInitialized = false;
 
   // Position tracking for teleporting to the player
@@ -307,8 +306,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.isHostBinding.set(currentHostStatus);
     }
 
-    // Alternative polling approach: Check if UI is still visible/active
-    if (this.assignedPlayer) {
+    // Asset Pool Gizmo handles ownership, so we work with the local player
+    const localPlayer = this.world.getLocalPlayer();
+    if (localPlayer) {
       try {
         // Check if the TriviaPhone entity is still visible (as an indicator of UI focus)
         const isVisible = this.entity.visible.get();
@@ -320,7 +320,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }
 
         // Keep VR phone positioned and ensure bottom points down
-        if (this.assignedPlayer.deviceType.get() === hz.PlayerDeviceType.VR && isVisible) {
+        if (localPlayer.deviceType.get() === hz.PlayerDeviceType.VR && isVisible) {
           // Check if phone is currently "hidden" at y=0 (don't reposition if hidden)
           const currentPosition = this.entity.position.get();
           if (currentPosition.y === 0) {
@@ -332,8 +332,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.entity.collidable.set(false);
 
           // Maintain position 1 unit in front and 0.25 units to the left of player
-          const playerPosition = this.assignedPlayer.position.get();
-          const playerForward = this.assignedPlayer.forward.get();
+          const playerPosition = localPlayer.position.get();
+          const playerForward = localPlayer.forward.get();
           const playerLeft = playerForward.cross(hz.Vec3.up).normalize();
           const desiredPosition = playerPosition
             .add(playerForward.mul(1.0))
@@ -343,7 +343,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.entity.position.set(desiredPosition);
 
           // Calculate direction to player and set rotation manually
-          const playerPos = this.assignedPlayer.position.get();
+          const playerPos = localPlayer.position.get();
           const phonePos = this.entity.position.get();
           const directionToPlayer = playerPos.sub(phonePos).normalize();
 
@@ -697,13 +697,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       return;
     }
 
-    // If phone is not assigned to anyone, assign it to this player
-    if (!this.assignedPlayer) {
-      this.initializeForPlayer(player);
-    } else if (this.assignedPlayer.id !== player.id) {
-      // If phone is assigned to someone else, reassign it to this player
-      this.assignedPlayer = player;
-    }
+    // Asset Pool Gizmo handles ownership assignment automatically
 
     // Show the TriviaPhone and focus the UI for non-VR users
     this.teleportToPlayer(player);
@@ -752,50 +746,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     return this.render();
   }
 
-  onPlayerAssigned(player: hz.Player) {
-    this.assignedPlayer = player;
-    this.isInitialized = true;
-
-    // Use VR-specific teleport method for VR users, regular method for others
-    if (player.deviceType.get() === hz.PlayerDeviceType.VR) {
-      this.teleportDirectlyInFrontOfVRUser(player);
-    } else {
-      this.teleportToPlayer(player);
-    }
-  }
-
-  onPlayerUnassigned(player: hz.Player) {
-    this.assignedPlayer = null;
-    this.isInitialized = false;
-
-    // Clear stored camera state
-    this.cameraPositionAtHKeyPress = null;
-    this.cameraRotationAtHKeyPress = null;
-
-    // Hide the TriviaPhone when unassigned
-    this.hideTriviaPhone();
-
-    // Return to original position
-    if (this.originalPosition) {
-      this.entity.position.set(this.originalPosition.clone());
-    }
-  }
-
-  public initializeForPlayer(player: hz.Player) {
-    this.assignedPlayer = player;
-    this.isInitialized = true;
-  }
-
-  public releaseTriviaPhone(): void {
-    if (this.assignedPlayer) {
-      this.onPlayerUnassigned(this.assignedPlayer);
-    }
-  }
+  // Asset Pool Gizmo handles ownership automatically - these methods are no longer needed
 
   public unfocusAndHide(): void {
-    if (this.assignedPlayer) {
-      const playerId = this.assignedPlayer.id;
-
+    // Asset Pool Gizmo handles ownership, so we work with the local player
+    const localPlayer = this.world.getLocalPlayer();
+    if (localPlayer) {
       // Explicitly hide the TriviaPhone after a short delay to ensure unfocus completes
       this.async.setTimeout(() => {
         this.hideTriviaPhone();
@@ -804,19 +760,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   public checkAndHideIfUnfocused(): void {
-    if (this.assignedPlayer) {
+    // Asset Pool Gizmo handles ownership, so we work with the local player
+    const localPlayer = this.world.getLocalPlayer();
+    if (localPlayer) {
       // For now, just hide it since we can't easily check focus state
-      // This method can be called externally when unfocus is suspected
       this.hideTriviaPhone();
     }
   }
 
   public isFollowing(): boolean {
-    return this.assignedPlayer !== null;
+    // Asset Pool Gizmo handles ownership - always return true since it's managed externally
+    return true;
   }
 
   public getAssignedPlayer(): hz.Player | null {
-    return this.assignedPlayer;
+    // Asset Pool Gizmo handles ownership - return local player
+    return this.world.getLocalPlayer();
   }
 
   public forceHide(): void {
@@ -841,13 +800,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private canPlayerInteract(player: hz.Player): boolean {
-    // If no one has claimed this phone yet, anyone can use it
-    if (!this.assignedPlayer) {
-      return true;
-    }
-
-    // Otherwise, only the assigned player can use it
-    return this.assignedPlayer === player;
+    // Asset Pool Gizmo handles ownership - allow interaction for the local player
+    const localPlayer = this.world.getLocalPlayer();
+    return localPlayer ? localPlayer.id === player.id : false;
   }
 
   private isHost(): boolean {
@@ -860,7 +815,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Send network event to start the game for all players with configured settings
     this.sendNetworkBroadcastEvent(triviaGameStartEvent, {
-      hostId: this.assignedPlayer?.id.toString() || 'host',
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
       config: {
         timeLimit: this.gameSettings.timeLimit,
         category: this.gameSettings.category.toLowerCase().replace(' ', ''),
@@ -933,10 +888,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isCorrect = playerDidNotAnswer ? false : this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
-    if (isCorrect && this.assignedPlayer && !eventData.showLeaderboard) {
+    if (isCorrect && this.world.getLocalPlayer() && !eventData.showLeaderboard) {
       // Send network event to TriviaGame to award points using persistent storage
       this.sendNetworkBroadcastEvent(triviaAwardPointsEvent, {
-        playerId: this.assignedPlayer.id.toString(),
+        playerId: this.world.getLocalPlayer()!.id.toString(),
         points: 1
       });
 
@@ -1176,7 +1131,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Send reset event to TriviaGame and all TriviaPhones
     this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
-      hostId: this.assignedPlayer?.id.toString() || 'unknown'
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
     });
   }
 
@@ -1209,7 +1164,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private nextQuestion(): void {
     // Send next question event to TriviaGame - let it handle all the logic
     this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
-      playerId: this.assignedPlayer?.id.toString() || 'host'
+      playerId: this.world.getLocalPlayer()?.id.toString() || 'host'
     });
   }
 
@@ -1251,7 +1206,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Send settings update to TriviaGame immediately
     this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
-      hostId: this.assignedPlayer?.id.toString() || 'host',
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
       settings: { ...this.gameSettings }
     });
   }
