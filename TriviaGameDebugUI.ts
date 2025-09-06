@@ -1049,6 +1049,13 @@ export class TriviaGame extends ui.UIComponent {
     // Ensure questions are properly shuffled before starting
     this.shuffleQuestions();
 
+    // Update UI state to hide config screen and show game
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(false);
+
     this.showNextQuestion();
   }
 
@@ -1159,6 +1166,13 @@ export class TriviaGame extends ui.UIComponent {
       showLeaderboard: false,
       showError: false
     });
+
+    // Also update local UI state bindings directly for immediate response
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(false);
 
     // Reset answer count when starting new question
     this.answerCountBinding.set("0");
@@ -2108,7 +2122,8 @@ export class TriviaGame extends ui.UIComponent {
         backgroundColor: 'transparent', // Fully transparent background
         position: 'relative',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        flexDirection: 'column'
       },
       children: [
         // Main game container with 16:9 aspect ratio
@@ -3326,6 +3341,159 @@ export class TriviaGame extends ui.UIComponent {
               })
             )
           ]
+        }),
+
+        // Debug Panel (below the main game UI)
+        View({
+          style: {
+            width: '100vw',
+            height: '25vh', // Use remaining 25% of viewport height
+            backgroundColor: '#2D3748',
+            borderRadius: 12,
+            padding: 12,
+            marginTop: 10,
+            flexDirection: 'column'
+          },
+          children: [
+            Text({
+              text: '🔧 TriviaGame Debug Panel',
+              style: {
+                fontSize: 14,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 12
+              }
+            }),
+            View({
+              style: {
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'space-between'
+              },
+              children: [
+                // Config Screen
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowConfigScreen(),
+                  children: [
+                    Text({
+                      text: '⚙️ Config',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Question Screen
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowQuestionScreen(),
+                  children: [
+                    Text({
+                      text: '❓ Question',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Results Screen
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowResultsScreen(),
+                  children: [
+                    Text({
+                      text: '📊 Results',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Leaderboard Screen
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowLeaderboardScreen(),
+                  children: [
+                    Text({
+                      text: '🏆 Leaderboard',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Error Screen
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowErrorScreen(),
+                  children: [
+                    Text({
+                      text: '⚠️ Error',
+                      style: {
+                        fontSize: 9,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
         })
       ]
     });
@@ -4130,6 +4298,99 @@ export class TriviaGame extends ui.UIComponent {
     for (const player of playersWithoutPhones) {
       this.assignPhoneToPlayer(player);
     }
+  }
+
+  // Debug methods for the debug panel
+  private debugShowConfigScreen(): void {
+    console.log('✅ Debug: Showing static config screen');
+    this.showConfigBinding.set(true);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(false);
+  }
+
+  private debugShowQuestionScreen(): void {
+    console.log('✅ Debug: Showing static question screen');
+    // Set up a sample question for display
+    if (this.triviaQuestions.length === 0) {
+      this.triviaQuestions = [...defaultTriviaQuestions];
+    }
+    const sampleQuestion = this.triviaQuestions[0];
+    this.currentQuestion = this.shuffleQuestionAnswers(sampleQuestion);
+    this.currentQuestionIndex = 0;
+    this.questionNumberBinding.set("Q1");
+    this.questionBinding.set(this.currentQuestion.question);
+    this.questionImageBinding.set(this.currentQuestion.image || null);
+    this.centerQuestionBinding.set(!this.currentQuestion.image);
+    this.timerBinding.set("30");
+    this.answerCountBinding.set("0");
+
+    // Set up answer options
+    for (let i = 0; i < 4; i++) {
+      if (i < this.currentQuestion.answers.length) {
+        this.answerTexts[i].set(this.currentQuestion.answers[i].text);
+      } else {
+        this.answerTexts[i].set("");
+      }
+    }
+
+    // Update UI state
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(false);
+  }
+
+  private debugShowResultsScreen(): void {
+    console.log('✅ Debug: Showing static results screen');
+    // Set up a sample question and results for display
+    if (!this.currentQuestion) {
+      if (this.triviaQuestions.length === 0) {
+        this.triviaQuestions = [...defaultTriviaQuestions];
+      }
+      const sampleQuestion = this.triviaQuestions[0];
+      this.currentQuestion = this.shuffleQuestionAnswers(sampleQuestion);
+    }
+
+    // Find correct answer index
+    const correctIndex = this.currentQuestion.answers.findIndex(a => a.correct);
+    this.correctAnswerBinding.set(correctIndex);
+    this.answerCountsBinding.set([2, 1, 0, 3]); // Sample answer counts
+    this.answerCountBinding.set("6"); // Total answers
+
+    // Update UI state
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(true);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(false);
+  }
+
+  private debugShowLeaderboardScreen(): void {
+    console.log('✅ Debug: Showing static leaderboard screen');
+    // Generate sample leaderboard data
+    this.generateRealLeaderboard().then(leaderboard => {
+      this.leaderboardDataBinding.set(leaderboard);
+    });
+
+    // Update UI state
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(true);
+    this.showErrorBinding.set(false);
+  }
+
+  private debugShowErrorScreen(): void {
+    console.log('✅ Debug: Showing static error screen');
+    this.errorMessageBinding.set("Sample error message for testing UI layout and styling.");
+    this.showConfigBinding.set(false);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(true);
   }
 }
 
