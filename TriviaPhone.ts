@@ -1261,29 +1261,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 }
               }),
 
-              // Show correct answer if wrong
-              ui.UINode.if(
-                ui.Binding.derive([this.isCorrectAnswerBinding], (isCorrect) => !isCorrect),
-                ui.Text({
-                  text: ui.Binding.derive([
-                    this.correctAnswerIndexBinding
-                  ], (correctIndex) => {
-                    if (correctIndex !== null && this.currentQuestion && this.currentQuestion.answers[correctIndex]) {
-                      return `Correct answer: ${this.currentQuestion.answers[correctIndex].text}`;
-                    }
-                    return '';
-                  }),
-                  numberOfLines: 2,
-                  style: {
-                    fontSize: 16,
-                    color: '#FFFFFF',
-                    textAlign: 'center',
-                    opacity: 0.8,
-                    lineHeight: 22
-                  }
-                })
-              ),
-
               // Next Question button - only show for host during active game when leaderboard is displayed (not last question)
               ui.UINode.if(
                 ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding], 
