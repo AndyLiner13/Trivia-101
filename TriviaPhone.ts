@@ -1260,17 +1260,133 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateGameSetting('isLocked', !this.gameSettings.isLocked);
   }
 
+  debugShowScreen(screenType: string): void {
+    console.log('🔧 Debug: Switching to screen:', screenType);
+    
+    switch (screenType) {
+      case 'pre-game':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(false);
+        this.showResultBinding.set(false);
+        break;
+        
+      case 'game-settings':
+        this.currentViewModeBinding.set('game-settings');
+        this.gameStartedBinding.set(false);
+        this.showResultBinding.set(false);
+        break;
+        
+      case 'two-options':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('two-options');
+        this.showResultBinding.set(false);
+        // Set up a mock question for debugging
+        this.currentQuestion = {
+          question: 'What is the capital of France?',
+          answers: ['Paris', 'London'],
+          correctAnswer: 0,
+          image: null
+        };
+        break;
+        
+      case 'four-options':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('four-options');
+        this.showResultBinding.set(false);
+        // Set up a mock question for debugging
+        this.currentQuestion = {
+          question: 'Which planet is known as the Red Planet?',
+          answers: ['Venus', 'Mars', 'Jupiter', 'Saturn'],
+          correctAnswer: 1,
+          image: null
+        };
+        break;
+        
+      case 'results-correct':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.showResultBinding.set(true);
+        this.isCorrectAnswerBinding.set(true);
+        this.selectedAnswerBinding.set(0);
+        this.currentQuestion = {
+          question: 'What is 2 + 2?',
+          answers: ['3', '4'],
+          correctAnswer: 1,
+          image: null
+        };
+        break;
+        
+      case 'results-wrong':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.showResultBinding.set(true);
+        this.isCorrectAnswerBinding.set(false);
+        this.selectedAnswerBinding.set(1);
+        this.currentQuestion = {
+          question: 'What is the largest planet?',
+          answers: ['Earth', 'Mars'],
+          correctAnswer: 0,
+          image: null
+        };
+        break;
+        
+      case 'results-timeout':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.showResultBinding.set(true);
+        this.isCorrectAnswerBinding.set(false);
+        this.selectedAnswerBinding.set(null); // No answer selected
+        this.currentQuestion = {
+          question: 'What color is the sky?',
+          answers: ['Blue', 'Green'],
+          correctAnswer: 0,
+          image: null
+        };
+        break;
+        
+      case 'waiting':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('waiting');
+        this.showResultBinding.set(false);
+        this.isHostBinding.set(true); // Force host mode
+        break;
+        
+      case 'participant-waiting':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('waiting');
+        this.showResultBinding.set(false);
+        this.isHostBinding.set(false); // Force participant mode
+        break;
+        
+      case 'leaderboard':
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('waiting');
+        this.showResultBinding.set(false);
+        this.showLeaderboardBinding.set(true);
+        break;
+        
+      default:
+        console.log('❌ Debug: Unknown screen type:', screenType);
+    }
+  }
+
   render(): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
         height: '100%',
+        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 40
+        padding: 20
       },
       children: [
-        // Phone container
+        // Phone container (left side)
         ui.View({
           style: {
             width: 200,
@@ -1279,7 +1395,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             borderRadius: 20,
             padding: 6,
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            marginRight: 20
           },
           children: [
             // Phone screen content area
@@ -1466,7 +1583,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ui.View({
                         style: {
                           position: 'absolute',
-                          bottom: 12,
+                          bottom: 13,
                           left: 12,
                           right: 12,
                           backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -1513,6 +1630,243 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ui.Binding.derive([this.currentViewModeBinding], (mode) => mode === 'game-settings'),
                   this.renderGameSettings()
                 )
+              ]
+            })
+          ]
+        }),
+
+        // Debug Panel (right side)
+        ui.View({
+          style: {
+            width: 200,
+            height: 400,
+            backgroundColor: '#2D3748',
+            borderRadius: 12,
+            padding: 16,
+            flexDirection: 'column'
+          },
+          children: [
+            ui.Text({
+              text: '🔧 Debug Panel',
+              style: {
+                fontSize: 16,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 16
+              }
+            }),
+            ui.ScrollView({
+              style: {
+                flex: 1
+              },
+              children: [
+                // Waiting Screen
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('waiting'),
+                  children: [
+                    ui.Text({
+                      text: 'Pre-Game (Host)',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Participant Waiting Screen
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('participant-waiting'),
+                  children: [
+                    ui.Text({
+                      text: 'Pre-Game (Participant)',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Game Settings
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('game-settings'),
+                  children: [
+                    ui.Text({
+                      text: '⚙️ Game Settings',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // 2-Options Question
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('two-options'),
+                  children: [
+                    ui.Text({
+                      text: '2️⃣ 2 Options',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // 4-Options Question
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('four-options'),
+                  children: [
+                    ui.Text({
+                      text: '4️⃣ 4 Options',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Results Screen - Correct
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('results-correct'),
+                  children: [
+                    ui.Text({
+                      text: '✅ Correct Answer',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Results Screen - Wrong
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('results-wrong'),
+                  children: [
+                    ui.Text({
+                      text: '❌ Wrong Answer',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Results Screen - Time's Up
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('results-timeout'),
+                  children: [
+                    ui.Text({
+                      text: '⏰ Time\'s Up',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Leaderboard
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 16,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowScreen('leaderboard'),
+                  children: [
+                    ui.Text({
+                      text: '🏆 Leaderboard',
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                })
               ]
             })
           ]
@@ -1928,7 +2282,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
           return '#6366F1'; // Default blue
         }),
-        flexDirection: 'column'
+        flexDirection: 'column',
+        borderWidth: 2,
+        borderColor: '#FF0000' // Red - top container
       },
       children: [
         // Show normal game content when NOT showing results
@@ -1938,7 +2294,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             style: {
               flex: 1,
               padding: 8,
-              paddingBottom: 12
+              paddingBottom: 11,
+              borderWidth: 2,
+              borderColor: '#00FF00' // Green - 1st nested container
             },
             children: [
               this.renderTwoOptionsPage()
@@ -1966,7 +2324,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
           return '#6366F1'; // Default blue
         }),
-        flexDirection: 'column'
+        flexDirection: 'column',
+        borderWidth: 2,
+        borderColor: '#FF0000' // Red - top container
       },
       children: [
         // Show normal game content when NOT showing results
@@ -1976,7 +2336,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             style: {
               flex: 1,
               padding: 8,
-              paddingBottom: 12
+              paddingBottom: 12,
+              borderWidth: 2,
+              borderColor: '#00FF00' // Green - 1st nested container
             },
             children: [
               this.renderFourOptionsPage()
@@ -2241,7 +2603,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         paddingHorizontal: 12,
         paddingVertical: 8,
         marginHorizontal: 12,
-        marginBottom: 12
+        marginBottom: 13,
+        borderWidth: 2,
+        borderColor: '#FFA500' // Orange - footer container
       },
       children: [
         ui.Text({
@@ -2304,7 +2668,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           return shape.color;
         }),
         borderRadius: 12,
-        margin: 3,
+        margin: 5,
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: 140,
@@ -2342,21 +2706,26 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       style: {
         flex: 1,
         flexDirection: 'column',
-        padding: 6,
-        paddingBottom: 8
+        padding: 8,
+        borderWidth: 2,
+        borderColor: '#0000FF' // Blue - 2nd nested container
       },
       children: [
         ui.View({
           style: {
             flex: 1,
-            marginBottom: 6
+            marginBottom: 8,
+            borderWidth: 2,
+            borderColor: '#800080' // Purple - 3rd nested container
           },
           children: [this.createAnswerButton(2)]
         }),
         ui.View({
           style: {
             flex: 1,
-            marginTop: 6
+            marginTop: 8,
+            borderWidth: 2,
+            borderColor: '#800080' // Purple - 3rd nested container
           },
           children: [this.createAnswerButton(3)]
         })
@@ -2369,8 +2738,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       style: {
         flex: 1,
         flexDirection: 'column',
-        padding: 6,
-        paddingBottom: 8
+        padding: 9,
+        borderWidth: 2,
+        borderColor: '#0000FF' // Blue - 2nd nested container
       },
       children: [
         // Top row (buttons 0 and 1) - Fixed static buttons
@@ -2378,7 +2748,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             flexDirection: 'row',
             flex: 1,
-            marginBottom: 0
+            marginBottom: 0,
+            borderWidth: 2,
+            borderColor: '#800080' // Purple - 3rd nested container
           },
           children: [
             this.createAnswerButton(0),
@@ -2390,7 +2762,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             flexDirection: 'row',
             flex: 1,
-            marginTop: 0
+            marginTop: 0,
+            borderWidth: 2,
+            borderColor: '#800080' // Purple - 3rd nested container
           },
           children: [
             this.createAnswerButton(2),
