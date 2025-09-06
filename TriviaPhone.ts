@@ -929,7 +929,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.correctAnswerIndexBinding.set(eventData.correctAnswerIndex);
 
     // Check if player's answer was correct - only award points during answer reveal (not leaderboard transition)
-    const isCorrect = this.selectedAnswer === eventData.correctAnswerIndex;
+    const playerDidNotAnswer = this.selectedAnswer === null;
+    const isCorrect = playerDidNotAnswer ? false : this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
     if (isCorrect && this.assignedPlayer && !eventData.showLeaderboard) {
@@ -1352,8 +1353,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       width: '100%',
                       height: '100%',
                       backgroundColor: ui.Binding.derive([
-                        this.isCorrectAnswerBinding
-                      ], (isCorrect) => {
+                        this.isCorrectAnswerBinding,
+                        this.selectedAnswerBinding
+                      ], (isCorrect, selectedAnswer) => {
+                        if (selectedAnswer === null) return '#F59E0B'; // Orange for time's up
                         return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
                       }),
                       justifyContent: 'center',
@@ -1363,9 +1366,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     children: [
                       ui.Text({
                         text: ui.Binding.derive([
-                          this.isCorrectAnswerBinding
-                        ], (isCorrect) => {
-                          return isCorrect ? '✅' : '❌';
+                          this.isCorrectAnswerBinding,
+                          this.selectedAnswerBinding
+                        ], (isCorrect, selectedAnswer) => {
+                          if (isCorrect) return '✅';
+                          if (selectedAnswer === null) return '⏰'; // Clock emoji for time's up
+                          return '❌';
                         }),
                         style: {
                           fontSize: 80,
@@ -1375,9 +1381,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }),
                       ui.Text({
                         text: ui.Binding.derive([
-                          this.isCorrectAnswerBinding
-                        ], (isCorrect) => {
-                          return isCorrect ? 'Correct!' : 'Wrong!';
+                          this.isCorrectAnswerBinding,
+                          this.selectedAnswerBinding
+                        ], (isCorrect, selectedAnswer) => {
+                          if (isCorrect) return 'Correct!';
+                          if (selectedAnswer === null) return 'Time\'s Up!';
+                          return 'Wrong!';
                         }),
                         style: {
                           fontSize: 32,

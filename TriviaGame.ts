@@ -1658,11 +1658,16 @@ export class TriviaGame extends ui.UIComponent {
     if (triviaPhones && Array.isArray(triviaPhones)) {
       triviaPhones.forEach((triviaPhone: any, index: number) => {
         if (triviaPhone && typeof triviaPhone.onTriviaResults === 'function') {
+          // Check if this phone's player answered
+          const phonePlayerId = triviaPhone.assignedPlayer?.id.toString();
+          const playerAnswered = phonePlayerId ? this.playersAnswered.has(phonePlayerId) : false;
+          
           triviaPhone.onTriviaResults({
             question: serializableQuestion,
             correctAnswerIndex: correctAnswerIndex,
             answerCounts: actualAnswerCounts,
-            scores: {}
+            scores: {},
+            playerAnswered: playerAnswered
           });
         }
       });
@@ -1670,11 +1675,16 @@ export class TriviaGame extends ui.UIComponent {
       // Fallback to global registry
       globalTriviaPhones.forEach((triviaPhone: any, index: number) => {
         if (triviaPhone && typeof triviaPhone.onTriviaResults === 'function') {
+          // Check if this phone's player answered
+          const phonePlayerId = triviaPhone.assignedPlayer?.id.toString();
+          const playerAnswered = phonePlayerId ? this.playersAnswered.has(phonePlayerId) : false;
+          
           triviaPhone.onTriviaResults({
             question: serializableQuestion,
             correctAnswerIndex: correctAnswerIndex,
             answerCounts: actualAnswerCounts,
-            scores: {}
+            scores: {},
+            playerAnswered: playerAnswered
           });
         }
       });
@@ -2049,29 +2059,38 @@ export class TriviaGame extends ui.UIComponent {
   private startTimer(): void {
     this.stopTimer(); // Clear any existing timer
 
-    // Only the host should run the actual timer
-    if (this.isLocalPlayerHost) {
-      this.timerInterval = this.async.setInterval(() => {
-        this.timeRemaining--;
+    // All clients should run the timer locally for immediate updates
+    this.timerInterval = this.async.setInterval(() => {
+      this.timeRemaining--;
 
+      // Only the host should broadcast timer updates to avoid conflicts
+      if (this.isLocalPlayerHost) {
         // Broadcast timer update to all clients
         this.sendNetworkBroadcastEvent(triviaTimerUpdateEvent, {
           timeRemaining: this.timeRemaining,
           questionIndex: this.currentQuestionIndex
         });
+      }
 
-        this.timerBinding.set(this.timeRemaining.toString());
+      this.timerBinding.set(this.timeRemaining.toString());
 
-        if (this.timeRemaining <= 0) {
-          this.stopTimer();
-          // Broadcast timer end to all clients
+      if (this.timeRemaining <= 0) {
+        this.stopTimer();
+        // Set timer to 0 for immediate visual feedback
+        this.timeRemaining = 0;
+        this.timerBinding.set("0");
+        
+        // All clients should show results when timer reaches 0
+        this.showQuestionResults();
+        
+        // Only the host should broadcast timer end to sync with other clients
+        if (this.isLocalPlayerHost) {
           this.sendNetworkBroadcastEvent(triviaTimerEndEvent, {
             questionIndex: this.currentQuestionIndex
           });
-          this.showQuestionResults();
         }
-      }, 1000);
-    }
+      }
+    }, 1000);
   }
 
   private stopTimer(): void {
@@ -3997,6 +4016,9 @@ export class TriviaGame extends ui.UIComponent {
     // Only end timer if it's for the current question
     if (eventData.questionIndex === this.currentQuestionIndex) {
       this.stopTimer();
+      // Set timer to 0 for immediate visual feedback
+      this.timeRemaining = 0;
+      this.timerBinding.set("0");
       this.showQuestionResults();
     }
   }
