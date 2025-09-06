@@ -182,7 +182,7 @@ const defaultTriviaQuestions: TriviaQuestion[] = [
  * This component provides static debug screens for testing UI layouts
  * without the full game functionality.
  */
-export class TriviaGameDebugUI2 extends ui.UIComponent {
+export class TriviaGameDebugUI extends ui.UIComponent {
   
   static propsDefinition = {
     // Display settings
@@ -261,9 +261,24 @@ export class TriviaGameDebugUI2 extends ui.UIComponent {
   // Player headshot cache - maps player ID to ImageSource
   private playerHeadshots = new Map<string, ImageSource | null>();
 
+  // Current players list for UI (not a binding to avoid circular reference issues)
+  private currentPlayers: Array<{id: string, name: string}> = [];
+
   async start() {
     // Initialize basic setup for debug functionality
     this.setupDebugFunctionality();
+    
+    // Load headshots for all current players
+    const initialPlayers = this.world.getPlayers();
+    for (const player of initialPlayers) {
+      await this.loadPlayerHeadshot(player, 'INIT');
+    }
+    
+    // Initialize players list
+    this.currentPlayers = initialPlayers.map(player => ({
+      id: player.id.toString(),
+      name: player.name.get()
+    }));
   }
 
   private getTextureIdForImage(imagePath: string): string | null {
@@ -2119,4 +2134,4 @@ export class TriviaGameDebugUI2 extends ui.UIComponent {
 }
 
 // Register the component so it can be attached to Custom UI gizmos
-ui.UIComponent.register(TriviaGameDebugUI2);
+ui.UIComponent.register(TriviaGameDebugUI);
