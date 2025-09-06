@@ -399,7 +399,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Listen for trivia game registration events
     this.connectNetworkBroadcastEvent(triviaGameRegisteredEvent, (eventData) => {
-      // Registration event received
+      // Request current game state to sync with any ongoing game
+      this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+        requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+      });
     });
 
     // Listen for trivia state responses
@@ -851,6 +854,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswer = null;
     this.showResult = false;
     this.answerSubmitted = false;
+
+    // Ensure game is marked as started when receiving a question
+    this.gameStarted = true;
+    this.gameStartedBinding.set(true);
 
     this.currentQuestionIndexBinding.set(questionData.questionIndex);
     this.selectedAnswerBinding.set(null);
