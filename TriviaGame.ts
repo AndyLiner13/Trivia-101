@@ -572,6 +572,9 @@ export class TriviaGame extends ui.UIComponent {
       await this.loadPlayerHeadshot(player, 'INIT');
     }
     
+    // Detect host player for existing players
+    this.detectHostPlayer();
+    
     console.log(`[INIT] ✅ Completed loading headshots for all existing players`);
   }
 
@@ -3693,6 +3696,9 @@ export class TriviaGame extends ui.UIComponent {
     this.updateTriggerCounter++;
     this.playersUpdateTrigger.set(this.updateTriggerCounter);
     
+    // Detect host player when a new player joins (only if no host is set yet)
+    this.detectHostPlayer();
+    
     console.log(`[PLAYER_EVENT] ✅ Updated players list with ${this.currentPlayers.length} players for pre-game display`);
   }
 
@@ -3723,6 +3729,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Check if the leaving player was the host
     if (this.hostPlayerId === player.id.toString()) {
+      console.log(`[PLAYER_EVENT] ✅ Host ${player.name.get()} left, clearing host and reassigning`);
       
       // Clear current host
       const oldHostId = this.hostPlayerId;
@@ -3730,32 +3737,15 @@ export class TriviaGame extends ui.UIComponent {
       this.isLocalPlayerHost = false;
       this.isLocalPlayerHostBinding.set(false);
       
-      // Reassign host to the player with the lowest ID among remaining players
-      const remainingPlayers = this.world.getPlayers().filter(p => p.id.toString() !== player.id.toString());
+      // Reassign host using the centralized method
+      this.detectHostPlayer();
       
-      if (remainingPlayers.length > 0) {
-        // Sort remaining players by ID and pick the first one
-        const sortedPlayers = remainingPlayers.sort((a, b) => {
-          const idA = parseInt(a.id.toString());
-          const idB = parseInt(b.id.toString());
-          return idA - idB;
-        });
-        
-        const newHost = sortedPlayers[0];
-        this.hostPlayerId = newHost.id.toString();
-        this.hostPlayerIdBinding.set(this.hostPlayerId);
-        
-        // Update local player host status
-        const localPlayer = this.world.getLocalPlayer();
-        this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
-        this.isLocalPlayerHostBinding.set(this.isLocalPlayerHost);
-        
-        // Broadcast the host change to all clients
+      // If a new host was assigned, broadcast the change
+      if (this.hostPlayerId && this.hostPlayerId !== oldHostId) {
         this.sendNetworkBroadcastEvent(hostChangedEvent, {
           newHostId: this.hostPlayerId,
           oldHostId: oldHostId
         });
-      } else {
       }
     }
   }
