@@ -3,7 +3,7 @@ import * as ui from 'horizon/ui';
 
 // Network events for trivia
 const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
-const trivia2AnswerQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('trivia2AnswerQuestionShow');
+const trivia4AnswerQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('trivia4AnswerQuestionShow');
 const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
@@ -14,10 +14,10 @@ const answerShapes = [
   { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
   { iconId: '1286736292915198', color: '#3B82F6', shape: 'Square' },
   { iconId: '1290982519195562', color: '#EAB308', shape: 'Triangle' },
-  { iconId: '1286736292915198', color: '#22C55E', shape: 'Diamond', rotation: 45 }
+  { iconId: '797899126007085', color: '#22C55E', shape: 'Diamond', rotation: 45 }
 ];
 
-export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
+export class FourOptionsUI extends ui.UIComponent<typeof FourOptionsUI> {
   static propsDefinition = {};
 
   // Game state
@@ -73,9 +73,9 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
   }
 
   private setupNetworkEvents(): void {
-    // Listen for 2-answer question show events
-    this.connectNetworkBroadcastEvent(trivia2AnswerQuestionShowEvent, (eventData) => {
-      this.syncWith2AnswerTrivia(eventData);
+    // Listen for 4-answer question show events
+    this.connectNetworkBroadcastEvent(trivia4AnswerQuestionShowEvent, (eventData) => {
+      this.syncWith4AnswerTrivia(eventData);
     });
 
     // Listen for trivia results events
@@ -94,7 +94,7 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
     });
   }
 
-  private syncWith2AnswerTrivia(questionData: { question: any, questionIndex: number, timeLimit: number }): void {
+  private syncWith4AnswerTrivia(questionData: { question: any, questionIndex: number, timeLimit: number }): void {
     this.currentQuestionIndex = questionData.questionIndex;
     this.currentQuestion = questionData.question;
     this.selectedAnswer = null;
@@ -112,7 +112,7 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
     this.correctAnswerIndexBinding.set(null);
     this.answerSubmittedBinding.set(false);
 
-    console.log('📱 TwoOptionsUI opened 2-answer question page triggered by trivia2AnswerQuestionShowEvent');
+    console.log('📱 FourOptionsUI opened 4-answer question page triggered by trivia4AnswerQuestionShowEvent');
   }
 
   private onTriviaResults(eventData: {
@@ -185,24 +185,14 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
   private handleAnswerSelect(answerIndex: number): void {
     if (this.showResult) return;
 
-    // For 2-answer questions, map button indices 2 and 3 to answer indices 0 and 1
-    let actualAnswerIndex = answerIndex;
-    if (this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2) {
-      if (answerIndex === 2) {
-        actualAnswerIndex = 0;
-      } else if (answerIndex === 3) {
-        actualAnswerIndex = 1;
-      }
-    }
-
-    this.selectedAnswer = actualAnswerIndex;
-    this.selectedAnswerBinding.set(actualAnswerIndex);
+    this.selectedAnswer = answerIndex;
+    this.selectedAnswerBinding.set(answerIndex);
     this.answerSubmitted = true;
     this.answerSubmittedBinding.set(true);
 
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
       playerId: this.world.getLocalPlayer()?.id.toString() || 'local',
-      answerIndex: actualAnswerIndex,
+      answerIndex: answerIndex,
       responseTime: 0
     });
   }
@@ -287,7 +277,7 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
                     flexDirection: 'column'
                   },
                   children: [
-                    // Feedback screen - positioned absolutely when visible
+                    // Feedback screen
                     ui.View({
                       style: {
                         position: 'absolute',
@@ -392,63 +382,48 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
                       ]
                     }),
 
-                    // Game content
+                    // Game content - only show answer buttons in 2x2 grid, no text
                     ui.View({
                       style: {
                         flex: 1,
                         flexDirection: 'column',
-                        padding: 6,
-                        paddingBottom: 8,
+                        padding: 4,
                         opacity: ui.Binding.derive([this.showResultBinding], (showResult) => showResult ? 0 : 1)
                       },
                       children: [
+                        // Answer buttons container - 2x2 grid layout for 4 answers
                         ui.View({
                           style: {
                             flex: 1,
-                            marginBottom: 6
+                            flexDirection: 'column',
+                            padding: 4
                           },
-                          children: [this.createAnswerButton(2)]
-                        }),
-                        ui.View({
-                          style: {
-                            flex: 1,
-                            marginTop: 6
-                          },
-                          children: [this.createAnswerButton(3)]
-                        })
-                      ]
-                    }),
-
-                    // Bottom status bar
-                    ui.View({
-                      style: {
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingHorizontal: 16,
-                        paddingVertical: 12
-                      },
-                      children: [
-                        ui.Text({
-                          text: ui.Binding.derive([this.currentQuestionIndexBinding, this.showLeaderboardBinding], (index, showLeaderboard) => {
-                            if (!showLeaderboard) {
-                              this.stableQuestionIndex = index;
-                            }
-                            return `Question ${this.stableQuestionIndex + 1}`;
-                          }),
-                          style: {
-                            fontSize: 12,
-                            color: '#6B7280'
-                          }
-                        }),
-                        ui.Text({
-                          text: ui.Binding.derive([this.scoreBinding], (score) => `Score: ${score}`),
-                          style: {
-                            fontSize: 12,
-                            fontWeight: '600',
-                            color: '#6B7280'
-                          }
+                          children: [
+                            // Top row (buttons 0 and 1)
+                            ui.View({
+                              style: {
+                                flexDirection: 'row',
+                                flex: 1,
+                                marginBottom: 2
+                              },
+                              children: [
+                                this.createAnswerButton(0),
+                                this.createAnswerButton(1)
+                              ]
+                            }),
+                            // Bottom row (buttons 2 and 3)
+                            ui.View({
+                              style: {
+                                flexDirection: 'row',
+                                flex: 1,
+                                marginTop: 2
+                              },
+                              children: [
+                                this.createAnswerButton(2),
+                                this.createAnswerButton(3)
+                              ]
+                            })
+                          ]
                         })
                       ]
                     })
@@ -476,18 +451,8 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
           if (showResult && question) {
             const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
 
-            let mappedCorrectIndex = correctIndex;
-            let mappedSelectedAnswer = selectedAnswer;
-            if (question.answers.length === 2) {
-              if (correctIndex === 0) mappedCorrectIndex = 2;
-              else if (correctIndex === 1) mappedCorrectIndex = 3;
-
-              if (selectedAnswer === 0) mappedSelectedAnswer = 2;
-              else if (selectedAnswer === 1) mappedSelectedAnswer = 3;
-            }
-
-            const isCorrect = answerIndex === mappedCorrectIndex;
-            const isSelected = answerIndex === mappedSelectedAnswer;
+            const isCorrect = answerIndex === correctIndex;
+            const isSelected = answerIndex === selectedAnswer;
 
             if (isCorrect) return '#22C55E';
             if (isSelected && !isCorrect) return '#EF4444';
@@ -499,19 +464,15 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
         margin: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 140,
-        padding: 6,
+        minHeight: 80,
+        padding: 4,
         opacity: ui.Binding.derive([this.currentQuestionBinding], (question) => {
           if (!question || !question.answers) {
             return answerIndex < 4 ? 1 : 0;
           }
 
           const answerCount = question.answers.length;
-          if (answerCount === 2) {
-            return (answerIndex === 2 || answerIndex === 3) ? 1 : 0;
-          } else {
-            return answerIndex < answerCount ? 1 : 0;
-          }
+          return answerIndex < answerCount ? 1 : 0;
         })
       },
       onPress: () => this.handleAnswerSelect(answerIndex),
@@ -519,8 +480,8 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
         ui.Image({
           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
           style: {
-            width: 50,
-            height: 50,
+            width: 40,
+            height: 40,
             tintColor: '#FFFFFF',
             ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
           }
@@ -531,4 +492,4 @@ export class TwoOptionsUI extends ui.UIComponent<typeof TwoOptionsUI> {
 }
 
 // Register the component for Horizon Worlds
-ui.UIComponent.register(TwoOptionsUI);
+ui.UIComponent.register(FourOptionsUI);

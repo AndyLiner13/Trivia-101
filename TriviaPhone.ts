@@ -1182,15 +1182,25 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleAnswerSelect(answerIndex: number): void {
     if (this.showResult) return;
 
-    this.selectedAnswer = answerIndex;
-    this.selectedAnswerBinding.set(answerIndex);
+    // For 2-answer questions, map button indices 2 and 3 to answer indices 0 and 1
+    let actualAnswerIndex = answerIndex;
+    if (this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2) {
+      if (answerIndex === 2) {
+        actualAnswerIndex = 0;
+      } else if (answerIndex === 3) {
+        actualAnswerIndex = 1;
+      }
+    }
+
+    this.selectedAnswer = actualAnswerIndex;
+    this.selectedAnswerBinding.set(actualAnswerIndex);
     this.answerSubmitted = true;
     this.answerSubmittedBinding.set(true);
 
     // Send network event with the answer index
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
       playerId: this.assignedPlayer?.id.toString() || 'local',
-      answerIndex: answerIndex,
+      answerIndex: actualAnswerIndex,
       responseTime: 0
     });
   }
@@ -1305,7 +1315,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding], (mode, screenType, started, showResult) => 
                     mode === 'pre-game' && started && screenType === 'two-options' && !showResult
                   ),
-                  this.renderTwoOptionsPage()
+                  ui.View({
+                    style: {
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: '#6366F1',
+                      flexDirection: 'column'
+                    },
+                    children: [
+                      this.renderTwoOptionsPage(),
+                      this.renderStatusBar()
+                    ]
+                  })
                 ),
                 
                 // Four-option trivia screen - shows only when event received and game is started
@@ -1313,7 +1334,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding], (mode, screenType, started, showResult) => 
                     mode === 'pre-game' && started && screenType === 'four-options' && !showResult
                   ),
-                  this.renderFourOptionsPage()
+                  ui.View({
+                    style: {
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: '#6366F1',
+                      flexDirection: 'column'
+                    },
+                    children: [
+                      this.renderFourOptionsPage(),
+                      this.renderStatusBar()
+                    ]
+                  })
                 ),
 
                 // Feedback screen - shows right/wrong when results are displayed
@@ -1332,10 +1364,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }),
                       justifyContent: 'center',
                       alignItems: 'center',
-                      padding: 16
+                      padding: 12
                     },
                     children: [
-                      // Large emoji icon
                       ui.Text({
                         text: ui.Binding.derive([
                           this.isCorrectAnswerBinding
@@ -1348,8 +1379,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           marginBottom: 16
                         }
                       }),
-                      
-                      // "Correct!" or "Wrong!" text
                       ui.Text({
                         text: ui.Binding.derive([
                           this.isCorrectAnswerBinding
@@ -1364,8 +1393,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           marginBottom: 12
                         }
                       }),
-
-                      // Show the question text
                       ui.Text({
                         text: ui.Binding.derive([], () => {
                           return this.currentQuestion ? this.currentQuestion.question : '';
@@ -1380,66 +1407,58 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           lineHeight: 24
                         }
                       }),
-
-                      // Next Question button - only show for host during active game when leaderboard is displayed (not last question)
-                      ui.UINode.if(
-                        ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding], 
-                          (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) => 
-                            showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) < settings.numberOfQuestions
-                        ),
-                        ui.Pressable({
-                          style: {
-                            backgroundColor: '#FFFFFF',
-                            borderRadius: 8,
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            marginTop: 16,
-                            alignSelf: 'center'
-                          },
-                          onPress: () => this.nextQuestion(),
-                          children: [
-                            ui.Text({
-                              text: '➡️ Next Question',
-                              style: {
-                                fontSize: 14,
-                                fontWeight: '600',
-                                color: '#6366F1',
-                                textAlign: 'center'
-                              }
-                            })
-                          ]
-                        })
-                      ),
-
-                      // End Game button - only show for host when on last question or when game has ended
-                      ui.UINode.if(
-                        ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding], 
-                          (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) => 
-                            showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions
-                        ),
-                        ui.Pressable({
-                          style: {
-                            backgroundColor: '#FF6B35',
-                            borderRadius: 8,
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            marginTop: 16,
-                            alignSelf: 'center'
-                          },
-                          onPress: () => this.endGame(),
-                          children: [
-                            ui.Text({
-                              text: '🔚 End Game',
-                              style: {
-                                fontSize: 14,
-                                fontWeight: '600',
-                                color: '#FFFFFF',
-                                textAlign: 'center'
-                              }
-                            })
-                          ]
-                        })
-                      )
+                      ui.Pressable({
+                        style: {
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: 8,
+                          paddingHorizontal: 16,
+                          paddingVertical: 8,
+                          marginTop: 16,
+                          alignSelf: 'center',
+                          opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
+                            (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
+                              showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) < settings.numberOfQuestions ? 1 : 0
+                          )
+                        },
+                        onPress: () => this.nextQuestion(),
+                        children: [
+                          ui.Text({
+                            text: '➡️ Next Question',
+                            style: {
+                              fontSize: 14,
+                              fontWeight: '600',
+                              color: '#6366F1',
+                              textAlign: 'center'
+                            }
+                          })
+                        ]
+                      }),
+                      ui.Pressable({
+                        style: {
+                          backgroundColor: '#FF6B35',
+                          borderRadius: 8,
+                          paddingHorizontal: 16,
+                          paddingVertical: 8,
+                          marginTop: 16,
+                          alignSelf: 'center',
+                          opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
+                            (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
+                              showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions ? 1 : 0
+                          )
+                        },
+                        onPress: () => this.endGame(),
+                        children: [
+                          ui.Text({
+                            text: '🔚 End Game',
+                            style: {
+                              fontSize: 14,
+                              fontWeight: '600',
+                              color: '#FFFFFF',
+                              textAlign: 'center'
+                            }
+                          })
+                        ]
+                      })
                     ]
                   })
                 ),
@@ -2247,107 +2266,95 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     });
   }
 
+  private createAnswerButton(answerIndex: number): ui.UINode {
+    const shape = answerShapes[answerIndex];
+
+    return ui.Pressable({
+      style: {
+        flex: 1,
+        backgroundColor: ui.Binding.derive([
+          this.showResultBinding,
+          this.selectedAnswerBinding,
+          this.currentQuestionBinding
+        ], (showResult, selectedAnswer, question) => {
+          if (showResult && question) {
+            const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
+
+            let mappedCorrectIndex = correctIndex;
+            let mappedSelectedAnswer = selectedAnswer;
+            if (question.answers.length === 2) {
+              if (correctIndex === 0) mappedCorrectIndex = 2;
+              else if (correctIndex === 1) mappedCorrectIndex = 3;
+
+              if (selectedAnswer === 0) mappedSelectedAnswer = 2;
+              else if (selectedAnswer === 1) mappedSelectedAnswer = 3;
+            }
+
+            const isCorrect = answerIndex === mappedCorrectIndex;
+            const isSelected = answerIndex === mappedSelectedAnswer;
+
+            if (isCorrect) return '#22C55E';
+            if (isSelected && !isCorrect) return '#EF4444';
+            return '#9CA3AF';
+          }
+          return shape.color;
+        }),
+        borderRadius: 12,
+        margin: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 140,
+        padding: 6,
+        opacity: ui.Binding.derive([this.currentQuestionBinding], (question) => {
+          if (!question || !question.answers) {
+            return answerIndex < 4 ? 1 : 0;
+          }
+
+          const answerCount = question.answers.length;
+          if (answerCount === 2) {
+            return (answerIndex === 2 || answerIndex === 3) ? 1 : 0;
+          } else {
+            return answerIndex < answerCount ? 1 : 0;
+          }
+        })
+      },
+      onPress: () => this.handleAnswerSelect(answerIndex),
+      children: [
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(shape.iconId))),
+          style: {
+            width: 50,
+            height: 50,
+            tintColor: '#FFFFFF',
+            ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
+          }
+        })
+      ]
+    });
+  }
+
   private renderTwoOptionsPage(): ui.UINode {
     return ui.View({
       style: {
         flex: 1,
         flexDirection: 'column',
-        padding: 4
+        padding: 6,
+        paddingBottom: 8
       },
       children: [
-        // Button 0 (first answer) - Fixed static button
         ui.View({
           style: {
             flex: 1,
-            marginBottom: 4
+            marginBottom: 6
           },
-          children: [
-            ui.Pressable({
-              style: {
-                flex: 1,
-                backgroundColor: ui.Binding.derive([
-                  this.showResultBinding,
-                  this.selectedAnswerBinding,
-                  this.currentQuestionBinding
-                ], (showResult, selectedAnswer, question) => {
-                  if (showResult && question) {
-                    const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
-                    const isCorrect = 0 === correctIndex;
-                    const isSelected = 0 === selectedAnswer;
-
-                    if (isCorrect) return '#22C55E'; // Green for correct
-                    if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
-                    return '#9CA3AF'; // Gray for other answers
-                  }
-                  return '#3B82F6'; // Blue default
-                }),
-                borderRadius: 12,
-                margin: 2,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 150,
-                padding: 8
-              },
-              onPress: () => this.handleAnswerSelect(0),
-              children: [
-                ui.Text({
-                  text: 'A',
-                  style: {
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF'
-                  }
-                })
-              ]
-            })
-          ]
+          children: [this.createAnswerButton(2)]
         }),
-        // Button 1 (second answer) - Fixed static button
         ui.View({
           style: {
             flex: 1,
-            marginTop: 4
+            marginTop: 6
           },
-          children: [
-            ui.Pressable({
-              style: {
-                flex: 1,
-                backgroundColor: ui.Binding.derive([
-                  this.showResultBinding,
-                  this.selectedAnswerBinding,
-                  this.currentQuestionBinding
-                ], (showResult, selectedAnswer, question) => {
-                  if (showResult && question) {
-                    const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
-                    const isCorrect = 1 === correctIndex;
-                    const isSelected = 1 === selectedAnswer;
-
-                    if (isCorrect) return '#22C55E'; // Green for correct
-                    if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
-                    return '#9CA3AF'; // Gray for other answers
-                  }
-                  return '#10B981'; // Green default
-                }),
-                borderRadius: 12,
-                margin: 2,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 150,
-                padding: 8
-              },
-              onPress: () => this.handleAnswerSelect(1),
-              children: [
-                ui.Text({
-                  text: 'B',
-                  style: {
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF'
-                  }
-                })
-              ]
-            })
-          ]
+          children: [this.createAnswerButton(3)]
         })
       ]
     });
@@ -2369,82 +2376,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             marginBottom: 2
           },
           children: [
-            ui.Pressable({
-              style: {
-                flex: 1,
-                backgroundColor: ui.Binding.derive([
-                  this.showResultBinding,
-                  this.selectedAnswerBinding,
-                  this.currentQuestionBinding
-                ], (showResult, selectedAnswer, question) => {
-                  if (showResult && question) {
-                    const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
-                    const isCorrect = 0 === correctIndex;
-                    const isSelected = 0 === selectedAnswer;
-
-                    if (isCorrect) return '#22C55E'; // Green for correct
-                    if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
-                    return '#9CA3AF'; // Gray for other answers
-                  }
-                  return '#3B82F6'; // Blue default
-                }),
-                borderRadius: 12,
-                margin: 2,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 150,
-                padding: 8
-              },
-              onPress: () => this.handleAnswerSelect(0),
-              children: [
-                ui.Text({
-                  text: 'A',
-                  style: {
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF'
-                  }
-                })
-              ]
-            }),
-            ui.Pressable({
-              style: {
-                flex: 1,
-                backgroundColor: ui.Binding.derive([
-                  this.showResultBinding,
-                  this.selectedAnswerBinding,
-                  this.currentQuestionBinding
-                ], (showResult, selectedAnswer, question) => {
-                  if (showResult && question) {
-                    const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
-                    const isCorrect = 1 === correctIndex;
-                    const isSelected = 1 === selectedAnswer;
-
-                    if (isCorrect) return '#22C55E'; // Green for correct
-                    if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
-                    return '#9CA3AF'; // Gray for other answers
-                  }
-                  return '#10B981'; // Green default
-                }),
-                borderRadius: 12,
-                margin: 2,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 150,
-                padding: 8
-              },
-              onPress: () => this.handleAnswerSelect(1),
-              children: [
-                ui.Text({
-                  text: 'B',
-                  style: {
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF'
-                  }
-                })
-              ]
-            })
+            this.createAnswerButton(0),
+            this.createAnswerButton(1)
           ]
         }),
         // Bottom row (buttons 2 and 3) - Fixed static buttons
@@ -2455,82 +2388,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             marginTop: 2
           },
           children: [
-            ui.Pressable({
-              style: {
-                flex: 1,
-                backgroundColor: ui.Binding.derive([
-                  this.showResultBinding,
-                  this.selectedAnswerBinding,
-                  this.currentQuestionBinding
-                ], (showResult, selectedAnswer, question) => {
-                  if (showResult && question) {
-                    const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
-                    const isCorrect = 2 === correctIndex;
-                    const isSelected = 2 === selectedAnswer;
-
-                    if (isCorrect) return '#22C55E'; // Green for correct
-                    if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
-                    return '#9CA3AF'; // Gray for other answers
-                  }
-                  return '#F59E0B'; // Orange default
-                }),
-                borderRadius: 12,
-                margin: 2,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 150,
-                padding: 8
-              },
-              onPress: () => this.handleAnswerSelect(2),
-              children: [
-                ui.Text({
-                  text: 'C',
-                  style: {
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF'
-                  }
-                })
-              ]
-            }),
-            ui.Pressable({
-              style: {
-                flex: 1,
-                backgroundColor: ui.Binding.derive([
-                  this.showResultBinding,
-                  this.selectedAnswerBinding,
-                  this.currentQuestionBinding
-                ], (showResult, selectedAnswer, question) => {
-                  if (showResult && question) {
-                    const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
-                    const isCorrect = 3 === correctIndex;
-                    const isSelected = 3 === selectedAnswer;
-
-                    if (isCorrect) return '#22C55E'; // Green for correct
-                    if (isSelected && !isCorrect) return '#EF4444'; // Red for wrong selection
-                    return '#9CA3AF'; // Gray for other answers
-                  }
-                  return '#EF4444'; // Red default
-                }),
-                borderRadius: 12,
-                margin: 2,
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 150,
-                padding: 8
-              },
-              onPress: () => this.handleAnswerSelect(3),
-              children: [
-                ui.Text({
-                  text: 'D',
-                  style: {
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF'
-                  }
-                })
-              ]
-            })
+            this.createAnswerButton(2),
+            this.createAnswerButton(3)
           ]
         })
       ]
