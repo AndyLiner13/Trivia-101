@@ -839,6 +839,16 @@ export class TriviaGame extends ui.UIComponent {
       } else if (isItalianBrainrot) {
       }
 
+      // Filter questions to only include those with 2 or 4 answer options
+      if (allQuestions.length > 0) {
+        const beforeAnswerFilter = allQuestions.length;
+        allQuestions = allQuestions.filter(q => {
+          const answerCount = q.answers?.length || 0;
+          return answerCount === 2 || answerCount === 4;
+        });
+        console.log(`📊 Filtered questions by answer count: ${beforeAnswerFilter} -> ${allQuestions.length} (only 2 or 4 options)`);
+      }
+
       // NO FALLBACKS - if no questions match the exact criteria, keep empty array
       // This will trigger error handling in handleStartGame
 
@@ -1949,7 +1959,12 @@ export class TriviaGame extends ui.UIComponent {
 
     // Use questions from TriviaPhone if provided, otherwise update questions based on the new configuration
     if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
-      this.triviaQuestions = data.questions;
+      // Filter questions to only include those with 2 or 4 answer options
+      this.triviaQuestions = data.questions.filter(q => {
+        const answerCount = q.answers?.length || 0;
+        return answerCount === 2 || answerCount === 4;
+      });
+      console.log(`📊 Filtered provided questions by answer count: ${data.questions.length} -> ${this.triviaQuestions.length} (only 2 or 4 options)`);
     } else {
       // Update questions based on the new configuration (now async with lazy loading)
       await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
