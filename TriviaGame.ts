@@ -405,6 +405,9 @@ export class TriviaGame extends ui.UIComponent {
   // Local score tracking for the duration of the game
   private localPlayerScores = new Map<string, number>();
 
+  // Persistent leaderboard tracking - total correct answers across all games
+  private persistentLeaderboardScores = new Map<string, number>();
+
   // Methods to interact with the native leaderboard system
   private getPlayerPoints(player: hz.Player): number {
     // Get score from local cache first, fallback to 0
@@ -414,18 +417,30 @@ export class TriviaGame extends ui.UIComponent {
 
   private setPlayerPoints(player: hz.Player, points: number): void {
     try {
-      // Update local cache
+      // Update local cache for game scoring
       const playerId = player.id.toString();
       this.localPlayerScores.set(playerId, points);
       
-      // Set the score in the native leaderboard system
+      // Note: Persistent leaderboard is now separate and only tracks total correct answers
+      // It should not be affected by game points
+    } catch (error) {
+    }
+  }
+
+  private addCorrectAnswerToLeaderboard(player: hz.Player): void {
+    try {
+      const playerId = player.id.toString();
+      const currentCorrectAnswers = this.persistentLeaderboardScores.get(playerId) || 0;
+      this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + 1);
+      
+      // Update native leaderboard with total correct answers
       const leaderboardName = "Trivia";
-      this.world.leaderboards.setScoreForPlayer(leaderboardName, player, points, true);
+      this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + 1, true);
       
       // Send network event to update leaderboard.ts
       this.sendNetworkBroadcastEvent(leaderboardScoreUpdateEvent, {
         playerId: playerId,
-        score: points,
+        score: currentCorrectAnswers + 1,
         leaderboardName: leaderboardName
       });
     } catch (error) {
@@ -1711,12 +1726,12 @@ export class TriviaGame extends ui.UIComponent {
     const currentPlayers = this.world.getPlayers();
     const leaderboard: Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}> = [];
     
-    // Create leaderboard entries for each real player using local cache
+    // Create leaderboard entries for each real player using persistent leaderboard scores
     for (const player of currentPlayers) {
       const playerId = player.id.toString();
       if (this.playersInWorld.has(playerId)) {
-        // Get actual score from local cache
-        const score = this.localPlayerScores.get(playerId) || 0;
+        // Get persistent leaderboard score (total correct answers across all games)
+        const score = this.persistentLeaderboardScores.get(playerId) || 0;
         
         // Get player headshot using Social API
         let headshotImageSource: ImageSource | undefined;
@@ -3703,6 +3718,8 @@ export class TriviaGame extends ui.UIComponent {
     this.playersAnswered.clear();
     this.playerScores.clear();
     this.localPlayerScores.clear();
+    
+    // Note: persistentLeaderboardScores are NOT cleared - they persist across games
   }
 
   private async onAwardPoints(event: { playerId: string; points: number }): Promise<void> {
@@ -3711,16 +3728,14 @@ export class TriviaGame extends ui.UIComponent {
       const player = this.world.getPlayers().find(p => p.id.toString() === event.playerId);
       
       if (player) {
-        // Get current points from local cache
-        const currentPoints = this.localPlayerScores.get(event.playerId) || 0;
-        const newPoints = currentPoints + event.points;
+        // Add to persistent leaderboard for correct answers (points = 1 for correct answers)
+        if (event.points > 0) {
+          this.addCorrectAnswerToLeaderboard(player);
+        }
         
-        // Update local cache
-        this.localPlayerScores.set(event.playerId, newPoints);
-        
-        // Update native leaderboard
-        const leaderboardName = "Trivia";
-        this.world.leaderboards.setScoreForPlayer(leaderboardName, player, newPoints, true);
+        // Update local game score cache (for game functionality)
+        const currentGamePoints = this.localPlayerScores.get(event.playerId) || 0;
+        this.localPlayerScores.set(event.playerId, currentGamePoints + event.points);
       }
     } catch (error) {
     }
