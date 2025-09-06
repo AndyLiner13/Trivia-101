@@ -1461,6 +1461,42 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             }
                           })
                         ]
+                      }),
+                      // Footer with question progress and score
+                      ui.View({
+                        style: {
+                          position: 'absolute',
+                          bottom: 12,
+                          left: 12,
+                          right: 12,
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          borderRadius: 8,
+                          paddingHorizontal: 12,
+                          paddingVertical: 8,
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        },
+                        children: [
+                          ui.Text({
+                            text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => 
+                              `Question ${index + 1}/${settings.numberOfQuestions}`
+                            ),
+                            style: {
+                              fontSize: 12,
+                              color: '#6B7280',
+                              fontWeight: '600'
+                            }
+                          }),
+                          ui.Text({
+                            text: ui.Binding.derive([this.scoreBinding], (score) => `Score: ${score}`),
+                            style: {
+                              fontSize: 12,
+                              color: '#6B7280',
+                              fontWeight: '600'
+                            }
+                          })
+                        ]
                       })
                     ]
                   })
@@ -2198,24 +2234,28 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     return ui.View({
       style: {
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 8,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        marginHorizontal: 12,
+        marginBottom: 12
       },
       children: [
         ui.Text({
-          text: ui.Binding.derive([this.currentQuestionIndexBinding, this.showLeaderboardBinding], (index, showLeaderboard) => {
+          text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding, this.showLeaderboardBinding], (index, settings, showLeaderboard) => {
             // Only update the question number when not showing leaderboard to prevent footer updates during transition
             if (!showLeaderboard) {
               this.stableQuestionIndex = index;
             }
-            return `Question ${this.stableQuestionIndex + 1}`;
+            return `Question ${this.stableQuestionIndex + 1}/${settings.numberOfQuestions}`;
           }),
           style: {
             fontSize: 12,
-            color: '#6B7280'
+            color: '#6B7280',
+            fontWeight: '600'
           }
         }),
         ui.Text({
@@ -2264,7 +2304,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           return shape.color;
         }),
         borderRadius: 12,
-        margin: 1,
+        margin: 3,
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: 140,
@@ -2329,7 +2369,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       style: {
         flex: 1,
         flexDirection: 'column',
-        padding: 4
+        padding: 6,
+        paddingBottom: 8
       },
       children: [
         // Top row (buttons 0 and 1) - Fixed static buttons
@@ -2337,7 +2378,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             flexDirection: 'row',
             flex: 1,
-            marginBottom: 2
+            marginBottom: 0
           },
           children: [
             this.createAnswerButton(0),
@@ -2349,7 +2390,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             flexDirection: 'row',
             flex: 1,
-            marginTop: 2
+            marginTop: 0
           },
           children: [
             this.createAnswerButton(2),

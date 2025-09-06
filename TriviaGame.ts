@@ -2597,8 +2597,8 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          left: '5%',
-                          right: '5%',
+                          left: 0,
+                          right: 0,
                           top: '16%',
                           alignItems: 'center',
                           justifyContent: 'center'
@@ -2616,7 +2616,10 @@ export class TriviaGame extends ui.UIComponent {
                             paddingLeft: 12,
                             paddingRight: 12,
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            alignSelf: 'center',
+                            maxWidth: '70%',
+                            marginHorizontal: 16
                           },
                           children: [
                             // Question text
@@ -2643,10 +2646,10 @@ export class TriviaGame extends ui.UIComponent {
                     View({
                       style: {
                         position: 'absolute',
-                        left: '12%',
-                        right: '12%',
+                        left: 0,
+                        right: 0,
                         top: '2%',
-                        height: '12%',
+                        height: '15%',
                         alignItems: 'center'
                       },
                       children: View({
@@ -2657,12 +2660,15 @@ export class TriviaGame extends ui.UIComponent {
                           shadowOpacity: 0.15,
                           shadowRadius: 6,
                           shadowOffset: [0, 2],
-                          paddingTop: 8,
-                          paddingBottom: 8,
+                          paddingTop: 12,
+                          paddingBottom: 12,
                           paddingLeft: 12,
                           paddingRight: 12,
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          alignSelf: 'center',
+                          maxWidth: '80%',
+                          marginHorizontal: 16
                         },
                         children: [
                           // Question text
