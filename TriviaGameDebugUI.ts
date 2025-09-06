@@ -1775,30 +1775,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       }
                     })
                   ]
-                }),
-
-                // Open TriviaPhoneDebugUI
-                Pressable({
-                  style: {
-                    backgroundColor: '#4A5568',
-                    borderRadius: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.debugOpenTriviaPhoneDebugUI(),
-                  children: [
-                    Text({
-                      text: '📱 Phone Debug',
-                      style: {
-                        fontSize: 9,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
                 })
               ]
             })
@@ -2123,13 +2099,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(true);
-  }
-
-  private debugOpenTriviaPhoneDebugUI(): void {
-    console.log('✅ Debug: Opening TriviaPhoneDebugUI');
-    // This would trigger opening the TriviaPhoneDebugUI
-    // Implementation depends on how the UI system works in Horizon Worlds
-    // For now, just log that we're attempting to open it
   }
 }
 
