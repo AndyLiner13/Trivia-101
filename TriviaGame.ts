@@ -2597,8 +2597,8 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          left: '15%',
-                          right: '15%',
+                          left: '5%',
+                          right: '5%',
                           top: '16%',
                           alignItems: 'center',
                           justifyContent: 'center'
@@ -2646,7 +2646,7 @@ export class TriviaGame extends ui.UIComponent {
                         left: '12%',
                         right: '12%',
                         top: '2%',
-                        height: '15%',
+                        height: '12%',
                         alignItems: 'center'
                       },
                       children: View({
@@ -2657,8 +2657,8 @@ export class TriviaGame extends ui.UIComponent {
                           shadowOpacity: 0.15,
                           shadowRadius: 6,
                           shadowOffset: [0, 2],
-                          paddingTop: 12,
-                          paddingBottom: 12,
+                          paddingTop: 8,
+                          paddingBottom: 8,
                           paddingLeft: 12,
                           paddingRight: 12,
                           alignItems: 'center',
