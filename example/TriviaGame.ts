@@ -125,18 +125,6 @@ const triviaResultsEvent = new hz.NetworkEvent<{
   leaderboardData?: Array<{name: string, score: number, playerId: string}>;
 }>('triviaResults');
 
-const triviaTwoOptionsEvent = new hz.NetworkEvent<{
-  question: SerializableQuestion;
-  questionIndex: number;
-  timeLimit: number;
-}>('triviaTwoOptions');
-
-const triviaFourOptionsEvent = new hz.NetworkEvent<{
-  question: SerializableQuestion;
-  questionIndex: number;
-  timeLimit: number;
-}>('triviaFourOptions');
-
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{
   playerId: string;
   answerIndex: number;
@@ -179,10 +167,7 @@ const triviaGameResetEvent = new hz.NetworkEvent<{
   const triviaAwardPointsEvent = new hz.NetworkEvent<{
     playerId: string;
     points: number;
-  }>('triviaAwardPoints');
-
-// New events for explicit screen routing
-// Request-response events for state synchronization
+  }>('triviaAwardPoints');// Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{
   requesterId: string;
 }>('triviaStateRequest');
@@ -1123,21 +1108,11 @@ export class TriviaGame extends ui.UIComponent {
       answers: shuffledQuestion.answers.map((answer: { text: string; correct: boolean }) => ({ text: answer.text, correct: answer.correct }))
     };
 
-    // Determine which screen type to show based on answer count
-    const answerCount = serializableQuestion.answers.length;
-    const questionData = {
+    this.sendNetworkBroadcastEvent(triviaQuestionShowEvent, {
       question: serializableQuestion,
       questionIndex: this.currentQuestionIndex,
       timeLimit: this.props.questionTimeLimit
-    };
-
-    if (answerCount === 2) {
-      // Send event for 2-option screen
-      this.sendNetworkBroadcastEvent(triviaTwoOptionsEvent, questionData);
-    } else {
-      // Send event for 4-option screen (3+ answers)
-      this.sendNetworkBroadcastEvent(triviaFourOptionsEvent, questionData);
-    }
+    });
 
     // Broadcast UI state update to show question screen
     this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
