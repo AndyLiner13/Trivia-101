@@ -2428,7 +2428,7 @@ export class TriviaGame extends ui.UIComponent {
                       style: {
                         position: 'absolute',
                         left: '5%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '55%' : '45%'), // Center of image area
+                        top: this.answerCountTracking.derive(count => count === 2 ? '21.5%' : '26.5%'), // Center of image area
                         width: 35,
                         height: 35,
                         backgroundColor: '#FF6B35',
@@ -2489,7 +2489,7 @@ export class TriviaGame extends ui.UIComponent {
                       style: {
                         position: 'absolute',
                         right: '5%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '55%' : '45%'), // Center of image area
+                        top: this.answerCountTracking.derive(count => count === 2 ? '25%' : '30%'), // Slightly below center of image area
                         alignItems: 'center'
                       },
                       children: [
@@ -2554,7 +2554,6 @@ export class TriviaGame extends ui.UIComponent {
                           left: '15%',
                           right: '15%',
                           top: '20%',
-                          height: '55%',
                           alignItems: 'center',
                           justifyContent: 'center'
                         },
@@ -2566,7 +2565,8 @@ export class TriviaGame extends ui.UIComponent {
                             shadowOpacity: 0.15,
                             shadowRadius: 6,
                             shadowOffset: [0, 2],
-                            padding: 12,
+                            paddingHorizontal: 16,
+                            paddingVertical: 16,
                             alignItems: 'center',
                             justifyContent: 'center'
                           },
@@ -2600,7 +2600,6 @@ export class TriviaGame extends ui.UIComponent {
                           left: '15%',
                           right: '15%',
                           top: '16%',
-                          height: '45%',
                           alignItems: 'center',
                           justifyContent: 'center'
                         },
@@ -2612,7 +2611,10 @@ export class TriviaGame extends ui.UIComponent {
                             shadowOpacity: 0.15,
                             shadowRadius: 6,
                             shadowOffset: [0, 2],
-                            padding: 12,
+                            paddingTop: 12,
+                            paddingBottom: 12,
+                            paddingLeft: 12,
+                            paddingRight: 12,
                             alignItems: 'center',
                             justifyContent: 'center'
                           },
@@ -2626,7 +2628,7 @@ export class TriviaGame extends ui.UIComponent {
                                 fontWeight: '500',
                                 color: 'black',
                                 textAlign: 'center',
-                                lineHeight: 24
+                                lineHeight: 16
                               }
                             })
                           ]
@@ -2645,8 +2647,7 @@ export class TriviaGame extends ui.UIComponent {
                         right: '12%',
                         top: '2%',
                         height: '15%',
-                        alignItems: 'center',
-                        justifyContent: 'center'
+                        alignItems: 'center'
                       },
                       children: View({
                         style: {
@@ -2656,7 +2657,10 @@ export class TriviaGame extends ui.UIComponent {
                           shadowOpacity: 0.15,
                           shadowRadius: 6,
                           shadowOffset: [0, 2],
-                          padding: 12,
+                          paddingTop: 12,
+                          paddingBottom: 12,
+                          paddingLeft: 12,
+                          paddingRight: 12,
                           alignItems: 'center',
                           justifyContent: 'center'
                         },
@@ -2670,7 +2674,7 @@ export class TriviaGame extends ui.UIComponent {
                               fontWeight: '500',
                               color: 'black',
                               textAlign: 'center',
-                              lineHeight: 20
+                              lineHeight: 16
                             }
                           })
                         ]
