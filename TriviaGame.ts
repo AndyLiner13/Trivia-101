@@ -3905,6 +3905,12 @@ export class TriviaGame extends ui.UIComponent {
     // Update answer count binding
     this.answerCountBinding.set(this.playersAnswered.size.toString());
     
+    // Check if all remaining players have answered after player left
+    if (this.playersAnswered.size >= this.playersInWorld.size && this.playersInWorld.size > 0) {
+      console.log('✅ All remaining players answered after player left - showing results');
+      this.showCorrectAnswersAndLeaderboard();
+    }
+    
     // Trigger UI update
     this.updateTriggerCounter++;
     this.playersUpdateTrigger.set(this.updateTriggerCounter);
