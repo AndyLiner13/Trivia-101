@@ -3727,16 +3727,27 @@ export class TriviaGame extends ui.UIComponent {
       // Find the player by ID
       const player = this.world.getPlayers().find(p => p.id.toString() === event.playerId);
       
+      // Update persistent leaderboard directly with player ID
+      const playerId = event.playerId;
+      const currentCorrectAnswers = this.persistentLeaderboardScores.get(playerId) || 0;
+      this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + 1);
+      
+      const leaderboardName = "Trivia";
       if (player) {
-        // Add to persistent leaderboard for correct answers (points = 1 for correct answers)
-        if (event.points > 0) {
-          this.addCorrectAnswerToLeaderboard(player);
-        }
-        
-        // Update local game score cache (for game functionality)
-        const currentGamePoints = this.localPlayerScores.get(event.playerId) || 0;
-        this.localPlayerScores.set(event.playerId, currentGamePoints + event.points);
+        // Update native leaderboard with player object
+        this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + 1, true);
       }
+      
+      // Send network event to update leaderboard.ts
+      this.sendNetworkBroadcastEvent(leaderboardScoreUpdateEvent, {
+        playerId: playerId,
+        score: currentCorrectAnswers + 1,
+        leaderboardName: leaderboardName
+      });
+      
+      // Update local game score cache
+      const currentGamePoints = this.localPlayerScores.get(event.playerId) || 0;
+      this.localPlayerScores.set(event.playerId, currentGamePoints + event.points);
     } catch (error) {
     }
   }
