@@ -447,22 +447,27 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         return;
       }
 
-      // Set up E key input for hiding TriviaPhone when focused - DISABLED for VR users to prevent grab button conflicts
-      // if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
-      //   this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
-      //     hz.PlayerInputAction.RightGrip,
-      //     hz.ButtonIcon.None,
-      //     this,
-      //     { preferredButtonPlacement: hz.ButtonPlacement.Default }
-      //   );
+      // Set up E key input for hiding TriviaPhone when focused - ENABLED for non-VR users only
+      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
+        // Check if the local player is NOT a VR user
+        const isVRUser = localPlayer.deviceType.get() === hz.PlayerDeviceType.VR;
 
-      //   this.eKeyInputConnection.registerCallback((action, pressed) => {
-      //     if (pressed) {
-      //       // Handle E key trigger - hide TriviaPhone if player is focused on UI
-      //       this.handleEKeyTrigger(localPlayer);
-      //     }
-      //   });
-      // }
+        if (!isVRUser) {
+          this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
+            hz.PlayerInputAction.RightGrip,
+            hz.ButtonIcon.None,
+            this,
+            { preferredButtonPlacement: hz.ButtonPlacement.Default }
+          );
+
+          this.eKeyInputConnection.registerCallback((action, pressed) => {
+            if (pressed) {
+              // Handle E key trigger - hide TriviaPhone for non-VR users
+              this.handleEKeyTrigger(localPlayer);
+            }
+          });
+        }
+      }
 
       // Set up H key input for opening TriviaPhone (desktop, web, and mobile users only)
       if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary)) {
