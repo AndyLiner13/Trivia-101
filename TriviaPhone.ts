@@ -1206,18 +1206,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private nextQuestion(): void {
-    this.currentQuestionIndex++;
-    this.selectedAnswer = null;
-    this.showResult = false;
-    this.answerSubmitted = false;
-
-    this.currentQuestionIndexBinding.set(this.currentQuestionIndex);
-    this.selectedAnswerBinding.set(null);
-    this.showResultBinding.set(false);
-    this.showLeaderboardBinding.set(false);
-    this.answerSubmittedBinding.set(false);
-
-    // Send next question event
+    // Send next question event to TriviaGame - let it handle all the logic
     this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
       playerId: this.assignedPlayer?.id.toString() || 'host'
     });
@@ -1297,7 +1286,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: ui.Binding.derive([this.screenTypeBinding, this.currentViewModeBinding, this.gameStartedBinding], (screenType, mode, started) => {
+                  if (mode === 'game-settings') return '#6366F1';
+                  if (started && (screenType === 'two-options' || screenType === 'four-options')) return '#6366F1';
+                  if (started && screenType === 'results') return '#FFFFFF'; // Will be overridden by feedback screen
+                  return '#FFFFFF';
+                }),
                 borderRadius: 14,
                 overflow: 'hidden'
               },
@@ -1461,14 +1455,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       })
                     ]
                   })
-                ),
-                
-                // Results screen - shows when results event received
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding], (mode, screenType) => 
-                    mode === 'pre-game' && screenType === 'results'
-                  ),
-                  this.renderResultsScreen()
                 ),
                 
                 // Waiting screen - default state during game
@@ -2075,37 +2061,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }
           })
         )
-      ]
-    });
-  }
-
-  private renderResultsScreen(): ui.UINode {
-    return ui.View({
-      style: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20
-      },
-      children: [
-        ui.Text({
-          text: '🎉 Results',
-          style: {
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            textAlign: 'center',
-            marginBottom: 20
-          }
-        }),
-        ui.Text({
-          text: 'Waiting for next question...',
-          style: {
-            fontSize: 16,
-            color: '#FFFFFF',
-            textAlign: 'center'
-          }
-        })
       ]
     });
   }
