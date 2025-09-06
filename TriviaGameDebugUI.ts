@@ -594,13 +594,13 @@ export class TriviaGame extends ui.UIComponent {
     });
     
     // Also register with global registry as backup (may not work across script contexts)
-    if (!(globalThis as any).triviaPhoneInstances) {
-      (globalThis as any).triviaPhoneInstances = [];
+    if (!(globalThis as any).triviaGameDebugInstances) {
+      (globalThis as any).triviaGameDebugInstances = [];
     }
-    (globalThis as any).triviaPhoneInstances.push(this);
+    (globalThis as any).triviaGameDebugInstances.push(this);
     
     // Notify any existing TriviaPhones about our registration
-    const globalTriviaPhones = (globalThis as any).triviaPhoneInstances || [];
+    const globalTriviaPhones = (globalThis as any).triviaGameDebugInstances || [];
     globalTriviaPhones.forEach((triviaPhone: any, index: number) => {
       if (triviaPhone && typeof triviaPhone.forceSyncWithTriviaGame === 'function') {
         triviaPhone.forceSyncWithTriviaGame();
@@ -633,6 +633,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Detect host player for existing players
     this.detectHostPlayer();
+
+    // Register debug-specific functionality
+    this.setupDebugFunctionality();
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -1644,7 +1647,7 @@ export class TriviaGame extends ui.UIComponent {
     const triviaPhones = (this.world as any).triviaPhones;
     
     // Also check global registry as backup
-    const globalTriviaPhones = (globalThis as any).triviaPhoneInstances || [];
+    const globalTriviaPhones = (globalThis as any).triviaGameDebugInstances || [];
     
     // Also send network event for TriviaPhone instances that might be listening
     // Use actual answer count in a way that won't reset our display
@@ -3667,6 +3670,19 @@ export class TriviaGame extends ui.UIComponent {
     });
   }
 
+  private setupDebugFunctionality(): void {
+    // Debug-specific setup to ensure compatibility with TriviaPhoneDebugUI
+    
+    // Ensure debug network events are properly registered
+    this.connectNetworkBroadcastEvent(triviaStateRequestEvent, this.onStateRequest.bind(this));
+    
+    // Register with debug-specific global registry
+    if (!(globalThis as any).triviaGameDebugInstances) {
+      (globalThis as any).triviaGameDebugInstances = [];
+    }
+    (globalThis as any).triviaGameDebugInstances.push(this);
+  }
+
   dispose(): void {
     this.isRunning = false;
     this.stopTimer();
@@ -3682,10 +3698,10 @@ export class TriviaGame extends ui.UIComponent {
     }
     
     // Clean up global registry
-    if ((globalThis as any).triviaPhoneInstances) {
-      const index = (globalThis as any).triviaPhoneInstances.indexOf(this);
+    if ((globalThis as any).triviaGameDebugInstances) {
+      const index = (globalThis as any).triviaGameDebugInstances.indexOf(this);
       if (index > -1) {
-        (globalThis as any).triviaPhoneInstances.splice(index, 1);
+        (globalThis as any).triviaGameDebugInstances.splice(index, 1);
       }
     }
     
@@ -3825,8 +3841,8 @@ export class TriviaGame extends ui.UIComponent {
 
   // Phone management methods
   private discoverPhoneEntities(): void {
-    // Find all entities in the world with the "TriviaPhone" tag
-    const allEntitiesInWorld = this.world.getEntitiesWithTags(['TriviaPhone']);
+    // Find all entities in the world with the "TriviaPhoneDebug" tag
+    const allEntitiesInWorld = this.world.getEntitiesWithTags(['TriviaPhoneDebug']);
 
     for (const entity of allEntitiesInWorld) {
       this.phoneAssignments.push({
