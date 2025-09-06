@@ -78,8 +78,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Game settings state
   private gameSettings = {
-    numberOfQuestions: 1,
-    category: 'General',
+    numberOfQuestions: 5,
+    category: 'Italian Brainrot Quiz',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     timeLimit: 30,
     autoAdvance: false,

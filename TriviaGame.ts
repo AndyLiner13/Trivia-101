@@ -202,6 +202,33 @@ const triviaSettingsUpdateEvent = new hz.NetworkEvent<{
   };
 }>('triviaSettingsUpdate');
 
+// Timer synchronization events
+const triviaTimerUpdateEvent = new hz.NetworkEvent<{
+  timeRemaining: number;
+  questionIndex: number;
+}>('triviaTimerUpdate');
+
+const triviaTimerEndEvent = new hz.NetworkEvent<{
+  questionIndex: number;
+}>('triviaTimerEnd');
+
+// UI state synchronization events
+const triviaUIStateEvent = new hz.NetworkEvent<{
+  showConfig: boolean;
+  showResults: boolean;
+  showWaiting: boolean;
+  showLeaderboard: boolean;
+  showError: boolean;
+  errorMessage?: string;
+}>('triviaUIState');
+
+// Player tracking synchronization events
+const triviaPlayerUpdateEvent = new hz.NetworkEvent<{
+  playersInWorld: string[];
+  playersAnswered: string[];
+  answerCount: number;
+}>('triviaPlayerUpdate');
+
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
   {
@@ -423,8 +450,8 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfigBinding = new Binding({
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 10,
-    category: "General",
+    numQuestions: 5,
+    category: "Italian Brainrot Quiz",
     difficulty: "easy"
   });
   private hostPlayerIdBinding = new Binding<string | null>(null);
@@ -447,8 +474,8 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfig = {
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 10,
-    category: "General",
+    numQuestions: 5,
+    category: "Italian Brainrot Quiz",
     difficulty: "easy"
   };
 
@@ -838,6 +865,19 @@ export class TriviaGame extends ui.UIComponent {
 
     // Listen for award points requests from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaAwardPointsEvent, this.onAwardPoints.bind(this));
+
+    // Listen for settings update events from TriviaPhone
+    this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, this.onSettingsUpdate.bind(this));
+
+    // Listen for timer synchronization events
+    this.connectNetworkBroadcastEvent(triviaTimerUpdateEvent, this.onTimerUpdate.bind(this));
+    this.connectNetworkBroadcastEvent(triviaTimerEndEvent, this.onTimerEnd.bind(this));
+
+    // Listen for UI state synchronization events
+    this.connectNetworkBroadcastEvent(triviaUIStateEvent, this.onUIStateUpdate.bind(this));
+
+    // Listen for player tracking synchronization events
+    this.connectNetworkBroadcastEvent(triviaPlayerUpdateEvent, this.onPlayerUpdate.bind(this));
   }
 
   private resetGameState(): void {
@@ -1055,6 +1095,15 @@ export class TriviaGame extends ui.UIComponent {
       timeLimit: this.props.questionTimeLimit
     });
 
+    // Broadcast UI state update to show question screen
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: false,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: false
+    });
+
     // Reset answer count when starting new question
     this.answerCountBinding.set("0");
 
@@ -1238,6 +1287,15 @@ export class TriviaGame extends ui.UIComponent {
     this.showConfigBinding.set(true);
     this.showErrorBinding.set(false);
     
+    // Broadcast UI state update to show config screen
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: true,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: false
+    });
+    
     // Reset question display to config message
     this.questionBinding.set("Configure your trivia game settings and press Start when ready!");
 
@@ -1355,6 +1413,13 @@ export class TriviaGame extends ui.UIComponent {
       this.playersInWorld.add(player.id.toString());
     });
     
+    // Broadcast initial player tracking state
+    this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
+      playersInWorld: Array.from(this.playersInWorld),
+      playersAnswered: [],
+      answerCount: 0
+    });
+    
     // Update UI bindings
     this.questionNumberBinding.set(`Q${eventData.questionIndex + 1}`);
     this.questionBinding.set(eventData.question.question);
@@ -1449,6 +1514,13 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update answer count immediately
     this.answerCountBinding.set(this.playersAnswered.size.toString());
+    
+    // Broadcast player tracking update to all clients
+    this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
+      playersInWorld: Array.from(this.playersInWorld),
+      playersAnswered: Array.from(this.playersAnswered),
+      answerCount: this.playersAnswered.size
+    });
     
     // Check if all players have answered
     if (this.playersAnswered.size >= this.playersInWorld.size && this.playersInWorld.size > 0) {
@@ -1565,6 +1637,15 @@ export class TriviaGame extends ui.UIComponent {
     this.showResultsBinding.set(true);
     this.isShowingResults = true;
     
+    // Broadcast UI state update to show results
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: false,
+      showResults: true,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: false
+    });
+    
     // After 5 seconds, show leaderboard (but don't auto-advance to next question)
     this.async.setTimeout(() => {
       this.showLeaderboard();
@@ -1578,6 +1659,15 @@ export class TriviaGame extends ui.UIComponent {
     this.isShowingResults = false;
     this.showLeaderboardBinding.set(true);
     this.isShowingLeaderboard = true;
+    
+    // Broadcast UI state update to show leaderboard
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: false,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: true,
+      showError: false
+    });
     
     // Generate real leaderboard data from actual players
     const realLeaderboard = await this.generateRealLeaderboard();
@@ -1870,26 +1960,58 @@ export class TriviaGame extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
+
+    // Broadcast UI state update to show error screen
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: false,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: true,
+      errorMessage: message
+    });
   }
 
   private hideErrorScreen(): void {
     this.showErrorBinding.set(false);
     this.showConfigBinding.set(true);
+
+    // Broadcast UI state update to hide error and show config
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: true,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: false
+    });
   }
 
   private startTimer(): void {
     this.stopTimer(); // Clear any existing timer
-    
-    this.timerInterval = this.async.setInterval(() => {
-      this.timeRemaining--;
-      this.timerBinding.set(this.timeRemaining.toString());
-      
-      if (this.timeRemaining <= 0) {
-        this.stopTimer();
-        // Show results when timer reaches 0
-        this.showQuestionResults();
-      }
-    }, 1000);
+
+    // Only the host should run the actual timer
+    if (this.isLocalPlayerHost) {
+      this.timerInterval = this.async.setInterval(() => {
+        this.timeRemaining--;
+
+        // Broadcast timer update to all clients
+        this.sendNetworkBroadcastEvent(triviaTimerUpdateEvent, {
+          timeRemaining: this.timeRemaining,
+          questionIndex: this.currentQuestionIndex
+        });
+
+        this.timerBinding.set(this.timeRemaining.toString());
+
+        if (this.timeRemaining <= 0) {
+          this.stopTimer();
+          // Broadcast timer end to all clients
+          this.sendNetworkBroadcastEvent(triviaTimerEndEvent, {
+            questionIndex: this.currentQuestionIndex
+          });
+          this.showQuestionResults();
+        }
+      }, 1000);
+    }
   }
 
   private stopTimer(): void {
@@ -3556,6 +3678,15 @@ export class TriviaGame extends ui.UIComponent {
     this.showConfigBinding.set(true);
     this.showErrorBinding.set(false);
     
+    // Broadcast UI state update to show config screen
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: true,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: false
+    });
+    
     // Reset question display
     this.questionBinding.set("Configure your trivia game settings and press Start when ready!");
     
@@ -3704,6 +3835,56 @@ export class TriviaGame extends ui.UIComponent {
           oldHostId: oldHostId
         });
       }
+    }
+  }
+
+  // New synchronization event handlers
+  private onPlayerUpdate(eventData: { playersInWorld: string[], playersAnswered: string[], answerCount: number }): void {
+    // Update player tracking from network event
+    this.playersInWorld.clear();
+    eventData.playersInWorld.forEach(playerId => {
+      this.playersInWorld.add(playerId);
+    });
+
+    this.playersAnswered.clear();
+    eventData.playersAnswered.forEach(playerId => {
+      this.playersAnswered.add(playerId);
+    });
+
+    // Update answer count binding
+    this.answerCountBinding.set(eventData.answerCount.toString());
+  }
+
+  private onUIStateUpdate(eventData: { showConfig: boolean, showResults: boolean, showWaiting: boolean, showLeaderboard: boolean, showError: boolean, errorMessage?: string }): void {
+    // Update UI state bindings from network event
+    this.showConfigBinding.set(eventData.showConfig);
+    this.showResultsBinding.set(eventData.showResults);
+    this.showWaitingBinding.set(eventData.showWaiting);
+    this.showLeaderboardBinding.set(eventData.showLeaderboard);
+    this.showErrorBinding.set(eventData.showError);
+
+    if (eventData.errorMessage) {
+      this.errorMessageBinding.set(eventData.errorMessage);
+    }
+
+    // Update internal state flags
+    this.isShowingResults = eventData.showResults;
+    this.isShowingLeaderboard = eventData.showLeaderboard;
+  }
+
+  private onTimerUpdate(eventData: { timeRemaining: number, questionIndex: number }): void {
+    // Only update timer if it's for the current question
+    if (eventData.questionIndex === this.currentQuestionIndex) {
+      this.timeRemaining = eventData.timeRemaining;
+      this.timerBinding.set(eventData.timeRemaining.toString());
+    }
+  }
+
+  private onTimerEnd(eventData: { questionIndex: number }): void {
+    // Only end timer if it's for the current question
+    if (eventData.questionIndex === this.currentQuestionIndex) {
+      this.stopTimer();
+      this.showQuestionResults();
     }
   }
 
