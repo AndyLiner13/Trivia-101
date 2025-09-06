@@ -105,6 +105,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showLeaderboardBinding = new ui.Binding(false);
   private answerSubmittedBinding = new ui.Binding(false);
 
+  // Current question binding to prevent flashing
+  private currentQuestionBinding = new ui.Binding<any>(null);
+
   // Game settings bindings
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
   private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
@@ -886,6 +889,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.gameStartedBinding.set(true);
 
     this.currentQuestionIndexBinding.set(questionData.questionIndex);
+    this.currentQuestionBinding.set(questionData.question); // Set current question to prevent flashing
     this.selectedAnswerBinding.set(null);
     this.showResultBinding.set(false);
     this.isCorrectAnswerBinding.set(false);
@@ -911,6 +915,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Store the current question data
     this.currentQuestion = eventData.question;
+    this.currentQuestionBinding.set(eventData.question); // Update binding to prevent flashing
     
     // Store the correct answer index
     this.correctAnswerIndexBinding.set(eventData.correctAnswerIndex);
@@ -1020,6 +1025,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Clear current question data
     this.currentQuestion = null;
+    this.currentQuestionBinding.set(null); // Clear binding
     
     // Show final leaderboard data if provided
     if (eventData.finalLeaderboard && eventData.finalLeaderboard.length > 0) {
@@ -1038,6 +1044,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.gameEndedBinding.set(false);
     this.currentQuestionIndex = 0;
     this.currentQuestion = null;
+    this.currentQuestionBinding.set(null); // Clear binding
     this.score = 0;
     this.selectedAnswer = null;
     this.showResult = false;
@@ -1141,6 +1148,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.gameStarted = false;
     this.currentQuestionIndex = 0;
     this.currentQuestion = null;
+    this.currentQuestionBinding.set(null); // Clear binding
     this.score = 0;
     this.selectedAnswer = null;
     this.showResult = false;
@@ -1571,8 +1579,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       children: [
                         // Conditional layout based on answer count
                         ui.UINode.if(
-                          ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
-                            return !!(this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2);
+                          ui.Binding.derive([this.currentQuestionBinding], (question) => {
+                            return !!(question && question.answers && question.answers.length === 2);
                           }),
                           // 2-answer layout: Single column filling full height
                           ui.View({
@@ -1603,8 +1611,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ),
                         // Default 2x2 grid layout for 3+ answers
                         ui.UINode.if(
-                          ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
-                            return !!(this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length !== 2);
+                          ui.Binding.derive([this.currentQuestionBinding], (question) => {
+                            return !!(question && question.answers && question.answers.length !== 2);
                           }),
                           ui.View({
                             style: {
@@ -2089,15 +2097,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         backgroundColor: ui.Binding.derive([
           this.showResultBinding,
           this.selectedAnswerBinding,
-          this.currentQuestionIndexBinding
-        ], (showResult, selectedAnswer, questionIndex) => {
-          if (showResult && this.currentQuestion) {
-            const correctIndex = this.currentQuestion.answers.findIndex((answer: any) => answer.correct);
+          this.currentQuestionBinding
+        ], (showResult, selectedAnswer, question) => {
+          if (showResult && question) {
+            const correctIndex = question.answers.findIndex((answer: any) => answer.correct);
             
             // For 2-answer questions, map the correct index to button indices
             let mappedCorrectIndex = correctIndex;
             let mappedSelectedAnswer = selectedAnswer;
-            if (this.currentQuestion.answers.length === 2) {
+            if (question.answers.length === 2) {
               if (correctIndex === 0) mappedCorrectIndex = 2;
               else if (correctIndex === 1) mappedCorrectIndex = 3;
               
@@ -2121,12 +2129,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         minHeight: 150,
         padding: 8,
         // Hide buttons that shouldn't be shown based on answer count
-        opacity: ui.Binding.derive([this.currentQuestionIndexBinding], (index) => {
-          if (!this.currentQuestion || !this.currentQuestion.answers) {
+        opacity: ui.Binding.derive([this.currentQuestionBinding], (question) => {
+          if (!question || !question.answers) {
             return answerIndex < 4 ? 1 : 0; // Show first 4 buttons by default
           }
           
-          const answerCount = this.currentQuestion.answers.length;
+          const answerCount = question.answers.length;
           if (answerCount === 2) {
             // For 2-answer questions, only show buttons 2 and 3
             return (answerIndex === 2 || answerIndex === 3) ? 1 : 0;
