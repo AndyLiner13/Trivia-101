@@ -1640,7 +1640,7 @@ export class TriviaGame extends ui.UIComponent {
         }
         
         leaderboard.push({
-          name: playerId,
+          name: player.name.get(),
           score: score,
           playerId: playerId,
           headshotImageSource: headshotImageSource
