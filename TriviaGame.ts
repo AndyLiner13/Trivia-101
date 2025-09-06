@@ -3627,6 +3627,7 @@ export class TriviaGame extends ui.UIComponent {
 
   // Handle state requests from TriviaPhone
   private async onStateRequest(event: { requesterId: string }): Promise<void> {
+    console.log('📡 TriviaGame received state request from:', event.requesterId);
     
     // Determine current game state
     let gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended' = 'waiting';
@@ -3647,6 +3648,7 @@ export class TriviaGame extends ui.UIComponent {
           score: player.score,
           playerId: player.playerId
         }));
+        console.log('📡 Responding with leaderboard state');
       } else if (this.isShowingResults) {
         gameState = 'results';
         responseData.gameState = gameState;
@@ -3658,20 +3660,24 @@ export class TriviaGame extends ui.UIComponent {
           responseData.correctAnswerIndex = this.lastCorrectAnswerIndex;
           responseData.answerCounts = this.lastAnswerCounts;
         }
+        console.log('📡 Responding with results state');
       } else if (this.currentQuestion) {
         gameState = 'playing';
         responseData.gameState = gameState;
         responseData.currentQuestion = this.currentQuestion;
         responseData.questionIndex = this.currentQuestionIndex;
         responseData.timeLimit = this.props.questionTimeLimit;
+        console.log('📡 Responding with playing state, question:', this.currentQuestionIndex);
       } else {
         // Game is running but no current question - could be between questions
         gameState = 'playing';
         responseData.gameState = gameState;
+        console.log('📡 Responding with playing state (no current question)');
       }
     } else {
       gameState = 'waiting';
       responseData.gameState = gameState;
+      console.log('📡 Responding with waiting state');
     }
     
     // Send the response

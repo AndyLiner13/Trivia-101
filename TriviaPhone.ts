@@ -424,6 +424,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.connectNetworkBroadcastEvent(hostChangedEvent, (eventData) => {
       this.onHostChanged(eventData);
     });
+
+    // Request state immediately when component starts (for players joining mid-game)
+    this.async.setTimeout(() => {
+      this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+        requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+      });
+    }, 1000); // Wait 1 second for everything to initialize
   }
 
   private setupKeyboardInput(): void {
@@ -949,10 +956,19 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     showLeaderboard?: boolean,
     leaderboardData?: Array<{name: string, score: number, playerId: string}>
   }): void {
+    // Only process responses meant for this player
+    const localPlayer = this.world.getLocalPlayer();
+    if (!localPlayer || event.requesterId !== localPlayer.id.toString()) {
+      return;
+    }
+
+    console.log('🔄 TriviaPhone received state response:', event.gameState);
+
     switch (event.gameState) {
       case 'waiting':
         this.gameStarted = false;
         this.gameStartedBinding.set(false);
+        console.log('🔄 Synced to waiting state');
         break;
       case 'playing':
         this.gameStarted = true;
@@ -964,14 +980,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             timeLimit: event.timeLimit || this.gameSettings.timeLimit
           });
         }
+        console.log('🔄 Synced to playing state with question:', event.questionIndex);
         break;
       case 'results':
         this.showResult = true;
         this.showResultBinding.set(true);
+        console.log('🔄 Synced to results state');
+        break;
+      case 'leaderboard':
+        this.showLeaderboardBinding.set(event.showLeaderboard || false);
+        console.log('🔄 Synced to leaderboard state');
         break;
       case 'ended':
         this.gameStarted = false;
         this.gameStartedBinding.set(false);
+        console.log('🔄 Synced to ended state');
         break;
     }
   }
