@@ -1,7 +1,7 @@
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
-import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
+import { View, Text, Pressable, Binding, UINode, Image, ImageSource, UIComponent } from 'horizon/ui';
 
 // Interface for tracking phone assignments
 interface PhoneAssignment {
@@ -16,165 +16,21 @@ interface TriviaQuestion {
   question: string;
   category?: string;
   difficulty?: string;
-  image?: string; // Path to image file
+  image?: string | null; // Path to image file or null
   answers: {
     text: string;
     correct: boolean;
   }[];
 }
 
-// Image mapping for texture IDs
-const imageTextureMap: { [key: string]: string } = {
-  "question_1": "1288240819609445",
-  "question_2": "4044904872392022",
-  "question_3": "1079109144384248",
-  "question_4": "1938735963635235",
-  "question_5": "2003463393758622",
-  "question_6": "1752745952035062",
-  "question_7": "1475346350459077",
-  "question_8": "1326047915821520",
-  "question_9": "3683839291925288",
-  "question_10": "1196531019167806",
-  "question_11": "706209595799642",
-  "question_12": "1410039643419415",
-  "question_13": "780941904872970",
-  "question_14": "1118817693525283",
-  "question_15": "733906099468866",
-  "question_16": "1807349089859596",
-  "question_17": "794724089702968",
-  "question_18": "764689873142192",
-  "question_19": "1142213797826617",
-  "question_20": "1825083965112873",
-  "question_21": "1518489952663744",
-  "question_22": "3567219543420158",
-  "question_23": "2242739949472621",
-  "question_24": "757964650190705",
-  "question_25": "1063919718873051",
-  "question_26": "1861463731067102",
-  "question_27": "1120356200069522",
-  "question_28": "761075996785743",
-  "question_29": "799049209398883",
-  "question_30": "1268024794620567",
-  "question_31": "1156729086299686",
-  "question_32": "724986150558004",
-  "question_33": "2242739949472621",
-  "question_34": "764254719694219",
-  "question_35": "1696089904438279",
-  "question_36": "1438253267399666",
-  "question_37": "3139059593060314",
-  "question_38": "1516371323068225",
-  "question_39": "637378339431139",
-  "question_40": "774931355028832",
-  "question_41": "2031929627613049",
-  "question_42": "2031929627613049",
-  "question_43": "1319399849969407",
-  "question_44": "1121153766023567",
-  "question_45": "25519518710969579",
-  "question_46": "758425783750920",
-  "question_47": "783521360835887",
-  "question_48": "1872767513454306",
-  "question_49": "1422789575447123"
-};
-
-// Default trivia questions for continuous gameplay
-const defaultTriviaQuestions: TriviaQuestion[] = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    category: "Geography",
-    difficulty: "easy",
-    answers: [
-      { text: "London", correct: false },
-      { text: "Berlin", correct: false },
-      { text: "Paris", correct: true },
-      { text: "Madrid", correct: false }
-    ]
-  },
-  {
-    id: 2,
-    question: "Which planet is closest to the Sun?",
-    category: "Science",
-    difficulty: "easy",
-    answers: [
-      { text: "Venus", correct: false },
-      { text: "Mercury", correct: true },
-      { text: "Earth", correct: false },
-      { text: "Mars", correct: false }
-    ]
-  },
-  {
-    id: 3,
-    question: "What is 7 × 8?",
-    category: "Math",
-    difficulty: "easy",
-    answers: [
-      { text: "54", correct: false },
-      { text: "56", correct: true },
-      { text: "64", correct: false },
-      { text: "48", correct: false }
-    ]
-  },
-  {
-    id: 4,
-    question: "Who painted the Mona Lisa?",
-    category: "Art",
-    difficulty: "medium",
-    answers: [
-      { text: "Van Gogh", correct: false },
-      { text: "Picasso", correct: false },
-      { text: "Da Vinci", correct: true },
-      { text: "Monet", correct: false }
-    ]
-  },
-  {
-    id: 5,
-    question: "What is the largest ocean on Earth?",
-    category: "Geography",
-    difficulty: "easy",
-    answers: [
-      { text: "Atlantic", correct: false },
-      { text: "Pacific", correct: true },
-      { text: "Indian", correct: false },
-      { text: "Arctic", correct: false }
-    ]
-  },
-  {
-    id: 6,
-    question: "In which year did World War II end?",
-    category: "History",
-    difficulty: "medium",
-    answers: [
-      { text: "1944", correct: false },
-      { text: "1945", correct: true },
-      { text: "1946", correct: false },
-      { text: "1943", correct: false }
-    ]
-  },
-  {
-    id: 7,
-    question: "What is the chemical symbol for gold?",
-    category: "Science",
-    difficulty: "medium",
-    answers: [
-      { text: "Go", correct: false },
-      { text: "Gd", correct: false },
-      { text: "Au", correct: true },
-      { text: "Ag", correct: false }
-    ]
-  },
-  {
-    id: 8,
-    question: "Which country is home to Machu Picchu?",
-    category: "Geography",
-    difficulty: "medium",
-    answers: [
-      { text: "Brazil", correct: false },
-      { text: "Peru", correct: true },
-      { text: "Chile", correct: false },
-      { text: "Colombia", correct: false }
-    ]
-  }
-];
+// Interface for custom quiz questions with images
+interface CustomQuizQuestion {
+  id: string;
+  image_id?: string; // New format uses image_id instead of image
+  question: string;
+  correct_answer: string;
+  incorrect_answers: string[];
+}
 
 /**
  * Trivia Game Debug UI Component - Static Version
@@ -188,8 +44,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     // Display settings
     fontSize: { type: hz.PropTypes.Number, default: 24 },
     headerColor: { type: hz.PropTypes.String, default: "#6366F1" },
-    backgroundColor: { type: hz.PropTypes.String, default: "#F3F4F6" }
-  };
+    backgroundColor: { type: hz.PropTypes.String, default: "#F3F4F6" },
+    // JSON asset connections
+    italianBrainrotQuiz: { type: hz.PropTypes.Asset, default: null },
+    generalQuestions: { type: hz.PropTypes.Asset, default: null }
+  } as const;
 
   // Bindings for dynamic UI updates
   private questionNumberBinding = new Binding("Q1");
@@ -249,8 +108,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     new Binding('#16A34A')  // Default green
   ];
   
-  // Game data
-  private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
+  // Game data - separate arrays for different question types
+  private generalQuestions: TriviaQuestion[] = [];
+  private italianBrainrotQuestions: TriviaQuestion[] = [];
   private currentQuestionIndex: number = 0;
   private currentQuestion: TriviaQuestion | null = null;
   
@@ -268,6 +128,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     // Initialize basic setup for debug functionality
     this.setupDebugFunctionality();
     
+    // Load questions from JSON assets
+    await this.loadQuestionsFromAssets();
+    
     // Load headshots for all current players
     const initialPlayers = this.world.getPlayers();
     for (const player of initialPlayers) {
@@ -284,6 +147,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private getTextureIdForImage(imagePath: string): string | null {
     if (!imagePath) return null;
 
+    // If it's already a numeric texture ID, use it directly
+    if (/^\d+$/.test(imagePath)) {
+      return imagePath;
+    }
+
     // If it's a hexadecimal texture ID (contains letters), convert to decimal
     if (/^[0-9A-Fa-f]+$/.test(imagePath) && /[A-Fa-f]/.test(imagePath)) {
       try {
@@ -294,16 +162,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       }
     }
 
-    // If it's already a numeric texture ID, use it directly
-    if (/^\d+$/.test(imagePath)) {
-      return imagePath;
-    }
-
-    // Otherwise, extract filename from path and look up in texture map
-    const filename = imagePath.split('/').pop()?.split('.')[0];
-    if (!filename) return null;
-
-    return imageTextureMap[filename] || null;
+    // For any other format, return as-is
+    return imagePath;
   }
 
   private shuffleQuestionAnswers(question: TriviaQuestion): TriviaQuestion {
@@ -1543,7 +1403,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   }),
 
                   // Error Screen overlay
-                  ui.View({
+                  View({
                     style: {
                       position: 'absolute',
                       top: 0,
@@ -1555,7 +1415,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       justifyContent: 'center',
                       display: this.showErrorBinding.derive(show => show ? 'flex' : 'none')
                     },
-                    children: ui.View({
+                    children: View({
                       style: {
                         backgroundColor: 'white',
                         borderRadius: 12,
@@ -1569,7 +1429,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       },
                       children: [
                         // Error icon
-                        ui.Text({
+                        Text({
                           text: '⚠️',
                           style: {
                             fontSize: 32,
@@ -1577,7 +1437,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           }
                         }),
                         // Error title
-                        ui.Text({
+                        Text({
                           text: 'No Questions Available',
                           style: {
                             fontSize: 18,
@@ -1588,7 +1448,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           }
                         }),
                         // Error message
-                        ui.Text({
+                        Text({
                           text: this.errorMessageBinding,
                           style: {
                             fontSize: 14,
@@ -1599,7 +1459,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           }
                         }),
                         // Back to config button
-                        ui.Pressable({
+                        Pressable({
                           style: {
                             backgroundColor: '#3B82F6',
                             borderRadius: 6,
@@ -1609,7 +1469,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           },
                           onPress: () => this.hideErrorScreen(),
                           children: [
-                            ui.Text({
+                            Text({
                               text: 'Back to Settings',
                               style: {
                                 fontSize: 14,
@@ -1705,6 +1565,30 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   ]
                 }),
 
+                // Question with Image Screen
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowQuestionWithImageScreen(),
+                  children: [
+                    Text({
+                      text: '🖼️ Q+Image',
+                      style: {
+                        fontSize: 8,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
                 // Results Screen
                 Pressable({
                   style: {
@@ -1782,6 +1666,121 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         })
       ]
     });
+  }
+
+  private async loadQuestionsFromAssets(): Promise<void> {
+    try {
+      // Load Italian Brainrot Quiz questions
+      if (this.props.italianBrainrotQuiz && this.props.italianBrainrotQuiz !== null) {
+        const asset = this.props.italianBrainrotQuiz as hz.Asset;
+        const assetData = await asset.fetchAsData();
+        const jsonData = assetData.asJSON();
+
+        if (jsonData && Array.isArray(jsonData)) {
+          // Convert CustomQuizQuestion format to TriviaQuestion format
+          this.italianBrainrotQuestions = this.loadCustomQuiz(jsonData);
+          console.log("✅ Loaded", this.italianBrainrotQuestions.length, "Italian Brainrot questions");
+        }
+      }
+
+      // Load General Questions
+      if (this.props.generalQuestions && this.props.generalQuestions !== null) {
+        const asset = this.props.generalQuestions as hz.Asset;
+        const assetData = await asset.fetchAsData();
+        const jsonData = assetData.asJSON();
+
+        if (jsonData && Array.isArray(jsonData)) {
+          // Convert Open Trivia Database format to TriviaQuestion format
+          this.generalQuestions = this.parseOpenTriviaFormat(jsonData);
+          console.log("✅ Loaded", this.generalQuestions.length, "General questions");
+        }
+      }
+
+      // Log summary
+      if (this.italianBrainrotQuestions.length === 0 && this.generalQuestions.length === 0) {
+        console.log("⚠️ No questions loaded from JSON assets");
+      }
+
+    } catch (error) {
+      console.log("❌ Error loading questions from assets:", error);
+    }
+  }
+
+  // Convert CustomQuizQuestion[] to TriviaQuestion[]
+  private loadCustomQuiz(questions: CustomQuizQuestion[]): TriviaQuestion[] {
+    return questions.map((item, index) => ({
+      id: index + 1,
+      question: item.question,
+      category: "Italian Brainrot Quiz",
+      difficulty: "medium",
+      image: item.image_id || null, // Use image_id directly as texture ID
+      answers: [
+        { text: item.correct_answer, correct: true },
+        ...item.incorrect_answers.map(answer => ({ text: answer, correct: false }))
+      ]
+    }));
+  }
+
+  // Convert Open Trivia Database format to TriviaQuestion[]
+  private parseOpenTriviaFormat(jsonData: any): TriviaQuestion[] {
+    const questions: TriviaQuestion[] = [];
+
+    // Handle the nested structure with difficulty levels
+    if (jsonData && jsonData.questions) {
+      // Extract questions from all difficulty levels
+      const difficulties = ['easy', 'medium', 'hard'];
+      let questionId = 1;
+
+      for (const difficulty of difficulties) {
+        if (jsonData.questions[difficulty] && Array.isArray(jsonData.questions[difficulty])) {
+          for (const item of jsonData.questions[difficulty]) {
+            if (item.question) { // Only add if question exists
+              questions.push({
+                id: questionId++,
+                question: item.question,
+                category: item.category || "General",
+                difficulty: difficulty,
+                image: null, // Open Trivia Database doesn't have images
+                answers: this.parseOpenTriviaAnswers(item)
+              });
+            }
+          }
+        }
+      }
+    } else if (Array.isArray(jsonData)) {
+      // Fallback for direct array format
+      jsonData.forEach((item, index) => {
+        questions.push({
+          id: index + 1,
+          question: item.question || "No question provided",
+          category: item.category || "General",
+          difficulty: item.difficulty || "medium",
+          image: null,
+          answers: this.parseOpenTriviaAnswers(item)
+        });
+      });
+    }
+
+    return questions;
+  }
+
+  // Parse answers from Open Trivia Database format
+  private parseOpenTriviaAnswers(question: any): { text: string; correct: boolean }[] {
+    const answers = [];
+    
+    // Add correct answer
+    if (question.correct_answer) {
+      answers.push({ text: question.correct_answer, correct: true });
+    }
+    
+    // Add incorrect answers
+    if (question.incorrect_answers && Array.isArray(question.incorrect_answers)) {
+      question.incorrect_answers.forEach((answer: string) => {
+        answers.push({ text: answer, correct: false });
+      });
+    }
+    
+    return answers;
   }
 
   private async loadPlayerHeadshot(player: hz.Player, stage: 'INIT' | 'RUNTIME' = 'RUNTIME'): Promise<void> {
@@ -1984,9 +1983,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         Text({
           text: this.answerTexts[index],
           style: {
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: '500',
-            color: 'white'
+            color: 'white',
+            flex: 1,
+            textAlign: 'left'
           }
         })
       ]
@@ -1994,113 +1995,137 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private setupDebugFunctionality(): void {
-    // Debug-specific setup for static UI testing
-    // No network events needed for static debug UI
+    // Setup debug functionality for testing different screens
+    console.log("🔧 Debug functionality initialized");
   }
 
-  dispose(): void {
-    // No cleanup needed for static debug UI
-    super.dispose();
-  }
-
-  private hideErrorScreen(): void {
-    this.showErrorBinding.set(false);
-    this.showConfigBinding.set(true);
-  }
-
-  // Debug methods for the debug panel
   private debugShowConfigScreen(): void {
-    console.log('✅ Debug: Showing static config screen');
+    console.log("⚙️ Showing config screen");
     this.showConfigBinding.set(true);
-    this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
   }
 
-  private debugShowQuestionScreen(): void {
-    console.log('✅ Debug: Showing static question screen');
-    // Set up a sample question for display
-    if (this.triviaQuestions.length === 0) {
-      this.triviaQuestions = [...defaultTriviaQuestions];
-    }
-    const sampleQuestion = this.triviaQuestions[0];
-    this.currentQuestion = this.shuffleQuestionAnswers(sampleQuestion);
-    this.currentQuestionIndex = 0;
-    this.questionNumberBinding.set("Q1");
-    this.questionBinding.set(this.currentQuestion.question);
-    this.questionImageBinding.set(this.currentQuestion.image || null);
-    this.centerQuestionBinding.set(!this.currentQuestion.image);
-    this.timerBinding.set("30");
-    this.answerCountBinding.set("0");
+  private async debugShowQuestionScreen(): Promise<void> {
+    console.log("❓ Showing question screen");
 
-    // Set up answer options
-    for (let i = 0; i < 4; i++) {
-      if (i < this.currentQuestion.answers.length) {
-        this.answerTexts[i].set(this.currentQuestion.answers[i].text);
-      } else {
+    // Hide other screens
+    this.showConfigBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showErrorBinding.set(false);
+
+    // Get a random question from general questions only
+    if (this.generalQuestions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * this.generalQuestions.length);
+      const question = this.shuffleQuestionAnswers(this.generalQuestions[randomIndex]);
+
+      // Update UI bindings
+      this.questionBinding.set(question.question);
+      this.questionImageBinding.set(null); // No image for regular question screen
+      this.answerCountTracking.set(question.answers.length);
+
+      // Update answer texts
+      for (let i = 0; i < 4; i++) {
+        if (i < question.answers.length) {
+          this.answerTexts[i].set(question.answers[i].text);
+        } else {
+          this.answerTexts[i].set("");
+        }
+      }
+
+      // Update answer count display
+      this.answerCountBinding.set(question.answers.length.toString());
+
+      console.log("✅ General question loaded:", question.question);
+    } else {
+      console.log("❌ No general questions available");
+      this.questionBinding.set("No general questions available. Please set the generalQuestions asset.");
+      this.questionImageBinding.set(null);
+      this.answerCountTracking.set(0);
+      for (let i = 0; i < 4; i++) {
         this.answerTexts[i].set("");
       }
+      this.answerCountBinding.set("0");
     }
+  }
 
-    // Update UI state
+  private async debugShowQuestionWithImageScreen(): Promise<void> {
+    console.log("🖼️ Showing question with image screen");
+
+    // Hide other screens
     this.showConfigBinding.set(false);
-    this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+
+    // Get a random question from Italian Brainrot questions only
+    if (this.italianBrainrotQuestions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * this.italianBrainrotQuestions.length);
+      const question = this.shuffleQuestionAnswers(this.italianBrainrotQuestions[randomIndex]);
+
+      // Update UI bindings
+      this.questionBinding.set(question.question);
+      this.questionImageBinding.set(question.image || null); // Set image if available
+      this.answerCountTracking.set(question.answers.length);
+
+      // Update answer texts
+      for (let i = 0; i < 4; i++) {
+        if (i < question.answers.length) {
+          this.answerTexts[i].set(question.answers[i].text);
+        } else {
+          this.answerTexts[i].set("");
+        }
+      }
+
+      // Update answer count display
+      this.answerCountBinding.set(question.answers.length.toString());
+
+      console.log("✅ Italian Brainrot question loaded:", question.question);
+      console.log("🖼️ Image:", question.image);
+    } else {
+      console.log("❌ No Italian Brainrot questions available");
+      this.questionBinding.set("No Italian Brainrot questions available. Please set the italianBrainrotQuiz asset.");
+      this.questionImageBinding.set(null);
+      this.answerCountTracking.set(0);
+      for (let i = 0; i < 4; i++) {
+        this.answerTexts[i].set("");
+      }
+      this.answerCountBinding.set("0");
+    }
   }
 
   private debugShowResultsScreen(): void {
-    console.log('✅ Debug: Showing static results screen');
-    // Set up a sample question and results for display
-    if (!this.currentQuestion) {
-      if (this.triviaQuestions.length === 0) {
-        this.triviaQuestions = [...defaultTriviaQuestions];
-      }
-      const sampleQuestion = this.triviaQuestions[0];
-      this.currentQuestion = this.shuffleQuestionAnswers(sampleQuestion);
-    }
-
-    // Find correct answer index
-    const correctIndex = this.currentQuestion.answers.findIndex(a => a.correct);
-    this.correctAnswerBinding.set(correctIndex);
-    this.answerCountsBinding.set([2, 1, 0, 3]); // Sample answer counts
-    this.answerCountBinding.set("6"); // Total answers
-
-    // Update UI state
+    console.log("📊 Showing results screen");
     this.showConfigBinding.set(false);
-    this.showResultsBinding.set(true);
-    this.showWaitingBinding.set(false);
+    this.showWaitingBinding.set(true);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
   }
 
   private debugShowLeaderboardScreen(): void {
-    console.log('✅ Debug: Showing static leaderboard screen');
-    // Generate sample leaderboard data
-    this.generateRealLeaderboard().then(leaderboard => {
-      this.leaderboardDataBinding.set(leaderboard);
-    });
-
-    // Update UI state
+    console.log("🏆 Showing leaderboard screen");
     this.showConfigBinding.set(false);
-    this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(true);
     this.showErrorBinding.set(false);
   }
 
   private debugShowErrorScreen(): void {
-    console.log('✅ Debug: Showing static error screen');
-    this.errorMessageBinding.set("Sample error message for testing UI layout and styling.");
+    console.log("⚠️ Showing error screen");
     this.showConfigBinding.set(false);
-    this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(true);
   }
+
+  private hideErrorScreen(): void {
+    console.log("🔄 Hiding error screen");
+    this.showErrorBinding.set(false);
+    this.debugShowConfigScreen();
+  }
 }
 
-// Register the component so it can be attached to Custom UI gizmos
-ui.UIComponent.register(TriviaGameDebugUI);
+// Register the component with Horizon Worlds
+UIComponent.register(TriviaGameDebugUI);
