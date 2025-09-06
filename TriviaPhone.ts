@@ -602,9 +602,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
 
-    // For VR users, check if y position is 0 instead of distance
+    // For VR users, check if y position is 0 OR if the phone is very far from the player
+    // This ensures first-time VR users can see the phone on their first click
     const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
-    const shouldShow = isVRUser ? (phonePosition.y === 0) : (phonePosition.distance(playerPosition) > 10);
+    const shouldShow = isVRUser ? 
+      (phonePosition.y <= 0.1 || phonePosition.distance(playerPosition) > 5) : 
+      (phonePosition.distance(playerPosition) > 10);
 
     if (shouldShow) {
       // Phone is hidden (y=0 for VR, or >10 units away for others), teleport it in front of the user
