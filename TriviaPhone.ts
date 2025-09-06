@@ -610,7 +610,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       (phonePosition.distance(playerPosition) > 10);
 
     if (shouldShow) {
-      // Phone is hidden (y=0 for VR, or >10 units away for others), teleport it in front of the user
+      // Check if the CustomUI is already open by checking if phone is close to player and not hidden
+      const isPhoneVisibleToPlayer = phonePosition.distance(playerPosition) < 5 && phonePosition.y > -500;
+
+      if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
+        // UI is already open, do nothing
+        return;
+      }
 
       // Capture camera position when RightSecondary is pressed
       try {
@@ -653,6 +659,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private handleLeftTertiaryTrigger(player: hz.Player): void {
     // This method is only called for non-VR users (desktop, web, mobile) since we only register the input for them
+
+    // Check if the CustomUI is already open by checking if phone is close to player and not hidden
+    const phonePosition = this.entity.position.get();
+    const playerPosition = player.position.get();
+    const isPhoneVisibleToPlayer = phonePosition.distance(playerPosition) < 5 && phonePosition.y > -500;
+
+    if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
+      // UI is already open, do nothing
+      return;
+    }
 
     // If phone is not assigned to anyone, assign it to this player
     if (!this.assignedPlayer) {
