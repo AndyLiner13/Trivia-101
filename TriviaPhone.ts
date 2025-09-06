@@ -1247,14 +1247,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         height: '100%',
         backgroundColor: ui.Binding.derive([
           this.showResultBinding,
-          this.isCorrectAnswerBinding,
-          this.answerSubmittedBinding
-        ], (showResult, isCorrect, answerSubmitted) => {
+          this.isCorrectAnswerBinding
+        ], (showResult, isCorrect) => {
           if (showResult) {
             return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
-          }
-          if (answerSubmitted) {
-            return '#F59E0B'; // Orange for answer submitted
           }
           return '#6366F1'; // Default blue
         }),
@@ -1381,56 +1377,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           })
         ),
 
-        // Show answer submitted screen when answer is submitted but waiting for others
+        // Show normal game content when NOT showing results
         ui.UINode.if(
-          ui.Binding.derive([this.answerSubmittedBinding, this.showResultBinding], (answerSubmitted, showResult) => answerSubmitted && !showResult),
-          ui.View({
-            style: {
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: 16
-            },
-            children: [
-              // Large checkmark icon
-              ui.Text({
-                text: '✅',
-                style: {
-                  fontSize: 80,
-                  textAlign: 'center',
-                  marginBottom: 16
-                }
-              }),
-              
-              // "Answer Submitted!" text
-              ui.Text({
-                text: 'Answer Submitted!',
-                style: {
-                  fontSize: 32,
-                  fontWeight: '700',
-                  color: '#FFFFFF',
-                  textAlign: 'center',
-                  marginBottom: 12
-                }
-              }),
-
-              // Waiting message
-              ui.Text({
-                text: 'Waiting for other players...',
-                style: {
-                  fontSize: 18,
-                  color: '#FFFFFF',
-                  textAlign: 'center',
-                  opacity: 0.9
-                }
-              })
-            ]
-          })
-        ),
-
-        // Show normal game content when NOT showing results and answer not submitted
-        ui.UINode.if(
-          ui.Binding.derive([this.showResultBinding, this.answerSubmittedBinding], (showResult, answerSubmitted) => !showResult && !answerSubmitted),
+          ui.Binding.derive([this.showResultBinding], (showResult) => !showResult),
           ui.View({
             style: {
               flex: 1,
