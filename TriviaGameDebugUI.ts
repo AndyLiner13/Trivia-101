@@ -109,6 +109,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     new Binding('#16A34A')  // Default green
   ];
   
+  // Debug outline toggle binding
+  private showOutlinesBinding = new Binding(true);
+  private showOutlines: boolean = true;
+  
   // Game data - separate arrays for different question types
   private generalQuestions: TriviaQuestion[] = [];
   private italianBrainrotQuestions: TriviaQuestion[] = [];
@@ -293,8 +297,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             shadowOpacity: 0.3,
             shadowRadius: 12,
             shadowOffset: [0, 6],
-            borderWidth: 2,
-            borderColor: '#FF0000' // Red border for main container
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for main container
           },
           children: [
             // Configuration Screen (shows initially)
@@ -311,8 +315,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: 16,
-                  borderWidth: 2,
-                  borderColor: '#FF0000' // Red border for configuration screen background
+                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for configuration screen background
                 },
                 children: [
                   // Header
@@ -323,8 +327,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       left: 0,
                       right: 0,
                       alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: '#00FF00' // Green border for header
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for header
                     },
                     children: Text({
                       text: 'Players Ready',
@@ -346,8 +350,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       right: '8%',
                       bottom: '35%',
                       alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: '#00FF00' // Green border for players section
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for players section
                     },
                     children: [
                       // Player count header
@@ -356,8 +360,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           flexDirection: 'row',
                           alignItems: 'center',
                           marginBottom: 12,
-                          borderWidth: 2,
-                          borderColor: '#0000FF' // Blue border for player count header
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player count header
                         },
                         children: [
                           Text({
@@ -386,8 +390,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           flexDirection: 'row',
                           flexWrap: 'wrap',
                           justifyContent: 'center',
-                          borderWidth: 2,
-                          borderColor: '#0000FF' // Blue border for players grid
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for players grid
                         },
                         children: this.createStaticPlayersComponents()
                       })
@@ -404,8 +408,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       backgroundColor: 'rgba(255, 255, 255, 0.95)',
                       borderRadius: 12,
                       padding: 12,
-                      borderWidth: 2,
-                      borderColor: '#00FF00' // Green border for game settings panel
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for game settings panel
                     },
                     children: [
                       View({
@@ -413,8 +417,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           flexDirection: 'row',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          borderWidth: 2,
-                          borderColor: '#0000FF' // Blue border for settings row container
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for settings row container
                         },
                         children: [
                           // Category
@@ -422,8 +426,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               alignItems: 'center',
                               flex: 1,
-                              borderWidth: 2,
-                              borderColor: '#800080' // Purple border for category section
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for category section
                             },
                             children: [
                               Text({
@@ -450,8 +454,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               alignItems: 'center',
                               flex: 1,
-                              borderWidth: 2,
-                              borderColor: '#800080' // Purple border for questions section
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for questions section
                             },
                             children: [
                               Text({
@@ -478,8 +482,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               alignItems: 'center',
                               flex: 1,
-                              borderWidth: 2,
-                              borderColor: '#800080' // Purple border for time section
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for time section
                             },
                             children: [
                               Text({
@@ -494,8 +498,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 style: {
                                   flexDirection: 'row',
                                   alignItems: 'center',
-                                  borderWidth: 2,
-                                  borderColor: '#000000' // Black border for time content container
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for time content container
                                 },
                                 children: [
                                   Text({
@@ -523,8 +527,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               alignItems: 'center',
                               flex: 1,
-                              borderWidth: 2,
-                              borderColor: '#800080' // Purple border for difficulty section
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for difficulty section
                             },
                             children: [
                               Text({
@@ -554,8 +558,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               alignItems: 'center',
                               flex: 1,
-                              borderWidth: 2,
-                              borderColor: '#800080' // Purple border for auto-advance section
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for auto-advance section
                             },
                             children: [
                               Text({
@@ -580,8 +584,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               alignItems: 'center',
                               flex: 1,
-                              borderWidth: 2,
-                              borderColor: '#800080' // Purple border for mute section
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for mute section
                             },
                             children: [
                               Text({
@@ -618,8 +622,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  borderWidth: 2,
-                  borderColor: '#FF0000' // Red border for game UI container
+                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for game UI container
                 },
                 children: [
                   // Timer - positioned based on whether there's an image
@@ -641,8 +645,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         shadowOpacity: 0.2,
                         shadowRadius: 3,
                         shadowOffset: [0, 1],
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for timer (with image)
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for timer (with image)
                       },
                       children: Text({
                         text: this.timerBinding,
@@ -673,8 +677,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         shadowOpacity: 0.2,
                         shadowRadius: 3,
                         shadowOffset: [0, 1],
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for timer (without image)
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for timer (without image)
                       },
                       children: Text({
                         text: this.timerBinding,
@@ -697,8 +701,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         right: '5%',
                         top: this.answerCountTracking.derive(count => count === 2 ? '25%' : '30%'), // Slightly below center of image area
                         alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for answer count (with image)
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for answer count (with image)
                       },
                       children: [
                         Text({
@@ -729,8 +733,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         right: '5%',
                         top: this.answerCountTracking.derive(count => count === 2 ? '42%' : '35%'), // Center of question area
                         alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for answer count (without image)
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for answer count (without image)
                       },
                       children: [
                         Text({
@@ -766,8 +770,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           top: '20%',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderWidth: 2,
-                          borderColor: '#00FF00' // Green border for question container (no image, 2 answers)
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (no image, 2 answers)
                         },
                         children: View({
                           style: {
@@ -781,8 +785,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             paddingVertical: 16,
                             alignItems: 'center',
                             justifyContent: 'center',
-                            borderWidth: 2,
-                            borderColor: '#0000FF' // Blue border for question text box (no image, 2 answers)
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for question text box (no image, 2 answers)
                           },
                           children: [
                             // Question text
@@ -816,8 +820,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           top: '16%',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderWidth: 2,
-                          borderColor: '#00FF00' // Green border for question container (no image, 3+ answers)
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (no image, 3+ answers)
                         },
                         children: View({
                           style: {
@@ -836,8 +840,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             alignSelf: 'center',
                             maxWidth: '70%',
                             marginHorizontal: 16,
-                            borderWidth: 2,
-                            borderColor: '#0000FF' // Blue border for question text box (no image, 3+ answers)
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for question text box (no image, 3+ answers)
                           },
                           children: [
                             // Question text
@@ -869,8 +873,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         top: '2%',
                         height: '15%',
                         alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for question container (with image)
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
                       children: View({
                         style: {
@@ -889,8 +893,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           alignSelf: 'center',
                           maxWidth: '80%',
                           marginHorizontal: 16,
-                          borderWidth: 2,
-                          borderColor: '#0000FF' // Blue border for question text box (with image)
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for question text box (with image)
                         },
                         children: [
                           // Question text
@@ -922,8 +926,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         bottom: this.answerCountTracking.derive(count => count === 2 ? '25%' : '35%'), // Larger area for 2-answer questions
                         alignItems: 'center',
                         justifyContent: 'center',
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for question image container
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question image container
                       },
                       children: Image({
                         source: this.questionImageBinding.derive(imageId => {
@@ -958,8 +962,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       left: 15,
                       right: 15,
                       height: 100,
-                      borderWidth: 2,
-                      borderColor: '#00FF00' // Green border for answer options grid
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for answer options grid
                     },
                     children: [
                       // Dynamic layout based on number of answers
@@ -973,8 +977,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             flexWrap: 'wrap',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            borderWidth: 2,
-                            borderColor: '#0000FF' // Blue border for dynamic layout container
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for dynamic layout container
                           },
                           children: [
                             // For 2-answer questions: Show options 3 and 4, hide 1 and 2
@@ -988,8 +992,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   flexWrap: 'wrap',
                                   justifyContent: 'center',
                                   alignItems: 'center', // Changed from 'flex-end' to 'center' for consistent spacing
-                                  borderWidth: 2,
-                                  borderColor: '#800080' // Purple border for 2-answer layout
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for 2-answer layout
                                 },
                                 children: [
                                   // Empty spacers for top row (where options 1 and 2 would be)
@@ -1000,8 +1004,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       marginRight: 6,
                                       marginBottom: 6,
                                       opacity: 0, // Invisible spacer
-                                      borderWidth: 2,
-                                      borderColor: '#000000' // Black border for spacer 1
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for spacer 1
                                     }
                                   }),
                                   View({
@@ -1010,8 +1014,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       height: 42,
                                       marginBottom: 6,
                                       opacity: 0, // Invisible spacer
-                                      borderWidth: 2,
-                                      borderColor: '#000000' // Black border for spacer 2
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for spacer 2
                                     }
                                   }),
                                   
@@ -1023,8 +1027,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         width: '48%',
                                         height: 42,
                                         marginRight: 6,
-                                        borderWidth: 2,
-                                        borderColor: '#000000' // Black border for answer 0 container (2-answer layout)
+                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container (2-answer layout)
                                       },
                                       children: this.createAnswerButton(0, '#EAB308', '797899126007085')
                                     })
@@ -1036,8 +1040,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         width: '48%',
                                         height: 42,
-                                        borderWidth: 2,
-                                        borderColor: '#000000' // Black border for answer 1 container (2-answer layout)
+                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container (2-answer layout)
                                       },
                                       children: this.createAnswerButton(1, '#16A34A', '1286736292915198')
                                     })
@@ -1057,8 +1061,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   flexWrap: 'wrap',
                                   justifyContent: 'center',
                                   alignItems: 'center',
-                                  borderWidth: 2,
-                                  borderColor: '#800080' // Purple border for 3+ answer layout
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for 3+ answer layout
                                 },
                                 children: [
                                   // Answer 0 (Red/Triangle) - Option 1
@@ -1070,8 +1074,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         height: 42,
                                         marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
                                         marginBottom: 6,
-                                        borderWidth: 2,
-                                        borderColor: '#000000' // Black border for answer 0 container (3+ answer layout)
+                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container (3+ answer layout)
                                       },
                                       children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
                                     })
@@ -1085,8 +1089,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
                                         height: 42,
                                         marginBottom: 6,
-                                        borderWidth: 2,
-                                        borderColor: '#000000' // Black border for answer 1 container (3+ answer layout)
+                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container (3+ answer layout)
                                       },
                                       children: this.createAnswerButton(1, '#2563EB', '764343253011569')
                                     })
@@ -1101,8 +1105,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         height: 42,
                                         marginRight: 6,
                                         marginBottom: 6,
-                                        borderWidth: 2,
-                                        borderColor: '#000000' // Black border for answer 2 container (3+ answer layout)
+                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 2 container (3+ answer layout)
                                       },
                                       children: this.createAnswerButton(2, '#EAB308', '797899126007085')
                                     })
@@ -1116,8 +1120,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         width: '48%',
                                         height: 42,
                                         marginBottom: 6,
-                                        borderWidth: 2,
-                                        borderColor: '#000000' // Black border for answer 3 container (3+ answer layout)
+                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 3 container (3+ answer layout)
                                       },
                                       children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
                                     })
@@ -1143,8 +1147,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       alignItems: 'center',
                       justifyContent: 'center',
                       display: this.showWaitingBinding.derive(show => show ? 'flex' : 'none'),
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red border for waiting overlay
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for waiting overlay
                     },
                     children: View({
                       style: {
@@ -1153,8 +1157,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         padding: 20,
                         alignItems: 'center',
                         maxWidth: '60%',
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for waiting content box
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for waiting content box
                       },
                       children: [
                         Text({
@@ -1189,8 +1193,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       bottom: 0,
                       backgroundColor: '#F3F4F6',
                       display: this.showLeaderboardBinding.derive(show => show ? 'flex' : 'none'),
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red border for leaderboard overlay
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for leaderboard overlay
                     },
                     children: [
                       // Header
@@ -1201,8 +1205,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           left: 0,
                           right: 0,
                           alignItems: 'center',
-                          borderWidth: 2,
-                          borderColor: '#00FF00' // Green border for leaderboard header container
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for leaderboard header container
                         },
                         children: View({
                           style: {
@@ -1214,8 +1218,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             shadowOpacity: 0.1,
                             shadowRadius: 6,
                             shadowOffset: [0, 2],
-                            borderWidth: 2,
-                            borderColor: '#0000FF' // Blue border for leaderboard header title box
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for leaderboard header title box
                           },
                           children: Text({
                             text: 'Leaderboard',
@@ -1237,8 +1241,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           left: '10%',
                           right: '10%',
                           flexDirection: 'column',
-                          borderWidth: 2,
-                          borderColor: '#00FF00' // Green border for leaderboard list container
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for leaderboard list container
                         },
                         children: [
                           // Player entries with improved spacing
@@ -1257,8 +1261,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 shadowOpacity: 0.1,
                                 shadowRadius: 4,
                                 shadowOffset: [0, 1],
-                                borderWidth: 2,
-                                borderColor: '#0000FF' // Blue border for player 1 entry
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 1 entry
                               },
                               children: [
                                 View({
@@ -1345,8 +1349,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 shadowOpacity: 0.1,
                                 shadowRadius: 4,
                                 shadowOffset: [0, 1],
-                                borderWidth: 2,
-                                borderColor: '#0000FF' // Blue border for player 2 entry
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 2 entry
                               },
                               children: [
                                 View({
@@ -1432,8 +1436,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 shadowOpacity: 0.1,
                                 shadowRadius: 4,
                                 shadowOffset: [0, 1],
-                                borderWidth: 2,
-                                borderColor: '#0000FF' // Blue border for player 3 entry
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 3 entry
                               },
                               children: [
                                 View({
@@ -1520,8 +1524,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       alignItems: 'center',
                       justifyContent: 'center',
                       display: this.showErrorBinding.derive(show => show ? 'flex' : 'none'),
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red border for error screen overlay
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for error screen overlay
                     },
                     children: View({
                       style: {
@@ -1534,8 +1538,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         shadowOpacity: 0.3,
                         shadowRadius: 8,
                         shadowOffset: [0, 4],
-                        borderWidth: 2,
-                        borderColor: '#00FF00' // Green border for error content box
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for error content box
                       },
                       children: [
                         // Error icon
@@ -1576,8 +1580,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             paddingHorizontal: 16,
                             paddingVertical: 8,
                             alignItems: 'center',
-                            borderWidth: 2,
-                            borderColor: '#0000FF' // Blue border for back to settings button
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for back to settings button
                           },
                           onPress: () => this.hideErrorScreen(),
                           children: [
@@ -1795,6 +1799,30 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       }
                     })
                   ]
+                }),
+
+                // Toggle Outlines
+                Pressable({
+                  style: {
+                    backgroundColor: this.showOutlinesBinding.derive(show => show ? '#16A34A' : '#DC2626'),
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.toggleOutlines(),
+                  children: [
+                    Text({
+                      text: this.showOutlinesBinding.derive(show => show ? '🔲 Outlines' : '⬜ Outlines'),
+                      style: {
+                        fontSize: 8,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
                 })
               ]
             })
@@ -1981,6 +2009,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.preShuffleQuestionOrders();
   }
 
+  // Toggle outline borders on/off
+  private toggleOutlines(): void {
+    this.showOutlines = !this.showOutlines;
+    this.showOutlinesBinding.set(this.showOutlines);
+    console.log(this.showOutlines ? "✅ Outlines enabled" : "❌ Outlines disabled");
+  }
+
   // Convert CustomQuizQuestion[] to TriviaQuestion[]
   private loadCustomQuiz(questions: CustomQuizQuestion[]): TriviaQuestion[] {
     return questions.map((item, index) => ({
@@ -2099,8 +2134,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               alignItems: 'center',
               marginBottom: 8,
               marginRight: 12,
-              borderWidth: 2,
-              borderColor: '#800080' // Purple border for individual player container
+              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for individual player container
             },
             children: [
               // Player avatar - reactive based on current player at this index
@@ -2114,8 +2149,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   justifyContent: 'center',
                   marginBottom: 4,
                   overflow: 'hidden',
-                  borderWidth: 2,
-                  borderColor: '#000000' // Black border for player avatar container
+                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                  borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for player avatar container
                 },
                 children: [
                   // Show headshot if available
@@ -2216,8 +2251,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             justifyContent: 'center',
             padding: 20,
             width: '100%',
-            borderWidth: 2,
-            borderColor: '#800080' // Purple border for empty state container
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for empty state container
           },
           children: Text({
             text: 'No players yet...',
