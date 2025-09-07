@@ -112,6 +112,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   // Debug outline toggle binding
   private showOutlinesBinding = new Binding(true);
   private showOutlines: boolean = true;
+
+  // Specific bindings to track which question screen is active
+  private show4AQuestionScreenBinding = new Binding(false);
+  private show2AQuestionScreenBinding = new Binding(false);
   
   // Game data - separate arrays for different question types
   private generalQuestions: TriviaQuestion[] = [];
@@ -1630,24 +1634,26 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               style: {
                 flexDirection: 'row',
                 flexWrap: 'wrap',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                alignItems: 'center'
               },
               children: [
+                // Top Row - 5 buttons
                 // Config Screen
                 Pressable({
                   style: {
-                    backgroundColor: '#4A5568',
+                    backgroundColor: this.showConfigBinding.derive(show => show ? '#2563EB' : '#4A5568'),
                     borderRadius: 6,
                     paddingVertical: 6,
                     paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
+                    marginBottom: 8,
+                    width: '19%',
                     alignItems: 'center'
                   },
                   onPress: () => this.debugShowConfigScreen(),
                   children: [
                     Text({
-                      text: '⚙️ Config',
+                      text: 'pre-game',
                       style: {
                         fontSize: 9,
                         fontWeight: '600',
@@ -1660,18 +1666,18 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                 // Question Screen
                 Pressable({
                   style: {
-                    backgroundColor: '#4A5568',
+                    backgroundColor: this.show4AQuestionScreenBinding.derive(show => show ? '#2563EB' : '#4A5568'),
                     borderRadius: 6,
                     paddingVertical: 6,
                     paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
+                    marginBottom: 8,
+                    width: '19%',
                     alignItems: 'center'
                   },
                   onPress: () => this.debugShowQuestionScreen(),
                   children: [
                     Text({
-                      text: '❓ Question',
+                      text: '4A',
                       style: {
                         fontSize: 9,
                         fontWeight: '600',
@@ -1684,18 +1690,42 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                 // Question with Image Screen
                 Pressable({
                   style: {
-                    backgroundColor: '#4A5568',
+                    backgroundColor: this.show2AQuestionScreenBinding.derive(show => show ? '#2563EB' : '#4A5568'),
                     borderRadius: 6,
                     paddingVertical: 6,
                     paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
+                    marginBottom: 8,
+                    width: '19%',
                     alignItems: 'center'
                   },
                   onPress: () => this.debugShowQuestionWithImageScreen(),
                   children: [
                     Text({
-                      text: '🖼️ Q+Image',
+                      text: '2A',
+                      style: {
+                        fontSize: 8,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Leaderboard Screen
+                Pressable({
+                  style: {
+                    backgroundColor: this.showLeaderboardBinding.derive(show => show ? '#2563EB' : '#4A5568'),
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 8,
+                    width: '19%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.debugShowLeaderboardScreen(),
+                  children: [
+                    Text({
+                      text: 'Leaderboard',
                       style: {
                         fontSize: 8,
                         fontWeight: '600',
@@ -1708,18 +1738,18 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                 // Results Screen
                 Pressable({
                   style: {
-                    backgroundColor: '#4A5568',
+                    backgroundColor: this.showWaitingBinding.derive(show => show ? '#2563EB' : '#4A5568'),
                     borderRadius: 6,
                     paddingVertical: 6,
                     paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
+                    marginBottom: 8,
+                    width: '19%',
                     alignItems: 'center'
                   },
                   onPress: () => this.debugShowResultsScreen(),
                   children: [
                     Text({
-                      text: '📊 Results',
+                      text: 'Results',
                       style: {
                         fontSize: 9,
                         fontWeight: '600',
@@ -1729,71 +1759,25 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   ]
                 }),
 
-                // Leaderboard Screen
-                Pressable({
-                  style: {
-                    backgroundColor: '#4A5568',
-                    borderRadius: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.debugShowLeaderboardScreen(),
-                  children: [
-                    Text({
-                      text: '🏆 Leaderboard',
-                      style: {
-                        fontSize: 9,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-
+                // Bottom Row - 2 buttons
                 // Error Screen
                 Pressable({
                   style: {
-                    backgroundColor: '#4A5568',
+                    backgroundColor: this.showErrorBinding.derive(show => show ? '#2563EB' : '#4A5568'),
                     borderRadius: 6,
                     paddingVertical: 6,
                     paddingHorizontal: 8,
                     marginBottom: 6,
-                    width: '23%',
+                    width: '48%',
+                    marginRight: '4%',
                     alignItems: 'center'
                   },
                   onPress: () => this.debugShowErrorScreen(),
                   children: [
                     Text({
-                      text: '⚠️ Error',
+                      text: 'Error',
                       style: {
                         fontSize: 9,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-
-                // Reset Questions
-                Pressable({
-                  style: {
-                    backgroundColor: '#4A5568',
-                    borderRadius: 6,
-                    paddingVertical: 6,
-                    paddingHorizontal: 8,
-                    marginBottom: 6,
-                    width: '23%',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.resetQuestionOrders(),
-                  children: [
-                    Text({
-                      text: '🔄 Reset',
-                      style: {
-                        fontSize: 8,
                         fontWeight: '600',
                         color: '#FFFFFF'
                       }
@@ -1809,13 +1793,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     paddingVertical: 6,
                     paddingHorizontal: 8,
                     marginBottom: 6,
-                    width: '23%',
+                    width: '48%',
                     alignItems: 'center'
                   },
                   onPress: () => this.toggleOutlines(),
                   children: [
                     Text({
-                      text: this.showOutlinesBinding.derive(show => show ? '🔲 Outlines' : '⬜ Outlines'),
+                      text: this.showOutlinesBinding.derive(show => show ? 'Outlines' : 'Outlines'),
                       style: {
                         fontSize: 8,
                         fontWeight: '600',
@@ -2365,6 +2349,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+    this.show4AQuestionScreenBinding.set(false);
+    this.show2AQuestionScreenBinding.set(false);
   }
 
   private async debugShowQuestionScreen(): Promise<void> {
@@ -2375,6 +2361,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+
+    // Set 4A screen as active and 2A screen as inactive
+    this.show4AQuestionScreenBinding.set(true);
+    this.show2AQuestionScreenBinding.set(false);
 
     // Get next question from pre-shuffled General questions
     // This goes sequentially through the pre-shuffled array (no duplicates)
@@ -2427,6 +2417,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+    this.show4AQuestionScreenBinding.set(false);
+    this.show2AQuestionScreenBinding.set(true);
 
     // Get next question from pre-shuffled Italian Brainrot questions
     // This goes sequentially through the pre-shuffled array (no duplicates)
@@ -2478,6 +2470,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(true);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+    this.show4AQuestionScreenBinding.set(false);
+    this.show2AQuestionScreenBinding.set(false);
   }
 
   private debugShowLeaderboardScreen(): void {
@@ -2486,6 +2480,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(true);
     this.showErrorBinding.set(false);
+    this.show4AQuestionScreenBinding.set(false);
+    this.show2AQuestionScreenBinding.set(false);
   }
 
   private debugShowErrorScreen(): void {
@@ -2494,6 +2490,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(true);
+    this.show4AQuestionScreenBinding.set(false);
+    this.show2AQuestionScreenBinding.set(false);
   }
 
   private hideErrorScreen(): void {
