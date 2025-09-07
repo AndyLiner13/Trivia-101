@@ -1888,14 +1888,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for 1st place
                           },
                           children: [
-                            // Crown above avatar
-                            Text({
-                              text: '👑',
-                              style: {
-                                fontSize: 20,
-                                marginBottom: 4
-                              }
-                            }),
                             // Avatar (simulated with player 1)
                             UINode.if(
                               this.leaderboardDataBinding.derive(players =>
