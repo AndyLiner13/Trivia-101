@@ -901,12 +901,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         left: 0,
                         right: 0,
                         top: 0,
-                        bottom: 130, // Leave 130px at bottom for answer buttons section (120px + 10px padding)
+                        bottom: 0, // Fill available space, answer section will overlay at bottom
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
                         alignItems: 'stretch',
                         paddingTop: '1%',
-                        paddingBottom: 0,
+                        paddingBottom: 100, // Add bottom padding to prevent overlap with answer section
                         borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                         borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
@@ -1077,9 +1077,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       bottom: 0, // Flush with bottom of red container
                       left: 0,
                       right: 0,
-                      height: 120, // Fixed pixel height for answer buttons
-                      paddingHorizontal: 15,
-                      paddingVertical: 5,
+                      // Removed fixed height to hug contents
+                      paddingHorizontal: 8, // Reduced from 16px to 8px for more button space
+                      paddingTop: 5,
+                      paddingBottom: 8, // Reduced from 16px to 8px for more button space
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for answer options grid
                     },
