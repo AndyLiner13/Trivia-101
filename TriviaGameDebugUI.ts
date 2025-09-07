@@ -1726,10 +1726,20 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         const assetData = await asset.fetchAsData();
         const jsonData = assetData.asJSON();
 
-        if (jsonData && Array.isArray(jsonData)) {
-          // Convert Open Trivia Database format to TriviaQuestion format
+        console.log("🔍 Debug: General questions JSON structure:", typeof jsonData, (jsonData as any)?.questions ? "has questions property" : "no questions property");
+        
+        if (jsonData) {
+          // Parse the Open Trivia Database format (nested structure)
           this.generalQuestions = this.parseOpenTriviaFormat(jsonData);
           console.log("✅ Loaded", this.generalQuestions.length, "General questions");
+          
+          // Log first few questions for debugging
+          if (this.generalQuestions.length > 0) {
+            console.log("📝 First general question:", this.generalQuestions[0].question);
+            console.log("📝 First question answers:", this.generalQuestions[0].answers);
+          }
+        } else {
+          console.log("❌ Failed to parse general questions JSON");
         }
       }
 
@@ -2184,12 +2194,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     console.log(`🎯 Answer selected: ${selectedAnswer?.text}`);
     console.log(`✅ Correct answer: ${isCorrect ? 'Yes' : 'No'}`);
 
-    // Debug: Log all answers with their correct status
-    console.log(`🔍 All answers for debugging:`);
-    this.currentQuestionAnswers.forEach((answer, index) => {
-      console.log(`  [${index}] "${answer.text}" - ${answer.correct ? 'CORRECT' : 'INCORRECT'}`);
-    });
-
     // Find and log the correct answer
     const correctAnswer = this.currentQuestionAnswers.find(answer => answer.correct);
     if (correctAnswer) {
@@ -2200,10 +2204,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     for (let i = 0; i < this.currentQuestionAnswers.length; i++) {
       const answer = this.currentQuestionAnswers[i];
       if (answer?.correct) {
-        console.log(`✅ Setting button ${i} to GREEN (correct): "${answer.text}"`);
         this.answerButtonColors[i].set('#16A34A'); // Green for correct
       } else {
-        console.log(`❌ Setting button ${i} to RED (incorrect): "${answer.text}"`);
         this.answerButtonColors[i].set('#DC2626'); // Red for all incorrect answers
       }
     }
@@ -2223,7 +2225,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private async debugShowQuestionScreen(): Promise<void> {
-    console.log("❓ Showing question screen");
+    console.log("❓ Showing next sequential question from pre-shuffled General questions");
 
     // Hide other screens
     this.showConfigBinding.set(false);
@@ -2232,15 +2234,17 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showErrorBinding.set(false);
 
     // Get next question from pre-shuffled General questions
+    // This goes sequentially through the pre-shuffled array (no duplicates)
     const question = this.getNextGeneralQuestion();
     if (question) {
-      const shuffledQuestion = this.shuffleQuestionAnswers(question);
+      // Use the question as-is without shuffling answers (maintain original order)
+      // The questions array is already pre-shuffled during initialization
 
       // Reset answer state for new question
       this.resetAnswerState();
 
-      // Store the shuffled answers for answer checking
-      this.currentQuestionAnswers = shuffledQuestion.answers;
+      // Store the original answers for answer checking
+      this.currentQuestionAnswers = question.answers;
 
       // Update UI bindings
       this.questionBinding.set(question.question);
@@ -2259,7 +2263,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       // Update answer count display
       this.answerCountBinding.set(question.answers.length.toString());
 
-      console.log("✅ General question loaded:", shuffledQuestion.question);
+      console.log("✅ General question loaded:", question.question);
     } else {
       console.log("❌ No general questions available");
       this.questionBinding.set("No general questions available. Please set the generalQuestions asset.");
