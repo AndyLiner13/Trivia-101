@@ -398,6 +398,9 @@ export class TriviaGame extends ui.UIComponent {
   private correctAnswerBinding = new Binding(-1);
   private answerCountsBinding = new Binding([0, 0, 0, 0]);
   
+  // Current answer counts tracking (separate from binding for easier manipulation)
+  private currentAnswerCounts: number[] = [0, 0, 0, 0];
+  
   // Answer selection and feedback state
   private answerRevealed: boolean = false;
   private answerRevealedBinding = new Binding(false); // Binding for UI reactivity
@@ -966,6 +969,10 @@ export class TriviaGame extends ui.UIComponent {
     // Reset answer count tracking
     this.answerCountTracking.set(4);
 
+    // Reset individual answer counts
+    this.currentAnswerCounts = [0, 0, 0, 0];
+    this.answerCountsBinding.set([...this.currentAnswerCounts]);
+
     // Reset answer button colors
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
     for (let i = 0; i < 4; i++) {
@@ -1022,6 +1029,10 @@ export class TriviaGame extends ui.UIComponent {
 
     // Reset answer count tracking
     this.answerCountTracking.set(4);
+
+    // Reset individual answer counts
+    this.currentAnswerCounts = [0, 0, 0, 0];
+    this.answerCountsBinding.set([...this.currentAnswerCounts]);
 
     // Reset answer button colors
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
@@ -1175,6 +1186,10 @@ export class TriviaGame extends ui.UIComponent {
 
     // Reset answer count when starting new question
     this.answerCountBinding.set("0");
+    
+    // Reset individual answer counts for new question
+    this.currentAnswerCounts = [0, 0, 0, 0];
+    this.answerCountsBinding.set([...this.currentAnswerCounts]);
 
     // Start countdown timer
     this.startTimer();
@@ -1545,6 +1560,10 @@ export class TriviaGame extends ui.UIComponent {
     // Reset answer count when starting new question
     this.answerCountBinding.set("0");
     
+    // Reset individual answer counts
+    this.currentAnswerCounts = [0, 0, 0, 0];
+    this.answerCountsBinding.set([...this.currentAnswerCounts]);
+
     // Start countdown timer
     this.startTimer();
   }
@@ -1555,14 +1574,14 @@ export class TriviaGame extends ui.UIComponent {
     this.isShowingResults = true;
     this.showWaitingBinding.set(false); // Hide waiting screen when results come in
     this.correctAnswerBinding.set(eventData.correctAnswerIndex);
-    this.answerCountsBinding.set(eventData.answerCounts);
+    this.answerCountsBinding.set([...this.currentAnswerCounts]); // Use our tracked counts
     
     // Store the results data for state responses
     this.lastCorrectAnswerIndex = eventData.correctAnswerIndex;
-    this.lastAnswerCounts = eventData.answerCounts;
+    this.lastAnswerCounts = [...this.currentAnswerCounts]; // Use our tracked counts
     
-    // Calculate total answers
-    this.totalAnswers = eventData.answerCounts.reduce((sum, count) => sum + count, 0);
+    // Calculate total answers from our tracked counts
+    this.totalAnswers = this.currentAnswerCounts.reduce((sum, count) => sum + count, 0);
     this.answerCountBinding.set(this.totalAnswers.toString());
     
     // Stop timer
@@ -1580,6 +1599,18 @@ export class TriviaGame extends ui.UIComponent {
     
     // Track this player as having answered
     this.playersAnswered.add(eventData.playerId);
+    
+    // Update individual answer count for the chosen answer
+    if (eventData.answerIndex >= 0 && eventData.answerIndex < 4) {
+      // Get current counts from the binding by creating a new array with updated values
+      const currentCounts = [0, 0, 0, 0]; // Initialize with zeros
+      // We need to track counts separately since bindings don't expose current values directly
+      if (!this.currentAnswerCounts) {
+        this.currentAnswerCounts = [0, 0, 0, 0];
+      }
+      this.currentAnswerCounts[eventData.answerIndex]++;
+      this.answerCountsBinding.set([...this.currentAnswerCounts]);
+    }
     
     // Update answer count immediately
     this.answerCountBinding.set(this.playersAnswered.size.toString());
@@ -1668,9 +1699,8 @@ export class TriviaGame extends ui.UIComponent {
     
     // Also send network event for TriviaPhone instances that might be listening
     // Use actual answer count in a way that won't reset our display
-    // Create answer counts array based on the number of answers for this question
-    const actualAnswerCounts = new Array(this.currentQuestion.answers.length).fill(0);
-    actualAnswerCounts[correctAnswerIndex] = this.playersAnswered.size;
+    // Use the actual tracked answer counts
+    const actualAnswerCounts = [...this.currentAnswerCounts];
     
     // Try world registry first
     if (triviaPhones && Array.isArray(triviaPhones)) {
@@ -3882,7 +3912,7 @@ export class TriviaGame extends ui.UIComponent {
           }
         }),
 
-        // Number indicator (only visible when answer is revealed)
+        // Number indicator (only visible when answers are revealed)
         UINode.if(
           this.answerRevealedBinding,
           View({
@@ -3893,7 +3923,10 @@ export class TriviaGame extends ui.UIComponent {
               paddingRight: 8 // Added right padding
             },
             children: Text({
-              text: (index + 1).toString(),
+              text: this.answerCountsBinding.derive(counts => {
+                // Simple direct mapping: button position index = answer count index
+                return (counts[index] || 0).toString();
+              }),
               style: {
                 fontSize: 10,
                 fontWeight: 'bold',
