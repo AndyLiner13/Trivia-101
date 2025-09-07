@@ -292,7 +292,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             shadowColor: 'black',
             shadowOpacity: 0.3,
             shadowRadius: 12,
-            shadowOffset: [0, 6]
+            shadowOffset: [0, 6],
+            borderWidth: 2,
+            borderColor: '#FF0000' // Red border for main container
           },
           children: [
             // Configuration Screen (shows initially)
@@ -308,7 +310,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   backgroundColor: 'linear-gradient(180deg, #7C3AED 0%, #3B82F6 100%)',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: 16
+                  padding: 16,
+                  borderWidth: 2,
+                  borderColor: '#FF0000' // Red border for configuration screen background
                 },
                 children: [
                   // Header
@@ -318,7 +322,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       top: '8%',
                       left: 0,
                       right: 0,
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      borderWidth: 2,
+                      borderColor: '#00FF00' // Green border for header
                     },
                     children: Text({
                       text: 'Players Ready',
@@ -339,7 +345,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       left: '8%',
                       right: '8%',
                       bottom: '35%',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      borderWidth: 2,
+                      borderColor: '#00FF00' // Green border for players section
                     },
                     children: [
                       // Player count header
@@ -347,7 +355,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         style: {
                           flexDirection: 'row',
                           alignItems: 'center',
-                          marginBottom: 12
+                          marginBottom: 12,
+                          borderWidth: 2,
+                          borderColor: '#0000FF' // Blue border for player count header
                         },
                         children: [
                           Text({
@@ -375,7 +385,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           width: '100%',
                           flexDirection: 'row',
                           flexWrap: 'wrap',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          borderWidth: 2,
+                          borderColor: '#0000FF' // Blue border for players grid
                         },
                         children: this.createStaticPlayersComponents()
                       })
@@ -391,21 +403,27 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       right: '8%',
                       backgroundColor: 'rgba(255, 255, 255, 0.95)',
                       borderRadius: 12,
-                      padding: 12
+                      padding: 12,
+                      borderWidth: 2,
+                      borderColor: '#00FF00' // Green border for game settings panel
                     },
                     children: [
                       View({
                         style: {
                           flexDirection: 'row',
                           justifyContent: 'space-between',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          borderWidth: 2,
+                          borderColor: '#0000FF' // Blue border for settings row container
                         },
                         children: [
                           // Category
                           View({
                             style: {
                               alignItems: 'center',
-                              flex: 1
+                              flex: 1,
+                              borderWidth: 2,
+                              borderColor: '#800080' // Purple border for category section
                             },
                             children: [
                               Text({
@@ -431,7 +449,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           View({
                             style: {
                               alignItems: 'center',
-                              flex: 1
+                              flex: 1,
+                              borderWidth: 2,
+                              borderColor: '#800080' // Purple border for questions section
                             },
                             children: [
                               Text({
@@ -457,7 +477,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           View({
                             style: {
                               alignItems: 'center',
-                              flex: 1
+                              flex: 1,
+                              borderWidth: 2,
+                              borderColor: '#800080' // Purple border for time section
                             },
                             children: [
                               Text({
@@ -471,7 +493,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               View({
                                 style: {
                                   flexDirection: 'row',
-                                  alignItems: 'center'
+                                  alignItems: 'center',
+                                  borderWidth: 2,
+                                  borderColor: '#000000' // Black border for time content container
                                 },
                                 children: [
                                   Text({
@@ -498,7 +522,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           View({
                             style: {
                               alignItems: 'center',
-                              flex: 1
+                              flex: 1,
+                              borderWidth: 2,
+                              borderColor: '#800080' // Purple border for difficulty section
                             },
                             children: [
                               Text({
@@ -527,7 +553,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           View({
                             style: {
                               alignItems: 'center',
-                              flex: 1
+                              flex: 1,
+                              borderWidth: 2,
+                              borderColor: '#800080' // Purple border for auto-advance section
                             },
                             children: [
                               Text({
@@ -551,7 +579,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           View({
                             style: {
                               alignItems: 'center',
-                              flex: 1
+                              flex: 1,
+                              borderWidth: 2,
+                              borderColor: '#800080' // Purple border for mute section
                             },
                             children: [
                               Text({
@@ -1996,7 +2026,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               flexDirection: 'column',
               alignItems: 'center',
               marginBottom: 8,
-              marginRight: 12
+              marginRight: 12,
+              borderWidth: 2,
+              borderColor: '#800080' // Purple border for individual player container
             },
             children: [
               // Player avatar - reactive based on current player at this index
@@ -2009,7 +2041,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 4,
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  borderWidth: 2,
+                  borderColor: '#000000' // Black border for player avatar container
                 },
                 children: [
                   // Show headshot if available
@@ -2109,7 +2143,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             alignItems: 'center',
             justifyContent: 'center',
             padding: 20,
-            width: '100%'
+            width: '100%',
+            borderWidth: 2,
+            borderColor: '#800080' // Purple border for empty state container
           },
           children: Text({
             text: 'No players yet...',
