@@ -24,4 +24,3 @@ Include emojis in console.logs. A check should go at the beginning of good logs 
 Prop 'children' of View component must be a UINode, an array of UINodes, or undefined
 at checkUIChildren (horizon/ui/HorizonUI.ts:3742:12)
 at View (horizon/ui/HorizonUI.ts:3119:2)
-at TriviaGameDebugUI.initializeUI (TriviaGameDebugUI.ts:956:41)

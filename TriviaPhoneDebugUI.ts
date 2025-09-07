@@ -2159,14 +2159,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         width: '100%',
         height: '100%',
         backgroundColor: '#6366F1',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        borderWidth: 2,
+        borderColor: '#FF0000' // Red - layer within phone frame
       },
       children: [
         // Header with lock/unlock
         ui.View({
           style: {
             padding: 16,
-            alignItems: 'center'
+            alignItems: 'center',
+            borderWidth: 2,
+            borderColor: '#00FF00' // Green - nested within red
           },
           children: [
             ui.Pressable({
@@ -2176,7 +2180,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 paddingHorizontal: 16,
                 paddingVertical: 8,
                 flexDirection: 'row',
-                alignItems: 'center'
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               onPress: () => this.toggleSettingsLock(),
               children: [
@@ -2212,7 +2218,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingBottom: 80,
             opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
               settings.isLocked ? 0.6 : 1
-            )
+            ),
+            borderWidth: 2,
+            borderColor: '#00FF00' // Green - nested within red
           },
           children: [
             // Number of Questions
@@ -2221,7 +2229,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderRadius: 12,
                 padding: 16,
-                marginBottom: 16
+                marginBottom: 16,
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               children: [
                 ui.Text({
@@ -2237,7 +2247,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.View({
                   style: {
                     flexDirection: 'row',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    borderWidth: 2,
+                    borderColor: '#800080' // Purple - nested within blue
                   },
                   children: [1, 5, 10, 15, 20].map(count =>
                     ui.Pressable({
@@ -2249,7 +2261,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         borderRadius: 8,
                         paddingVertical: 12,
                         marginHorizontal: 4,
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        borderWidth: 2,
+                        borderColor: '#000000' // Black - nested within purple
                       },
                       onPress: () => this.updateGameSetting('numberOfQuestions', count),
                       children: [
@@ -2276,7 +2290,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderRadius: 12,
                 padding: 16,
-                marginBottom: 16
+                marginBottom: 16,
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               children: [
                 ui.Text({
@@ -2291,7 +2307,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 }),
                 ui.View({
                   style: {
-                    flexDirection: 'column'
+                    flexDirection: 'column',
+                    borderWidth: 2,
+                    borderColor: '#800080' // Purple - nested within blue
                   },
                   children: ['General', 'Italian Brainrot Quiz'].map(category =>
                     ui.Pressable({
@@ -2303,7 +2321,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         paddingVertical: 12,
                         paddingHorizontal: 16,
                         marginBottom: 8,
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        borderWidth: 2,
+                        borderColor: '#000000' // Black - nested within purple
                       },
                       onPress: () => this.updateGameSetting('category', category),
                       children: [
@@ -2331,7 +2351,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderRadius: 12,
                 padding: 16,
-                marginBottom: 16
+                marginBottom: 16,
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               children: [
                 ui.Text({
@@ -2347,7 +2369,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.View({
                   style: {
                     flexDirection: 'row',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    borderWidth: 2,
+                    borderColor: '#800080' // Purple - nested within blue
                   },
                   children: ['easy', 'medium', 'hard'].map(difficulty =>
                     ui.Pressable({
@@ -2359,7 +2383,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         borderRadius: 8,
                         paddingVertical: 12,
                         marginHorizontal: 4,
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        borderWidth: 2,
+                        borderColor: '#000000' // Black - nested within purple
                       },
                       onPress: () => this.updateGameSetting('difficulty', difficulty),
                       children: [
@@ -2386,7 +2412,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderRadius: 12,
                 padding: 16,
-                marginBottom: 16
+                marginBottom: 16,
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               children: [
                 ui.Text({
@@ -2403,7 +2431,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     flexDirection: 'row',
                     flexWrap: 'wrap',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    borderWidth: 2,
+                    borderColor: '#800080' // Purple - nested within blue
                   },
                   children: [10, 15, 30, 45, 60].map(time =>
                     ui.Pressable({
@@ -2415,7 +2445,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         borderRadius: 8,
                         paddingVertical: 8,
                         marginBottom: 8,
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        borderWidth: 2,
+                        borderColor: '#000000' // Black - nested within purple
                       },
                       onPress: () => this.updateGameSetting('timeLimit', time),
                       children: [
@@ -2441,7 +2473,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderRadius: 12,
-                padding: 16
+                padding: 16,
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               children: [
                 ui.Text({
@@ -2464,7 +2498,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     paddingVertical: 12,
                     paddingHorizontal: 16,
                     marginBottom: 8,
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: '#800080' // Purple - nested within blue
                   },
                   onPress: () => this.updateGameSetting('autoAdvance', !this.gameSettings.autoAdvance),
                   children: [
@@ -2489,7 +2525,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     borderRadius: 8,
                     paddingVertical: 12,
                     paddingHorizontal: 16,
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: '#800080' // Purple - nested within blue
                   },
                   onPress: () => this.updateGameSetting('muteDuringQuestions', !this.gameSettings.muteDuringQuestions),
                   children: [
@@ -2518,7 +2556,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: 0,
             right: 0,
             padding: 16,
-            backgroundColor: 'rgba(99, 102, 241, 0.9)'
+            backgroundColor: 'rgba(99, 102, 241, 0.9)',
+            borderWidth: 2,
+            borderColor: '#00FF00' // Green - nested within red
           },
           children: [
             ui.Pressable({
@@ -2526,7 +2566,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 backgroundColor: '#FFFFFF',
                 borderRadius: 12,
                 paddingVertical: 16,
-                alignItems: 'center'
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: '#0000FF' // Blue - nested within green
               },
               onPress: () => this.navigateToPreGame(),
               children: [
@@ -2636,7 +2678,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20
+        padding: 20,
+        borderWidth: 2,
+        borderColor: '#FF0000' // Red - layer within phone frame
       },
       children: [
         // Role Badge
@@ -2651,7 +2695,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             shadowOffset: [0, 4],
             shadowOpacity: 0.3,
             shadowRadius: 8,
-            marginBottom: 32
+            marginBottom: 32,
+            borderWidth: 2,
+            borderColor: '#00FF00' // Green - nested within red
           },
           children: [
             ui.Text({
@@ -2670,7 +2716,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.isHostBinding.derive(isHost => isHost),
           ui.View({
             style: {
-              alignItems: 'center'
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: '#00FF00' // Green - nested within red
             },
             children: [
               // Game Settings Button
