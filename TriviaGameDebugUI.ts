@@ -918,13 +918,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             top: 0,
                             left: 0,
                             right: 0,
-                            height: 50, // Fixed height to accommodate question text with padding (12px top + ~26px text + 12px bottom)
+                            height: 58, // Increased height to accommodate padding (50 + 8)
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'center', // Center the question text
                             width: '100%',
                             flexShrink: 0, // Prevent shrinking
-                            paddingBottom: 8, // Added bottom padding to the blue container
+                            paddingTop: 4, // Added top padding for better balance
+                            paddingBottom: 4, // Reduced bottom padding from 8 to 4
                             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                             borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for header layout container
                           },
@@ -971,7 +972,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         View({
                           style: {
                             position: 'absolute',
-                            top: 50, // Start exactly at the bottom of the blue header container (50px height)
+                            top: 58, // Start exactly at the bottom of the blue header container (58px height)
                             left: 0,
                             right: 0,
                             bottom: this.answerCountTracking.derive(count => count === 2 ? 62 : 110) as any, // Stop above the green answer container (110px height, reduced by 48px for 2-answer questions)
