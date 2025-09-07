@@ -75,6 +75,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   // Leaderboard data
   private leaderboardDataBinding = new Binding<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>>([]);
   
+  // Debug leaderboard flag - when true, show fake static data
+  private showDebugLeaderboard = new Binding(false);
+  
+  // Cache for real player avatars
+  private realPlayerAvatars = new Map<string, ImageSource | null>();
+  
   // Players list binding for reactive UI updates
   private playersListBinding = new Binding<Array<{id: string, name: string}>>([]);
   
@@ -250,26 +256,52 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private async generateRealLeaderboard(): Promise<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>> {
     // Get actual players in the world
     const currentPlayers = this.world.getPlayers();
+    
+    if (currentPlayers.length === 0) {
+      // Return fake data if no players are present
+      console.log("⚠️ No players found, returning fake leaderboard data");
+      return [
+        { name: "Debug Player", score: 10, playerId: "12345", headshotImageSource: undefined },
+        { name: "Debug Player", score: 8, playerId: "12345", headshotImageSource: undefined },
+        { name: "Debug Player", score: 6, playerId: "12345", headshotImageSource: undefined },
+        { name: "Debug Player", score: 4, playerId: "12345", headshotImageSource: undefined },
+        { name: "Debug Player", score: 2, playerId: "12345", headshotImageSource: undefined }
+      ];
+    }
+    
+    // Find the player with the lowest player ID
+    let lowestIdPlayer = currentPlayers[0];
+    let lowestId = BigInt(currentPlayers[0].id.toString());
+    
+    for (const player of currentPlayers) {
+      const playerId = BigInt(player.id.toString());
+      if (playerId < lowestId) {
+        lowestId = playerId;
+        lowestIdPlayer = player;
+      }
+    }
+    
+    console.log(`✅ Found player with lowest ID: ${lowestIdPlayer.name.get()} (ID: ${lowestId})`);
+    
+    // Get player headshot using Social API
+    let headshotImageSource: ImageSource | undefined;
+    try {
+      headshotImageSource = await Social.getAvatarImageSource(lowestIdPlayer, {
+        type: AvatarImageType.HEADSHOT,
+        highRes: true
+      });
+    } catch (error) {
+      console.log("⚠️ Could not get headshot for player");
+    }
+    
+    // Create 5 entries for the player with the lowest ID
     const leaderboard: Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}> = [];
     
-    // Create leaderboard entries for each real player
-    for (const player of currentPlayers) {
-      const playerId = player.id.toString();
-      // Get player headshot using Social API
-      let headshotImageSource: ImageSource | undefined;
-      try {
-        headshotImageSource = await Social.getAvatarImageSource(player, {
-          type: AvatarImageType.HEADSHOT,
-          highRes: true
-        });
-      } catch (error) {
-        // Could not get headshot for player
-      }
-      
+    for (let i = 0; i < 5; i++) {
       leaderboard.push({
-        name: player.name.get(),
+        name: lowestIdPlayer.name.get(),
         score: Math.floor(Math.random() * 10), // Random score for demo
-        playerId: playerId,
+        playerId: lowestIdPlayer.id.toString(),
         headshotImageSource: headshotImageSource
       });
     }
@@ -712,7 +744,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       fontWeight: '500',
                                       color: 'black',
                                       textAlign: 'center',
-                                      lineHeight: 24
+                                      lineHeight: 18
                                     }
                                   })
                                 ]
@@ -845,7 +877,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       fontWeight: '500',
                                       color: 'black',
                                       textAlign: 'center',
-                                      lineHeight: 16
+                                      lineHeight: 18
                                     }
                                   })
                                 ]
@@ -961,7 +993,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     fontWeight: '500',
                                     color: 'black',
                                     textAlign: 'center',
-                                    lineHeight: 16
+                                    lineHeight: 18
                                   }
                                 })
                               ]
@@ -1283,7 +1315,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          top: 12,
+                          top: 8, // Reduced from 12 to 8
                           left: 0,
                           right: 0,
                           alignItems: 'center',
@@ -1294,8 +1326,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           style: {
                             backgroundColor: 'white',
                             borderRadius: 8,
-                            paddingHorizontal: 24,
-                            paddingVertical: 8,
+                            paddingHorizontal: 20, // Reduced from 24 to 20
+                            paddingVertical: 6, // Reduced from 8 to 6
                             shadowColor: 'black',
                             shadowOpacity: 0.1,
                             shadowRadius: 6,
@@ -1306,7 +1338,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           children: Text({
                             text: 'Leaderboard',
                             style: {
-                              fontSize: 18,
+                              fontSize: 16, // Reduced from 18 to 16
                               fontWeight: 'bold',
                               color: '#1F2937'
                             }
@@ -1318,8 +1350,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          top: 60,
-                          bottom: 15,
+                          top: 48, // Reduced from 55 to 48
+                          bottom: 10, // Reduced from 15 to 10
                           left: '10%',
                           right: '10%',
                           flexDirection: 'column',
@@ -1334,8 +1366,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 12,
-                                marginBottom: 8,
+                                padding: 6, // Reduced from 8 to 6
+                                marginBottom: 4, // Reduced from 6 to 4
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -1422,8 +1454,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 12,
-                                marginBottom: 8,
+                                padding: 6, // Reduced from 8 to 6
+                                marginBottom: 4, // Reduced from 6 to 4
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -1509,8 +1541,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 12,
-                                marginBottom: 8,
+                                padding: 6, // Reduced from 8 to 6
+                                marginBottom: 4, // Reduced from 6 to 4
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -1579,6 +1611,180 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 Text({
                                   text: this.leaderboardDataBinding.derive(players =>
                                     players.length > 2 ? players[2].score.toString() : '0'
+                                  ),
+                                  style: {
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                    color: '#1F2937'
+                                  }
+                                })
+                              ]
+                            })
+                          ),
+
+                          UINode.if(
+                            this.leaderboardDataBinding.derive(players => players.length > 3),
+                            View({
+                              style: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                borderRadius: 8,
+                                padding: 6, // Reduced from 8 to 6
+                                marginBottom: 4, // Reduced from 6 to 4
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                shadowColor: 'black',
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                                shadowOffset: [0, 1],
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 4 entry
+                              },
+                              children: [
+                                View({
+                                  style: {
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    flex: 1
+                                  },
+                                  children: [
+                                    View({
+                                      style: {
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: 12,
+                                        backgroundColor: '#F3F4F6',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: 12
+                                      },
+                                      children: Text({
+                                        text: '4',
+                                        style: {
+                                          fontSize: 12,
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      })
+                                    }),
+                                    UINode.if(
+                                      this.leaderboardDataBinding.derive(players =>
+                                        players.length > 3 && players[3].headshotImageSource
+                                      ),
+                                      Image({
+                                        source: this.leaderboardDataBinding.derive(players =>
+                                          players.length > 3 && players[3].headshotImageSource ? players[3].headshotImageSource : null
+                                        ),
+                                        style: {
+                                          width: 30,
+                                          height: 30,
+                                          borderRadius: 15,
+                                          marginRight: 8
+                                        }
+                                      })
+                                    ),
+                                    Text({
+                                      text: this.leaderboardDataBinding.derive(players =>
+                                        players.length > 3 ? players[3].name : ''
+                                      ),
+                                      style: {
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        color: '#1F2937'
+                                      }
+                                    })
+                                  ]
+                                }),
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players =>
+                                    players.length > 3 ? players[3].score.toString() : '0'
+                                  ),
+                                  style: {
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                    color: '#1F2937'
+                                  }
+                                })
+                              ]
+                            })
+                          ),
+
+                          UINode.if(
+                            this.leaderboardDataBinding.derive(players => players.length > 4),
+                            View({
+                              style: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                borderRadius: 8,
+                                padding: 6, // Reduced from 8 to 6
+                                marginBottom: 4, // Reduced from 6 to 4
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                shadowColor: 'black',
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
+                                shadowOffset: [0, 1],
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 5 entry
+                              },
+                              children: [
+                                View({
+                                  style: {
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    flex: 1
+                                  },
+                                  children: [
+                                    View({
+                                      style: {
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: 12,
+                                        backgroundColor: '#F3F4F6',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: 12
+                                      },
+                                      children: Text({
+                                        text: '5',
+                                        style: {
+                                          fontSize: 12,
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      })
+                                    }),
+                                    UINode.if(
+                                      this.leaderboardDataBinding.derive(players =>
+                                        players.length > 4 && players[4].headshotImageSource
+                                      ),
+                                      Image({
+                                        source: this.leaderboardDataBinding.derive(players =>
+                                          players.length > 4 && players[4].headshotImageSource ? players[4].headshotImageSource : null
+                                        ),
+                                        style: {
+                                          width: 30,
+                                          height: 30,
+                                          borderRadius: 15,
+                                          marginRight: 8
+                                        }
+                                      })
+                                    ),
+                                    Text({
+                                      text: this.leaderboardDataBinding.derive(players =>
+                                        players.length > 4 ? players[4].name : ''
+                                      ),
+                                      style: {
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        color: '#1F2937'
+                                      }
+                                    })
+                                  ]
+                                }),
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players =>
+                                    players.length > 4 ? players[4].score.toString() : '0'
                                   ),
                                   style: {
                                     fontSize: 16,
@@ -1799,7 +2005,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     width: '19%',
                     alignItems: 'center'
                   },
-                  onPress: () => this.debugShowLeaderboardScreen(),
+                  onPress: async () => await this.debugShowLeaderboardScreen(),
                   children: [
                     Text({
                       text: 'Leaderboard',
@@ -2335,13 +2541,18 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       return (index + 1).toString();
     };
 
+    // Determine icon size based on texture ID
+    // Star (blue) stays at 18px, others get bigger at 20px
+    const iconSize = iconTextureId === '764343253011569' ? 18 : 20; // Star = 18px, Triangle/Circle/Square = 20px
+
     return Pressable({
       style: {
         width: '100%',
         height: '100%',
         backgroundColor: this.answerButtonColors[index],
         borderRadius: 4,
-        paddingHorizontal: 8,
+        paddingLeft: 12,
+        paddingRight: 8,
         paddingVertical: 6,
         flexDirection: 'row',
         alignItems: 'center',
@@ -2353,8 +2564,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         Image({
           source: ImageSource.fromTextureAsset(textureAsset),
           style: {
-            width: 12,
-            height: 12,
+            width: iconSize,
+            height: iconSize,
+            aspectRatio: 1,
             marginRight: 6
           }
         }),
@@ -2605,7 +2817,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.show2AQuestionScreenBinding.set(false);
   }
 
-  private debugShowLeaderboardScreen(): void {
+  private async debugShowLeaderboardScreen(): Promise<void> {
+    console.log("✅ Showing leaderboard screen");
+    
+    // Generate and set leaderboard data
+    const leaderboardData = await this.generateRealLeaderboard();
+    this.leaderboardDataBinding.set(leaderboardData);
     
     this.showConfigBinding.set(false);
     this.showWaitingBinding.set(false);
@@ -2613,6 +2830,28 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showErrorBinding.set(false);
     this.show4AQuestionScreenBinding.set(false);
     this.show2AQuestionScreenBinding.set(false);
+  }
+
+  private async loadRealPlayerAvatarsForDebug(): Promise<void> {
+    const currentPlayers = this.world.getPlayers();
+    
+    if (currentPlayers.length > 0) {
+      // Get the first player's avatar for all debug entries
+      const firstPlayer = currentPlayers[0];
+      try {
+        const headshotImageSource = await Social.getAvatarImageSource(firstPlayer, {
+          type: AvatarImageType.HEADSHOT,
+          highRes: true
+        });
+        this.realPlayerAvatars.set('debug', headshotImageSource);
+        console.log(`✅ Loaded avatar for debug leaderboard: ${firstPlayer.name.get()}`);
+      } catch (error) {
+        console.log("⚠️ Could not load avatar for debug leaderboard");
+        this.realPlayerAvatars.set('debug', null);
+      }
+    } else {
+      this.realPlayerAvatars.set('debug', null);
+    }
   }
 
   private debugShowErrorScreen(): void {
