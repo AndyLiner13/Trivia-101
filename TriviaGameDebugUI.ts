@@ -1165,8 +1165,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 height: 42,
                                 marginRight: 6,
                                 marginBottom: 6,
-                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container
+                                borderWidth: 0, // Hide outline for top options in 2-answer layout
+                                borderColor: 'transparent' // Hide outline for top options in 2-answer layout
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 2 && this.currentQuestionAnswers.length > 0),
@@ -1181,8 +1181,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 width: '48%',
                                 height: 42,
                                 marginBottom: 6,
-                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container
+                                borderWidth: 0, // Hide outline for top options in 2-answer layout
+                                borderColor: 'transparent' // Hide outline for top options in 2-answer layout
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 3 && this.currentQuestionAnswers.length > 1),
@@ -2616,8 +2616,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         height: '100%',
         backgroundColor: 'transparent', // Transparent background
         borderRadius: 4,
-        borderWidth: 2,
-        borderColor: 'rgba(255, 255, 255, 0.3)', // Subtle border to show the slot
+        borderWidth: 0,
+        borderColor: 'transparent', // No border outline
         paddingHorizontal: 8,
         paddingVertical: 6,
         flexDirection: 'row',
