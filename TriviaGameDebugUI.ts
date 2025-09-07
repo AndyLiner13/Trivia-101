@@ -642,35 +642,24 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           right: 0,
                           top: 0,
                           bottom: 0,
-                          flexDirection: 'column',
-                          justifyContent: 'center',
+                          flexDirection: 'row',
                           alignItems: 'center',
+                          justifyContent: 'space-between',
                           paddingTop: '5%',
                           paddingBottom: '25%', // Leave space for answer buttons
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (no image, 2 answers)
                         },
                         children: [
-                          // Horizontal layout: Timer | Question | Answer Count
+                          // Timer container - flex to fill left space
                           View({
                             style: {
-                              flexDirection: 'row',
+                              flex: 1,
                               alignItems: 'center',
-                              justifyContent: 'space-between',
-                              width: '100%',
+                              justifyContent: 'center',
                               borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for horizontal layout container
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer flex container
                             },
-                            children: [
-                              // Timer container - flex to fill left space
-                              View({
-                                style: {
-                                  flex: 1,
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer flex container
-                                },
                                 children: [
                                   // Timer on the left
                                   View({
@@ -765,8 +754,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   })
                                 ]
                               })
-                            ]
-                          })
                         ]
                       })
                     )
@@ -784,33 +771,22 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           right: 0,
                           top: 0,
                           bottom: 0,
-                          flexDirection: 'column',
-                          justifyContent: 'center',
+                          flexDirection: 'row',
                           alignItems: 'center',
+                          justifyContent: 'space-between',
                           paddingTop: '5%',
                           paddingBottom: '25%', // Leave space for answer buttons
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (no image, 3+ answers)
                         },
                         children: [
-                          // Horizontal layout: Timer | Question | Answer Count
+                          // Timer container - flex to fill left space
                           View({
                             style: {
-                              flexDirection: 'row',
+                              flex: 1,
                               alignItems: 'center',
-                              justifyContent: 'space-between',
-                              width: '100%',
+                              justifyContent: 'center',
                               borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for horizontal layout container
-                            },
-                            children: [
-                              // Timer container - flex to fill left space
-                              View({
-                                style: {
-                                  flex: 1,
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                   borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer flex container
                                 },
                                 children: [
@@ -911,8 +887,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   })
                                 ]
                               })
-                            ]
-                          })
                         ]
                       })
                     )
