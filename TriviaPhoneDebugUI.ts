@@ -1494,7 +1494,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       width: '100%',
                       height: '100%',
                       backgroundColor: '#6366F1',
-                      flexDirection: 'column'
+                      flexDirection: 'column',
+                      borderWidth: 2,
+                      borderColor: '#FF0000' // Red - layer within phone frame
                     },
                     children: [
                       this.renderTwoOptionsPage(),
@@ -1513,7 +1515,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       width: '100%',
                       height: '100%',
                       backgroundColor: '#6366F1',
-                      flexDirection: 'column'
+                      flexDirection: 'column',
+                      borderWidth: 2,
+                      borderColor: '#FF0000' // Red - layer within phone frame
                     },
                     children: [
                       this.renderFourOptionsPage(),
@@ -1541,54 +1545,70 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       justifyContent: 'flex-start',
                       alignItems: 'center',
                       padding: 8,
-                      paddingTop: 20
+                      paddingTop: 20,
+                      borderWidth: 2,
+                      borderColor: '#FF0000' // Red - layer within phone frame
                     },
                     children: [
-                      ui.Text({
-                        text: ui.Binding.derive([
-                          this.isCorrectAnswerBinding,
-                          this.selectedAnswerBinding
-                        ], (isCorrect, selectedAnswer) => {
-                          if (isCorrect) return '✅';
-                          if (selectedAnswer === null) return '⏰'; // Clock emoji for time's up
-                          return '❌';
-                        }),
+                      // Main content container with green border
+                      ui.View({
                         style: {
-                          fontSize: 48,
-                          textAlign: 'center',
-                          marginBottom: 8
-                        }
-                      }),
-                      ui.Text({
-                        text: ui.Binding.derive([
-                          this.isCorrectAnswerBinding,
-                          this.selectedAnswerBinding
-                        ], (isCorrect, selectedAnswer) => {
-                          if (isCorrect) return 'Correct!';
-                          if (selectedAnswer === null) return 'Time\'s Up!';
-                          return 'Wrong!';
-                        }),
-                        style: {
-                          fontSize: 24,
-                          fontWeight: '700',
-                          color: '#FFFFFF',
-                          textAlign: 'center',
-                          marginBottom: 8
-                        }
-                      }),
-                      ui.Text({
-                        text: ui.Binding.derive([], () => {
-                          return this.currentQuestion ? this.currentQuestion.question : '';
-                        }),
-                        numberOfLines: 3,
-                        style: {
-                          fontSize: 14,
-                          color: '#FFFFFF',
-                          textAlign: 'center',
-                          marginBottom: 8,
-                          opacity: 0.9,
-                          lineHeight: 18
-                        }
+                          flex: 1,
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                          padding: 8,
+                          paddingTop: 20,
+                          borderWidth: 2,
+                          borderColor: '#00FF00' // Green - nested within red
+                        },
+                        children: [
+                          ui.Text({
+                            text: ui.Binding.derive([
+                              this.isCorrectAnswerBinding,
+                              this.selectedAnswerBinding
+                            ], (isCorrect, selectedAnswer) => {
+                              if (isCorrect) return '✅';
+                              if (selectedAnswer === null) return '⏰'; // Clock emoji for time's up
+                              return '❌';
+                            }),
+                            style: {
+                              fontSize: 48,
+                              textAlign: 'center',
+                              marginBottom: 8
+                            }
+                          }),
+                          ui.Text({
+                            text: ui.Binding.derive([
+                              this.isCorrectAnswerBinding,
+                              this.selectedAnswerBinding
+                            ], (isCorrect, selectedAnswer) => {
+                              if (isCorrect) return 'Correct!';
+                              if (selectedAnswer === null) return 'Time\'s Up!';
+                              return 'Wrong!';
+                            }),
+                            style: {
+                              fontSize: 24,
+                              fontWeight: '700',
+                              color: '#FFFFFF',
+                              textAlign: 'center',
+                              marginBottom: 8
+                            }
+                          }),
+                          ui.Text({
+                            text: ui.Binding.derive([], () => {
+                              return this.currentQuestion ? this.currentQuestion.question : '';
+                            }),
+                            numberOfLines: 3,
+                            style: {
+                              fontSize: 14,
+                              color: '#FFFFFF',
+                              textAlign: 'center',
+                              marginBottom: 8,
+                              opacity: 0.9,
+                              lineHeight: 18
+                            }
+                          })
+                        ]
                       }),
                       // Host buttons container - positioned above footer (only for hosts)
                       ui.UINode.if(
@@ -1601,7 +1621,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             right: 12,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            borderWidth: 2,
+                            borderColor: '#00FF00' // Green - nested within red
                           },
                           children: [
                             ui.Pressable({
@@ -1614,7 +1636,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                                 opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
                                   (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
                                     showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) < settings.numberOfQuestions ? 1 : 0
-                                )
+                                ),
+                                borderWidth: 2,
+                                borderColor: '#0000FF' // Blue - nested within green
                               },
                               onPress: () => this.nextQuestion(),
                               children: [
@@ -1638,7 +1662,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                                 opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
                                   (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
                                     showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions ? 1 : 0
-                                )
+                                ),
+                                borderWidth: 2,
+                                borderColor: '#0000FF' // Blue - nested within green
                               },
                               onPress: () => this.endGame(),
                               children: [
@@ -1671,7 +1697,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             paddingVertical: 8,
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            borderWidth: 2,
+                            borderColor: '#00FF00' // Green - nested within red
                           },
                           children: [
                             ui.Text({
@@ -1718,7 +1746,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       justifyContent: 'center',
                       alignItems: 'center',
                       padding: 12,
-                      position: 'relative' // Ensure this view takes full space
+                      position: 'relative', // Ensure this view takes full space
+                      borderWidth: 2,
+                      borderColor: '#FF0000' // Red - layer within phone frame
                     },
                     children: [
                       ui.View({
@@ -1726,7 +1756,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           flex: 1,
                           justifyContent: 'center',
                           alignItems: 'center',
-                          width: '100%'
+                          width: '100%',
+                          borderWidth: 2,
+                          borderColor: '#00FF00' // Green - nested within red
                         },
                         children: [
                           ui.Text({
@@ -2763,7 +2795,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   shadowColor: '#000000',
                   shadowOffset: [0, 2],
                   shadowOpacity: 0.1,
-                  shadowRadius: 4
+                  shadowRadius: 4,
+                  borderWidth: 2,
+                  borderColor: '#0000FF' // Blue - nested within green
                 },
                 onPress: () => this.handleStartGame(),
                 children: [
@@ -2804,7 +2838,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20
+        padding: 20,
+        borderWidth: 2,
+        borderColor: '#FF0000' // Red - layer within phone frame
       },
       children: [
         // Role Badge
@@ -2819,7 +2855,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             shadowOffset: [0, 4],
             shadowOpacity: 0.3,
             shadowRadius: 8,
-            marginBottom: 32
+            marginBottom: 32,
+            borderWidth: 2,
+            borderColor: '#00FF00' // Green - nested within red
           },
           children: [
             ui.Text({
@@ -2838,7 +2876,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.isHostBinding.derive(isHost => isHost),
           ui.View({
             style: {
-              alignItems: 'center'
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: '#00FF00' // Green - nested within red
             },
             children: [
               // Game Settings Button
@@ -2855,7 +2895,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   shadowColor: '#000000',
                   shadowOffset: [0, 2],
                   shadowOpacity: 0.1,
-                  shadowRadius: 4
+                  shadowRadius: 4,
+                  borderWidth: 2,
+                  borderColor: '#0000FF' // Blue - nested within green
                 },
                 onPress: () => this.navigateToGameSettings(),
                 children: [
@@ -2883,7 +2925,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   shadowColor: '#000000',
                   shadowOffset: [0, 2],
                   shadowOpacity: 0.1,
-                  shadowRadius: 4
+                  shadowRadius: 4,
+                  borderWidth: 2,
+                  borderColor: '#0000FF' // Blue - nested within green
                 },
                 onPress: () => this.handleStartGame(),
                 children: [
