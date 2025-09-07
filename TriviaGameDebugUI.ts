@@ -911,7 +911,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
                       children: [
-                        // Timer | Question | Answer Count layout - anchored to top of green container
+                        // Question text only - centered at top
                         View({
                           style: {
                             position: 'absolute',
@@ -921,47 +921,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             height: 50, // Fixed height to accommodate question text with padding (12px top + ~26px text + 12px bottom)
                             flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
+                            justifyContent: 'center', // Center the question text
                             width: '100%',
                             flexShrink: 0, // Prevent shrinking
                             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                             borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for header layout container
                           },
                           children: [
-                            // Timer on the left
-                            View({
-                              style: {
-                                flex: 1,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for timer container
-                              },
-                              children: [
-                                View({
-                                  style: {
-                                    width: 30,
-                                    height: 30,
-                                    backgroundColor: '#FF6B35',
-                                    borderRadius: 15,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                    borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for timer circle
-                                  },
-                                  children: Text({
-                                    text: this.timerBinding,
-                                    style: {
-                                      fontSize: 10,
-                                      fontWeight: 'bold',
-                                      color: 'white'
-                                    }
-                                  })
-                                })
-                              ]
-                            }),
-
-                            // Question text in the middle
+                            // Question text in the middle (now centered)
                             View({
                               style: {
                                 backgroundColor: 'white',
@@ -977,7 +944,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 alignSelf: 'center',
-                                maxWidth: '80%',
+                                maxWidth: '90%', // Increased from 80% since we removed timer and answer count
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for question text box (with image)
                               },
@@ -995,16 +962,105 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   }
                                 })
                               ]
-                            }),
+                            })
+                          ]
+                        }),
 
-                            // Answer count container - flex to fill right space
+                        // Question image container with timer on left, image in middle, answer count on right
+                        View({
+                          style: {
+                            position: 'absolute',
+                            top: 50, // Start exactly at the bottom of the blue header container (50px height)
+                            left: 0,
+                            right: 0,
+                            bottom: 110, // Stop above the green answer container (110px height)
+                            marginHorizontal: '5%',
+                            flexDirection: 'row', // Horizontal layout: timer | image | answer count
+                            alignItems: 'center',
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for question image container
+                          },
+                          children: [
+                            // Timer container on the left
                             View({
                               style: {
-                                flex: 1,
+                                flex: 1, // Equal space with answer count container
+                                height: '100%', // Fill the full height of the parent container
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for answer count container
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for timer container
+                              },
+                              children: [
+                                View({
+                                  style: {
+                                    width: 35,
+                                    height: 35,
+                                    backgroundColor: '#FF6B35',
+                                    borderRadius: 17.5,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                    borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for timer circle
+                                  },
+                                  children: Text({
+                                    text: this.timerBinding,
+                                    style: {
+                                      fontSize: 12,
+                                      fontWeight: 'bold',
+                                      color: 'white'
+                                    }
+                                  })
+                                })
+                              ]
+                            }),
+
+                            // Image container in the middle
+                            View({
+                              style: {
+                                width: 'auto', // Let container size itself to hug the image
+                                maxWidth: '60%', // Prevent it from getting too wide
+                                height: '100%', // Fill the full height of the parent container
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for image container
+                              },
+                              children: [
+                                Image({
+                                  source: this.questionImageBinding.derive(imageId => {
+                                    if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                    const textureId = this.getTextureIdForImage(imageId);
+                                    if (textureId) {
+                                      try {
+                                        const bigIntId = BigInt(textureId);
+                                        return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
+                                      } catch (error) {
+                                        return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                      }
+                                    }
+                                    return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                  }),
+                                  style: {
+                                    width: '100%', // Fill the full width of the container
+                                    height: '100%', // Fill the full height of the container
+                                    aspectRatio: 1.5, // Maintain 3:2 aspect ratio
+                                    borderRadius: 8,
+                                    alignSelf: 'center'
+                                  }
+                                })
+                              ]
+                            }),
+
+                            // Answer count container on the right
+                            View({
+                              style: {
+                                flex: 1, // Equal space with timer container
+                                height: '100%', // Fill the full height of the parent container
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for answer count container
                               },
                               children: [
                                 View({
@@ -1017,7 +1073,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     Text({
                                       text: this.answerCountBinding,
                                       style: {
-                                        fontSize: 14,
+                                        fontSize: 16,
                                         fontWeight: 'bold',
                                         color: '#1F2937'
                                       }
@@ -1025,7 +1081,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     Text({
                                       text: 'Answers',
                                       style: {
-                                        fontSize: 8,
+                                        fontSize: 10,
                                         color: '#6B7280'
                                       }
                                     })
@@ -1034,44 +1090,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               ]
                             })
                           ]
-                        }),
-
-                        // Question image - positioned below the blue header container
-                        View({
-                          style: {
-                            position: 'absolute',
-                            top: 50, // Start exactly at the bottom of the blue header container (50px height)
-                            left: 0,
-                            right: 0,
-                            bottom: 110, // Stop above the green answer container (110px height)
-                            marginHorizontal: '5%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for question image container
-                          },
-                          children: Image({
-                            source: this.questionImageBinding.derive(imageId => {
-                              if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                              const textureId = this.getTextureIdForImage(imageId);
-                              if (textureId) {
-                                try {
-                                  const bigIntId = BigInt(textureId);
-                                  return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
-                                } catch (error) {
-                                  return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                                }
-                              }
-                              return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                            }),
-                            style: {
-                              width: '100%',
-                              height: '100%',
-                              aspectRatio: 1.5, // 3:2 aspect ratio to maintain original proportions
-                              borderRadius: 8,
-                              alignSelf: 'center'
-                            }
-                          })
                         })
                       ]
                     })
