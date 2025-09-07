@@ -1417,9 +1417,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     players.length > 0 ? players[0].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
@@ -1485,9 +1486,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     players.length > 1 ? players[1].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
@@ -1552,9 +1554,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     players.length > 2 ? players[2].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
@@ -1619,9 +1622,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     players.length > 3 ? players[3].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
@@ -1686,9 +1690,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     players.length > 4 ? players[4].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
