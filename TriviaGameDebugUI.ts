@@ -648,9 +648,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               })
             ),
 
-            // Game UI (shows when game is running)
+            // Game UI (shows when game is running, but not on config or results screen)
             UINode.if(
-              this.showConfigBinding.derive(show => !show),
+              Binding.derive([this.showConfigBinding, this.showResultsBinding], (showConfig, showResults) => 
+                !showConfig && !showResults
+              ),
               View({
                 style: {
                   position: 'absolute',
@@ -1800,191 +1802,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     ]
                   }),
 
-                  // Results overlay
-                  View({
-                    style: {
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: '#F3F4F6',
-                      display: this.showResultsBinding.derive(show => show ? 'flex' : 'none'),
-                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for results overlay
-                    },
-                    children: [
-                      // Header
-                      View({
-                        style: {
-                          position: 'absolute',
-                          top: 8,
-                          left: 0,
-                          right: 0,
-                          alignItems: 'center',
-                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for results header container
-                        },
-                        children: View({
-                          style: {
-                            backgroundColor: 'white',
-                            borderRadius: 8,
-                            paddingHorizontal: 20,
-                            paddingVertical: 6,
-                            shadowColor: 'black',
-                            shadowOpacity: 0.1,
-                            shadowRadius: 6,
-                            shadowOffset: [0, 2],
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for results header title box
-                          },
-                          children: Text({
-                            text: 'Game Results',
-                            style: {
-                              fontSize: 16,
-                              fontWeight: 'bold',
-                              color: '#1F2937'
-                            }
-                          })
-                        })
-                      }),
-
-                      // Results content
-                      View({
-                        style: {
-                          position: 'absolute',
-                          top: '18%',
-                          left: '8%',
-                          right: '8%',
-                          bottom: '8%',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for results content area
-                        },
-                        children: [
-                          // Game completion message
-                          View({
-                            style: {
-                              backgroundColor: 'white',
-                              borderRadius: 12,
-                              padding: 24,
-                              alignItems: 'center',
-                              marginBottom: 20,
-                              shadowColor: 'black',
-                              shadowOpacity: 0.1,
-                              shadowRadius: 8,
-                              shadowOffset: [0, 3],
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for results message box
-                            },
-                            children: [
-                              // Trophy emoji
-                              Text({
-                                text: '🏆',
-                                style: {
-                                  fontSize: 32,
-                                  marginBottom: 12
-                                }
-                              }),
-                              // Congratulations message
-                              Text({
-                                text: 'Game Complete!',
-                                style: {
-                                  fontSize: 20,
-                                  fontWeight: 'bold',
-                                  color: '#1F2937',
-                                  marginBottom: 8,
-                                  textAlign: 'center'
-                                }
-                              }),
-                              // Results summary
-                              Text({
-                                text: 'Thanks for playing! Check the leaderboard to see final standings.',
-                                style: {
-                                  fontSize: 14,
-                                  color: '#6B7280',
-                                  textAlign: 'center',
-                                  lineHeight: 1.4
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Actions
-                          View({
-                            style: {
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#FF00FF' : 'transparent') // Magenta border for action buttons container
-                            },
-                            children: [
-                              // View Leaderboard button
-                              Pressable({
-                                style: {
-                                  backgroundColor: '#3B82F6',
-                                  borderRadius: 8,
-                                  paddingHorizontal: 16,
-                                  paddingVertical: 10,
-                                  alignItems: 'center',
-                                  marginRight: 6,
-                                  shadowColor: 'black',
-                                  shadowOpacity: 0.1,
-                                  shadowRadius: 4,
-                                  shadowOffset: [0, 2],
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for leaderboard button
-                                },
-                                onPress: async () => await this.debugShowLeaderboardScreen(),
-                                children: [
-                                  Text({
-                                    text: 'View Leaderboard',
-                                    style: {
-                                      fontSize: 14,
-                                      fontWeight: '600',
-                                      color: 'white'
-                                    }
-                                  })
-                                ]
-                              }),
-
-                              // Play Again button
-                              Pressable({
-                                style: {
-                                  backgroundColor: '#16A34A',
-                                  borderRadius: 8,
-                                  paddingHorizontal: 16,
-                                  paddingVertical: 10,
-                                  alignItems: 'center',
-                                  marginLeft: 6,
-                                  shadowColor: 'black',
-                                  shadowOpacity: 0.1,
-                                  shadowRadius: 4,
-                                  shadowOffset: [0, 2],
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for play again button
-                                },
-                                onPress: () => this.debugShowConfigScreen(),
-                                children: [
-                                  Text({
-                                    text: 'Play Again',
-                                    style: {
-                                      fontSize: 14,
-                                      fontWeight: '600',
-                                      color: 'white'
-                                    }
-                                  })
-                                ]
-                              })
-                            ]
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-
                   // Error Screen overlay
                   View({
                     style: {
@@ -2065,6 +1882,314 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 fontWeight: '600',
                                 color: 'white'
                               }
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  })
+                ]
+              })
+            ),
+
+            // Results Screen (separate page)
+            UINode.if(
+              this.showResultsBinding,
+              View({
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'white',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 16,
+                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for results screen background
+                },
+                children: [
+                  // Header
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: '8%',
+                      left: 0,
+                      right: 0,
+                      alignItems: 'center',
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for header container
+                    },
+                    children: Text({
+                      text: 'Game Complete!',
+                      style: {
+                        fontSize: 28,
+                        fontWeight: 'bold',
+                        color: '#1F2937',
+                        textAlign: 'center'
+                      }
+                    })
+                  }),
+
+                  // Podium Section
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: '25%',
+                      left: 0,
+                      right: 0,
+                      bottom: '25%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for podium section
+                    },
+                    children: View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center'
+                      },
+                      children: [
+                        // 2nd Place
+                        View({
+                          style: {
+                            alignItems: 'center',
+                            marginHorizontal: 16,
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for 2nd place
+                          },
+                          children: [
+                            // Avatar (simulated with player 2)
+                            UINode.if(
+                              this.leaderboardDataBinding.derive(players =>
+                                players.length > 1 && players[1].headshotImageSource
+                              ),
+                              Image({
+                                source: this.leaderboardDataBinding.derive(players =>
+                                  players.length > 1 && players[1].headshotImageSource ? players[1].headshotImageSource : null
+                                ),
+                                style: {
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: 12,
+                                  marginBottom: 8
+                                }
+                              })
+                            ),
+                            // Name
+                            Text({
+                              text: this.leaderboardDataBinding.derive(players =>
+                                players.length > 1 ? players[1].name : 'Player 2'
+                              ),
+                              style: {
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                                color: '#1F2937',
+                                textAlign: 'center',
+                                marginBottom: 8
+                              }
+                            }),
+                            // Platform
+                            View({
+                              style: {
+                                width: 60,
+                                height: 48,
+                                backgroundColor: '#9CA3AF',
+                                borderRadius: 8,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: 'black',
+                                shadowOpacity: 0.3,
+                                shadowRadius: 6,
+                                shadowOffset: [0, 3]
+                              },
+                              children: [
+                                Text({
+                                  text: '2nd',
+                                  style: {
+                                    fontSize: 14,
+                                    fontWeight: 'bold',
+                                    color: '#374151',
+                                    marginBottom: 2
+                                  }
+                                }),
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players =>
+                                    players.length > 1 ? players[1].score.toString() : '0'
+                                  ),
+                                  style: {
+                                    fontSize: 10,
+                                    fontWeight: '600',
+                                    color: '#4B5563'
+                                  }
+                                })
+                              ]
+                            })
+                          ]
+                        }),
+
+                        // 1st Place
+                        View({
+                          style: {
+                            alignItems: 'center',
+                            marginHorizontal: 16,
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for 1st place
+                          },
+                          children: [
+                            // Crown above avatar
+                            Text({
+                              text: '👑',
+                              style: {
+                                fontSize: 20,
+                                marginBottom: 4
+                              }
+                            }),
+                            // Avatar (simulated with player 1)
+                            UINode.if(
+                              this.leaderboardDataBinding.derive(players =>
+                                players.length > 0 && players[0].headshotImageSource
+                              ),
+                              Image({
+                                source: this.leaderboardDataBinding.derive(players =>
+                                  players.length > 0 && players[0].headshotImageSource ? players[0].headshotImageSource : null
+                                ),
+                                style: {
+                                  width: 60,
+                                  height: 60,
+                                  borderRadius: 12,
+                                  marginBottom: 8
+                                }
+                              })
+                            ),
+                            // Name
+                            Text({
+                              text: this.leaderboardDataBinding.derive(players =>
+                                players.length > 0 ? players[0].name : 'Winner'
+                              ),
+                              style: {
+                                fontSize: 14,
+                                fontWeight: 'bold',
+                                color: '#1F2937',
+                                textAlign: 'center',
+                                marginBottom: 8
+                              }
+                            }),
+                            // Platform
+                            View({
+                              style: {
+                                width: 72,
+                                height: 60,
+                                backgroundColor: '#FBBF24',
+                                borderRadius: 8,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: 'black',
+                                shadowOpacity: 0.3,
+                                shadowRadius: 6,
+                                shadowOffset: [0, 3]
+                              },
+                              children: [
+                                Text({
+                                  text: '1st',
+                                  style: {
+                                    fontSize: 16,
+                                    fontWeight: 'bold',
+                                    color: '#92400E',
+                                    marginBottom: 2
+                                  }
+                                }),
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players =>
+                                    players.length > 0 ? players[0].score.toString() : '0'
+                                  ),
+                                  style: {
+                                    fontSize: 12,
+                                    fontWeight: '600',
+                                    color: '#B45309'
+                                  }
+                                })
+                              ]
+                            })
+                          ]
+                        }),
+
+                        // 3rd Place
+                        View({
+                          style: {
+                            alignItems: 'center',
+                            marginHorizontal: 16,
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for 3rd place
+                          },
+                          children: [
+                            // Avatar (simulated with player 3)
+                            UINode.if(
+                              this.leaderboardDataBinding.derive(players =>
+                                players.length > 2 && players[2].headshotImageSource
+                              ),
+                              Image({
+                                source: this.leaderboardDataBinding.derive(players =>
+                                  players.length > 2 && players[2].headshotImageSource ? players[2].headshotImageSource : null
+                                ),
+                                style: {
+                                  width: 42,
+                                  height: 42,
+                                  borderRadius: 12,
+                                  marginBottom: 8
+                                }
+                              })
+                            ),
+                            // Name
+                            Text({
+                              text: this.leaderboardDataBinding.derive(players =>
+                                players.length > 2 ? players[2].name : 'Player 3'
+                              ),
+                              style: {
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                                color: '#1F2937',
+                                textAlign: 'center',
+                                marginBottom: 8
+                              }
+                            }),
+                            // Platform
+                            View({
+                              style: {
+                                width: 48,
+                                height: 36,
+                                backgroundColor: '#FB923C',
+                                borderRadius: 8,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: 'black',
+                                shadowOpacity: 0.3,
+                                shadowRadius: 6,
+                                shadowOffset: [0, 3]
+                              },
+                              children: [
+                                Text({
+                                  text: '3rd',
+                                  style: {
+                                    fontSize: 12,
+                                    fontWeight: 'bold',
+                                    color: '#9A3412',
+                                    marginBottom: 2
+                                  }
+                                }),
+                                Text({
+                                  text: this.leaderboardDataBinding.derive(players =>
+                                    players.length > 2 ? players[2].score.toString() : '0'
+                                  ),
+                                  style: {
+                                    fontSize: 10,
+                                    fontWeight: '600',
+                                    color: '#C2410C'
+                                  }
+                                })
+                              ]
                             })
                           ]
                         })
@@ -2214,7 +2339,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     width: '19%',
                     alignItems: 'center'
                   },
-                  onPress: () => this.debugShowResultsScreen(),
+                  onPress: async () => await this.debugShowResultsScreen(),
                   children: [
                     Text({
                       text: 'Results',
@@ -2995,7 +3120,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     }
   }
 
-  private debugShowResultsScreen(): void {
+  private async debugShowResultsScreen(): Promise<void> {
+    console.log("✅ Showing results screen");
+    
+    // Generate and set leaderboard data for the podium
+    const leaderboardData = await this.generateRealLeaderboard();
+    this.leaderboardDataBinding.set(leaderboardData);
     
     this.showConfigBinding.set(false);
     this.showWaitingBinding.set(false);
