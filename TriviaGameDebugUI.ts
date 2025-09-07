@@ -658,31 +658,42 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               width: '100%',
-                              paddingHorizontal: 16
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for horizontal layout container
                             },
                             children: [
-                              // Timer on the left
+                              // Timer container - flex to fill left space
                               View({
                                 style: {
-                                  width: 35,
-                                  height: 35,
-                                  backgroundColor: '#FF6B35',
-                                  borderRadius: 17.5,
+                                  flex: 1,
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  shadowColor: 'black',
-                                  shadowOpacity: 0.2,
-                                  shadowRadius: 3,
-                                  shadowOffset: [0, 1]
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer flex container
                                 },
-                                children: Text({
-                                  text: this.timerBinding,
-                                  style: {
-                                    fontSize: 12,
-                                    fontWeight: 'bold',
-                                    color: 'white'
-                                  }
-                                })
+                                children: [
+                                  // Timer on the left
+                                  View({
+                                    style: {
+                                      width: 35,
+                                      height: 35,
+                                      backgroundColor: '#FF6B35',
+                                      borderRadius: 17.5,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for timer
+                                    },
+                                    children: Text({
+                                      text: this.timerBinding,
+                                      style: {
+                                        fontSize: 12,
+                                        fontWeight: 'bold',
+                                        color: 'white'
+                                      }
+                                    })
+                                  })
+                                ]
                               }),
 
                               // Question text in the middle
@@ -717,26 +728,40 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 ]
                               }),
 
-                              // Answer count on the right
+                              // Answer count container - flex to fill right space
                               View({
                                 style: {
-                                  alignItems: 'center'
+                                  flex: 1,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for answer count flex container
                                 },
                                 children: [
-                                  Text({
-                                    text: this.answerCountBinding,
+                                  // Answer count on the right
+                                  View({
                                     style: {
-                                      fontSize: 16,
-                                      fontWeight: 'bold',
-                                      color: '#1F2937'
-                                    }
-                                  }),
-                                  Text({
-                                    text: 'Answers',
-                                    style: {
-                                      fontSize: 10,
-                                      color: '#6B7280'
-                                    }
+                                      alignItems: 'center',
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for answer count indicator
+                                    },
+                                    children: [
+                                      Text({
+                                        text: this.answerCountBinding,
+                                        style: {
+                                          fontSize: 16,
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      }),
+                                      Text({
+                                        text: 'Answers',
+                                        style: {
+                                          fontSize: 10,
+                                          color: '#6B7280'
+                                        }
+                                      })
+                                    ]
                                   })
                                 ]
                               })
@@ -775,31 +800,42 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               width: '100%',
-                              paddingHorizontal: 16
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for horizontal layout container
                             },
                             children: [
-                              // Timer on the left
+                              // Timer container - flex to fill left space
                               View({
                                 style: {
-                                  width: 35,
-                                  height: 35,
-                                  backgroundColor: '#FF6B35',
-                                  borderRadius: 17.5,
+                                  flex: 1,
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  shadowColor: 'black',
-                                  shadowOpacity: 0.2,
-                                  shadowRadius: 3,
-                                  shadowOffset: [0, 1]
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer flex container
                                 },
-                                children: Text({
-                                  text: this.timerBinding,
-                                  style: {
-                                    fontSize: 12,
-                                    fontWeight: 'bold',
-                                    color: 'white'
-                                  }
-                                })
+                                children: [
+                                  // Timer on the left
+                                  View({
+                                    style: {
+                                      width: 35,
+                                      height: 35,
+                                      backgroundColor: '#FF6B35',
+                                      borderRadius: 17.5,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for timer
+                                    },
+                                    children: Text({
+                                      text: this.timerBinding,
+                                      style: {
+                                        fontSize: 12,
+                                        fontWeight: 'bold',
+                                        color: 'white'
+                                      }
+                                    })
+                                  })
+                                ]
                               }),
 
                               // Question text in the middle
@@ -838,26 +874,40 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 ]
                               }),
 
-                              // Answer count on the right
+                              // Answer count container - flex to fill right space
                               View({
                                 style: {
-                                  alignItems: 'center'
+                                  flex: 1,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for answer count flex container
                                 },
                                 children: [
-                                  Text({
-                                    text: this.answerCountBinding,
+                                  // Answer count on the right
+                                  View({
                                     style: {
-                                      fontSize: 16,
-                                      fontWeight: 'bold',
-                                      color: '#1F2937'
-                                    }
-                                  }),
-                                  Text({
-                                    text: 'Answers',
-                                    style: {
-                                      fontSize: 10,
-                                      color: '#6B7280'
-                                    }
+                                      alignItems: 'center',
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for answer count indicator
+                                    },
+                                    children: [
+                                      Text({
+                                        text: this.answerCountBinding,
+                                        style: {
+                                          fontSize: 16,
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      }),
+                                      Text({
+                                        text: 'Answers',
+                                        style: {
+                                          fontSize: 10,
+                                          color: '#6B7280'
+                                        }
+                                      })
+                                    ]
                                   })
                                 ]
                               })
@@ -894,31 +944,42 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             width: '100%',
-                            paddingHorizontal: 16
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for horizontal layout container
                           },
                           children: [
-                            // Timer on the left
+                            // Timer container - flex to fill left space
                             View({
                               style: {
-                                width: 30,
-                                height: 30,
-                                backgroundColor: '#FF6B35',
-                                borderRadius: 15,
+                                flex: 1,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.2,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1]
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer flex container
                               },
-                              children: Text({
-                                text: this.timerBinding,
-                                style: {
-                                  fontSize: 10,
-                                  fontWeight: 'bold',
-                                  color: 'white'
-                                }
-                              })
+                              children: [
+                                // Timer on the left
+                                View({
+                                  style: {
+                                    width: 30,
+                                    height: 30,
+                                    backgroundColor: '#FF6B35',
+                                    borderRadius: 15,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                    borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for timer
+                                  },
+                                  children: Text({
+                                    text: this.timerBinding,
+                                    style: {
+                                      fontSize: 10,
+                                      fontWeight: 'bold',
+                                      color: 'white'
+                                    }
+                                  })
+                                })
+                              ]
                             }),
 
                             // Question text in the middle
@@ -957,26 +1018,40 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               ]
                             }),
 
-                            // Answer count on the right
+                            // Answer count container - flex to fill right space
                             View({
                               style: {
-                                alignItems: 'center'
+                                flex: 1,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for answer count flex container
                               },
                               children: [
-                                Text({
-                                  text: this.answerCountBinding,
+                                // Answer count on the right
+                                View({
                                   style: {
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937'
-                                  }
-                                }),
-                                Text({
-                                  text: 'Answers',
-                                  style: {
-                                    fontSize: 8,
-                                    color: '#6B7280'
-                                  }
+                                    alignItems: 'center',
+                                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                    borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for answer count indicator
+                                  },
+                                  children: [
+                                    Text({
+                                      text: this.answerCountBinding,
+                                      style: {
+                                        fontSize: 14,
+                                        fontWeight: 'bold',
+                                        color: '#1F2937'
+                                      }
+                                    }),
+                                    Text({
+                                      text: 'Answers',
+                                      style: {
+                                        fontSize: 8,
+                                        color: '#6B7280'
+                                      }
+                                    })
+                                  ]
                                 })
                               ]
                             })
