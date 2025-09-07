@@ -1330,10 +1330,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             borderRadius: 8,
                             paddingHorizontal: 20, // Reduced from 24 to 20
                             paddingVertical: 6, // Reduced from 8 to 6
-                            shadowColor: 'black',
-                            shadowOpacity: 0.1,
-                            shadowRadius: 6,
-                            shadowOffset: [0, 2],
                             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                             borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for leaderboard header title box
                           },
@@ -1369,15 +1365,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 6, // Reduced from 8 to 6
-                                marginBottom: 4, // Reduced from 6 to 4
+                                padding: 7, // Increased from 6 to 7
+                                marginBottom: 3, // Keep at 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1],
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 1 entry
                               },
@@ -1391,9 +1383,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27,
+                                        height: 27,
+                                        borderRadius: 13.5,
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -1441,15 +1433,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 6, // Reduced from 8 to 6
-                                marginBottom: 4, // Reduced from 6 to 4
+                                padding: 7, // Increased from 6 to 7
+                                marginBottom: 3, // Keep at 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1],
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 2 entry
                               },
@@ -1463,9 +1451,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27,
+                                        height: 27,
+                                        borderRadius: 13.5,
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -1512,15 +1500,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 6, // Reduced from 8 to 6
-                                marginBottom: 4, // Reduced from 6 to 4
+                                padding: 7, // Increased from 6 to 7
+                                marginBottom: 3, // Keep at 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1],
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 3 entry
                               },
@@ -1534,9 +1518,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27,
+                                        height: 27,
+                                        borderRadius: 13.5,
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -1583,15 +1567,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 6, // Reduced from 8 to 6
-                                marginBottom: 4, // Reduced from 6 to 4
+                                padding: 7, // Increased from 6 to 7
+                                marginBottom: 3, // Keep at 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1],
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 4 entry
                               },
@@ -1605,9 +1585,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27,
+                                        height: 27,
+                                        borderRadius: 13.5,
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -1654,15 +1634,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 6, // Reduced from 8 to 6
-                                marginBottom: 4, // Reduced from 6 to 4
+                                padding: 7, // Increased from 6 to 7
+                                marginBottom: 3, // Keep at 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1],
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player 5 entry
                               },
@@ -1676,9 +1652,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27,
+                                        height: 27,
+                                        borderRadius: 13.5,
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -1871,11 +1847,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 backgroundColor: '#9CA3AF',
                                 borderRadius: 8,
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.3,
-                                shadowRadius: 6,
-                                shadowOffset: [0, 3]
+                                justifyContent: 'center'
                               },
                               children: [
                                 Text({
@@ -1957,11 +1929,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 backgroundColor: '#FBBF24',
                                 borderRadius: 8,
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.3,
-                                shadowRadius: 6,
-                                shadowOffset: [0, 3]
+                                justifyContent: 'center'
                               },
                               children: [
                                 Text({
@@ -2035,11 +2003,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 backgroundColor: '#FB923C',
                                 borderRadius: 8,
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.3,
-                                shadowRadius: 6,
-                                shadowOffset: [0, 3]
+                                justifyContent: 'center'
                               },
                               children: [
                                 Text({
