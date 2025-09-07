@@ -1088,9 +1088,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             flexDirection: 'row',
                             flexWrap: 'wrap',
                             justifyContent: 'center',
-                            alignItems: 'center',
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for dynamic layout container
+                            alignItems: 'center'
                           },
                           children: [
                             // For 2-answer questions: Show options 3 and 4, hide 1 and 2
@@ -1102,9 +1100,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   flexDirection: 'row',
                                   flexWrap: 'wrap',
                                   justifyContent: 'center',
-                                  alignItems: 'center', // Changed from 'flex-end' to 'center' for consistent spacing
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for 2-answer layout
+                                  alignItems: 'center' // Changed from 'flex-end' to 'center' for consistent spacing
                                 },
                                 children: [
                                   // Empty spacers for top row (where options 1 and 2 would be)
@@ -1164,80 +1160,69 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             // For 3+ answer questions: Show all options normally
                             UINode.if(
                               this.answerCountTracking.derive(count => count !== 2),
-                              View({
-                                style: {
-                                  width: '100%',
-                                  flexDirection: 'row',
-                                  flexWrap: 'wrap',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for 3+ answer layout
-                                },
-                                children: [
-                                  // Answer 0 (Red/Triangle) - Option 1
-                                  UINode.if(
-                                    this.answerTexts[0].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                        height: 42,
-                                        marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
-                                        marginBottom: 6,
-                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container (3+ answer layout)
-                                      },
-                                      children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
-                                    })
-                                  ),
+                              [
+                                // Answer 0 (Red/Triangle) - Option 1
+                                UINode.if(
+                                  this.answerTexts[0].derive(text => text !== ''),
+                                  View({
+                                    style: {
+                                      width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
+                                      height: 42,
+                                      marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
+                                      marginBottom: 6,
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container (3+ answer layout)
+                                    },
+                                    children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                                  })
+                                ),
 
-                                  // Answer 1 (Blue/Star) - Option 2
-                                  UINode.if(
-                                    this.answerTexts[1].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                        height: 42,
-                                        marginBottom: 6,
-                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container (3+ answer layout)
-                                      },
-                                      children: this.createAnswerButton(1, '#2563EB', '764343253011569')
-                                    })
-                                  ),
+                                // Answer 1 (Blue/Star) - Option 2
+                                UINode.if(
+                                  this.answerTexts[1].derive(text => text !== ''),
+                                  View({
+                                    style: {
+                                      width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
+                                      height: 42,
+                                      marginBottom: 6,
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container (3+ answer layout)
+                                    },
+                                    children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+                                  })
+                                ),
 
-                                  // Answer 2 (Yellow/Circle) - Option 3
-                                  UINode.if(
-                                    this.answerTexts[2].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        marginRight: 6,
-                                        marginBottom: 6,
-                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 2 container (3+ answer layout)
-                                      },
-                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                                    })
-                                  ),
+                                // Answer 2 (Yellow/Circle) - Option 3
+                                UINode.if(
+                                  this.answerTexts[2].derive(text => text !== ''),
+                                  View({
+                                    style: {
+                                      width: '48%',
+                                      height: 42,
+                                      marginRight: 6,
+                                      marginBottom: 6,
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 2 container (3+ answer layout)
+                                    },
+                                    children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                                  })
+                                ),
 
-                                  // Answer 3 (Green/Square) - Option 4
-                                  UINode.if(
-                                    this.answerTexts[3].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        marginBottom: 6,
-                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 3 container (3+ answer layout)
-                                      },
-                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
-                                    })
-                                  )
-                                ]
-                              })
+                                // Answer 3 (Green/Square) - Option 4
+                                UINode.if(
+                                  this.answerTexts[3].derive(text => text !== ''),
+                                  View({
+                                    style: {
+                                      width: '48%',
+                                      height: 42,
+                                      marginBottom: 6,
+                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 3 container (3+ answer layout)
+                                    },
+                                    children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                  })
+                                )
+                              ]
                             )
                           ]
                         })
