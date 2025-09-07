@@ -1444,7 +1444,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private toggleOutlines(): void {
     this.showOutlines = !this.showOutlines;
     this.showOutlinesBinding.set(this.showOutlines);
-    console.log(this.showOutlines ? "✅ Outlines enabled" : "❌ Outlines disabled");
+    
   }
 
   render(): ui.UINode {

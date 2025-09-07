@@ -283,17 +283,16 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         width: '100%',
         height: '100%',
         backgroundColor: 'transparent', // Fully transparent background
-        position: 'relative',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column'
+        justifyContent: 'center'
       },
       children: [
         // Main game container with 16:9 aspect ratio
         View({
           style: {
             width: '100vw', // Use full viewport width
-            aspectRatio: 16/9, // 16:9 aspect ratio
+            aspectRatio: 16/9, // Maintain 16:9 aspect ratio
             backgroundColor: '#F3F4F6',
             position: 'relative',
             overflow: 'hidden',
@@ -639,11 +638,15 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          left: '15%',
-                          right: '15%',
-                          top: '20%',
-                          alignItems: 'center',
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          flexDirection: 'column',
                           justifyContent: 'center',
+                          alignItems: 'center',
+                          paddingTop: '5%',
+                          paddingBottom: '25%', // Leave space for answer buttons
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (no image, 2 answers)
                         },
@@ -702,7 +705,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   // Question text
                                   Text({
                                     text: this.questionBinding,
-                                    numberOfLines: 3,
+                                    numberOfLines: 5,
                                     style: {
                                       fontSize: 16,
                                       fontWeight: '500',
@@ -754,9 +757,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           position: 'absolute',
                           left: 0,
                           right: 0,
-                          top: '16%',
-                          alignItems: 'center',
+                          top: 0,
+                          bottom: 0,
+                          flexDirection: 'column',
                           justifyContent: 'center',
+                          alignItems: 'center',
+                          paddingTop: '5%',
+                          paddingBottom: '25%', // Leave space for answer buttons
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (no image, 3+ answers)
                         },
@@ -819,7 +826,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   // Question text
                                   Text({
                                     text: this.questionBinding,
-                                    numberOfLines: 3,
+                                    numberOfLines: 5,
                                     style: {
                                       fontSize: 16,
                                       fontWeight: '500',
@@ -869,9 +876,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         position: 'absolute',
                         left: 0,
                         right: 0,
-                        top: '2%',
-                        height: '15%',
+                        top: 0,
+                        bottom: 0,
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
                         alignItems: 'center',
+                        paddingTop: '2%',
+                        paddingBottom: '25%', // Leave space for answer buttons
                         borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                         borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
@@ -970,48 +981,44 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               ]
                             })
                           ]
+                        }),
+
+                        // Question image - positioned in the flex flow
+                        View({
+                          style: {
+                            flex: 1,
+                            marginTop: 16,
+                            marginBottom: 16,
+                            marginHorizontal: '15%',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question image container
+                          },
+                          children: Image({
+                            source: this.questionImageBinding.derive(imageId => {
+                              if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                              const textureId = this.getTextureIdForImage(imageId);
+                              if (textureId) {
+                                try {
+                                  const bigIntId = BigInt(textureId);
+                                  return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
+                                } catch (error) {
+                                  return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                }
+                              }
+                              return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                            }),
+                            style: {
+                              width: '100%',
+                              height: '100%',
+                              aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
+                              borderRadius: 8,
+                              alignSelf: 'center'
+                            }
+                          })
                         })
                       ]
-                    })
-                  ),
-
-                  // Question image - positioned below question when both exist
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId !== null),
-                    View({
-                      style: {
-                        position: 'absolute',
-                        left: '15%',
-                        right: '15%',
-                        top: '18%', // Fixed position below the question
-                        bottom: this.answerCountTracking.derive(count => count === 2 ? '25%' : '35%'), // Larger area for 2-answer questions
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question image container
-                      },
-                      children: Image({
-                        source: this.questionImageBinding.derive(imageId => {
-                          if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                          const textureId = this.getTextureIdForImage(imageId);
-                          if (textureId) {
-                            try {
-                              const bigIntId = BigInt(textureId);
-                              return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
-                            } catch (error) {
-                              return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                            }
-                          }
-                          return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                        }),
-                        style: {
-                          width: 'auto',
-                          height: this.answerCountTracking.derive(count => count === 2 ? '100%' : '80%'), // Bigger image for 2-answer questions
-                          aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
-                          borderRadius: 8,
-                          alignSelf: 'center'
-                        }
-                      })
                     })
                   ),
 
@@ -1020,9 +1027,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       bottom: 5,
-                      left: 15,
-                      right: 15,
-                      height: 100,
+                      left: 0,
+                      right: 0,
+                      paddingHorizontal: 15,
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for answer options grid
                     },
@@ -1033,7 +1040,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         View({
                           style: {
                             width: '100%',
-                            height: '100%',
                             flexDirection: 'row',
                             flexWrap: 'wrap',
                             justifyContent: 'center',
@@ -1048,7 +1054,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               View({
                                 style: {
                                   width: '100%',
-                                  height: '100%',
                                   flexDirection: 'row',
                                   flexWrap: 'wrap',
                                   justifyContent: 'center',
@@ -1117,7 +1122,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               View({
                                 style: {
                                   width: '100%',
-                                  height: '100%',
                                   flexDirection: 'row',
                                   flexWrap: 'wrap',
                                   justifyContent: 'center',
@@ -1669,7 +1673,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         View({
           style: {
             width: '100vw',
-            height: '25vh', // Use remaining 25% of viewport height
             backgroundColor: '#2D3748',
             borderRadius: 12,
             padding: 12,
@@ -1884,7 +1887,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         if (jsonData && Array.isArray(jsonData)) {
           // Convert CustomQuizQuestion format to TriviaQuestion format
           this.italianBrainrotQuestions = this.loadCustomQuiz(jsonData);
-          console.log("✅ Loaded", this.italianBrainrotQuestions.length, "Italian Brainrot questions");
 
           // Pre-load all images for Italian Brainrot questions
           await this.preloadItalianBrainrotImages();
@@ -1896,21 +1898,17 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         const asset = this.props.generalQuestions as hz.Asset;
         const assetData = await asset.fetchAsData();
         const jsonData = assetData.asJSON();
-
-        console.log("🔍 Debug: General questions JSON structure:", typeof jsonData, (jsonData as any)?.questions ? "has questions property" : "no questions property");
         
         if (jsonData) {
           // Parse the Open Trivia Database format (nested structure)
           this.generalQuestions = this.parseOpenTriviaFormat(jsonData);
-          console.log("✅ Loaded", this.generalQuestions.length, "General questions");
           
           // Log first few questions for debugging
           if (this.generalQuestions.length > 0) {
-            console.log("📝 First general question:", this.generalQuestions[0].question);
-            console.log("📝 First question answers:", this.generalQuestions[0].answers);
+            
           }
         } else {
-          console.log("❌ Failed to parse general questions JSON");
+          
         }
       }
 
@@ -1919,18 +1917,18 @@ export class TriviaGameDebugUI extends ui.UIComponent {
 
       // Log summary
       if (this.italianBrainrotQuestions.length === 0 && this.generalQuestions.length === 0) {
-        console.log("⚠️ No questions loaded from JSON assets");
+        
       }
 
     } catch (error) {
-      console.log("❌ Error loading questions from assets:", error);
+      
     }
   }
 
   // Pre-load all Italian Brainrot Quiz images onto all players' devices
   private async preloadItalianBrainrotImages(): Promise<void> {
     if (this.italianBrainrotQuestions.length === 0) {
-      console.log("⚠️ No Italian Brainrot questions to pre-load images for");
+      
       return;
     }
 
@@ -1945,7 +1943,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     }
 
     if (imagesToPreload.length === 0) {
-      console.log("⚠️ No images found in Italian Brainrot questions");
+      
       return;
     }
 
@@ -1968,16 +1966,16 @@ export class TriviaGameDebugUI extends ui.UIComponent {
           });
 
           preloadedCount++;
-          console.log("✅ Pre-loaded image:", imageId, "(", preloadedCount, "/", imagesToPreload.length, ")");
+          
         } else {
-          console.log("⚠️ Could not get texture ID for image:", imageId);
+          
         }
       } catch (error) {
-        console.log("❌ Error pre-loading image:", imageId, error);
+        
       }
     }
 
-    console.log("🎉 Successfully pre-loaded", preloadedCount, "out of", imagesToPreload.length, "Italian Brainrot images");
+    
   }
 
   // Pre-shuffle question orders to ensure no duplicates during gameplay
@@ -1986,14 +1984,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     if (this.generalQuestions.length > 0) {
       this.generalQuestionsShuffledIndices = this.createShuffledIndices(this.generalQuestions.length);
       this.generalQuestionsCurrentIndex = 0;
-      console.log("🔀 Pre-shuffled", this.generalQuestions.length, "General questions");
+      
     }
 
     // Shuffle Italian Brainrot Questions
     if (this.italianBrainrotQuestions.length > 0) {
       this.italianBrainrotQuestionsShuffledIndices = this.createShuffledIndices(this.italianBrainrotQuestions.length);
       this.italianBrainrotQuestionsCurrentIndex = 0;
-      console.log("🔀 Pre-shuffled", this.italianBrainrotQuestions.length, "Italian Brainrot questions");
+      
     }
   }
 
@@ -2017,7 +2015,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     // If we've gone through all questions, reset to beginning
     if (this.generalQuestionsCurrentIndex >= this.generalQuestionsShuffledIndices.length) {
       this.generalQuestionsCurrentIndex = 0;
-      console.log("🔄 Reset General questions to beginning");
+      
     }
 
     const questionIndex = this.generalQuestionsShuffledIndices[this.generalQuestionsCurrentIndex];
@@ -2046,7 +2044,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
 
   // Reset and re-shuffle question orders
   private resetQuestionOrders(): void {
-    console.log("🔄 Resetting and re-shuffling question orders...");
+    
     this.preShuffleQuestionOrders();
   }
 
@@ -2054,7 +2052,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private toggleOutlines(): void {
     this.showOutlines = !this.showOutlines;
     this.showOutlinesBinding.set(this.showOutlines);
-    console.log(this.showOutlines ? "✅ Outlines enabled" : "❌ Outlines disabled");
+    
   }
 
   // Convert CustomQuizQuestion[] to TriviaQuestion[]
@@ -2340,6 +2338,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         // Answer text
         Text({
           text: this.answerTexts[index],
+          numberOfLines: 5,
           style: {
             fontSize: 12,
             fontWeight: '500',
@@ -2375,13 +2374,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     const selectedAnswer = this.currentQuestionAnswers[selectedIndex];
     const isCorrect = selectedAnswer?.correct || false;
 
-    console.log(`🎯 Answer selected: ${selectedAnswer?.text}`);
-    console.log(`✅ Correct answer: ${isCorrect ? 'Yes' : 'No'}`);
+    
 
     // Find and log the correct answer
     const correctAnswer = this.currentQuestionAnswers.find(answer => answer.correct);
     if (correctAnswer) {
-      console.log(`🎯 Correct answer was: ${correctAnswer.text}`);
+      
     }
 
     // Update button colors to show correct/incorrect answers
@@ -2397,11 +2395,11 @@ export class TriviaGameDebugUI extends ui.UIComponent {
 
   private setupDebugFunctionality(): void {
     // Setup debug functionality for testing different screens
-    console.log("🔧 Debug functionality initialized");
+    
   }
 
   private debugShowConfigScreen(): void {
-    console.log("⚙️ Showing config screen");
+    
     this.showConfigBinding.set(true);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
@@ -2411,7 +2409,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private async debugShowQuestionScreen(): Promise<void> {
-    console.log("❓ Showing next sequential question from pre-shuffled General questions");
+    
 
     // Hide other screens
     this.showConfigBinding.set(false);
@@ -2453,9 +2451,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       // Update answer count display
       this.answerCountBinding.set(question.answers.length.toString());
 
-      console.log("✅ General question loaded:", question.question);
+      
     } else {
-      console.log("❌ No general questions available");
+      
       this.questionBinding.set("No general questions available. Please set the generalQuestions asset.");
       this.questionImageBinding.set(null);
       this.answerCountTracking.set(0);
@@ -2467,7 +2465,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private async debugShowQuestionWithImageScreen(): Promise<void> {
-    console.log("🖼️ Showing next sequential question from pre-shuffled Italian Brainrot quiz");
+    
 
     // Hide other screens
     this.showConfigBinding.set(false);
@@ -2507,10 +2505,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       // Update answer count display
       this.answerCountBinding.set(question.answers.length.toString());
 
-      console.log("✅ Italian Brainrot question loaded:", question.question);
-      console.log("🖼️ Image:", question.image);
+      
+      
     } else {
-      console.log("❌ No Italian Brainrot questions available");
+      
       this.questionBinding.set("No Italian Brainrot questions available. Please set the italianBrainrotQuiz asset.");
       this.questionImageBinding.set(null);
       this.answerCountTracking.set(0);
@@ -2522,7 +2520,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private debugShowResultsScreen(): void {
-    console.log("📊 Showing results screen");
+    
     this.showConfigBinding.set(false);
     this.showWaitingBinding.set(true);
     this.showLeaderboardBinding.set(false);
@@ -2532,7 +2530,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private debugShowLeaderboardScreen(): void {
-    console.log("🏆 Showing leaderboard screen");
+    
     this.showConfigBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(true);
@@ -2542,7 +2540,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private debugShowErrorScreen(): void {
-    console.log("⚠️ Showing error screen");
+    
     this.showConfigBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
@@ -2552,7 +2550,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private hideErrorScreen(): void {
-    console.log("🔄 Hiding error screen");
+    
     this.showErrorBinding.set(false);
     this.debugShowConfigScreen();
   }
