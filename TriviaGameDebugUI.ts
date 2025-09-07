@@ -2368,7 +2368,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             fontWeight: '500',
             color: 'white',
             flex: 1,
-            textAlign: 'left'
+            textAlign: 'left',
+            lineHeight: 12 // Reduced line spacing to prevent text cutoff
           }
         }),
 
