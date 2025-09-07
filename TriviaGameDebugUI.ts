@@ -133,6 +133,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private currentQuestionAnswers: { text: string; correct: boolean }[] = [];
   private selectedAnswerIndex: number = -1;
   private answerRevealed: boolean = false;
+  private answerRevealedBinding = new Binding(false); // Binding for UI reactivity
   private answerStateTrigger = new Binding<number>(0);
   private answerStateCounter: number = 0;
 
@@ -664,10 +665,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   // Timer on the left
                                   View({
                                     style: {
-                                      width: 35,
-                                      height: 35,
+                                      width: 45, // Increased from 35 to 45
+                                      height: 45, // Increased from 35 to 45
                                       backgroundColor: '#FF6B35',
-                                      borderRadius: 17.5,
+                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
@@ -676,7 +677,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     children: Text({
                                       text: this.timerBinding,
                                       style: {
-                                        fontSize: 12,
+                                        fontSize: 16, // Increased from 12 to 16
                                         fontWeight: 'bold',
                                         color: 'white'
                                       }
@@ -793,10 +794,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   // Timer on the left
                                   View({
                                     style: {
-                                      width: 35,
-                                      height: 35,
+                                      width: 45, // Increased from 35 to 45
+                                      height: 45, // Increased from 35 to 45
                                       backgroundColor: '#FF6B35',
-                                      borderRadius: 17.5,
+                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
@@ -805,7 +806,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     children: Text({
                                       text: this.timerBinding,
                                       style: {
-                                        fontSize: 12,
+                                        fontSize: 16, // Increased from 12 to 16
                                         fontWeight: 'bold',
                                         color: 'white'
                                       }
@@ -871,7 +872,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       Text({
                                         text: this.answerCountBinding,
                                         style: {
-                                          fontSize: 16,
+                                          fontSize: 20, // Increased from 16 to 20
                                           fontWeight: 'bold',
                                           color: '#1F2937'
                                         }
@@ -879,7 +880,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       Text({
                                         text: 'Answers',
                                         style: {
-                                          fontSize: 10,
+                                          fontSize: 12, // Increased from 10 to 12
                                           color: '#6B7280'
                                         }
                                       })
@@ -995,10 +996,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               children: [
                                 View({
                                   style: {
-                                    width: 35,
-                                    height: 35,
+                                    width: 45, // Increased from 35 to 45
+                                    height: 45, // Increased from 35 to 45
                                     backgroundColor: '#FF6B35',
-                                    borderRadius: 17.5,
+                                    borderRadius: 22.5, // Increased from 17.5 to 22.5
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
@@ -1007,7 +1008,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   children: Text({
                                     text: this.timerBinding,
                                     style: {
-                                      fontSize: 12,
+                                      fontSize: 16, // Increased from 12 to 16
                                       fontWeight: 'bold',
                                       color: 'white'
                                     }
@@ -1074,7 +1075,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     Text({
                                       text: this.answerCountBinding,
                                       style: {
-                                        fontSize: 16,
+                                        fontSize: 20, // Increased from 16 to 20
                                         fontWeight: 'bold',
                                         color: '#1F2937'
                                       }
@@ -1082,7 +1083,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     Text({
                                       text: 'Answers',
                                       style: {
-                                        fontSize: 10,
+                                        fontSize: 12, // Increased from 10 to 12
                                         color: '#6B7280'
                                       }
                                     })
@@ -2327,6 +2328,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private createAnswerButton(index: number, color: string, iconTextureId: string): UINode {
     const textureAsset = new hz.TextureAsset(BigInt(iconTextureId));
 
+    // Map answer index to display number based on layout
+    // For 2-answer questions: answer 0 -> "1", answer 1 -> "2" 
+    // For 4-answer questions: answer 0 -> "1", answer 1 -> "2", answer 2 -> "3", answer 3 -> "4"
+    const getDisplayNumber = (): string => {
+      return (index + 1).toString();
+    };
+
     return Pressable({
       style: {
         width: '100%',
@@ -2362,7 +2370,28 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             flex: 1,
             textAlign: 'left'
           }
-        })
+        }),
+
+        // Number indicator (only visible when answer is revealed)
+        UINode.if(
+          this.answerRevealedBinding,
+          View({
+            style: {
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginLeft: 4,
+              paddingRight: 8 // Added right padding
+            },
+            children: Text({
+              text: getDisplayNumber(),
+              style: {
+                fontSize: 10,
+                fontWeight: 'bold',
+                color: 'white' // Changed to white text
+              }
+            })
+          })
+        )
       ]
     });
   }
@@ -2399,6 +2428,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private resetAnswerState(): void {
     this.selectedAnswerIndex = -1;
     this.answerRevealed = false;
+    this.answerRevealedBinding.set(false); // Update the binding
     this.currentQuestionAnswers = [];
     
     // Reset button colors to defaults
@@ -2414,6 +2444,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
 
     this.selectedAnswerIndex = selectedIndex;
     this.answerRevealed = true;
+    this.answerRevealedBinding.set(true); // Update the binding
 
     const selectedAnswer = this.currentQuestionAnswers[selectedIndex];
     const isCorrect = selectedAnswer?.correct || false;
