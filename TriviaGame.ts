@@ -2555,6 +2555,127 @@ export class TriviaGame extends ui.UIComponent {
                     )
                   ),
 
+                  // No image - center the question (2-answer questions)
+                  UINode.if(
+                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
+                    UINode.if(
+                      this.answerCountTracking.derive(count => count === 2),
+                      View({
+                        style: {
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          paddingTop: '5%',
+                          paddingBottom: '25%', // Leave space for answer buttons
+                        },
+                        children: [
+                          // Timer container - flex to fill left space
+                          View({
+                            style: {
+                              flex: 1,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            },
+                                children: [
+                                  // Timer on the left
+                                  View({
+                                    style: {
+                                      width: 45, // Increased from 35 to 45
+                                      height: 45, // Increased from 35 to 45
+                                      backgroundColor: '#FF6B35',
+                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    },
+                                    children: Text({
+                                      text: this.timerBinding,
+                                      style: {
+                                        fontSize: 16, // Increased from 12 to 16
+                                        fontWeight: 'bold',
+                                        color: 'white'
+                                      }
+                                    })
+                                  })
+                                ]
+                              }),
+
+                              // Question text in the middle
+                              View({
+                                style: {
+                                  backgroundColor: 'white',
+                                  borderRadius: 6,
+                                  shadowColor: 'black',
+                                  shadowOpacity: 0.15,
+                                  shadowRadius: 6,
+                                  shadowOffset: [0, 2],
+                                  paddingTop: 12,
+                                  paddingBottom: 12,
+                                  paddingLeft: 12,
+                                  paddingRight: 12,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  alignSelf: 'center',
+                                  maxWidth: '60%',
+                                },
+                                children: [
+                                  // Question text
+                                  Text({
+                                    text: this.questionBinding,
+                                    numberOfLines: 5,
+                                    style: {
+                                      fontSize: 16,
+                                      fontWeight: '500',
+                                      color: 'black',
+                                      textAlign: 'center',
+                                      lineHeight: 18
+                                    }
+                                  })
+                                ]
+                              }),
+
+                              // Answer count container - flex to fill right space
+                              View({
+                                style: {
+                                  flex: 1,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                },
+                                children: [
+                                  // Answer count on the right
+                                  View({
+                                    style: {
+                                      alignItems: 'center',
+                                    },
+                                    children: [
+                                      Text({
+                                        text: this.answerCountBinding,
+                                        style: {
+                                          fontSize: 20, // Increased from 16 to 20
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      }),
+                                      Text({
+                                        text: 'Answers',
+                                        style: {
+                                          fontSize: 12, // Increased from 10 to 12
+                                          color: '#6B7280'
+                                        }
+                                      })
+                                    ]
+                                  })
+                                ]
+                              })
+                        ]
+                      })
+                    )
+                  ),
+
                   // No image - center the question (3+ answer questions)
                   UINode.if(
                     this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
@@ -2929,8 +3050,8 @@ export class TriviaGame extends ui.UIComponent {
                                 this.answerCountTracking.derive(count => count === 2),
                                 // For 2-answer questions: show answer 0 in position 3
                                 UINode.if(
-                                  this.answerTexts[0].derive(text => text !== ''),
-                                  this.createAnswerButton(0, '#DC2626', '1290982519195562'),
+                                  this.answerTexts[2].derive(text => text !== ''),
+                                  this.createAnswerButton(2, '#EAB308', '797899126007085'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 2 in position 3
@@ -2953,8 +3074,8 @@ export class TriviaGame extends ui.UIComponent {
                                 this.answerCountTracking.derive(count => count === 2),
                                 // For 2-answer questions: show answer 1 in position 4
                                 UINode.if(
-                                  this.answerTexts[1].derive(text => text !== ''),
-                                  this.createAnswerButton(1, '#2563EB', '764343253011569'),
+                                  this.answerTexts[3].derive(text => text !== ''),
+                                  this.createAnswerButton(3, '#16A34A', '1286736292915198'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 3 in position 4
