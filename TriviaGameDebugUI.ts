@@ -906,7 +906,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         justifyContent: 'flex-start',
                         alignItems: 'stretch',
                         paddingTop: '1%',
-                        paddingBottom: 100, // Add bottom padding to prevent overlap with answer section
+                        paddingBottom: this.answerCountTracking.derive(count => count === 2 ? 52 : 100) as any, // Reduce height for 2-answer questions (100 - 48px for unused button + gap)
                         borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                         borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
@@ -973,7 +973,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             top: 50, // Start exactly at the bottom of the blue header container (50px height)
                             left: 0,
                             right: 0,
-                            bottom: 110, // Stop above the green answer container (110px height)
+                            bottom: this.answerCountTracking.derive(count => count === 2 ? 62 : 110) as any, // Stop above the green answer container (110px height, reduced by 48px for 2-answer questions)
                             flexDirection: 'row', // Horizontal layout: timer | image | answer count
                             alignItems: 'center',
                             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
