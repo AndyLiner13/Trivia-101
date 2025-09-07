@@ -1800,6 +1800,191 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     ]
                   }),
 
+                  // Results overlay
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: '#F3F4F6',
+                      display: this.showResultsBinding.derive(show => show ? 'flex' : 'none'),
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for results overlay
+                    },
+                    children: [
+                      // Header
+                      View({
+                        style: {
+                          position: 'absolute',
+                          top: 8,
+                          left: 0,
+                          right: 0,
+                          alignItems: 'center',
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for results header container
+                        },
+                        children: View({
+                          style: {
+                            backgroundColor: 'white',
+                            borderRadius: 8,
+                            paddingHorizontal: 20,
+                            paddingVertical: 6,
+                            shadowColor: 'black',
+                            shadowOpacity: 0.1,
+                            shadowRadius: 6,
+                            shadowOffset: [0, 2],
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for results header title box
+                          },
+                          children: Text({
+                            text: 'Game Results',
+                            style: {
+                              fontSize: 16,
+                              fontWeight: 'bold',
+                              color: '#1F2937'
+                            }
+                          })
+                        })
+                      }),
+
+                      // Results content
+                      View({
+                        style: {
+                          position: 'absolute',
+                          top: '18%',
+                          left: '8%',
+                          right: '8%',
+                          bottom: '8%',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for results content area
+                        },
+                        children: [
+                          // Game completion message
+                          View({
+                            style: {
+                              backgroundColor: 'white',
+                              borderRadius: 12,
+                              padding: 24,
+                              alignItems: 'center',
+                              marginBottom: 20,
+                              shadowColor: 'black',
+                              shadowOpacity: 0.1,
+                              shadowRadius: 8,
+                              shadowOffset: [0, 3],
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for results message box
+                            },
+                            children: [
+                              // Trophy emoji
+                              Text({
+                                text: '🏆',
+                                style: {
+                                  fontSize: 32,
+                                  marginBottom: 12
+                                }
+                              }),
+                              // Congratulations message
+                              Text({
+                                text: 'Game Complete!',
+                                style: {
+                                  fontSize: 20,
+                                  fontWeight: 'bold',
+                                  color: '#1F2937',
+                                  marginBottom: 8,
+                                  textAlign: 'center'
+                                }
+                              }),
+                              // Results summary
+                              Text({
+                                text: 'Thanks for playing! Check the leaderboard to see final standings.',
+                                style: {
+                                  fontSize: 14,
+                                  color: '#6B7280',
+                                  textAlign: 'center',
+                                  lineHeight: 1.4
+                                }
+                              })
+                            ]
+                          }),
+
+                          // Actions
+                          View({
+                            style: {
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                              borderColor: this.showOutlinesBinding.derive(show => show ? '#FF00FF' : 'transparent') // Magenta border for action buttons container
+                            },
+                            children: [
+                              // View Leaderboard button
+                              Pressable({
+                                style: {
+                                  backgroundColor: '#3B82F6',
+                                  borderRadius: 8,
+                                  paddingHorizontal: 16,
+                                  paddingVertical: 10,
+                                  alignItems: 'center',
+                                  marginRight: 6,
+                                  shadowColor: 'black',
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 4,
+                                  shadowOffset: [0, 2],
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for leaderboard button
+                                },
+                                onPress: async () => await this.debugShowLeaderboardScreen(),
+                                children: [
+                                  Text({
+                                    text: 'View Leaderboard',
+                                    style: {
+                                      fontSize: 14,
+                                      fontWeight: '600',
+                                      color: 'white'
+                                    }
+                                  })
+                                ]
+                              }),
+
+                              // Play Again button
+                              Pressable({
+                                style: {
+                                  backgroundColor: '#16A34A',
+                                  borderRadius: 8,
+                                  paddingHorizontal: 16,
+                                  paddingVertical: 10,
+                                  alignItems: 'center',
+                                  marginLeft: 6,
+                                  shadowColor: 'black',
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 4,
+                                  shadowOffset: [0, 2],
+                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#FFFF00' : 'transparent') // Yellow border for play again button
+                                },
+                                onPress: () => this.debugShowConfigScreen(),
+                                children: [
+                                  Text({
+                                    text: 'Play Again',
+                                    style: {
+                                      fontSize: 14,
+                                      fontWeight: '600',
+                                      color: 'white'
+                                    }
+                                  })
+                                ]
+                              })
+                            ]
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+
                   // Error Screen overlay
                   View({
                     style: {
@@ -2021,7 +2206,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                 // Results Screen
                 Pressable({
                   style: {
-                    backgroundColor: this.showWaitingBinding.derive(show => show ? '#2563EB' : '#4A5568'),
+                    backgroundColor: this.showResultsBinding.derive(show => show ? '#2563EB' : '#4A5568'),
                     borderRadius: 6,
                     paddingVertical: 6,
                     paddingHorizontal: 8,
@@ -2694,6 +2879,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showErrorBinding.set(false);
     this.show4AQuestionScreenBinding.set(false);
     this.show2AQuestionScreenBinding.set(false);
+    this.showResultsBinding.set(false);
   }
 
   private async debugShowQuestionScreen(): Promise<void> {
@@ -2704,6 +2890,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+    this.showResultsBinding.set(false);
 
     // Set 4A screen as active and 2A screen as inactive
     this.show4AQuestionScreenBinding.set(true);
@@ -2760,6 +2947,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
+    this.showResultsBinding.set(false);
     this.show4AQuestionScreenBinding.set(false);
     this.show2AQuestionScreenBinding.set(true);
 
@@ -2810,11 +2998,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private debugShowResultsScreen(): void {
     
     this.showConfigBinding.set(false);
-    this.showWaitingBinding.set(true);
+    this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
     this.show4AQuestionScreenBinding.set(false);
     this.show2AQuestionScreenBinding.set(false);
+    this.showResultsBinding.set(true);
   }
 
   private async debugShowLeaderboardScreen(): Promise<void> {
@@ -2830,6 +3019,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showErrorBinding.set(false);
     this.show4AQuestionScreenBinding.set(false);
     this.show2AQuestionScreenBinding.set(false);
+    this.showResultsBinding.set(false);
   }
 
   private async loadRealPlayerAvatarsForDebug(): Promise<void> {
@@ -2862,6 +3052,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showErrorBinding.set(true);
     this.show4AQuestionScreenBinding.set(false);
     this.show2AQuestionScreenBinding.set(false);
+    this.showResultsBinding.set(false);
   }
 
   private hideErrorScreen(): void {
