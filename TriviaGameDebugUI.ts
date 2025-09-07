@@ -1206,7 +1206,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 // For 2-answer questions: show answer 0 in position 3
                                 UINode.if(
                                   this.answerTexts[0].derive(text => text !== ''),
-                                  this.createAnswerButton(0, '#EAB308', '797899126007085'),
+                                  this.createAnswerButton(0, '#DC2626', '1290982519195562'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 2 in position 3
@@ -1232,7 +1232,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 // For 2-answer questions: show answer 1 in position 4
                                 UINode.if(
                                   this.answerTexts[1].derive(text => text !== ''),
-                                  this.createAnswerButton(1, '#16A34A', '1286736292915198'),
+                                  this.createAnswerButton(1, '#2563EB', '764343253011569'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 3 in position 4
