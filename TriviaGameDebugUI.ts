@@ -119,6 +119,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private showOutlinesBinding = new Binding(true);
   private showOutlines: boolean = true;
 
+  // Theme mode binding (light/dark)
+  private isDarkModeBinding = new Binding(false);
+  private isDarkMode: boolean = false;
+
   // Specific bindings to track which question screen is active
   private show4AQuestionScreenBinding = new Binding(false);
   private show2AQuestionScreenBinding = new Binding(false);
@@ -326,7 +330,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
           style: {
             width: '100vw', // Use full viewport width
             aspectRatio: 16/9, // Maintain 16:9 aspect ratio
-            backgroundColor: '#F3F4F6',
+            backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#F3F4F6'),
             position: 'relative',
             overflow: 'hidden',
             shadowColor: 'black',
@@ -371,7 +375,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       style: {
                         fontSize: 18,
                         fontWeight: 'bold',
-                        color: 'black',
+                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
                         textAlign: 'center'
                       }
                     })
@@ -412,7 +416,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               fontSize: 16,
                               fontWeight: '600',
-                              color: 'black'
+                              color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black')
                             }
                           })
                         ]
@@ -441,7 +445,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       bottom: '8%',
                       left: '8%',
                       right: '8%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
                       borderRadius: 12,
                       padding: 12,
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
@@ -470,7 +474,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 text: 'Category:',
                                 style: {
                                   fontSize: 10,
-                                  color: '#6B7280',
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
                                   marginBottom: 4
                                 }
                               }),
@@ -479,7 +483,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 style: {
                                   fontSize: 12,
                                   fontWeight: '600',
-                                  color: '#1F2937'
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                 }
                               })
                             ]
@@ -498,7 +502,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 text: 'Questions:',
                                 style: {
                                   fontSize: 10,
-                                  color: '#6B7280',
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
                                   marginBottom: 4
                                 }
                               }),
@@ -507,7 +511,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 style: {
                                   fontSize: 12,
                                   fontWeight: '600',
-                                  color: '#1F2937'
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                 }
                               })
                             ]
@@ -526,7 +530,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 text: 'Time:',
                                 style: {
                                   fontSize: 10,
-                                  color: '#6B7280',
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
                                   marginBottom: 4
                                 }
                               }),
@@ -550,7 +554,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     style: {
                                       fontSize: 12,
                                       fontWeight: '600',
-                                      color: '#1F2937'
+                                      color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                     }
                                   })
                                 ]
@@ -571,7 +575,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 text: 'Difficulty:',
                                 style: {
                                   fontSize: 10,
-                                  color: '#6B7280',
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
                                   marginBottom: 4
                                 }
                               }),
@@ -583,7 +587,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 style: {
                                   fontSize: 12,
                                   fontWeight: '600',
-                                  color: '#1F2937'
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                 }
                               })
                             ]
@@ -602,7 +606,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 text: 'Auto:',
                                 style: {
                                   fontSize: 10,
-                                  color: '#6B7280',
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
                                   marginBottom: 4
                                 }
                               }),
@@ -628,7 +632,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 text: 'Audio:',
                                 style: {
                                   fontSize: 10,
-                                  color: '#6B7280',
+                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
                                   marginBottom: 4
                                 }
                               }),
@@ -723,7 +727,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               // Question text in the middle
                               View({
                                 style: {
-                                  backgroundColor: 'white',
+                                  backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#374151' : 'white'),
                                   borderRadius: 6,
                                   shadowColor: 'black',
                                   shadowOpacity: 0.15,
@@ -744,7 +748,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     style: {
                                       fontSize: 16,
                                       fontWeight: '500',
-                                      color: 'black',
+                                      color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
                                       textAlign: 'center',
                                       lineHeight: 18
                                     }
@@ -775,14 +779,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 16,
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                         }
                                       }),
                                       Text({
                                         text: 'Answers',
                                         style: {
                                           fontSize: 10,
-                                          color: '#6B7280'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280')
                                         }
                                       })
                                     ]
@@ -852,7 +856,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               // Question text in the middle
                               View({
                                 style: {
-                                  backgroundColor: 'white',
+                                  backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#374151' : 'white'),
                                   borderRadius: 6,
                                   shadowColor: 'black',
                                   shadowOpacity: 0.15,
@@ -877,7 +881,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     style: {
                                       fontSize: 16,
                                       fontWeight: '500',
-                                      color: 'black',
+                                      color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
                                       textAlign: 'center',
                                       lineHeight: 18
                                     }
@@ -908,14 +912,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 20, // Increased from 16 to 20
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                         }
                                       }),
                                       Text({
                                         text: 'Answers',
                                         style: {
                                           fontSize: 12, // Increased from 10 to 12
-                                          color: '#6B7280'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280')
                                         }
                                       })
                                     ]
@@ -968,7 +972,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             // Question text in the middle (centered)
                             View({
                               style: {
-                                backgroundColor: 'white',
+                                backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#374151' : 'white'),
                                 borderRadius: 6,
                                 shadowColor: 'black',
                                 shadowOpacity: 0.15,
@@ -993,7 +997,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   style: {
                                     fontSize: 14,
                                     fontWeight: '500',
-                                    color: 'black',
+                                    color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
                                     textAlign: 'center',
                                     lineHeight: 18
                                   }
@@ -1111,14 +1115,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 20, // Increased from 16 to 20
                                         fontWeight: 'bold',
-                                        color: '#1F2937'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                       }
                                     }),
                                     Text({
                                       text: 'Answers',
                                       style: {
                                         fontSize: 12, // Increased from 10 to 12
-                                        color: '#6B7280'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280')
                                       }
                                     })
                                   ]
@@ -1268,7 +1272,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     },
                     children: View({
                       style: {
-                        backgroundColor: 'white',
+                        backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#374151' : 'white'),
                         borderRadius: 12,
                         padding: 20,
                         alignItems: 'center',
@@ -1282,7 +1286,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           style: {
                             fontSize: 16,
                             fontWeight: 'bold',
-                            color: '#1F2937',
+                            color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                             marginBottom: 8,
                             textAlign: 'center'
                           }
@@ -1291,7 +1295,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           text: 'Please wait while other players submit their answers',
                           style: {
                             fontSize: 12,
-                            color: '#6B7280',
+                            color: this.isDarkModeBinding.derive(isDark => isDark ? '#D1D5DB' : '#6B7280'),
                             textAlign: 'center'
                           }
                         })
@@ -1307,7 +1311,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      backgroundColor: '#F3F4F6',
+                      backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#F3F4F6'),
                       display: this.showLeaderboardBinding.derive(show => show ? 'flex' : 'none'),
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for leaderboard overlay
@@ -1326,7 +1330,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         },
                         children: View({
                           style: {
-                            backgroundColor: 'white',
+                            backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#374151' : 'white'),
                             borderRadius: 8,
                             paddingHorizontal: 20, // Reduced from 24 to 20
                             paddingVertical: 6, // Reduced from 8 to 6
@@ -1338,7 +1342,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             style: {
                               fontSize: 16, // Reduced from 18 to 16
                               fontWeight: 'bold',
-                              color: '#1F2937'
+                              color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                             }
                           })
                         })
@@ -1363,7 +1367,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             this.leaderboardDataBinding.derive(players => players.length > 0),
                             View({
                               style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
                                 borderRadius: 8,
                                 padding: 7, // Increased from 6 to 7
                                 marginBottom: 3, // Keep at 3 for tight spacing
@@ -1396,7 +1400,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 12,
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#1F2937')
                                         }
                                       })
                                     }),
@@ -1407,7 +1411,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 14,
                                         fontWeight: '500',
-                                        color: '#1F2937'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                       }
                                     })
                                   ]
@@ -1419,7 +1423,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   style: {
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937',
+                                    color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                     marginRight: 8
                                   }
                                 })
@@ -1432,7 +1436,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             this.leaderboardDataBinding.derive(players => players.length > 1),
                             View({
                               style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
                                 borderRadius: 8,
                                 padding: 7, // Increased from 6 to 7
                                 marginBottom: 3, // Keep at 3 for tight spacing
@@ -1465,7 +1469,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 12,
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#1F2937')
                                         }
                                       })
                                     }),
@@ -1476,7 +1480,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 14,
                                         fontWeight: '500',
-                                        color: '#1F2937'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                       }
                                     })
                                   ]
@@ -1488,7 +1492,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   style: {
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937',
+                                    color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                     marginRight: 8
                                   }
                                 })
@@ -1500,7 +1504,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             this.leaderboardDataBinding.derive(players => players.length > 2),
                             View({
                               style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
                                 borderRadius: 8,
                                 padding: 7, // Increased from 6 to 7
                                 marginBottom: 3, // Keep at 3 for tight spacing
@@ -1533,7 +1537,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 12,
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#1F2937')
                                         }
                                       })
                                     }),
@@ -1544,7 +1548,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 14,
                                         fontWeight: '500',
-                                        color: '#1F2937'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                       }
                                     })
                                   ]
@@ -1556,7 +1560,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   style: {
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937',
+                                    color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                     marginRight: 8
                                   }
                                 })
@@ -1568,7 +1572,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             this.leaderboardDataBinding.derive(players => players.length > 3),
                             View({
                               style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
                                 borderRadius: 8,
                                 padding: 7, // Increased from 6 to 7
                                 marginBottom: 3, // Keep at 3 for tight spacing
@@ -1601,7 +1605,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 12,
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#1F2937')
                                         }
                                       })
                                     }),
@@ -1612,7 +1616,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 14,
                                         fontWeight: '500',
-                                        color: '#1F2937'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                       }
                                     })
                                   ]
@@ -1624,7 +1628,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   style: {
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937',
+                                    color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                     marginRight: 8
                                   }
                                 })
@@ -1636,7 +1640,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             this.leaderboardDataBinding.derive(players => players.length > 4),
                             View({
                               style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
                                 borderRadius: 8,
                                 padding: 7, // Increased from 6 to 7
                                 marginBottom: 3, // Keep at 3 for tight spacing
@@ -1669,7 +1673,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 12,
                                           fontWeight: 'bold',
-                                          color: '#1F2937'
+                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#1F2937')
                                         }
                                       })
                                     }),
@@ -1680,7 +1684,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 14,
                                         fontWeight: '500',
-                                        color: '#1F2937'
+                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
                                       }
                                     })
                                   ]
@@ -1692,7 +1696,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                   style: {
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937',
+                                    color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                     marginRight: 8
                                   }
                                 })
@@ -1755,7 +1759,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'white',
+                  backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : 'white'),
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: 16,
@@ -1779,7 +1783,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       style: {
                         fontSize: 28,
                         fontWeight: 'bold',
-                        color: '#1F2937',
+                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                         textAlign: 'center'
                       }
                     })
@@ -1839,7 +1843,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 fontSize: 12,
                                 fontWeight: 'bold',
-                                color: '#1F2937',
+                                color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                 textAlign: 'center',
                                 marginBottom: 8
                               }
@@ -1913,7 +1917,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 fontSize: 14,
                                 fontWeight: 'bold',
-                                color: '#1F2937',
+                                color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                 textAlign: 'center',
                                 marginBottom: 8
                               }
@@ -1987,7 +1991,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               style: {
                                 fontSize: 12,
                                 fontWeight: 'bold',
-                                color: '#1F2937',
+                                color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937'),
                                 textAlign: 'center',
                                 marginBottom: 8
                               }
@@ -2185,7 +2189,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   ]
                 }),
 
-                // Bottom Row - 2 buttons
+                // Bottom Row - 3 buttons
                 // Error Screen
                 Pressable({
                   style: {
@@ -2194,8 +2198,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     paddingVertical: 6,
                     paddingHorizontal: 8,
                     marginBottom: 6,
-                    width: '48%',
-                    marginRight: '4%',
+                    width: '30%',
+                    marginRight: '3%',
                     alignItems: 'center'
                   },
                   onPress: () => this.debugShowErrorScreen(),
@@ -2211,6 +2215,31 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   ]
                 }),
 
+                // Toggle Theme
+                Pressable({
+                  style: {
+                    backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#7C3AED' : '#16A34A'),
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '30%',
+                    marginRight: '3%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.toggleTheme(),
+                  children: [
+                    Text({
+                      text: this.isDarkModeBinding.derive(isDark => isDark ? 'Light' : 'Dark'),
+                      style: {
+                        fontSize: 8,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
                 // Toggle Outlines
                 Pressable({
                   style: {
@@ -2219,7 +2248,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     paddingVertical: 6,
                     paddingHorizontal: 8,
                     marginBottom: 6,
-                    width: '48%',
+                    width: '30%',
                     alignItems: 'center'
                   },
                   onPress: () => this.toggleOutlines(),
@@ -2421,6 +2450,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     
   }
 
+  // Toggle between light and dark mode
+  private toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    this.isDarkModeBinding.set(this.isDarkMode);
+    
+  }
+
   // Convert CustomQuizQuestion[] to TriviaQuestion[]
   private loadCustomQuiz(questions: CustomQuizQuestion[]): TriviaQuestion[] {
     return questions.map((item, index) => ({
@@ -2612,7 +2648,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       style: {
                         fontSize: 18,
                         fontWeight: 'bold',
-                        color: 'black'
+                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black')
                       }
                     })
                   )
@@ -2630,7 +2666,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                 }),
                 style: {
                   fontSize: 10,
-                  color: 'black',
+                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
                   textAlign: 'center',
                   maxWidth: 60,
                   overflow: 'hidden'
@@ -2663,7 +2699,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             text: 'No players yet...',
             style: {
               fontSize: 14,
-              color: 'black',
+              color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
               textAlign: 'center'
             }
           })
