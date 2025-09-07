@@ -398,6 +398,10 @@ export class TriviaGame extends ui.UIComponent {
   private correctAnswerBinding = new Binding(-1);
   private answerCountsBinding = new Binding([0, 0, 0, 0]);
   
+  // Answer selection and feedback state
+  private answerRevealed: boolean = false;
+  private answerRevealedBinding = new Binding(false); // Binding for UI reactivity
+  
   // Leaderboard data
   private leaderboardDataBinding = new Binding<Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>>([]);
   
@@ -949,6 +953,10 @@ export class TriviaGame extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
     this.showErrorBinding.set(false); // Hide error screen on reset
+    
+    // Reset answer reveal state
+    this.answerRevealed = false;
+    this.answerRevealedBinding.set(false);
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -1002,6 +1010,10 @@ export class TriviaGame extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
     this.showErrorBinding.set(false); // Hide error screen on reset
+    
+    // Reset answer reveal state
+    this.answerRevealed = false;
+    this.answerRevealedBinding.set(false);
 
     // Clear answer texts
     for (let i = 0; i < 4; i++) {
@@ -1080,6 +1092,10 @@ export class TriviaGame extends ui.UIComponent {
     this.centerQuestionBinding.set(!imageValue || imageValue.trim() === "");
     // Don't reset answer count here - let it persist during results display
     this.showResultsBinding.set(false);
+    
+    // Reset answer reveal state for new question
+    this.answerRevealed = false;
+    this.answerRevealedBinding.set(false);
 
     // Update answer options with shuffled answers - support both 2 and 4 option questions
     if (shuffledQuestion.answers.length === 2) {
@@ -1600,6 +1616,10 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update answer count to show how many players answered
     this.answerCountBinding.set(this.playersAnswered.size.toString());
+    
+    // Set answer revealed state
+    this.answerRevealed = true;
+    this.answerRevealedBinding.set(true);
     
     // Update answer button colors for results - handle remapped positions for 2-answer questions
     if (this.currentQuestion.answers.length === 2) {
@@ -2417,128 +2437,6 @@ export class TriviaGame extends ui.UIComponent {
                   bottom: 0
                 },
                 children: [
-                  // Timer - positioned based on whether there's an image
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId !== null && imageId !== ""),
-                    // With image - align with center of image
-                    View({
-                      style: {
-                        position: 'absolute',
-                        left: '5%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '21.5%' : '26.5%'), // Center of image area
-                        width: 35,
-                        height: 35,
-                        backgroundColor: '#FF6B35',
-                        borderRadius: 17.5,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        shadowColor: 'black',
-                        shadowOpacity: 0.2,
-                        shadowRadius: 3,
-                        shadowOffset: [0, 1]
-                      },
-                      children: Text({
-                        text: this.timerBinding,
-                        style: {
-                          fontSize: 12,
-                          fontWeight: 'bold',
-                          color: 'white'
-                        }
-                      })
-                    })
-                  ),
-
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
-                    // Without image - align with question textbox
-                    View({
-                      style: {
-                        position: 'absolute',
-                        left: '5%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '42%' : '35%'), // Center of question area
-                        width: 35,
-                        height: 35,
-                        backgroundColor: '#FF6B35',
-                        borderRadius: 17.5,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        shadowColor: 'black',
-                        shadowOpacity: 0.2,
-                        shadowRadius: 3,
-                        shadowOffset: [0, 1]
-                      },
-                      children: Text({
-                        text: this.timerBinding,
-                        style: {
-                          fontSize: 12,
-                          fontWeight: 'bold',
-                          color: 'white'
-                        }
-                      })
-                    })
-                  ),
-
-                  // Answer count - positioned based on whether there's an image
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId !== null && imageId !== ""),
-                    // With image - align with center of image
-                    View({
-                      style: {
-                        position: 'absolute',
-                        right: '5%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '25%' : '30%'), // Slightly below center of image area
-                        alignItems: 'center'
-                      },
-                      children: [
-                        Text({
-                          text: this.answerCountBinding,
-                          style: {
-                            fontSize: 16,
-                            fontWeight: 'bold',
-                            color: '#1F2937'
-                          }
-                        }),
-                        Text({
-                          text: 'Answers',
-                          style: {
-                            fontSize: 10,
-                            color: '#6B7280'
-                          }
-                        })
-                      ]
-                    })
-                  ),
-
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
-                    // Without image - align with question textbox
-                    View({
-                      style: {
-                        position: 'absolute',
-                        right: '5%',
-                        top: this.answerCountTracking.derive(count => count === 2 ? '42%' : '35%'), // Center of question area
-                        alignItems: 'center'
-                      },
-                      children: [
-                        Text({
-                          text: this.answerCountBinding,
-                          style: {
-                            fontSize: 16,
-                            fontWeight: 'bold',
-                            color: '#1F2937'
-                          }
-                        }),
-                        Text({
-                          text: 'Answers',
-                          style: {
-                            fontSize: 10,
-                            color: '#6B7280'
-                          }
-                        })
-                      ]
-                    })
-                  ),
-
                   // Question text - conditional positioning based on image presence
                   UINode.if(
                     this.questionImageBinding.derive(imageId => imageId === null || imageId === ""),
@@ -2548,40 +2446,111 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          left: '15%',
-                          right: '15%',
-                          top: '20%',
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'space-between',
+                          paddingTop: '5%',
+                          paddingBottom: '25%', // Leave space for answer buttons
                         },
-                        children: View({
-                          style: {
-                            backgroundColor: 'white',
-                            borderRadius: 6,
-                            shadowColor: 'black',
-                            shadowOpacity: 0.15,
-                            shadowRadius: 6,
-                            shadowOffset: [0, 2],
-                            paddingHorizontal: 16,
-                            paddingVertical: 16,
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          },
-                          children: [
-                            // Question text
-                            Text({
-                              text: this.questionBinding,
-                              numberOfLines: 3,
-                              style: {
-                                fontSize: 16,
-                                fontWeight: '500',
-                                color: 'black',
-                                textAlign: 'center',
-                                lineHeight: 24
-                              }
-                            })
-                          ]
-                        })
+                        children: [
+                          // Timer container - flex to fill left space
+                          View({
+                            style: {
+                              flex: 1,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            },
+                                children: [
+                                  // Timer on the left
+                                  View({
+                                    style: {
+                                      width: 45, // Increased from 35 to 45
+                                      height: 45, // Increased from 35 to 45
+                                      backgroundColor: '#FF6B35',
+                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    },
+                                    children: Text({
+                                      text: this.timerBinding,
+                                      style: {
+                                        fontSize: 16, // Increased from 12 to 16
+                                        fontWeight: 'bold',
+                                        color: 'white'
+                                      }
+                                    })
+                                  })
+                                ]
+                              }),
+
+                              // Question text in the middle
+                              View({
+                                style: {
+                                  backgroundColor: 'white',
+                                  borderRadius: 6,
+                                  shadowColor: 'black',
+                                  shadowOpacity: 0.15,
+                                  shadowRadius: 6,
+                                  shadowOffset: [0, 2],
+                                  paddingHorizontal: 16,
+                                  paddingVertical: 16,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                },
+                                children: [
+                                  // Question text
+                                  Text({
+                                    text: this.questionBinding,
+                                    numberOfLines: 5,
+                                    style: {
+                                      fontSize: 16,
+                                      fontWeight: '500',
+                                      color: 'black',
+                                      textAlign: 'center',
+                                      lineHeight: 18
+                                    }
+                                  })
+                                ]
+                              }),
+
+                              // Answer count container - flex to fill right space
+                              View({
+                                style: {
+                                  flex: 1,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                },
+                                children: [
+                                  // Answer count on the right
+                                  View({
+                                    style: {
+                                      alignItems: 'center',
+                                    },
+                                    children: [
+                                      Text({
+                                        text: this.answerCountBinding,
+                                        style: {
+                                          fontSize: 16,
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      }),
+                                      Text({
+                                        text: 'Answers',
+                                        style: {
+                                          fontSize: 10,
+                                          color: '#6B7280'
+                                        }
+                                      })
+                                    ]
+                                  })
+                                ]
+                              })
+                        ]
                       })
                     )
                   ),
@@ -2596,43 +2565,113 @@ export class TriviaGame extends ui.UIComponent {
                           position: 'absolute',
                           left: 0,
                           right: 0,
-                          top: '16%',
+                          top: 0,
+                          bottom: 0,
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'space-between',
+                          paddingTop: '5%',
+                          paddingBottom: '25%', // Leave space for answer buttons
                         },
-                        children: View({
-                          style: {
-                            backgroundColor: 'white',
-                            borderRadius: 6,
-                            shadowColor: 'black',
-                            shadowOpacity: 0.15,
-                            shadowRadius: 6,
-                            shadowOffset: [0, 2],
-                            paddingTop: 12,
-                            paddingBottom: 12,
-                            paddingLeft: 12,
-                            paddingRight: 12,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            alignSelf: 'center',
-                            maxWidth: '70%',
-                            marginHorizontal: 16
-                          },
-                          children: [
-                            // Question text
-                            Text({
-                              text: this.questionBinding,
-                              numberOfLines: 3,
-                              style: {
-                                fontSize: 16,
-                                fontWeight: '500',
-                                color: 'black',
-                                textAlign: 'center',
-                                lineHeight: 16
-                              }
-                            })
-                          ]
-                        })
+                        children: [
+                          // Timer container - flex to fill left space
+                          View({
+                            style: {
+                              flex: 1,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            },
+                                children: [
+                                  // Timer on the left
+                                  View({
+                                    style: {
+                                      width: 45, // Increased from 35 to 45
+                                      height: 45, // Increased from 35 to 45
+                                      backgroundColor: '#FF6B35',
+                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    },
+                                    children: Text({
+                                      text: this.timerBinding,
+                                      style: {
+                                        fontSize: 16, // Increased from 12 to 16
+                                        fontWeight: 'bold',
+                                        color: 'white'
+                                      }
+                                    })
+                                  })
+                                ]
+                              }),
+
+                              // Question text in the middle
+                              View({
+                                style: {
+                                  backgroundColor: 'white',
+                                  borderRadius: 6,
+                                  shadowColor: 'black',
+                                  shadowOpacity: 0.15,
+                                  shadowRadius: 6,
+                                  shadowOffset: [0, 2],
+                                  paddingTop: 12,
+                                  paddingBottom: 12,
+                                  paddingLeft: 12,
+                                  paddingRight: 12,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  alignSelf: 'center',
+                                  maxWidth: '60%',
+                                },
+                                children: [
+                                  // Question text
+                                  Text({
+                                    text: this.questionBinding,
+                                    numberOfLines: 5,
+                                    style: {
+                                      fontSize: 16,
+                                      fontWeight: '500',
+                                      color: 'black',
+                                      textAlign: 'center',
+                                      lineHeight: 18
+                                    }
+                                  })
+                                ]
+                              }),
+
+                              // Answer count container - flex to fill right space
+                              View({
+                                style: {
+                                  flex: 1,
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                },
+                                children: [
+                                  // Answer count on the right
+                                  View({
+                                    style: {
+                                      alignItems: 'center',
+                                    },
+                                    children: [
+                                      Text({
+                                        text: this.answerCountBinding,
+                                        style: {
+                                          fontSize: 20, // Increased from 16 to 20
+                                          fontWeight: 'bold',
+                                          color: '#1F2937'
+                                        }
+                                      }),
+                                      Text({
+                                        text: 'Answers',
+                                        style: {
+                                          fontSize: 12, // Increased from 10 to 12
+                                          color: '#6B7280'
+                                        }
+                                      })
+                                    ]
+                                  })
+                                ]
+                              })
+                        ]
                       })
                     )
                   ),
@@ -2645,92 +2684,195 @@ export class TriviaGame extends ui.UIComponent {
                         position: 'absolute',
                         left: 0,
                         right: 0,
-                        top: '2%',
-                        height: '15%',
-                        alignItems: 'center'
+                        top: 0,
+                        bottom: 0, // Fill available space, answer section will overlay at bottom
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
+                        alignItems: 'stretch',
+                        paddingTop: '1%',
+                        paddingBottom: this.answerCountTracking.derive(count => count === 2 ? 52 : 100) as any, // Reduce height for 2-answer questions (100 - 48px for unused button + gap)
                       },
-                      children: View({
-                        style: {
-                          backgroundColor: 'white',
-                          borderRadius: 6,
-                          shadowColor: 'black',
-                          shadowOpacity: 0.15,
-                          shadowRadius: 6,
-                          shadowOffset: [0, 2],
-                          paddingTop: 12,
-                          paddingBottom: 12,
-                          paddingLeft: 12,
-                          paddingRight: 12,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          alignSelf: 'center',
-                          maxWidth: '80%',
-                          marginHorizontal: 16
-                        },
-                        children: [
-                          // Question text
-                          Text({
-                            text: this.questionBinding,
-                            numberOfLines: 2,
-                            style: {
-                              fontSize: 14,
-                              fontWeight: '500',
-                              color: 'black',
-                              textAlign: 'center',
-                              lineHeight: 16
-                            }
-                          })
-                        ]
-                      })
-                    })
-                  ),
-
-                  // Question image - positioned below question when both exist
-                  UINode.if(
-                    this.questionImageBinding.derive(imageId => imageId !== null),
-                    View({
-                      style: {
-                        position: 'absolute',
-                        left: '15%',
-                        right: '15%',
-                        top: '18%', // Fixed position below the question
-                        bottom: this.answerCountTracking.derive(count => count === 2 ? '25%' : '35%'), // Larger area for 2-answer questions
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      },
-                      children: Image({
-                        source: this.questionImageBinding.derive(imageId => {
-                          if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                          const textureId = this.getTextureIdForImage(imageId);
-                          if (textureId) {
-                            try {
-                              const bigIntId = BigInt(textureId);
-                              return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
-                            } catch (error) {
-                              return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
-                            }
-                          }
-                          return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                      children: [
+                        // Question text only - centered at top (no timer/answer count here for image questions)
+                        View({
+                          style: {
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 58, // Increased height to accommodate padding (50 + 8)
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center', // Center the question text
+                            width: '100%',
+                            flexShrink: 0, // Prevent shrinking
+                            paddingTop: 4, // Added top padding for better balance
+                            paddingBottom: 4, // Reduced bottom padding from 8 to 4
+                          },
+                          children: [
+                            // Question text in the middle (centered)
+                            View({
+                              style: {
+                                backgroundColor: 'white',
+                                borderRadius: 6,
+                                shadowColor: 'black',
+                                shadowOpacity: 0.15,
+                                shadowRadius: 6,
+                                shadowOffset: [0, 2],
+                                paddingTop: 12,
+                                paddingBottom: 12,
+                                paddingLeft: 12,
+                                paddingRight: 12,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
+                                maxWidth: '90%', // Increased since we removed timer and answer count from question text box
+                              },
+                              children: [
+                                // Question text
+                                Text({
+                                  text: this.questionBinding,
+                                  numberOfLines: 2,
+                                  style: {
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: 'black',
+                                    textAlign: 'center',
+                                    lineHeight: 18
+                                  }
+                                })
+                              ]
+                            })
+                          ]
                         }),
-                        style: {
-                          width: 'auto',
-                          height: this.answerCountTracking.derive(count => count === 2 ? '100%' : '80%'), // Bigger image for 2-answer questions
-                          aspectRatio: 1.5, // 3:2 aspect ratio to maintain proportions
-                          borderRadius: 8,
-                          alignSelf: 'center'
-                        }
-                      })
+
+                        // Question image container with timer on left, image in middle, answer count on right
+                        View({
+                          style: {
+                            position: 'absolute',
+                            top: 58, // Start exactly at the bottom of the blue header container (58px height)
+                            left: 0,
+                            right: 0,
+                            bottom: this.answerCountTracking.derive(count => count === 2 ? 62 : 110) as any, // Stop above the green answer container (110px height, reduced by 48px for 2-answer questions)
+                            flexDirection: 'row', // Horizontal layout: timer | image | answer count
+                            alignItems: 'center',
+                          },
+                          children: [
+                            // Timer container on the left
+                            View({
+                              style: {
+                                flex: 1, // Equal space with answer count container
+                                height: '100%', // Fill the full height of the parent container
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              },
+                              children: [
+                                View({
+                                  style: {
+                                    width: 45, // Increased from 35 to 45
+                                    height: 45, // Increased from 35 to 45
+                                    backgroundColor: '#FF6B35',
+                                    borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  },
+                                  children: Text({
+                                    text: this.timerBinding,
+                                    style: {
+                                      fontSize: 16, // Increased from 12 to 16
+                                      fontWeight: 'bold',
+                                      color: 'white'
+                                    }
+                                  })
+                                })
+                              ]
+                            }),
+
+                            // Image container in the middle
+                            View({
+                              style: {
+                                width: 'auto', // Let container size itself to hug the image
+                                maxWidth: '60%', // Prevent it from getting too wide
+                                height: '100%', // Fill the full height of the parent container
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              },
+                              children: [
+                                Image({
+                                  source: this.questionImageBinding.derive(imageId => {
+                                    if (!imageId) return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                    const textureId = this.getTextureIdForImage(imageId);
+                                    if (textureId) {
+                                      try {
+                                        const bigIntId = BigInt(textureId);
+                                        return ImageSource.fromTextureAsset(new hz.TextureAsset(bigIntId));
+                                      } catch (error) {
+                                        return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                      }
+                                    }
+                                    return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                  }),
+                                  style: {
+                                    width: '100%', // Fill the full width of the container
+                                    height: '100%', // Fill the full height of the container
+                                    aspectRatio: 1.5, // Maintain 3:2 aspect ratio
+                                    borderRadius: 8,
+                                    alignSelf: 'center'
+                                  }
+                                })
+                              ]
+                            }),
+
+                            // Answer count container on the right
+                            View({
+                              style: {
+                                flex: 1, // Equal space with timer container
+                                height: '100%', // Fill the full height of the parent container
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              },
+                              children: [
+                                View({
+                                  style: {
+                                    alignItems: 'center',
+                                  },
+                                  children: [
+                                    Text({
+                                      text: this.answerCountBinding,
+                                      style: {
+                                        fontSize: 20, // Increased from 16 to 20
+                                        fontWeight: 'bold',
+                                        color: '#1F2937'
+                                      }
+                                    }),
+                                    Text({
+                                      text: 'Answers',
+                                      style: {
+                                        fontSize: 12, // Increased from 10 to 12
+                                        color: '#6B7280'
+                                      }
+                                    })
+                                  ]
+                                })
+                              ]
+                            })
+                          ]
+                        })
+                      ]
                     })
                   ),
 
-                  // Answer options grid - positioned at bottom
+                  // Answer options grid - anchored to bottom of game screen
                   View({
                     style: {
                       position: 'absolute',
-                      bottom: 5,
-                      left: 15,
-                      right: 15,
-                      height: 100
+                      bottom: 0, // Flush with bottom of red container
+                      left: 0,
+                      right: 0,
+                      height: 110, // Fixed height for consistent 4-option layout
+                      paddingHorizontal: 8, // Reduced from 16px to 8px for more button space
+                      paddingTop: 5,
+                      paddingBottom: 8, // Reduced from 16px to 8px for more button space
                     },
                     children: [
                       // Dynamic layout based on number of answers
@@ -2739,141 +2881,90 @@ export class TriviaGame extends ui.UIComponent {
                         View({
                           style: {
                             width: '100%',
-                            height: '100%',
                             flexDirection: 'row',
                             flexWrap: 'wrap',
                             justifyContent: 'center',
                             alignItems: 'center'
                           },
                           children: [
-                            // For 2-answer questions: Show options 3 and 4, hide 1 and 2
-                            UINode.if(
-                              this.answerCountTracking.derive(count => count === 2),
-                              View({
-                                style: {
-                                  width: '100%',
-                                  height: '100%',
-                                  flexDirection: 'row',
-                                  flexWrap: 'wrap',
-                                  justifyContent: 'center',
-                                  alignItems: 'center' // Changed from 'flex-end' to 'center' for consistent spacing
-                                },
-                                children: [
-                                  // Empty spacers for top row (where options 1 and 2 would be)
-                                  View({
-                                    style: {
-                                      width: '48%',
-                                      height: 42,
-                                      marginRight: 6,
-                                      marginBottom: 6,
-                                      opacity: 0 // Invisible spacer
-                                    }
-                                  }),
-                                  View({
-                                    style: {
-                                      width: '48%',
-                                      height: 42,
-                                      marginBottom: 6,
-                                      opacity: 0 // Invisible spacer
-                                    }
-                                  }),
-                                  
-                                  // Answer 2 (Yellow/Circle) - shows as Option 3 in bottom row
-                                  UINode.if(
-                                    this.answerTexts[2].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        marginRight: 6
-                                      },
-                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                                    })
-                                  ),
-                                  // Answer 3 (Green/Square) - shows as Option 4 in bottom row
-                                  UINode.if(
-                                    this.answerTexts[3].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42
-                                      },
-                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
-                                    })
-                                  )
-                                ]
-                              })
-                            ),
+                            // Always show 4 slots - for 2-answer questions, use bottom 2 slots
+                            // Answer 0 (Red/Triangle) - Option 1 - show answer 0 only if there are 3+ answers
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginRight: 6,
+                                marginBottom: 6,
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count > 2),
+                                this.createAnswerButton(0, '#DC2626', '1290982519195562'),
+                                this.createBlankButton()
+                              )
+                            }),
 
-                            // For 3+ answer questions: Show all options normally
-                            UINode.if(
-                              this.answerCountTracking.derive(count => count !== 2),
-                              View({
-                                style: {
-                                  width: '100%',
-                                  height: '100%',
-                                  flexDirection: 'row',
-                                  flexWrap: 'wrap',
-                                  justifyContent: 'center',
-                                  alignItems: 'center'
-                                },
-                                children: [
-                                  // Answer 0 (Red/Triangle) - Option 1
-                                  UINode.if(
-                                    this.answerTexts[0].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                        height: 42,
-                                        marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
-                                        marginBottom: 6
-                                      },
-                                      children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
-                                    })
-                                  ),
+                            // Answer 1 (Blue/Star) - Option 2 - show answer 1 only if there are 4+ answers
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginBottom: 6,
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count > 3),
+                                this.createAnswerButton(1, '#2563EB', '764343253011569'),
+                                this.createBlankButton()
+                              )
+                            }),
 
-                                  // Answer 1 (Blue/Star) - Option 2
-                                  UINode.if(
-                                    this.answerTexts[1].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                        height: 42,
-                                        marginBottom: 6
-                                      },
-                                      children: this.createAnswerButton(1, '#2563EB', '764343253011569')
-                                    })
-                                  ),
+                            // Answer 2 (Yellow/Circle) - Option 3 - show answer 0 for 2-answer questions, answer 2 for 3+ answer questions
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginRight: 6,
+                                marginBottom: 6,
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count === 2),
+                                // For 2-answer questions: show answer 0 in position 3
+                                UINode.if(
+                                  this.answerTexts[0].derive(text => text !== ''),
+                                  this.createAnswerButton(0, '#DC2626', '1290982519195562'),
+                                  this.createBlankButton()
+                                ),
+                                // For 3+ answer questions: show answer 2 in position 3
+                                UINode.if(
+                                  this.answerTexts[2].derive(text => text !== ''),
+                                  this.createAnswerButton(2, '#EAB308', '797899126007085'),
+                                  this.createBlankButton()
+                                )
+                              )
+                            }),
 
-                                  // Answer 2 (Yellow/Circle) - Option 3
-                                  UINode.if(
-                                    this.answerTexts[2].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        marginRight: 6,
-                                        marginBottom: 6
-                                      },
-                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                                    })
-                                  ),
-
-                                  // Answer 3 (Green/Square) - Option 4
-                                  UINode.if(
-                                    this.answerTexts[3].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        marginBottom: 6
-                                      },
-                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
-                                    })
-                                  )
-                                ]
-                              })
-                            )
+                            // Answer 3 (Green/Square) - Option 4 - show answer 1 for 2-answer questions, answer 3 for 3+ answer questions
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginBottom: 6,
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count === 2),
+                                // For 2-answer questions: show answer 1 in position 4
+                                UINode.if(
+                                  this.answerTexts[1].derive(text => text !== ''),
+                                  this.createAnswerButton(1, '#2563EB', '764343253011569'),
+                                  this.createBlankButton()
+                                ),
+                                // For 3+ answer questions: show answer 3 in position 4
+                                UINode.if(
+                                  this.answerTexts[3].derive(text => text !== ''),
+                                  this.createAnswerButton(3, '#16A34A', '1286736292915198'),
+                                  this.createBlankButton()
+                                )
+                              )
+                            })
                           ]
                         })
                       )
@@ -3637,7 +3728,8 @@ export class TriviaGame extends ui.UIComponent {
         height: '100%',
         backgroundColor: this.answerButtonColors[index],
         borderRadius: 4,
-        paddingHorizontal: 8,
+        paddingLeft: 12,
+        paddingRight: 8,
         paddingVertical: 6,
         flexDirection: 'row',
         alignItems: 'center',
@@ -3648,19 +3740,73 @@ export class TriviaGame extends ui.UIComponent {
         Image({
           source: ImageSource.fromTextureAsset(textureAsset),
           style: {
-            width: 12,
-            height: 12,
+            width: 20,
+            height: 20,
+            aspectRatio: 1,
             marginRight: 6
           }
         }),
 
-        // Answer text only (no results indicator)
+        // Answer text
         Text({
           text: this.answerTexts[index],
+          numberOfLines: 5,
           style: {
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: '500',
-            color: 'white'
+            color: 'white',
+            flex: 1,
+            textAlign: 'left',
+            lineHeight: 12 // Reduced line spacing to prevent text cutoff
+          }
+        }),
+
+        // Number indicator (only visible when answer is revealed)
+        UINode.if(
+          this.answerRevealedBinding,
+          View({
+            style: {
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginLeft: 4,
+              paddingRight: 8 // Added right padding
+            },
+            children: Text({
+              text: (index + 1).toString(),
+              style: {
+                fontSize: 10,
+                fontWeight: 'bold',
+                color: 'white' // Changed to white text
+              }
+            })
+          })
+        )
+      ]
+    });
+  }
+
+  private createBlankButton(): UINode {
+    return View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'transparent', // Transparent background
+        borderRadius: 4,
+        borderWidth: 0,
+        borderColor: 'transparent', // No border outline
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      children: [
+        Text({
+          text: '', // Empty text
+          style: {
+            fontSize: 12,
+            fontWeight: '500',
+            color: 'transparent'
           }
         })
       ]
