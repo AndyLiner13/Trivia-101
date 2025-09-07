@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import backgroundImage from 'figma:asset/cad91586e214fa1ccd2c2c2b8b441412b340fe93.png';
+import exampleImage from 'figma:asset/9aba15909e2373b41e001825c158a095905f3617.png';
 
 interface Player {
   name: string;
@@ -50,21 +50,22 @@ export function ScoreboardScreen({ onNext, questionNumber }: ScoreboardScreenPro
   ];
 
   return (
-    <div 
-      className="w-[800px] h-[450px] relative overflow-hidden rounded-lg border border-white/10"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
+    <div className="w-[800px] h-[450px] relative overflow-hidden rounded-lg">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <ImageWithFallback
+          src={exampleImage}
+          alt="Scoreboard Background"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
       {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/40"></div>
+      <div className="absolute inset-0 bg-black bg-opacity-20"></div>
 
       {/* Header */}
       <div className="absolute top-3 left-1/2 transform -translate-x-1/2">
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg px-6 py-2 shadow-lg border border-white/20">
+        <div className="bg-white rounded-lg px-6 py-2 shadow-lg">
           <h1 className="text-xl font-bold text-gray-800">Scoreboard</h1>
         </div>
       </div>
@@ -73,7 +74,7 @@ export function ScoreboardScreen({ onNext, questionNumber }: ScoreboardScreenPro
       <div className="absolute top-3 right-3">
         <button
           onClick={onNext}
-          className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-800 px-3 py-2 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 border border-white/20"
+          className="bg-white hover:bg-gray-100 text-gray-800 px-3 py-2 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
         >
           <span className="text-sm">Next</span>
           <ChevronRight className="w-3 h-3" />
@@ -86,7 +87,7 @@ export function ScoreboardScreen({ onNext, questionNumber }: ScoreboardScreenPro
           {players.map((player, index) => (
             <div
               key={player.name}
-              className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center justify-between shadow-lg hover:bg-white transition-all border border-white/20"
+              className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center justify-between shadow-lg hover:bg-opacity-100 transition-all"
             >
               <div className="flex items-center gap-3">
                 {/* Rank */}

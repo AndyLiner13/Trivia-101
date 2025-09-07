@@ -1,6 +1,5 @@
 import { Clock, Play, Pause, VolumeX, Baby, Users } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import backgroundImage from 'figma:asset/cad91586e214fa1ccd2c2c2b8b441412b340fe93.png';
 
 interface Player {
   name: string;
@@ -49,83 +48,69 @@ export function GameConfigScreen({ onStartGame }: GameConfigScreenProps) {
   ];
 
   return (
-    <div 
-      className="w-[800px] h-[450px] relative overflow-hidden rounded-lg border border-white/10 p-4 flex flex-col"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
-      {/* Overlay for better content visibility */}
-      <div className="absolute inset-0 bg-black/30 rounded-lg"></div>
-      
-      {/* Content Container */}
-      <div className="relative z-10 flex flex-col h-full">
-        {/* Header */}
-        <div className="text-center mb-3">
-          <h1 className="text-xl font-bold text-white">Waiting for Host...</h1>
-        </div>
+    <div className="w-[800px] h-[450px] bg-gradient-to-br from-purple-600 to-blue-600 relative overflow-hidden rounded-lg p-4 flex flex-col">
+      {/* Header */}
+      <div className="text-center mb-3">
+        <h1 className="text-xl font-bold text-black">Waiting for Host...</h1>
+      </div>
 
-        {/* Players Section */}
-        <div className="flex-1 mb-2">
-          <h3 className="text-white font-semibold mb-2 text-sm flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span>{players.filter(p => p.isOnline).length}</span>
-          </h3>
-          <div className="grid grid-cols-7 gap-2 max-h-72 overflow-y-auto scrollbar-hide">
-            {players.map((player) => (
-              <div key={player.name} className="flex flex-col items-center space-y-1">
-                <ImageWithFallback
-                  src={player.avatar}
-                  alt={player.name}
-                  className="w-16 h-16 rounded-lg object-cover shadow-lg"
-                />
-                <span className="text-white text-xs font-medium text-center leading-tight max-w-full truncate">
-                  {player.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Game Settings Panel - Full Width Bottom */}
-        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 border border-white/10">
-          <div className="grid grid-cols-6 gap-2 text-center">
-            <div>
-              <span className="text-white/70 text-xs block mb-1">Category:</span>
-              <span className="text-white text-xs font-medium">{gameSettings.category}</span>
-            </div>
-            <div>
-              <span className="text-white/70 text-xs block mb-1 invisible">Questions:</span>
-              <span className="text-white text-xs font-medium">Q{gameSettings.numQuestions}</span>
-            </div>
-            <div>
-              <span className="text-white/70 text-xs block mb-1 invisible">Time:</span>
-              <span className="text-white text-xs font-medium flex items-center justify-center gap-1">
-                <Clock className="w-3 h-3" />
-                {gameSettings.timeLimit}s
+      {/* Players Section */}
+      <div className="flex-1 mb-2">
+        <h3 className="text-black font-semibold mb-2 text-sm flex items-center gap-2">
+          <Users className="w-4 h-4" />
+          <span>{players.filter(p => p.isOnline).length}</span>
+        </h3>
+        <div className="grid grid-cols-7 gap-2 max-h-72 overflow-y-auto scrollbar-hide">
+          {players.map((player) => (
+            <div key={player.name} className="flex flex-col items-center space-y-1">
+              <ImageWithFallback
+                src={player.avatar}
+                alt={player.name}
+                className="w-16 h-16 rounded-lg object-cover shadow-lg"
+              />
+              <span className="text-black text-xs font-medium text-center leading-tight max-w-full truncate">
+                {player.name}
               </span>
             </div>
-            <div>
-              <span className="text-white/70 text-xs block mb-1 invisible">Difficulty:</span>
-              <div className="flex items-center justify-center">
-                <Baby className="w-4 h-4 text-pink-400" />
-              </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Game Settings Panel - Full Width Bottom */}
+      <div className="bg-white bg-opacity-90 rounded-lg p-2 backdrop-blur-sm">
+        <div className="grid grid-cols-6 gap-2 text-center">
+          <div>
+            <span className="text-gray-700 text-xs block mb-1">Category:</span>
+            <span className="text-black text-xs font-medium">{gameSettings.category}</span>
+          </div>
+          <div>
+            <span className="text-gray-700 text-xs block mb-1 invisible">Questions:</span>
+            <span className="text-black text-xs font-medium">Q{gameSettings.numQuestions}</span>
+          </div>
+          <div>
+            <span className="text-gray-700 text-xs block mb-1 invisible">Time:</span>
+            <span className="text-black text-xs font-medium flex items-center justify-center gap-1">
+              <Clock className="w-3 h-3" />
+              {gameSettings.timeLimit}s
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-700 text-xs block mb-1 invisible">Difficulty:</span>
+            <div className="flex items-center justify-center">
+              <Baby className="w-4 h-4 text-pink-500" />
             </div>
-            <div>
-              <span className="text-white/70 text-xs block mb-1 invisible">Auto:</span>
-              <div className="flex items-center justify-center gap-0.5">
-                <Play className={`w-4 h-4 ${gameSettings.autoAdvance ? 'text-green-400' : 'text-white/40'}`} />
-                <Pause className={`w-4 h-4 ${gameSettings.autoAdvance ? 'text-green-400' : 'text-white/40'}`} />
-              </div>
+          </div>
+          <div>
+            <span className="text-gray-700 text-xs block mb-1 invisible">Auto:</span>
+            <div className="flex items-center justify-center gap-0.5">
+              <Play className={`w-4 h-4 ${gameSettings.autoAdvance ? 'text-green-500' : 'text-gray-400'}`} />
+              <Pause className={`w-4 h-4 ${gameSettings.autoAdvance ? 'text-green-500' : 'text-gray-400'}`} />
             </div>
-            <div>
-              <span className="text-white/70 text-xs block mb-1 invisible">Audio:</span>
-              <div className="flex items-center justify-center">
-                <VolumeX className={`w-4 h-4 ${gameSettings.muteQuestions ? 'text-red-400' : 'text-white/40'}`} />
-              </div>
+          </div>
+          <div>
+            <span className="text-gray-700 text-xs block mb-1 invisible">Audio:</span>
+            <div className="flex items-center justify-center">
+              <VolumeX className={`w-4 h-4 ${gameSettings.muteQuestions ? 'text-red-500' : 'text-gray-400'}`} />
             </div>
           </div>
         </div>

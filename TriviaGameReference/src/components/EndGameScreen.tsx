@@ -1,5 +1,6 @@
-import { Trophy, RotateCcw, Settings } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import backgroundImage from 'figma:asset/cad91586e214fa1ccd2c2c2b8b441412b340fe93.png';
 
 interface Player {
   name: string;
@@ -32,117 +33,87 @@ export function EndGameScreen({ onPlayAgain, onEditSettings }: EndGameScreenProp
     }
   ];
 
-  const podiumColors = [
-    "bg-gradient-to-t from-yellow-400 to-yellow-300", // 1st place - Gold
-    "bg-gradient-to-t from-gray-400 to-gray-300",     // 2nd place - Silver
-    "bg-gradient-to-t from-orange-400 to-orange-300"  // 3rd place - Bronze
-  ];
-
-  const podiumHeights = ["h-20", "h-16", "h-12"]; // 1st tallest, 2nd medium, 3rd shortest
-
   return (
-    <div className="w-[800px] h-[450px] bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 relative overflow-hidden rounded-lg p-4">
-      {/* Confetti/Celebration Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-4 h-4 bg-yellow-400 rounded-full opacity-80 animate-bounce"></div>
-        <div className="absolute top-20 right-20 w-3 h-3 bg-pink-400 rounded-full opacity-80 animate-bounce delay-100"></div>
-        <div className="absolute top-32 left-1/3 w-2 h-2 bg-green-400 rounded-full opacity-80 animate-bounce delay-200"></div>
-        <div className="absolute top-16 right-1/3 w-3 h-3 bg-blue-400 rounded-full opacity-80 animate-bounce delay-300"></div>
-      </div>
-
-      {/* Header */}
-      <div className="text-center mb-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Trophy className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-          <h1 className="text-3xl font-bold text-white">Game Complete!</h1>
-          <Trophy className="w-8 h-8 text-yellow-400 fill-yellow-400" />
+    <div 
+      className="w-[800px] h-[450px] relative overflow-hidden rounded-3xl border border-white/10"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Overlay for better content visibility */}
+      <div className="absolute inset-0 bg-black/30 rounded-3xl"></div>
+      
+      {/* Content Container */}
+      <div className="relative z-10 w-full h-full">
+        {/* Header */}
+        <div className="relative text-center pt-8 pb-12">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Trophy className="w-10 h-10 text-yellow-400 fill-yellow-400" />
+            <h1 className="text-4xl font-bold text-white">Game Complete!</h1>
+            <Trophy className="w-10 h-10 text-yellow-400 fill-yellow-400" />
+          </div>
         </div>
-        <p className="text-purple-200 text-lg">Congratulations to our top performers!</p>
-      </div>
 
-      {/* Podium */}
-      <div className="flex items-end justify-center gap-6 mb-4">
-        {/* 2nd Place */}
-        <div className="flex flex-col items-center">
-          <div className="relative mb-2">
-            <ImageWithFallback
-              src={topPlayers[1].avatar}
-              alt={topPlayers[1].name}
-              className="w-16 h-16 rounded-full object-cover border-3 border-gray-300 shadow-lg"
-            />
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-black font-bold text-xs">
-              2
+        {/* Podium */}
+        <div className="relative flex items-end justify-center gap-8 px-8">
+          {/* 2nd Place */}
+          <div className="flex flex-col items-center">
+            <div className="relative mb-4">
+              <ImageWithFallback
+                src={topPlayers[1].avatar}
+                alt={topPlayers[1].name}
+                className="w-16 h-16 rounded-xl object-cover shadow-lg"
+              />
+            </div>
+            <div className="text-center mb-3">
+              <p className="text-white font-bold text-sm">{topPlayers[1].name}</p>
+            </div>
+            <div className="w-20 h-16 bg-gray-400 rounded-lg shadow-lg flex flex-col items-center justify-center">
+              <span className="text-gray-800 font-bold text-lg">2nd</span>
+              <span className="text-gray-700 text-xs font-medium">{topPlayers[1].score.toLocaleString()}</span>
             </div>
           </div>
-          <div className="text-center mb-1">
-            <p className="text-white font-bold text-sm">{topPlayers[1].name}</p>
-            <p className="text-gray-200 text-xs">{topPlayers[1].score.toLocaleString()} pts</p>
-          </div>
-          <div className={`w-20 h-16 ${podiumColors[1]} rounded-t-lg shadow-lg flex items-end justify-center pb-1`}>
-            <span className="text-black font-bold text-lg">2nd</span>
-          </div>
-        </div>
 
-        {/* 1st Place */}
-        <div className="flex flex-col items-center">
-          <div className="relative mb-2">
-            <ImageWithFallback
-              src={topPlayers[0].avatar}
-              alt={topPlayers[0].name}
-              className="w-20 h-20 rounded-full object-cover border-3 border-yellow-400 shadow-lg"
-            />
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold text-sm">
-              1
+          {/* 1st Place */}
+          <div className="flex flex-col items-center">
+            <div className="relative mb-4">
+              <ImageWithFallback
+                src={topPlayers[0].avatar}
+                alt={topPlayers[0].name}
+                className="w-20 h-20 rounded-xl object-cover shadow-lg"
+              />
+              <Trophy className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-6 h-6 text-yellow-400 fill-yellow-400" />
             </div>
-            <Trophy className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-5 h-5 text-yellow-400 fill-yellow-400" />
-          </div>
-          <div className="text-center mb-1">
-            <p className="text-white font-bold text-lg">{topPlayers[0].name}</p>
-            <p className="text-yellow-200 text-sm">{topPlayers[0].score.toLocaleString()} pts</p>
-          </div>
-          <div className={`w-24 h-20 ${podiumColors[0]} rounded-t-lg shadow-lg flex items-end justify-center pb-1`}>
-            <span className="text-black font-bold text-xl">1st</span>
-          </div>
-        </div>
-
-        {/* 3rd Place */}
-        <div className="flex flex-col items-center">
-          <div className="relative mb-2">
-            <ImageWithFallback
-              src={topPlayers[2].avatar}
-              alt={topPlayers[2].name}
-              className="w-14 h-14 rounded-full object-cover border-3 border-orange-400 shadow-lg"
-            />
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-400 rounded-full flex items-center justify-center text-black font-bold text-xs">
-              3
+            <div className="text-center mb-3">
+              <p className="text-white font-bold text-lg">{topPlayers[0].name}</p>
+            </div>
+            <div className="w-24 h-20 bg-yellow-400 rounded-lg shadow-lg flex flex-col items-center justify-center">
+              <span className="text-yellow-900 font-bold text-xl">1st</span>
+              <span className="text-yellow-800 text-sm font-medium">{topPlayers[0].score.toLocaleString()}</span>
             </div>
           </div>
-          <div className="text-center mb-1">
-            <p className="text-white font-bold text-sm">{topPlayers[2].name}</p>
-            <p className="text-orange-200 text-xs">{topPlayers[2].score.toLocaleString()} pts</p>
-          </div>
-          <div className={`w-16 h-12 ${podiumColors[2]} rounded-t-lg shadow-lg flex items-end justify-center pb-1`}>
-            <span className="text-black font-bold text-sm">3rd</span>
+
+          {/* 3rd Place */}
+          <div className="flex flex-col items-center">
+            <div className="relative mb-4">
+              <ImageWithFallback
+                src={topPlayers[2].avatar}
+                alt={topPlayers[2].name}
+                className="w-14 h-14 rounded-xl object-cover shadow-lg"
+              />
+            </div>
+            <div className="text-center mb-3">
+              <p className="text-white font-bold text-sm">{topPlayers[2].name}</p>
+            </div>
+            <div className="w-16 h-12 bg-orange-400 rounded-lg shadow-lg flex flex-col items-center justify-center">
+              <span className="text-orange-900 font-bold text-base">3rd</span>
+              <span className="text-orange-800 text-xs font-medium">{topPlayers[2].score.toLocaleString()}</span>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={onPlayAgain}
-          className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold text-base transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Play Again
-        </button>
-        <button
-          onClick={onEditSettings}
-          className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-full font-bold text-base transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
-        >
-          <Settings className="w-4 h-4" />
-          Configure
-        </button>
       </div>
     </div>
   );
