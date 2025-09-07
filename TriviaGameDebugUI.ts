@@ -114,6 +114,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private currentQuestionIndex: number = 0;
   private currentQuestion: TriviaQuestion | null = null;
   
+  // Pre-shuffled question indices to ensure no duplicates
+  private generalQuestionsShuffledIndices: number[] = [];
+  private italianBrainrotQuestionsShuffledIndices: number[] = [];
+  private generalQuestionsCurrentIndex: number = 0;
+  private italianBrainrotQuestionsCurrentIndex: number = 0;
+  
   // Results data for static display
   private lastCorrectAnswerIndex: number = -1;
   private lastAnswerCounts: number[] = [];
@@ -941,27 +947,27 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                     }
                                   }),
                                   
-                                  // Answer 2 (Yellow/Circle) - shows as Option 3 in bottom row
+                                  // Answer 0 (Yellow/Circle) - shows as Option 1 in bottom row
                                   UINode.if(
-                                    this.answerTexts[2].derive(text => text !== ''),
+                                    this.answerTexts[0].derive(text => text !== ''),
                                     View({
                                       style: {
                                         width: '48%',
                                         height: 42,
                                         marginRight: 6
                                       },
-                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                                      children: this.createAnswerButton(0, '#EAB308', '797899126007085')
                                     })
                                   ),
-                                  // Answer 3 (Green/Square) - shows as Option 4 in bottom row
+                                  // Answer 1 (Green/Square) - shows as Option 2 in bottom row
                                   UINode.if(
-                                    this.answerTexts[3].derive(text => text !== ''),
+                                    this.answerTexts[1].derive(text => text !== ''),
                                     View({
                                       style: {
                                         width: '48%',
                                         height: 42
                                       },
-                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                      children: this.createAnswerButton(1, '#16A34A', '1286736292915198')
                                     })
                                   )
                                 ]
@@ -1659,6 +1665,30 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       }
                     })
                   ]
+                }),
+
+                // Reset Questions
+                Pressable({
+                  style: {
+                    backgroundColor: '#4A5568',
+                    borderRadius: 6,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    marginBottom: 6,
+                    width: '23%',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.resetQuestionOrders(),
+                  children: [
+                    Text({
+                      text: '🔄 Reset',
+                      style: {
+                        fontSize: 8,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
                 })
               ]
             })
@@ -1680,6 +1710,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
           // Convert CustomQuizQuestion format to TriviaQuestion format
           this.italianBrainrotQuestions = this.loadCustomQuiz(jsonData);
           console.log("✅ Loaded", this.italianBrainrotQuestions.length, "Italian Brainrot questions");
+
+          // Pre-load all images for Italian Brainrot questions
+          await this.preloadItalianBrainrotImages();
         }
       }
 
@@ -1696,6 +1729,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         }
       }
 
+      // Pre-shuffle question orders to ensure no duplicates
+      this.preShuffleQuestionOrders();
+
       // Log summary
       if (this.italianBrainrotQuestions.length === 0 && this.generalQuestions.length === 0) {
         console.log("⚠️ No questions loaded from JSON assets");
@@ -1704,6 +1740,129 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     } catch (error) {
       console.log("❌ Error loading questions from assets:", error);
     }
+  }
+
+  // Pre-load all Italian Brainrot Quiz images onto all players' devices
+  private async preloadItalianBrainrotImages(): Promise<void> {
+    if (this.italianBrainrotQuestions.length === 0) {
+      console.log("⚠️ No Italian Brainrot questions to pre-load images for");
+      return;
+    }
+
+    const imagesToPreload: string[] = [];
+    let preloadedCount = 0;
+
+    // Collect all unique image IDs that need to be pre-loaded
+    for (const question of this.italianBrainrotQuestions) {
+      if (question.image && !imagesToPreload.includes(question.image)) {
+        imagesToPreload.push(question.image);
+      }
+    }
+
+    if (imagesToPreload.length === 0) {
+      console.log("⚠️ No images found in Italian Brainrot questions");
+      return;
+    }
+
+    // Pre-load each image
+    for (const imageId of imagesToPreload) {
+      try {
+        const textureId = this.getTextureIdForImage(imageId);
+        if (textureId) {
+          // Create the texture asset to trigger pre-loading
+          const textureAsset = new hz.TextureAsset(BigInt(textureId));
+
+          // Create an ImageSource to ensure the texture is loaded into memory
+          const imageSource = ImageSource.fromTextureAsset(textureAsset);
+
+          // Force the image to load by creating a temporary Image component
+          // This ensures the texture is cached on the device
+          const tempImage = Image({
+            source: imageSource,
+            style: { width: 1, height: 1, opacity: 0 }
+          });
+
+          preloadedCount++;
+          console.log("✅ Pre-loaded image:", imageId, "(", preloadedCount, "/", imagesToPreload.length, ")");
+        } else {
+          console.log("⚠️ Could not get texture ID for image:", imageId);
+        }
+      } catch (error) {
+        console.log("❌ Error pre-loading image:", imageId, error);
+      }
+    }
+
+    console.log("🎉 Successfully pre-loaded", preloadedCount, "out of", imagesToPreload.length, "Italian Brainrot images");
+  }
+
+  // Pre-shuffle question orders to ensure no duplicates during gameplay
+  private preShuffleQuestionOrders(): void {
+    // Shuffle General Questions
+    if (this.generalQuestions.length > 0) {
+      this.generalQuestionsShuffledIndices = this.createShuffledIndices(this.generalQuestions.length);
+      this.generalQuestionsCurrentIndex = 0;
+      console.log("🔀 Pre-shuffled", this.generalQuestions.length, "General questions");
+    }
+
+    // Shuffle Italian Brainrot Questions
+    if (this.italianBrainrotQuestions.length > 0) {
+      this.italianBrainrotQuestionsShuffledIndices = this.createShuffledIndices(this.italianBrainrotQuestions.length);
+      this.italianBrainrotQuestionsCurrentIndex = 0;
+      console.log("🔀 Pre-shuffled", this.italianBrainrotQuestions.length, "Italian Brainrot questions");
+    }
+  }
+
+  // Create a shuffled array of indices (0 to length-1) with no duplicates
+  private createShuffledIndices(length: number): number[] {
+    const indices = Array.from({ length }, (_, i) => i);
+
+    // Fisher-Yates shuffle algorithm
+    for (let i = length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+
+    return indices;
+  }
+
+  // Get next question from pre-shuffled General questions
+  private getNextGeneralQuestion(): TriviaQuestion | null {
+    if (this.generalQuestions.length === 0) return null;
+
+    // If we've gone through all questions, reset to beginning
+    if (this.generalQuestionsCurrentIndex >= this.generalQuestionsShuffledIndices.length) {
+      this.generalQuestionsCurrentIndex = 0;
+      console.log("🔄 Reset General questions to beginning");
+    }
+
+    const questionIndex = this.generalQuestionsShuffledIndices[this.generalQuestionsCurrentIndex];
+    const question = this.generalQuestions[questionIndex];
+    this.generalQuestionsCurrentIndex++;
+
+    return question;
+  }
+
+  // Get next question from pre-shuffled Italian Brainrot questions
+  private getNextItalianBrainrotQuestion(): TriviaQuestion | null {
+    if (this.italianBrainrotQuestions.length === 0) return null;
+
+    // If we've gone through all questions, reset to beginning
+    if (this.italianBrainrotQuestionsCurrentIndex >= this.italianBrainrotQuestionsShuffledIndices.length) {
+      this.italianBrainrotQuestionsCurrentIndex = 0;
+      console.log("🔄 Reset Italian Brainrot questions to beginning");
+    }
+
+    const questionIndex = this.italianBrainrotQuestionsShuffledIndices[this.italianBrainrotQuestionsCurrentIndex];
+    const question = this.italianBrainrotQuestions[questionIndex];
+    this.italianBrainrotQuestionsCurrentIndex++;
+
+    return question;
+  }
+
+  // Reset and re-shuffle question orders
+  private resetQuestionOrders(): void {
+    console.log("🔄 Resetting and re-shuffling question orders...");
+    this.preShuffleQuestionOrders();
   }
 
   // Convert CustomQuizQuestion[] to TriviaQuestion[]
@@ -2016,10 +2175,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
 
-    // Get a random question from general questions only
-    if (this.generalQuestions.length > 0) {
-      const randomIndex = Math.floor(Math.random() * this.generalQuestions.length);
-      const question = this.shuffleQuestionAnswers(this.generalQuestions[randomIndex]);
+    // Get next question from pre-shuffled General questions
+    const question = this.getNextGeneralQuestion();
+    if (question) {
+      const shuffledQuestion = this.shuffleQuestionAnswers(question);
 
       // Update UI bindings
       this.questionBinding.set(question.question);
@@ -2038,7 +2197,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       // Update answer count display
       this.answerCountBinding.set(question.answers.length.toString());
 
-      console.log("✅ General question loaded:", question.question);
+      console.log("✅ General question loaded:", shuffledQuestion.question);
     } else {
       console.log("❌ No general questions available");
       this.questionBinding.set("No general questions available. Please set the generalQuestions asset.");
@@ -2060,10 +2219,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.showErrorBinding.set(false);
 
-    // Get a random question from Italian Brainrot questions only
-    if (this.italianBrainrotQuestions.length > 0) {
-      const randomIndex = Math.floor(Math.random() * this.italianBrainrotQuestions.length);
-      const question = this.shuffleQuestionAnswers(this.italianBrainrotQuestions[randomIndex]);
+    // Get next question from pre-shuffled Italian Brainrot questions
+    const question = this.getNextItalianBrainrotQuestion();
+    if (question) {
+      const shuffledQuestion = this.shuffleQuestionAnswers(question);
 
       // Update UI bindings
       this.questionBinding.set(question.question);
@@ -2082,8 +2241,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       // Update answer count display
       this.answerCountBinding.set(question.answers.length.toString());
 
-      console.log("✅ Italian Brainrot question loaded:", question.question);
-      console.log("🖼️ Image:", question.image);
+      console.log("✅ Italian Brainrot question loaded:", shuffledQuestion.question);
+      console.log("🖼️ Image:", shuffledQuestion.image);
     } else {
       console.log("❌ No Italian Brainrot questions available");
       this.questionBinding.set("No Italian Brainrot questions available. Please set the italianBrainrotQuiz asset.");
