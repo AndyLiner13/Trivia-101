@@ -1077,7 +1077,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       bottom: 0, // Flush with bottom of red container
                       left: 0,
                       right: 0,
-                      // Removed fixed height to hug contents
+                      height: 110, // Fixed height for consistent 4-option layout
                       paddingHorizontal: 8, // Reduced from 16px to 8px for more button space
                       paddingTop: 5,
                       paddingBottom: 8, // Reduced from 16px to 8px for more button space
@@ -1098,140 +1098,92 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             // Removed blue border for answer grid container
                           },
                           children: [
-                            // For 2-answer questions: Show options 3 and 4, hide 1 and 2
-                            UINode.if(
-                              this.answerCountTracking.derive(count => count === 2),
-                              View({
-                                style: {
-                                  width: '100%',
-                                  flexDirection: 'row',
-                                  flexWrap: 'wrap',
-                                  justifyContent: 'center',
-                                  alignItems: 'center' // Changed from 'flex-end' to 'center' for consistent spacing
-                                  // Removed purple border for 2-answer layout container
-                                },
-                                children: [
-                                  // Empty spacers for top row (where options 1 and 2 would be)
-                                  View({
-                                    style: {
-                                      width: '48%',
-                                      height: 42,
-                                      marginRight: 6,
-                                      marginBottom: 6,
-                                      opacity: 0, // Invisible spacer
-                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for spacer 1
-                                    }
-                                  }),
-                                  View({
-                                    style: {
-                                      width: '48%',
-                                      height: 42,
-                                      marginBottom: 6,
-                                      opacity: 0, // Invisible spacer
-                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for spacer 2
-                                    }
-                                  }),
-                                  
-                                  // Answer 0 (Yellow/Circle) - shows as Option 1 in bottom row
-                                  UINode.if(
-                                    this.answerTexts[0].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        marginRight: 6,
-                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container (2-answer layout)
-                                      },
-                                      children: this.createAnswerButton(0, '#EAB308', '797899126007085')
-                                    })
-                                  ),
-                                  // Answer 1 (Green/Square) - shows as Option 2 in bottom row
-                                  UINode.if(
-                                    this.answerTexts[1].derive(text => text !== ''),
-                                    View({
-                                      style: {
-                                        width: '48%',
-                                        height: 42,
-                                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container (2-answer layout)
-                                      },
-                                      children: this.createAnswerButton(1, '#16A34A', '1286736292915198')
-                                    })
-                                  )
-                                ]
-                              })
-                            ),
+                            // Always show 4 slots - for 2-answer questions, use bottom 2 slots
+                            // Answer 0 (Red/Triangle) - Option 1 - show answer 0 only if there are 3+ answers
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginRight: 6,
+                                marginBottom: 6,
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count > 2 && this.currentQuestionAnswers.length > 0),
+                                this.createAnswerButton(0, '#DC2626', '1290982519195562'),
+                                this.createBlankButton()
+                              )
+                            }),
 
-                            // For 3+ answer questions: Show all options normally
-                            UINode.if(
-                              this.answerCountTracking.derive(count => count !== 2),
-                              [
-                                // Answer 0 (Red/Triangle) - Option 1
+                            // Answer 1 (Blue/Star) - Option 2 - show answer 1 only if there are 4+ answers
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginBottom: 6,
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count > 3 && this.currentQuestionAnswers.length > 1),
+                                this.createAnswerButton(1, '#2563EB', '764343253011569'),
+                                this.createBlankButton()
+                              )
+                            }),
+
+                            // Answer 2 (Yellow/Circle) - Option 3 - show answer 0 for 2-answer questions, answer 2 for 3+ answer questions
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginRight: 6,
+                                marginBottom: 6,
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 2 container
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count === 2),
+                                // For 2-answer questions: show answer 0 in position 3
                                 UINode.if(
                                   this.answerTexts[0].derive(text => text !== ''),
-                                  View({
-                                    style: {
-                                      width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                      height: 42,
-                                      marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
-                                      marginBottom: 6,
-                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 0 container (3+ answer layout)
-                                    },
-                                    children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
-                                  })
+                                  this.createAnswerButton(0, '#EAB308', '797899126007085'),
+                                  this.createBlankButton()
                                 ),
-
-                                // Answer 1 (Blue/Star) - Option 2
-                                UINode.if(
-                                  this.answerTexts[1].derive(text => text !== ''),
-                                  View({
-                                    style: {
-                                      width: this.answerTexts[2].derive(text => text !== '') ? '48%' : '48%',
-                                      height: 42,
-                                      marginBottom: 6,
-                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 1 container (3+ answer layout)
-                                    },
-                                    children: this.createAnswerButton(1, '#2563EB', '764343253011569')
-                                  })
-                                ),
-
-                                // Answer 2 (Yellow/Circle) - Option 3
+                                // For 3+ answer questions: show answer 2 in position 3
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  View({
-                                    style: {
-                                      width: '48%',
-                                      height: 42,
-                                      marginRight: 6,
-                                      marginBottom: 6,
-                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 2 container (3+ answer layout)
-                                    },
-                                    children: this.createAnswerButton(2, '#EAB308', '797899126007085')
-                                  })
-                                ),
+                                  this.createAnswerButton(2, '#EAB308', '797899126007085'),
+                                  this.createBlankButton()
+                                )
+                              )
+                            }),
 
-                                // Answer 3 (Green/Square) - Option 4
+                            // Answer 3 (Green/Square) - Option 4 - show answer 1 for 2-answer questions, answer 3 for 3+ answer questions
+                            View({
+                              style: {
+                                width: '48%',
+                                height: 42,
+                                marginBottom: 6,
+                                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                                borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 3 container
+                              },
+                              children: UINode.if(
+                                this.answerCountTracking.derive(count => count === 2),
+                                // For 2-answer questions: show answer 1 in position 4
+                                UINode.if(
+                                  this.answerTexts[1].derive(text => text !== ''),
+                                  this.createAnswerButton(1, '#16A34A', '1286736292915198'),
+                                  this.createBlankButton()
+                                ),
+                                // For 3+ answer questions: show answer 3 in position 4
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  View({
-                                    style: {
-                                      width: '48%',
-                                      height: 42,
-                                      marginBottom: 6,
-                                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                      borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for answer 3 container (3+ answer layout)
-                                    },
-                                    children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
-                                  })
+                                  this.createAnswerButton(3, '#16A34A', '1286736292915198'),
+                                  this.createBlankButton()
                                 )
-                              ]
-                            )
+                              )
+                            })
                           ]
                         })
                       )
@@ -2383,6 +2335,34 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             color: 'white',
             flex: 1,
             textAlign: 'left'
+          }
+        })
+      ]
+    });
+  }
+
+  private createBlankButton(): UINode {
+    return View({
+      style: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'transparent', // Transparent background
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.3)', // Subtle border to show the slot
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      children: [
+        Text({
+          text: '', // Empty text
+          style: {
+            fontSize: 12,
+            fontWeight: '500',
+            color: 'transparent'
           }
         })
       ]
