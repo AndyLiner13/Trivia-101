@@ -63,6 +63,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     new Binding(""),
     new Binding("")
   ];
+  
   private showResultsBinding = new Binding(false);
   private showWaitingBinding = new Binding(false);
   private showLeaderboardBinding = new Binding(false);
@@ -120,9 +121,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private generalQuestionsCurrentIndex: number = 0;
   private italianBrainrotQuestionsCurrentIndex: number = 0;
   
-  // Results data for static display
-  private lastCorrectAnswerIndex: number = -1;
-  private lastAnswerCounts: number[] = [];
+  // Answer selection and feedback state
+  private currentQuestionAnswers: { text: string; correct: boolean }[] = [];
+  private selectedAnswerIndex: number = -1;
+  private answerRevealed: boolean = false;
+  private answerStateTrigger = new Binding<number>(0);
+  private answerStateCounter: number = 0;
 
   // Player headshot cache - maps player ID to ImageSource
   private playerHeadshots = new Map<string, ImageSource | null>();
@@ -2115,7 +2119,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   private createAnswerButton(index: number, color: string, iconTextureId: string): UINode {
     const textureAsset = new hz.TextureAsset(BigInt(iconTextureId));
 
-    return View({
+    return Pressable({
       style: {
         width: '100%',
         height: '100%',
@@ -2127,6 +2131,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         alignItems: 'center',
         justifyContent: 'flex-start'
       },
+      onPress: () => this.handleAnswerSelection(index),
       children: [
         // Icon
         Image({
@@ -2138,7 +2143,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
           }
         }),
 
-        // Answer text only (no results indicator)
+        // Answer text
         Text({
           text: this.answerTexts[index],
           style: {
@@ -2151,6 +2156,57 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         })
       ]
     });
+  }
+
+  // Reset answer selection state for new question
+  private resetAnswerState(): void {
+    this.selectedAnswerIndex = -1;
+    this.answerRevealed = false;
+    this.currentQuestionAnswers = [];
+    
+    // Reset button colors to defaults
+    const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A'];
+    for (let i = 0; i < 4; i++) {
+      this.answerButtonColors[i].set(defaultColors[i]);
+    }
+  }
+
+  // Handle answer selection and reveal correct answer
+  private handleAnswerSelection(selectedIndex: number): void {
+    if (this.answerRevealed) return; // Don't allow selection if already revealed
+
+    this.selectedAnswerIndex = selectedIndex;
+    this.answerRevealed = true;
+
+    const selectedAnswer = this.currentQuestionAnswers[selectedIndex];
+    const isCorrect = selectedAnswer?.correct || false;
+
+    console.log(`🎯 Answer selected: ${selectedAnswer?.text}`);
+    console.log(`✅ Correct answer: ${isCorrect ? 'Yes' : 'No'}`);
+
+    // Debug: Log all answers with their correct status
+    console.log(`🔍 All answers for debugging:`);
+    this.currentQuestionAnswers.forEach((answer, index) => {
+      console.log(`  [${index}] "${answer.text}" - ${answer.correct ? 'CORRECT' : 'INCORRECT'}`);
+    });
+
+    // Find and log the correct answer
+    const correctAnswer = this.currentQuestionAnswers.find(answer => answer.correct);
+    if (correctAnswer) {
+      console.log(`🎯 Correct answer was: ${correctAnswer.text}`);
+    }
+
+    // Update button colors to show correct/incorrect answers
+    for (let i = 0; i < this.currentQuestionAnswers.length; i++) {
+      const answer = this.currentQuestionAnswers[i];
+      if (answer?.correct) {
+        console.log(`✅ Setting button ${i} to GREEN (correct): "${answer.text}"`);
+        this.answerButtonColors[i].set('#16A34A'); // Green for correct
+      } else {
+        console.log(`❌ Setting button ${i} to RED (incorrect): "${answer.text}"`);
+        this.answerButtonColors[i].set('#DC2626'); // Red for all incorrect answers
+      }
+    }
   }
 
   private setupDebugFunctionality(): void {
@@ -2179,6 +2235,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     const question = this.getNextGeneralQuestion();
     if (question) {
       const shuffledQuestion = this.shuffleQuestionAnswers(question);
+
+      // Reset answer state for new question
+      this.resetAnswerState();
+
+      // Store the shuffled answers for answer checking
+      this.currentQuestionAnswers = shuffledQuestion.answers;
 
       // Update UI bindings
       this.questionBinding.set(question.question);
@@ -2211,7 +2273,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private async debugShowQuestionWithImageScreen(): Promise<void> {
-    console.log("🖼️ Showing question with image screen");
+    console.log("🖼️ Showing next sequential question from pre-shuffled Italian Brainrot quiz");
 
     // Hide other screens
     this.showConfigBinding.set(false);
@@ -2220,9 +2282,17 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     this.showErrorBinding.set(false);
 
     // Get next question from pre-shuffled Italian Brainrot questions
+    // This goes sequentially through the pre-shuffled array (no duplicates)
     const question = this.getNextItalianBrainrotQuestion();
     if (question) {
-      const shuffledQuestion = this.shuffleQuestionAnswers(question);
+      // Use the question as-is without shuffling answers (maintain original order)
+      // The questions array is already pre-shuffled during initialization
+
+      // Reset answer state for new question
+      this.resetAnswerState();
+
+      // Store the original answers for answer checking
+      this.currentQuestionAnswers = question.answers;
 
       // Update UI bindings
       this.questionBinding.set(question.question);
@@ -2241,8 +2311,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       // Update answer count display
       this.answerCountBinding.set(question.answers.length.toString());
 
-      console.log("✅ Italian Brainrot question loaded:", shuffledQuestion.question);
-      console.log("🖼️ Image:", shuffledQuestion.image);
+      console.log("✅ Italian Brainrot question loaded:", question.question);
+      console.log("🖼️ Image:", question.image);
     } else {
       console.log("❌ No Italian Brainrot questions available");
       this.questionBinding.set("No Italian Brainrot questions available. Please set the italianBrainrotQuiz asset.");
