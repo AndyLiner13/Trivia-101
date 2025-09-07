@@ -1354,8 +1354,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           position: 'absolute',
                           top: 48, // Reduced from 55 to 48
                           bottom: 10, // Reduced from 15 to 10
-                          left: '10%',
-                          right: '10%',
+                          left: 0,
+                          right: 0,
+                          paddingHorizontal: '10%',
                           flexDirection: 'column',
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for leaderboard list container
@@ -1407,22 +1408,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 0 && players[0].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 0 && players[0].headshotImageSource ? players[0].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 0 ? players[0].name : ''
@@ -1495,22 +1480,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 1 && players[1].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 1 && players[1].headshotImageSource ? players[1].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 1 ? players[1].name : ''
@@ -1582,22 +1551,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 2 && players[2].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 2 && players[2].headshotImageSource ? players[2].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 2 ? players[2].name : ''
@@ -1669,22 +1622,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 3 && players[3].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 3 && players[3].headshotImageSource ? players[3].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 3 ? players[3].name : ''
@@ -1756,22 +1693,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 4 && players[4].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 4 && players[4].headshotImageSource ? players[4].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 4 ? players[4].name : ''
