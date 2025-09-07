@@ -122,6 +122,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Game settings bindings
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
   private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
+  
+  // Debug outline toggle binding
+  private showOutlinesBinding = new ui.Binding(true);
+  private showOutlines: boolean = true;
 
   // Host status binding
   private isHostBinding = new ui.Binding(false);
@@ -1437,6 +1441,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
   }
 
+  private toggleOutlines(): void {
+    this.showOutlines = !this.showOutlines;
+    this.showOutlinesBinding.set(this.showOutlines);
+    console.log(this.showOutlines ? "✅ Outlines enabled" : "❌ Outlines disabled");
+  }
+
   render(): ui.UINode {
     return ui.View({
       style: {
@@ -1495,8 +1505,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       height: '100%',
                       backgroundColor: '#6366F1',
                       flexDirection: 'column',
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red - layer within phone frame
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
                       this.renderTwoOptionsPage(),
@@ -1516,8 +1526,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       height: '100%',
                       backgroundColor: '#6366F1',
                       flexDirection: 'column',
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red - layer within phone frame
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
                       this.renderFourOptionsPage(),
@@ -1546,8 +1556,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       alignItems: 'center',
                       padding: 8,
                       paddingTop: 20,
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red - layer within phone frame
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
                       // Main content container with green border
@@ -1558,8 +1568,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           alignItems: 'center',
                           padding: 8,
                           paddingTop: 20,
-                          borderWidth: 2,
-                          borderColor: '#00FF00' // Green - nested within red
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green - nested within red
                         },
                         children: [
                           ui.Text({
@@ -1622,8 +1632,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             flexDirection: 'row',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            borderWidth: 2,
-                            borderColor: '#00FF00' // Green - nested within red
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green - nested within red
                           },
                           children: [
                             ui.Pressable({
@@ -1747,8 +1757,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       alignItems: 'center',
                       padding: 12,
                       position: 'relative', // Ensure this view takes full space
-                      borderWidth: 2,
-                      borderColor: '#FF0000' // Red - layer within phone frame
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
                       ui.View({
@@ -1757,8 +1767,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           justifyContent: 'center',
                           alignItems: 'center',
                           width: '100%',
-                          borderWidth: 2,
-                          borderColor: '#00FF00' // Green - nested within red
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green - nested within red
                         },
                         children: [
                           ui.Text({
@@ -2177,6 +2187,29 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     })
                   ]
                 }),
+
+                // Toggle Outlines
+                ui.Pressable({
+                  style: {
+                    backgroundColor: this.showOutlinesBinding.derive(show => show ? '#16A34A' : '#DC2626'),
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginTop: 8,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.toggleOutlines(),
+                  children: [
+                    ui.Text({
+                      text: this.showOutlinesBinding.derive(show => show ? '🔲 Hide Outlines' : '⬜ Show Outlines'),
+                      style: {
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: '#FFFFFF'
+                      }
+                    })
+                  ]
+                })
               ]
             })
           ]
@@ -3077,16 +3110,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         flex: 1,
         flexDirection: 'column',
         padding: 8,
-        borderWidth: 2,
-        borderColor: '#0000FF' // Blue - 2nd nested container
+        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+        borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue - 2nd nested container
       },
       children: [
         ui.View({
           style: {
             flex: 1,
             marginBottom: 8,
-            borderWidth: 2,
-            borderColor: '#800080' // Purple - 3rd nested container
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
           },
           children: [this.createAnswerButton(2)]
         }),
@@ -3094,8 +3127,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             flex: 1,
             marginTop: 8,
-            borderWidth: 2,
-            borderColor: '#800080' // Purple - 3rd nested container
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
           },
           children: [this.createAnswerButton(3)]
         })
@@ -3109,8 +3142,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         flex: 1,
         flexDirection: 'column',
         padding: 9,
-        borderWidth: 2,
-        borderColor: '#0000FF' // Blue - 2nd nested container
+        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+        borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue - 2nd nested container
       },
       children: [
         // Top row (buttons 0 and 1) - Fixed static buttons
@@ -3119,8 +3152,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'row',
             flex: 1,
             marginBottom: 0,
-            borderWidth: 2,
-            borderColor: '#800080' // Purple - 3rd nested container
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
           },
           children: [
             this.createAnswerButton(0),
@@ -3133,8 +3166,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'row',
             flex: 1,
             marginTop: 0,
-            borderWidth: 2,
-            borderColor: '#800080' // Purple - 3rd nested container
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
           },
           children: [
             this.createAnswerButton(2),
