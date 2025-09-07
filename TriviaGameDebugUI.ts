@@ -911,9 +911,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
                       children: [
-                        // Timer | Question | Answer Count layout
+                        // Timer | Question | Answer Count layout - anchored to top of green container
                         View({
                           style: {
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 50, // Fixed height to accommodate question text with padding (12px top + ~26px text + 12px bottom)
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -1031,12 +1036,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           ]
                         }),
 
-                        // Question image - positioned in the flex flow
+                        // Question image - positioned below the blue header container
                         View({
                           style: {
-                            flex: 1,
-                            marginTop: 8,
-                            marginBottom: 8,
+                            position: 'absolute',
+                            top: 50, // Start exactly at the bottom of the blue header container (50px height)
+                            left: 0,
+                            right: 0,
+                            bottom: 110, // Stop above the green answer container (110px height)
                             marginHorizontal: '5%',
                             alignItems: 'center',
                             justifyContent: 'center',
