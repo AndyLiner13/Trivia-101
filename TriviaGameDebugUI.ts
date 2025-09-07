@@ -1810,83 +1810,34 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      backgroundColor: 'red',
                       alignItems: 'center',
                       justifyContent: 'center',
                       display: this.showErrorBinding.derive(show => show ? 'flex' : 'none'),
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for error screen overlay
                     },
-                    children: View({
-                      style: {
-                        backgroundColor: 'white',
-                        borderRadius: 12,
-                        padding: 24,
-                        alignItems: 'center',
-                        maxWidth: '70%',
-                        shadowColor: 'black',
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                        shadowOffset: [0, 4],
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for error content box
-                      },
-                      children: [
-                        // Error icon
-                        Text({
-                          text: '⚠️',
-                          style: {
-                            fontSize: 32,
-                            marginBottom: 12
-                          }
-                        }),
-                        // Error title
-                        Text({
-                          text: 'No Questions Available',
-                          style: {
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            color: '#DC2626',
-                            marginBottom: 8,
-                            textAlign: 'center'
-                          }
-                        }),
-                        // Error message
-                        Text({
-                          text: this.errorMessageBinding,
-                          style: {
-                            fontSize: 14,
-                            color: '#6B7280',
-                            textAlign: 'center',
-                            lineHeight: 1.4,
-                            marginBottom: 16
-                          }
-                        }),
-                        // Back to config button
-                        Pressable({
-                          style: {
-                            backgroundColor: '#3B82F6',
-                            borderRadius: 6,
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            alignItems: 'center',
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for back to settings button
-                          },
-                          onPress: () => this.hideErrorScreen(),
-                          children: [
-                            Text({
-                              text: 'Back to Settings',
-                              style: {
-                                fontSize: 14,
-                                fontWeight: '600',
-                                color: 'white'
-                              }
-                            })
-                          ]
-                        })
-                      ]
-                    })
+                    children: [
+                      // Big warning emoji
+                      Text({
+                        text: '⚠️',
+                        style: {
+                          fontSize: 80,
+                          marginBottom: 20
+                        }
+                      }),
+                      // Error message
+                      Text({
+                        text: this.errorMessageBinding,
+                        style: {
+                          fontSize: 18,
+                          fontWeight: 'bold',
+                          color: 'white',
+                          textAlign: 'center',
+                          lineHeight: 1.4
+                        }
+                      })
+                    ]
                   })
                 ]
               })
