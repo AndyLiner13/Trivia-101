@@ -974,7 +974,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             left: 0,
                             right: 0,
                             bottom: 110, // Stop above the green answer container (110px height)
-                            marginHorizontal: '5%',
                             flexDirection: 'row', // Horizontal layout: timer | image | answer count
                             alignItems: 'center',
                             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
