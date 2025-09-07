@@ -911,7 +911,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for question container (with image)
                       },
                       children: [
-                        // Question text only - centered at top
+                        // Question text only - centered at top (no timer/answer count here for image questions)
                         View({
                           style: {
                             position: 'absolute',
@@ -924,11 +924,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                             justifyContent: 'center', // Center the question text
                             width: '100%',
                             flexShrink: 0, // Prevent shrinking
+                            paddingBottom: 8, // Added bottom padding to the blue container
                             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                             borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for header layout container
                           },
                           children: [
-                            // Question text in the middle (now centered)
+                            // Question text in the middle (centered)
                             View({
                               style: {
                                 backgroundColor: 'white',
@@ -944,7 +945,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 alignSelf: 'center',
-                                maxWidth: '90%', // Increased from 80% since we removed timer and answer count
+                                maxWidth: '90%', // Increased since we removed timer and answer count from question text box
                                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                                 borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for question text box (with image)
                               },
