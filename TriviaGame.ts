@@ -1602,9 +1602,8 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update individual answer count for the chosen answer
     if (eventData.answerIndex >= 0 && eventData.answerIndex < 4) {
-      // Get current counts from the binding by creating a new array with updated values
-      const currentCounts = [0, 0, 0, 0]; // Initialize with zeros
-      // We need to track counts separately since bindings don't expose current values directly
+      // TriviaPhone already sends the correct logical answer indices (0,1 for 2-answer questions)
+      // No mapping needed - just use the answer index directly
       if (!this.currentAnswerCounts) {
         this.currentAnswerCounts = [0, 0, 0, 0];
       }
@@ -3924,8 +3923,20 @@ export class TriviaGame extends ui.UIComponent {
             },
             children: Text({
               text: this.answerCountsBinding.derive(counts => {
-                // Simple direct mapping: button position index = answer count index
-                return (counts[index] || 0).toString();
+                // Determine question type based on actual question data, not vote distribution
+                const is2Answer = this.currentQuestion && this.currentQuestion.answers && this.currentQuestion.answers.length === 2;
+                
+                if (is2Answer) {
+                  // 2-answer question logic: votes stored in counts[0], counts[1]
+                  // Position 2 shows counts[0], Position 3 shows counts[1]
+                  if (index === 2) return (counts[0] || 0).toString();
+                  if (index === 3) return (counts[1] || 0).toString();
+                  return "0"; // Positions 0,1 not used in 2-answer questions
+                } else {
+                  // 4-answer question logic: direct mapping
+                  // Position 0 shows counts[0], Position 1 shows counts[1], etc.
+                  return (counts[index] || 0).toString();
+                }
               }),
               style: {
                 fontSize: 10,
