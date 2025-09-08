@@ -3366,7 +3366,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 marginBottom: 4
               },
               children: [
-                // Top-left button (Red)
+                // Top-left button (Circle)
                 ui.Pressable({
                   style: {
                     flex: 1,
@@ -3393,11 +3393,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Top-right button (Yellow)
+                // Top-right button (Square)
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#f7ce23',
+                    backgroundColor: '#2db22c',
                     borderRadius: 16,
                     marginLeft: 4,
                     justifyContent: 'center',
@@ -3430,11 +3430,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 marginTop: 4
               },
               children: [
-                // Bottom-left button (Green)
+                // Bottom-left button (Triangle)
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#2db22c',
+                    backgroundColor: '#f7ce23',
                     borderRadius: 16,
                     marginRight: 4,
                     justifyContent: 'center',
