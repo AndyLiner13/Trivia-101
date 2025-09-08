@@ -2857,11 +2857,38 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     width: 97,
                     height: 87,
-                    marginTop: 24,
+                    marginTop: -150,
                     tintColor: '#F7CE23'
                   }
                 })
               ]
+            })
+          ]
+        }),
+
+        // "You are the host!" text positioned above buttons
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 116, // Position above the buttons (58px for each button)
+            left: 0,
+            right: 0,
+            height: 30, // Fixed height for the text
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent'), // BLUE - within red (variation)
+            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 255, 0, 0.5)' : 'transparent') // Yellow fill (complementary to blue)
+          },
+          children: [
+            ui.Text({
+              text: 'You are the host!',
+              style: {
+                fontSize: 18, // Slightly smaller than before
+                fontWeight: '600',
+                color: '#FFFFFF',
+                textAlign: 'center'
+              }
             })
           ]
         }),
