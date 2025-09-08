@@ -131,8 +131,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private isHostBinding = new ui.Binding(false);
   private currentHostStatus = false;
 
+  // Ready state binding for participants
+  private isReadyBinding = new ui.Binding(false);
+  private isReady = false;
+
   constructor() {
     super();
+    this.isReady = false;
   }
 
   // Methods to interact with the native leaderboard system
@@ -854,6 +859,17 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         numQuestions: this.gameSettings.numberOfQuestions
       }
     });
+  }
+
+  private handleReadyButtonPress(): void {
+    if (this.isHost()) {
+      // Host should navigate to game settings
+      this.navigateToGameSettings();
+    } else {
+      // Participant should toggle ready state
+      this.isReady = !this.isReady;
+      this.isReadyBinding.set(this.isReady);
+    }
   }
 
   // Trivia game methods
@@ -2585,7 +2601,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('791326273594709'))),
+          source: ui.Binding.derive([this.isReadyBinding], (isReady) => 
+            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '791326273594709')))
+          ),
           style: {
             width: '100%',
             height: '100%',
@@ -2731,16 +2749,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center',
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : '#FFFFFF') // Fuchsia fill (complementary to purple)
+                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
+                  isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
+                )
               },
-              onPress: () => this.navigateToGameSettings(),
+              onPress: () => this.handleReadyButtonPress(),
               children: [
                 ui.Text({
-                  text: ui.Binding.derive([this.isHostBinding], (isHost) => isHost ? 'Game Settings' : 'Ready Up'),
+                  text: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
+                    isHost ? 'Game Settings' : (isReady ? 'Not Ready' : 'Ready Up')
+                  ),
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
+                      isHost ? '#111111' : (isReady ? '#FFFFFF' : '#111111')
+                    ),
                     textAlign: 'center'
                   }
                 })
