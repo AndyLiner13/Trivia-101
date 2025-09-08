@@ -1058,7 +1058,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private startContinuousGame(): void {
-    console.log("✅ TriviaGame: Starting new game");
     if (this.triviaQuestions.length === 0) {
       this.questionBinding.set("No questions available. Please add trivia questions.");
       return;
@@ -1079,7 +1078,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private showNextQuestion(): void {
-    console.log("✅ TriviaGame: Transitioning to QUESTION screen");
     if (!this.isRunning || this.triviaQuestions.length === 0) {
       return;
     }
@@ -1087,7 +1085,6 @@ export class TriviaGame extends ui.UIComponent {
     // Get the next question in the shuffled order
     if (this.currentQuestionIndex >= this.triviaQuestions.length) {
       // If we've gone through all questions, end the game
-      console.log("✅ TriviaGame: All questions completed, ending game");
       this.endGame();
       return;
     }
@@ -1102,7 +1099,6 @@ export class TriviaGame extends ui.UIComponent {
 
     // Update UI bindings
     this.questionNumberBinding.set(`Q${this.currentQuestionIndex + 1}`);
-    console.log(`✅ TriviaGame: Showing question ${this.currentQuestionIndex + 1} of ${this.triviaQuestions.length}`);
     this.questionBinding.set(shuffledQuestion.question);
     // Set the image binding for stable image display
     const imageValue = shuffledQuestion.image;
@@ -1366,8 +1362,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private endGame(): void {
-    console.log("✅ TriviaGame: Transitioning to GAME OVER screen");
-    
     // Reset the game to pre-game configuration screen
     this.isRunning = false;
     this.stopTimer();
@@ -1664,7 +1658,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private showCorrectAnswersAndLeaderboard(): void {
-    console.log("✅ TriviaGame: Transitioning to RESULTS screen");
     if (!this.currentQuestion) return;
     
     // Stop timer and hide waiting screen
@@ -1797,24 +1790,17 @@ export class TriviaGame extends ui.UIComponent {
     
     // After 5 seconds, check if this is the last question
     this.async.setTimeout(() => {
-      // Debug logging to see the values
-      console.log(`✅ TriviaGame: Checking if last question - currentQuestionIndex: ${this.currentQuestionIndex}, triviaQuestions.length: ${this.triviaQuestions.length}`);
-      
       // Check if this is the last question - if so, end the game instead of showing leaderboard
       // We check if currentQuestionIndex + 1 equals the total length (since we're 0-indexed)
       if (this.currentQuestionIndex + 1 >= this.triviaQuestions.length) {
-        console.log("✅ TriviaGame: Last question completed, ending game instead of showing leaderboard");
         this.endGame();
       } else {
-        console.log("✅ TriviaGame: Transitioning to LEADERBOARD screen");
         this.showLeaderboard();
       }
     }, 5000);
   }
 
   private async showLeaderboard(): Promise<void> {
-    console.log("✅ TriviaGame: Showing LEADERBOARD screen");
-    
     // Hide results, show leaderboard
     this.showResultsBinding.set(false);
     this.isShowingResults = false;
@@ -1919,7 +1905,6 @@ export class TriviaGame extends ui.UIComponent {
     
     // Move to next question
     this.currentQuestionIndex++;
-    console.log(`✅ TriviaGame: Advanced to question index ${this.currentQuestionIndex} (will show question ${this.currentQuestionIndex + 1})`);
     
     // Show the next question (this will send network event to all TriviaPhones)
     this.showNextQuestion();
@@ -3194,7 +3179,7 @@ export class TriviaGame extends ui.UIComponent {
                       },
                       children: [
                         Text({
-                          text: 'Waiting for Other Players...',
+                          text: ' Other Players...',
                           style: {
                             fontSize: 16,
                             fontWeight: 'bold',
