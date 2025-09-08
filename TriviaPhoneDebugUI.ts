@@ -2784,8 +2784,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.Image({
                   source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
                   style: {
-                    width: 32,
-                    height: 29,
+                    width: 97,
+                    height: 87,
+                    marginTop: 24,
                     tintColor: '#F7CE23'
                   }
                 })
