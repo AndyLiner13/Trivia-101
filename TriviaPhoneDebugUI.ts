@@ -2683,56 +2683,166 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: 0,
             right: 0,
             width: '100%',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
             alignItems: 'center'
           },
           children: [
-            // Light/Dark mode switch container
+            // Top row - Light/Dark mode and Settings icon sharing green container
             ui.View({
               style: {
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                borderRadius: 20,
-                paddingHorizontal: 8,
-                paddingVertical: 6,
+                width: '100%',
                 flexDirection: 'row',
-                alignItems: 'center'
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN-1 - shared container
               },
               children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                // Light/Dark mode switch blue container
+                ui.View({
                   style: {
-                    width: 20,
-                    height: 20,
-                    tintColor: '#FFFFFF',
-                    marginRight: 4
-                  }
+                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // BLUE-1 - within green
+                  },
+                  children: [
+                    // Light/Dark mode switch purple container
+                    ui.View({
+                      style: {
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#8A2BE2' : 'transparent') // PURPLE-1 - within blue
+                      },
+                      children: [
+                        // Light/Dark mode switch black container
+                        ui.View({
+                          style: {
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // BLACK-1 - within purple
+                          },
+                          children: [
+                            ui.View({
+                              style: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                borderRadius: 20,
+                                paddingHorizontal: 8,
+                                paddingVertical: 6,
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                              },
+                              children: [
+                                ui.Image({
+                                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                                  style: {
+                                    width: 20,
+                                    height: 20,
+                                    tintColor: '#FFFFFF',
+                                    marginRight: 4
+                                  }
+                                }),
+                                ui.Image({
+                                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                                  style: {
+                                    width: 20,
+                                    height: 20,
+                                    tintColor: '#FFFFFF'
+                                  }
+                                })
+                              ]
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
                 }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                
+                // Settings icon blue container
+                ui.View({
                   style: {
-                    width: 20,
-                    height: 20,
-                    tintColor: '#FFFFFF'
-                  }
+                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0033FF' : 'transparent') // BLUE-2 - within green (slightly different)
+                  },
+                  children: [
+                    // Settings icon purple container
+                    ui.View({
+                      style: {
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#9370DB' : 'transparent') // PURPLE-2 - within blue (slightly different)
+                      },
+                      children: [
+                        // Settings icon black container
+                        ui.View({
+                          style: {
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within purple (slightly different)
+                          },
+                          children: [
+                            ui.View({
+                              style: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                borderRadius: 12,
+                                padding: 8
+                              },
+                              children: [
+                                ui.Image({
+                                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))),
+                                  style: {
+                                    width: 20,
+                                    height: 20,
+                                    tintColor: '#FFFFFF'
+                                  }
+                                })
+                              ]
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
                 })
               ]
             }),
-            // Settings icon container
+            
+            // Crown icon underneath the shared container
             ui.View({
               style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                borderRadius: 12,
-                padding: 8
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent') // GREEN-2 - crown container (slightly different)
               },
               children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))),
+                // Crown icon element container
+                ui.View({
                   style: {
-                    width: 20,
-                    height: 20,
-                    tintColor: '#FFFFFF'
-                  }
+                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0066FF' : 'transparent') // BLUE-3 - within green (slightly different)
+                  },
+                  children: [
+                    // Crown icon final container
+                    ui.View({
+                      style: {
+                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                        borderColor: this.showOutlinesBinding.derive(show => show ? '#BA55D3' : 'transparent') // PURPLE-3 - within blue (slightly different)
+                      },
+                      children: [
+                        // Crown image container
+                        ui.View({
+                          style: {
+                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                            borderColor: this.showOutlinesBinding.derive(show => show ? '#2F2F2F' : 'transparent') // BLACK-3 - within purple (slightly different)
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
+                              style: {
+                                width: 32,
+                                height: 29,
+                                tintColor: '#F7CE23'
+                              }
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
                 })
               ]
             })
@@ -2752,54 +2862,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // RED - innermost rim (moved here)
           },
           children: [
-
-        // Crown icon positioned in upper-middle area
-        ui.View({
-          style: {
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN-1 - within red
-          },
-          children: [
-            // Crown icon element container
-            ui.View({
-              style: {
-                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // BLUE-1 - within green
-              },
-              children: [
-                // Crown icon final container
-                ui.View({
-                  style: {
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#8A2BE2' : 'transparent') // PURPLE-1 - within blue
-                  },
-                  children: [
-                    // Crown image container
-                    ui.View({
-                      style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // BLACK-1 - within purple
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
-                          style: {
-                            width: 64,
-                            height: 58,
-                            tintColor: '#F7CE23'
-                          }
-                        })
-                      ]
-                    })
-                  ]
-                })
-              ]
-            })
-          ]
-        }),
 
         // Spacer to push bottom content down
         ui.View({
