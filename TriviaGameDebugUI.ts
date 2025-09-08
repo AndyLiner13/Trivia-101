@@ -351,7 +351,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'linear-gradient(180deg, #7C3AED 0%, #3B82F6 100%)',
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: 16,
@@ -359,6 +358,20 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for configuration screen background
                 },
                 children: [
+                  // Background image
+                  Image({
+                    source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('765365063138745'))),
+                    style: {
+                      position: 'absolute',
+                      top: -16,
+                      left: -16,
+                      right: -16,
+                      bottom: -16,
+                      width: 'calc(100% + 32px)',
+                      height: 'calc(100% + 32px)',
+                      resizeMode: 'cover'
+                    }
+                  }),
                   // Header
                   View({
                     style: {
