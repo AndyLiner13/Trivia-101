@@ -2467,6 +2467,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       style: {
                         width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 18 : 24),
                         height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 18 : 24),
+
                         tintColor: '#000000'
                       }
                     }),
@@ -2494,7 +2495,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       style: {
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingHorizontal: 6,
+                        paddingLeft: 5,
+                        paddingRight: 6,
                         paddingVertical: 4,
                         marginBottom: 8
                       },
@@ -2509,8 +2511,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         }
                       }),
                       style: {
-                        width: 24,
-                        height: 24,
+                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
+                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
+
                         tintColor: '#000000'
                       }
                     }),
