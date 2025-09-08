@@ -2790,7 +2790,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3042,7 +3042,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
           style: {
             width: '100%',
             height: '100%',
