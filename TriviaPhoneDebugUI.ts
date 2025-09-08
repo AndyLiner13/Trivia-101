@@ -1462,404 +1462,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 overflow: 'hidden'
               },
               children: [
-                // Pre-game screen - shows when game hasn't started
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding], (mode, started) => 
-                    mode === 'pre-game' && !started
-                  ),
-                  this.renderPreGameScreen()
-                ),
-
-                // Two-option trivia screen - shows only when event received and game is started
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding], (mode, screenType, started, showResult) => 
-                    mode === 'pre-game' && started && screenType === 'two-options' && !showResult
-                  ),
-                  ui.View({
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'transparent',
-                      flexDirection: 'column',
-                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
-                    },
-                    children: [
-                      // Background image
-                      ui.Image({
-                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2225071587959777'))),
-                        style: {
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          width: '100%',
-                          height: '100%',
-                          resizeMode: 'cover'
-                        }
-                      }),
-                      this.renderTwoOptionsPage(),
-                      this.renderStatusBar()
-                    ]
-                  })
-                ),
-                
-                // Four-option trivia screen - shows only when event received and game is started
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding], (mode, screenType, started, showResult) => 
-                    mode === 'pre-game' && started && screenType === 'four-options' && !showResult
-                  ),
-                  ui.View({
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'transparent',
-                      flexDirection: 'column',
-                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
-                    },
-                    children: [
-                      // Background image
-                      ui.Image({
-                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2225071587959777'))),
-                        style: {
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          width: '100%',
-                          height: '100%',
-                          resizeMode: 'cover'
-                        }
-                      }),
-                      this.renderFourOptionsPage(),
-                      this.renderStatusBar()
-                    ]
-                  })
-                ),
-
-                // Host Feedback screen - shows right/wrong when results are displayed (with buttons)
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.isHostBinding], (mode, started, showResult, isHost) => 
-                    mode === 'pre-game' && started && showResult && isHost
-                  ),
-                  ui.View({
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'transparent',
-                      justifyContent: 'flex-start',
-                      alignItems: 'center',
-                      padding: 8,
-                      paddingTop: 20,
-                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
-                    },
-                    children: [
-                      // Background image for correct/wrong
-                      ui.Image({
-                        source: ui.Binding.derive([
-                          this.isCorrectAnswerBinding,
-                          this.selectedAnswerBinding
-                        ], (isCorrect, selectedAnswer) => {
-                          const textureId = isCorrect ? '1168577108523290' : '781887657533527';
-                          return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-                        }),
-                        style: {
-                          position: 'absolute',
-                          top: -20,
-                          left: -8,
-                          right: -8,
-                          bottom: -8,
-                          width: 'calc(100% + 16px)',
-                          height: 'calc(100% + 28px)',
-                          resizeMode: 'cover',
-                          zIndex: -1
-                        }
-                      }),
-                      // Main content container with green border
-                      ui.View({
-                        style: {
-                          flex: 1,
-                          justifyContent: 'flex-start',
-                          alignItems: 'center',
-                          padding: 8,
-                          paddingTop: 20,
-                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green - nested within red
-                        },
-                        children: [
-                          ui.Text({
-                            text: ui.Binding.derive([
-                              this.isCorrectAnswerBinding,
-                              this.selectedAnswerBinding
-                            ], (isCorrect, selectedAnswer) => {
-                              if (isCorrect) return '✅';
-                              return '❌';
-                            }),
-                            style: {
-                              fontSize: 48,
-                              textAlign: 'center',
-                              marginBottom: 8
-                            }
-                          }),
-                          ui.Text({
-                            text: ui.Binding.derive([
-                              this.isCorrectAnswerBinding,
-                              this.selectedAnswerBinding
-                            ], (isCorrect, selectedAnswer) => {
-                              if (isCorrect) return 'Correct!';
-                              return 'Wrong!';
-                            }),
-                            style: {
-                              fontSize: 24,
-                              fontWeight: '700',
-                              color: '#FFFFFF',
-                              textAlign: 'center',
-                              marginBottom: 8
-                            }
-                          }),
-                          ui.Text({
-                            text: ui.Binding.derive([], () => {
-                              return this.currentQuestion ? this.currentQuestion.question : '';
-                            }),
-                            numberOfLines: 3,
-                            style: {
-                              fontSize: 14,
-                              color: '#FFFFFF',
-                              textAlign: 'center',
-                              marginBottom: 8,
-                              opacity: 0.9,
-                              lineHeight: 18
-                            }
-                          })
-                        ]
-                      }),
-                      // Host buttons container - positioned above footer (only for hosts)
-                      ui.UINode.if(
-                        this.isHostBinding.derive(isHost => isHost),
-                        ui.View({
-                          style: {
-                            position: 'absolute',
-                            bottom: 60, // Position above the footer
-                            left: 12,
-                            right: 12,
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green - nested within red
-                          },
-                          children: [
-                            ui.Pressable({
-                              style: {
-                                backgroundColor: '#FFFFFF',
-                                borderRadius: 8,
-                                paddingHorizontal: 16,
-                                paddingVertical: 8,
-                                marginRight: 8,
-                                opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
-                                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
-                                    showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) < settings.numberOfQuestions ? 1 : 0
-                                ),
-                                borderWidth: 2,
-                                borderColor: '#0000FF' // Blue - nested within green
-                              },
-                              onPress: () => this.nextQuestion(),
-                              children: [
-                                ui.Text({
-                                  text: '➡️ Next Question',
-                                  style: {
-                                    fontSize: 14,
-                                    fontWeight: '600',
-                                    color: '#6366F1',
-                                    textAlign: 'center'
-                                  }
-                                })
-                              ]
-                            }),
-                            ui.Pressable({
-                              style: {
-                                backgroundColor: '#FF6B35',
-                                borderRadius: 8,
-                                paddingHorizontal: 16,
-                                paddingVertical: 8,
-                                opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
-                                  (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
-                                    showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions ? 1 : 0
-                                ),
-                                borderWidth: 2,
-                                borderColor: '#0000FF' // Blue - nested within green
-                              },
-                              onPress: () => this.endGame(),
-                              children: [
-                                ui.Text({
-                                  text: '🔚 End Game',
-                                  style: {
-                                    fontSize: 14,
-                                    fontWeight: '600',
-                                    color: '#FFFFFF',
-                                    textAlign: 'center'
-                                  }
-                                })
-                              ]
-                            })
-                          ]
-                        })
-                      ),
-                      // Footer with question progress and score (only for hosts)
-                      ui.UINode.if(
-                        this.isHostBinding.derive(isHost => isHost),
-                        ui.View({
-                          style: {
-                            position: 'absolute',
-                            bottom: 13,
-                            left: 12,
-                            right: 12,
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            borderRadius: 8,
-                            paddingHorizontal: 12,
-                            paddingVertical: 8,
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            borderWidth: 2,
-                            borderColor: '#00FF00' // Green - nested within red
-                          },
-                          children: [
-                            ui.Text({
-                              text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => 
-                                `Question ${index + 1}/${settings.numberOfQuestions}`
-                              ),
-                              style: {
-                                fontSize: 12,
-                                color: '#6B7280',
-                                fontWeight: '600'
-                              }
-                            }),
-                            ui.Text({
-                              text: ui.Binding.derive([this.scoreBinding], (score) => `Score: ${score}`),
-                              style: {
-                                fontSize: 12,
-                                color: '#6B7280',
-                                fontWeight: '600'
-                              }
-                            })
-                          ]
-                        })
-                      )
-                    ]
-                  })
-                ),
-                
-                // Participant Feedback screen - shows right/wrong when results are displayed (no buttons)
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.isHostBinding], (mode, started, showResult, isHost) => 
-                    mode === 'pre-game' && started && showResult && !isHost
-                  ),
-                  ui.View({
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'transparent',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: 12,
-                      position: 'relative', // Ensure this view takes full space
-                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
-                    },
-                    children: [
-                      // Background image for correct/wrong
-                      ui.Image({
-                        source: ui.Binding.derive([
-                          this.isCorrectAnswerBinding,
-                          this.selectedAnswerBinding
-                        ], (isCorrect, selectedAnswer) => {
-                          const textureId = isCorrect ? '1168577108523290' : '781887657533527';
-                          return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-                        }),
-                        style: {
-                          position: 'absolute',
-                          top: -12,
-                          left: -12,
-                          right: -12,
-                          bottom: -12,
-                          width: 'calc(100% + 24px)',
-                          height: 'calc(100% + 24px)',
-                          resizeMode: 'cover',
-                          zIndex: -1
-                        }
-                      }),
-                      ui.View({
-                        style: {
-                          flex: 1,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          width: '100%',
-                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green - nested within red
-                        },
-                        children: [
-                          ui.Text({
-                            text: ui.Binding.derive([
-                              this.isCorrectAnswerBinding,
-                              this.selectedAnswerBinding
-                            ], (isCorrect, selectedAnswer) => {
-                              if (isCorrect) return '✅';
-                              return '❌';
-                            }),
-                            style: {
-                              fontSize: 64,
-                              textAlign: 'center',
-                              marginBottom: 12
-                            }
-                          }),
-                          ui.Text({
-                            text: ui.Binding.derive([
-                              this.isCorrectAnswerBinding,
-                              this.selectedAnswerBinding
-                            ], (isCorrect, selectedAnswer) => {
-                              if (isCorrect) return 'Correct!';
-                              return 'Wrong!';
-                            }),
-                            style: {
-                              fontSize: 28,
-                              fontWeight: '700',
-                              color: '#FFFFFF',
-                              textAlign: 'center',
-                              marginBottom: 12
-                            }
-                          }),
-                          ui.Text({
-                            text: ui.Binding.derive([], () => {
-                              return this.currentQuestion ? this.currentQuestion.question : '';
-                            }),
-                            numberOfLines: 4,
-                            style: {
-                              fontSize: 16,
-                              color: '#FFFFFF',
-                              textAlign: 'center',
-                              marginBottom: 12,
-                              opacity: 0.9,
-                              lineHeight: 20
-                            }
-                          })
-                        ]
-                      })
-                      // Absolutely NO buttons, pressables, or footer for participants
-                    ]
-                  })
-                ),
-                
                 // Waiting screen - default state during game
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
                     mode === 'pre-game' && started && (screenType === 'waiting' || !screenType)
                   ),
                   this.renderWaitingScreen()
+                ),
+
+                // Pre-game screen - shows when game hasn't started
+                ui.UINode.if(
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding], (mode, started) => 
+                    mode === 'pre-game' && !started
+                  ),
+                  this.renderPreGameScreen()
                 ),
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding], (mode) => mode === 'game-settings'),
@@ -2960,127 +2576,178 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private renderWaitingScreen(): ui.UINode {
     return ui.View({
       style: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        borderWidth: 2,
-        borderColor: '#FF0000' // Red - layer within phone frame
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
       },
       children: [
-        // Role Badge
+        // Full-screen background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('791326273594709'))),
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Header anchored to top - now fills full viewport height
         ui.View({
           style: {
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: 20,
-            paddingHorizontal: 24,
-            paddingVertical: 16,
-            alignItems: 'center',
-            shadowColor: '#000000',
-            shadowOffset: [0, 4],
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            marginBottom: 32,
-            borderWidth: 2,
-            borderColor: '#00FF00' // Green - nested within red
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0, // Changed from 58 to 0 to fill viewport height
+            flexDirection: 'column',
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0033' : 'transparent'), // RED-2 - header container (variation)
+            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 204, 0.5)' : 'transparent') // Aqua fill (complementary to red)
           },
           children: [
-            ui.Text({
-              text: ui.Binding.derive([this.isHostBinding], (isHost) => isHost ? '👑 You are the Host' : '👤 You are a Participant'),
+            // Light/Dark mode container
+            ui.View({
               style: {
-                fontSize: 18,
-                fontWeight: '600',
-                color: '#4B5563',
-                textAlign: 'center'
-              }
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                borderRadius: 8,
+                padding: 4,
+                flexDirection: 'row',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000CC' : 'transparent'), // BLUE-4 - within red
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 204, 0, 0.5)' : '#191919') // Gold fill (complementary to blue)
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.View({
+              style: {
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                borderRadius: 5,
+                padding: 2,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#CC0000' : 'transparent'), // BLUE-5 - within red
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 51, 0.5)' : '#FFFFFF') // Chartreuse fill (complementary to blue)
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                  style: {
+                    width: 28,
+                    height: 28,
+                    tintColor: '#000000'
+                  }
+                })
+              ]
             })
           ]
         }),
-        // Host Controls
-        ui.UINode.if(
-          this.isHostBinding.derive(isHost => isHost),
-          ui.View({
-            style: {
-              alignItems: 'center'
-            },
-            children: [
-              // Game Settings Button
+
+        // Buttons container - participant version
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'column',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            paddingBottom: 8,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent'), // GREEN-2 - within red (variation)
+            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : 'transparent'), // Pink fill (complementary to green)
+            zIndex: 10 // Ensure buttons appear on top of the red container
+          },
+          children: [
+            // Start Game button (only for hosts)
+            ui.UINode.if(
+              this.isHostBinding.derive(isHost => isHost),
               ui.Pressable({
                 style: {
-                  backgroundColor: '#FFFFFF',
+                  width: '100%',
+                  height: 42,
                   borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  width: 150,
                   justifyContent: 'center',
                   alignItems: 'center',
                   marginBottom: 8,
-                  shadowColor: '#000000',
-                  shadowOffset: [0, 2],
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  borderWidth: 2,
-                  borderColor: '#0000FF' // Blue - nested within green
-                },
-                onPress: () => this.navigateToGameSettings(),
-                children: [
-                  ui.Text({
-                    text: '⚙️ Game Settings',
-                    style: {
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: '#6366F1',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              }),
-              // Start Game Button
-              ui.Pressable({
-                style: {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  width: 150,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  shadowColor: '#000000',
-                  shadowOffset: [0, 2],
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  borderWidth: 2,
-                  borderColor: '#0000FF' // Blue - nested within green
+                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                  borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent'), // PURPLE - within blue
+                  backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 128, 0.5)' : '#FFFFFF') // Spring green fill (complementary to purple)
                 },
                 onPress: () => this.handleStartGame(),
                 children: [
                   ui.Text({
-                    text: '🎯 Start Game',
+                    text: 'Start Game',
                     style: {
-                      fontSize: 14,
+                      fontSize: 18,
                       fontWeight: '600',
-                      color: '#6366F1',
+                      color: '#111111',
                       textAlign: 'center'
                     }
                   })
                 ]
               })
-            ]
-          })
-        ),
-        // Participant Waiting Message
-        ui.UINode.if(
-          ui.Binding.derive([this.isHostBinding], (isHost) => !isHost),
-          ui.Text({
-            text: 'Waiting for host to start the game...',
-            style: {
-              fontSize: 16,
-              color: '#FFFFFF',
-              textAlign: 'center',
-              opacity: 0.9
-            }
-          })
-        )
+            ),
+            // Game Settings button (for both hosts and participants)
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: 42,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : '#FFFFFF') // Fuchsia fill (complementary to purple)
+              },
+              onPress: () => this.navigateToGameSettings(),
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.isHostBinding], (isHost) => isHost ? 'Game Settings' : 'Ready Up'),
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
       ]
     });
   }
