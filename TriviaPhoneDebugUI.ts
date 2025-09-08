@@ -3681,7 +3681,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('648661411200941'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3784,7 +3784,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Checkmark container - moved up from center
+        // Close icon container - moved up from center
         ui.View({
           style: {
             position: 'absolute',
@@ -3798,9 +3798,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             alignItems: 'center'
           },
           children: [
-            // Checkmark icon (no green circle background)
+            // Close icon
             ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2019383778812059'))), // Using specified check icon
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24587675990884692'))), // close icon
               style: {
                 width: 120,
                 height: 120,
@@ -3810,7 +3810,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Points display underneath checkmark
+        // Message display underneath close icon
         ui.View({
           style: {
             position: 'absolute',
@@ -3818,15 +3818,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: 0,
             right: 0,
             marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
-            height: 50,
+            height: 80, // Increased height to accommodate two lines
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingHorizontal: 40 // Match close icon width (120px / 2 = 60px on each side)
           },
           children: [
             ui.Text({
-              text: '+1200 points',
+              text: 'You need to lock in twin',
               style: {
-                fontSize: 24,
+                fontSize: 20, // Reduced from 24 to 20
                 fontWeight: '700',
                 color: '#FFFFFF',
                 textAlign: 'center'
