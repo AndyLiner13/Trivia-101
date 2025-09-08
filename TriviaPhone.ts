@@ -2893,27 +2893,33 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Answer buttons container
+        // Answer buttons grid - positioned between header and status bar
         ui.View({
           style: {
             position: 'absolute',
-            top: '50%',
+            top: 0,
             left: 0,
             right: 0,
-            marginTop: -120, // Center the buttons vertically
-            paddingHorizontal: 16
+            bottom: 58, // Leave space for the status bar
+            flexDirection: 'column',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 48, // 8px spacing from header
+            paddingBottom: 8
           },
           children: [
-            // Button 0 (Red Circle)
+            // Top row
             ui.View({
               style: {
-                marginBottom: 16
+                flexDirection: 'row',
+                flex: 1,
+                marginBottom: 4
               },
               children: [
+                // Full-width red circle button
                 ui.Pressable({
                   style: {
-                    width: '100%',
-                    height: 80,
+                    flex: 1,
                     backgroundColor: '#d70f33',
                     borderRadius: 16,
                     justifyContent: 'center',
@@ -2929,7 +2935,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // red circle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
                       style: {
                         width: 55,
                         height: 54,
@@ -2941,16 +2947,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Button 1 (Green Square)
+            // Bottom row
             ui.View({
               style: {
-                marginTop: 16
+                flexDirection: 'row',
+                flex: 1,
+                marginTop: 4
               },
               children: [
+                // Full-width green square button
                 ui.Pressable({
                   style: {
-                    width: '100%',
-                    height: 80,
+                    flex: 1,
                     backgroundColor: '#2db22c',
                     borderRadius: 16,
                     justifyContent: 'center',
@@ -2966,7 +2974,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1317550153280256'))), // green square
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1317550153280256'))), // square
                       style: {
                         width: 54,
                         height: 55,
@@ -3951,55 +3959,59 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }),
 
         // Next Question button
-        ui.View({
-          style: {
-            position: 'absolute',
-            bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
-            left: 16,
-            right: 16,
-            height: 42,
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#FFFFFF',
-                borderRadius: 8,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingHorizontal: 8
-              },
-              onPress: () => {
-                // Handle next question logic
-                console.log('✅ Next Question pressed');
-              },
-              children: [
-                ui.Text({
-                  text: 'Next Question',
-                  style: {
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: '#000000',
-                    textAlign: 'center',
-                    flex: 1
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#000000'
-                  }
-                })
-              ]
-            })
-          ]
-        }),
+        ui.UINode.if(
+          this.showLeaderboardBinding,
+          ui.View({
+            style: {
+              position: 'absolute',
+              bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
+              left: 16,
+              right: 16,
+              height: 42,
+              justifyContent: 'center',
+              alignItems: 'center'
+            },
+            children: [
+              ui.Pressable({
+                style: {
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 8,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingHorizontal: 8
+                },
+                onPress: () => {
+                  // Handle next question logic
+                  console.log('✅ Next Question pressed');
+                  this.nextQuestion();
+                },
+                children: [
+                  ui.Text({
+                    text: 'Next Question',
+                    style: {
+                      fontSize: 16,
+                      fontWeight: '700',
+                      color: '#000000',
+                      textAlign: 'center',
+                      flex: 1
+                    }
+                  }),
+                  ui.Image({
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward
+                    style: {
+                      width: 24,
+                      height: 24,
+                      tintColor: '#000000'
+                    }
+                  })
+                ]
+              })
+            ]
+          })
+        ),
 
         // Bottom status bar (like 4A page with question info)
         ui.View({
@@ -4158,7 +4170,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Close icon container - moved up from center
+        // Close icon container - centered
         ui.View({
           style: {
             position: 'absolute',
@@ -4166,7 +4178,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: '50%',
             width: 136,
             height: 136,
-            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginTop: -68, // Half of height to center vertically
             marginLeft: -68, // Half of width to center horizontally
             justifyContent: 'center',
             alignItems: 'center'
@@ -4228,55 +4240,59 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }),
 
         // Next Question button
-        ui.View({
-          style: {
-            position: 'absolute',
-            bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
-            left: 16,
-            right: 16,
-            height: 42,
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#FFFFFF',
-                borderRadius: 8,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingHorizontal: 8
-              },
-              onPress: () => {
-                // Handle next question logic
-                console.log('✅ Next Question pressed');
-              },
-              children: [
-                ui.Text({
-                  text: 'Next Question',
-                  style: {
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: '#000000',
-                    textAlign: 'center',
-                    flex: 1
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#000000'
-                  }
-                })
-              ]
-            })
-          ]
-        })
+        ui.UINode.if(
+          this.showLeaderboardBinding,
+          ui.View({
+            style: {
+              position: 'absolute',
+              bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
+              left: 16,
+              right: 16,
+              height: 42,
+              justifyContent: 'center',
+              alignItems: 'center'
+            },
+            children: [
+              ui.Pressable({
+                style: {
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 8,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingHorizontal: 8
+                },
+                onPress: () => {
+                  // Handle next question logic
+                  console.log('✅ Next Question pressed');
+                  this.nextQuestion();
+                },
+                children: [
+                  ui.Text({
+                    text: 'Next Question',
+                    style: {
+                      fontSize: 16,
+                      fontWeight: '700',
+                      color: '#000000',
+                      textAlign: 'center',
+                      flex: 1
+                    }
+                  }),
+                  ui.Image({
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward
+                    style: {
+                      width: 24,
+                      height: 24,
+                      tintColor: '#000000'
+                    }
+                  })
+                ]
+              })
+            ]
+          })
+        )
       ]
     });
   }
