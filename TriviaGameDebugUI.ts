@@ -467,9 +467,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   View({
                     style: {
                       position: 'absolute',
-                      bottom: 0, // Moved to bottom of screen
-                      left: '3%', // 24px out of 800px total width
-                      right: '3%', // 24px out of 800px total width
+                      bottom: -15, // Moved down further (10 pixels more)
+                      left: '2%', // Moved more to the left (was 3%)
+                      right: '11%', // Adjusted right margin to shift text leftward
                       height: 65,
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -481,7 +481,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     children: Text({
                       text: 'Waiting for host...',
                       style: {
-                        fontSize: 20, // Scaled down from 28
+                        fontSize: 18, // Scaled down from 20
                         fontWeight: 'bold',
                         color: 'white',
                         textAlign: 'center'
