@@ -3181,7 +3181,7 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          top: 12,
+                          top: 8, // Reduced from 12 to 8
                           left: 0,
                           right: 0,
                           alignItems: 'center'
@@ -3190,17 +3190,13 @@ export class TriviaGame extends ui.UIComponent {
                           style: {
                             backgroundColor: 'white',
                             borderRadius: 8,
-                            paddingHorizontal: 24,
-                            paddingVertical: 8,
-                            shadowColor: 'black',
-                            shadowOpacity: 0.1,
-                            shadowRadius: 6,
-                            shadowOffset: [0, 2]
+                            paddingHorizontal: 20, // Reduced from 24 to 20
+                            paddingVertical: 6 // Reduced from 8 to 6
                           },
                           children: Text({
                             text: 'Leaderboard',
                             style: {
-                              fontSize: 18,
+                              fontSize: 16, // Reduced from 18 to 16
                               fontWeight: 'bold',
                               color: '#1F2937'
                             }
@@ -3212,8 +3208,8 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                           position: 'absolute',
-                          top: 60,
-                          bottom: 15,
+                          top: 48, // Reduced from 60 to 48
+                          bottom: 10, // Reduced from 15 to 10
                           left: '10%',
                           right: '10%',
                           flexDirection: 'column'
@@ -3226,15 +3222,11 @@ export class TriviaGame extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 12,
-                                marginBottom: 8,
+                                padding: 7, // Increased from 6 to 7 to match DebugUI
+                                marginBottom: 3, // Reduced from 8 to 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1]
+                                justifyContent: 'space-between'
                               },
                               children: [
                                 View({
@@ -3246,9 +3238,9 @@ export class TriviaGame extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27, // Increased from 24 to 27
+                                        height: 27, // Increased from 24 to 27
+                                        borderRadius: 13.5, // Updated for new size
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -3263,22 +3255,6 @@ export class TriviaGame extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 0 && players[0].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 0 && players[0].headshotImageSource ? players[0].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 0 ? players[0].name : ''
@@ -3296,9 +3272,10 @@ export class TriviaGame extends ui.UIComponent {
                                     players.length > 0 ? players[0].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
@@ -3312,15 +3289,11 @@ export class TriviaGame extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 12,
-                                marginBottom: 8,
+                                padding: 7, // Reduced from 12 to 7
+                                marginBottom: 3, // Reduced from 8 to 3
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1]
+                                justifyContent: 'space-between'
                               },
                               children: [
                                 View({
@@ -3332,9 +3305,9 @@ export class TriviaGame extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27, // Increased from 24 to 27
+                                        height: 27, // Increased from 24 to 27
+                                        borderRadius: 13.5, // Updated for new size
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -3349,22 +3322,6 @@ export class TriviaGame extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 1 && players[1].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 1 && players[1].headshotImageSource ? players[1].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 1 ? players[1].name : ''
@@ -3382,9 +3339,10 @@ export class TriviaGame extends ui.UIComponent {
                                     players.length > 1 ? players[1].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
@@ -3397,15 +3355,11 @@ export class TriviaGame extends ui.UIComponent {
                               style: {
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 borderRadius: 8,
-                                padding: 12,
-                                marginBottom: 8,
+                                padding: 7, // Reduced from 12 to 7
+                                marginBottom: 3, // Reduced from 8 to 3
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                shadowOffset: [0, 1]
+                                justifyContent: 'space-between'
                               },
                               children: [
                                 View({
@@ -3417,9 +3371,9 @@ export class TriviaGame extends ui.UIComponent {
                                   children: [
                                     View({
                                       style: {
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: 12,
+                                        width: 27, // Increased from 24 to 27
+                                        height: 27, // Increased from 24 to 27
+                                        borderRadius: 13.5, // Updated for new size
                                         backgroundColor: '#F3F4F6',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -3434,22 +3388,6 @@ export class TriviaGame extends ui.UIComponent {
                                         }
                                       })
                                     }),
-                                    UINode.if(
-                                      this.leaderboardDataBinding.derive(players =>
-                                        players.length > 2 && players[2].headshotImageSource
-                                      ),
-                                      Image({
-                                        source: this.leaderboardDataBinding.derive(players =>
-                                          players.length > 2 && players[2].headshotImageSource ? players[2].headshotImageSource : null
-                                        ),
-                                        style: {
-                                          width: 30,
-                                          height: 30,
-                                          borderRadius: 15,
-                                          marginRight: 8
-                                        }
-                                      })
-                                    ),
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
                                         players.length > 2 ? players[2].name : ''
@@ -3467,9 +3405,10 @@ export class TriviaGame extends ui.UIComponent {
                                     players.length > 2 ? players[2].score.toString() : '0'
                                   ),
                                   style: {
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: '#1F2937'
+                                    color: '#1F2937',
+                                    marginRight: 8
                                   }
                                 })
                               ]
