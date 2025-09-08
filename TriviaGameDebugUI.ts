@@ -494,8 +494,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       top: 48, // Moved up to touch bottom of header (was 73)
-                      left: '15%', // Increased margin to make container narrower
-                      right: '15%', // Increased margin to make container narrower
+                      left: '10%', // Reduced margin to make container wider
+                      right: '10%', // Reduced margin to make container wider
                       bottom: '20%', // Leave more space for the waiting message
                       flexDirection: 'row',
                       flexWrap: 'wrap',
