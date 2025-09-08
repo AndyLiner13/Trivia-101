@@ -2702,53 +2702,35 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.View({
                   style: {
                     borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // BLUE-1 - within green
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // BLACK-1 - within green (simplified)
                   },
                   children: [
-                    // Light/Dark mode switch purple container
                     ui.View({
                       style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#8A2BE2' : 'transparent') // PURPLE-1 - within blue
+                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        borderRadius: 20,
+                        paddingHorizontal: 8,
+                        paddingVertical: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center'
                       },
                       children: [
-                        // Light/Dark mode switch black container
-                        ui.View({
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
                           style: {
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // BLACK-1 - within purple
-                          },
-                          children: [
-                            ui.View({
-                              style: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                                borderRadius: 20,
-                                paddingHorizontal: 8,
-                                paddingVertical: 6,
-                                flexDirection: 'row',
-                                alignItems: 'center'
-                              },
-                              children: [
-                                ui.Image({
-                                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
-                                  style: {
-                                    width: 20,
-                                    height: 20,
-                                    tintColor: '#FFFFFF',
-                                    marginRight: 4
-                                  }
-                                }),
-                                ui.Image({
-                                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
-                                  style: {
-                                    width: 20,
-                                    height: 20,
-                                    tintColor: '#FFFFFF'
-                                  }
-                                })
-                              ]
-                            })
-                          ]
+                            width: 20,
+                            height: 20,
+                            tintColor: '#FFFFFF',
+                            marginRight: 4
+                          }
+                        }),
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                          style: {
+                            width: 20,
+                            height: 20,
+                            tintColor: '#FFFFFF'
+                          }
                         })
                       ]
                     })
@@ -2759,41 +2741,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.View({
                   style: {
                     borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0033FF' : 'transparent') // BLUE-2 - within green (slightly different)
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within green (simplified, slightly different)
                   },
                   children: [
-                    // Settings icon purple container
                     ui.View({
                       style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#9370DB' : 'transparent') // PURPLE-2 - within blue (slightly different)
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        borderRadius: 12,
+                        padding: 8
                       },
                       children: [
-                        // Settings icon black container
-                        ui.View({
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))),
                           style: {
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within purple (slightly different)
-                          },
-                          children: [
-                            ui.View({
-                              style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                borderRadius: 12,
-                                padding: 8
-                              },
-                              children: [
-                                ui.Image({
-                                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))),
-                                  style: {
-                                    width: 20,
-                                    height: 20,
-                                    tintColor: '#FFFFFF'
-                                  }
-                                })
-                              ]
-                            })
-                          ]
+                            width: 20,
+                            height: 20,
+                            tintColor: '#FFFFFF'
+                          }
                         })
                       ]
                     })
@@ -2865,36 +2829,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#0033FF' : 'transparent') // BLUE-2 - within green (slightly different)
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within green (simplified)
               },
               children: [
-                // Text element container
-                ui.View({
+                ui.Text({
+                  text: 'You are the host!',
                   style: {
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#9370DB' : 'transparent') // PURPLE-2 - within blue (slightly different)
-                  },
-                  children: [
-                    // Text final container
-                    ui.View({
-                      style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within purple (slightly different)
-                      },
-                      children: [
-                        ui.Text({
-                          text: 'You are the host!',
-                          style: {
-                            fontSize: 18,
-                            fontWeight: '600',
-                            color: '#FFFFFF',
-                            textAlign: 'center',
-                            marginBottom: 16
-                          }
-                        })
-                      ]
-                    })
-                  ]
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    marginBottom: 16
+                  }
                 })
               ]
             }),
