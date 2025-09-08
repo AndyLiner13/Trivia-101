@@ -3313,10 +3313,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))),
                   style: {
-                    width: 26,
-                    height: 26,
+                    width: 24,
+                    height: 24,
                     tintColor: '#FFFFFF'
                   }
                 })
@@ -3495,8 +3495,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             alignItems: 'center',
             paddingLeft: 8,
             paddingRight: 8,
-            paddingTop: 8,
-            height: 48
+            paddingTop: 8
           },
           children: [
             // Light/Dark mode toggle
@@ -3564,10 +3563,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
                   style: {
-                    width: 26,
-                    height: 26,
+                    width: 24,
+                    height: 24,
                     tintColor: '#FFFFFF'
                   }
                 })
@@ -3680,9 +3679,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         position: 'relative'
       },
       children: [
-        // Background image (red failure background)
+        // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))), // Using red background
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3708,7 +3707,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode container
+            // Light/Dark mode toggle
             ui.View({
               style: {
                 backgroundColor: '#191919',
@@ -3719,7 +3718,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
                   style: {
                     width: 24,
                     height: 24,
@@ -3727,7 +3726,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }
                 }),
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
                   style: {
                     width: 24,
                     height: 24,
@@ -3737,7 +3736,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Points display container
+            // Points display container (like 4A page)
             ui.View({
               style: {
                 backgroundColor: '#191919',
@@ -3773,7 +3772,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1003669655537991'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
@@ -3785,56 +3784,91 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Center content with X icon and message
+        // Checkmark container - moved up from center
         ui.View({
           style: {
             position: 'absolute',
             top: '50%',
             left: '50%',
-            transform: [{ translateX: -50 }, { translateY: -50 }],
-            alignItems: 'center',
-            justifyContent: 'center'
+            width: 136,
+            height: 136,
+            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginLeft: -68, // Half of width to center horizontally
+            justifyContent: 'center',
+            alignItems: 'center'
           },
           children: [
-            // X mark icon for wrong answer
-            ui.View({
+            // Checkmark icon (no green circle background)
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2019383778812059'))), // Using specified check icon
               style: {
-                backgroundColor: '#EF4444',
-                borderRadius: 50,
-                width: 100,
-                height: 100,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 20
-              },
-              children: [
-                ui.Text({
-                  text: '✗',
-                  style: {
-                    fontSize: 60,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
+                width: 120,
+                height: 120,
+                tintColor: '#FFFFFF'
+              }
+            })
+          ]
+        }),
 
-            // "Better luck next time!" text
-            ui.View({
+        // Points display underneath checkmark
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
+            height: 50,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '+1200 points',
               style: {
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                borderRadius: 12,
-                paddingHorizontal: 24,
-                paddingVertical: 12
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
+                // Removed drop shadow properties
+              }
+            })
+          ]
+        }),
+
+        // Bottom status bar (like 4A page with question info)
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
               },
+              onPress: () => {}, // No action for status bar
               children: [
                 ui.Text({
-                  text: 'Better luck next time!',
+                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                  }),
                   style: {
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: '600',
-                    color: '#FFFFFF',
+                    color: '#111111',
                     textAlign: 'center'
                   }
                 })
@@ -3934,10 +3968,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))),
                   style: {
-                    width: 26,
-                    height: 26,
+                    width: 24,
+                    height: 24,
                     tintColor: '#FFFFFF'
                   }
                 })
