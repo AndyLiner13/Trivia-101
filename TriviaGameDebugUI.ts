@@ -852,14 +852,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 16,
                                           fontWeight: 'bold',
-                                          color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
+                                          color: 'white'
                                         }
                                       }),
                                       Text({
                                         text: 'Answers',
                                         style: {
                                           fontSize: 10,
-                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280')
+                                          color: 'white'
                                         }
                                       })
                                     ]
@@ -985,14 +985,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                         style: {
                                           fontSize: 20, // Increased from 16 to 20
                                           fontWeight: 'bold',
-                                          color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
+                                          color: 'white'
                                         }
                                       }),
                                       Text({
                                         text: 'Answers',
                                         style: {
                                           fontSize: 12, // Increased from 10 to 12
-                                          color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280')
+                                          color: 'white'
                                         }
                                       })
                                     ]
@@ -1188,14 +1188,14 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                       style: {
                                         fontSize: 20, // Increased from 16 to 20
                                         fontWeight: 'bold',
-                                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
+                                        color: 'white'
                                       }
                                     }),
                                     Text({
                                       text: 'Answers',
                                       style: {
                                         fontSize: 12, // Increased from 10 to 12
-                                        color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280')
+                                        color: 'white'
                                       }
                                     })
                                   ]
