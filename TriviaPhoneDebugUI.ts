@@ -2156,7 +2156,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         height: 28,
                         tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                           settings.timeLimit > 30 ? '#FFFFFF' : '#666666'
-                     Can you change the following text in the pop-up:
 
    )
                       }
