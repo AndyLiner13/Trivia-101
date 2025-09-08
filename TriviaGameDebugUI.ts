@@ -3,6 +3,12 @@ import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
 import { View, Text, Pressable, Binding, UINode, Image, ImageSource, UIComponent } from 'horizon/ui';
 
+// CRITICAL NOTE: DO NOT REMOVE THE 16:9 ASPECT RATIO FROM ANY SCREEN CONTAINER
+// The 16:9 aspect ratio (aspectRatio: 16/9) is essential for maintaining consistent display
+// across all devices and screens in the application. NEVER remove this property.
+// NOTE: All screens must maintain the 16:9 aspect ratio for proper layout consistency
+// NOTE: The aspectRatio: 16/9 property should NEVER be removed from any container
+
 // Interface for tracking phone assignments
 interface PhoneAssignment {
   phoneEntity: hz.Entity;
@@ -326,12 +332,15 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       },
       children: [
         // Error Screen (standalone screen)
+        // NOTE: DO NOT REMOVE THE 16:9 ASPECT RATIO - This maintains consistency with all other screens
+        // NOTE: The 16:9 aspect ratio is critical for proper display across all devices
+        // NOTE: NEVER remove aspectRatio: 16/9 from this container under any circumstances
         UINode.if(
           this.showErrorBinding,
           View({
             style: {
               width: '100vw', // Use full viewport width
-              aspectRatio: 16/9, // Maintain 16:9 aspect ratio
+              aspectRatio: 16/9, // Maintain 16:9 aspect ratio - DO NOT REMOVE THIS LINE
               backgroundColor: 'transparent',
               position: 'relative',
               overflow: 'hidden',
@@ -340,6 +349,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             },
             children: [
               // Background image
+              // NOTE: This image now fills the entire 16:9 viewport
+              // NOTE: The 16:9 aspect ratio of the container is preserved above
+              // NOTE: DO NOT change the container's aspectRatio: 16/9 setting
               Image({
                 source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('765365063138745'))),
                 style: {
@@ -350,7 +362,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   bottom: 0,
                   width: '100%',
                   height: '100%',
-                  resizeMode: 'cover'
+                  resizeMode: 'cover' // Fill the entire viewport while maintaining aspect ratio
                 }
               })
             ]
@@ -358,12 +370,15 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         ),
 
         // Main game container with 16:9 aspect ratio (only show when not on error screen)
+        // NOTE: DO NOT REMOVE THE 16:9 ASPECT RATIO - This maintains consistency with all other screens
+        // NOTE: The 16:9 aspect ratio is critical for proper display across all devices
+        // NOTE: NEVER remove aspectRatio: 16/9 from this container under any circumstances
         UINode.if(
           this.showErrorBinding.derive(showError => !showError),
           View({
             style: {
               width: '100vw', // Use full viewport width
-              aspectRatio: 16/9, // Maintain 16:9 aspect ratio
+              aspectRatio: 16/9, // Maintain 16:9 aspect ratio - DO NOT REMOVE THIS LINE
               backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#F3F4F6'),
               position: 'relative',
               overflow: 'hidden',
@@ -375,6 +390,21 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for main container
             },
           children: [
+            // Background image for all screens
+            Image({
+              source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
+              style: {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+                resizeMode: 'cover',
+                zIndex: -1
+              }
+            }),
             // Configuration Screen (shows initially)
             UINode.if(
               this.showConfigBinding,
@@ -1364,6 +1394,21 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for leaderboard overlay
                     },
                     children: [
+                      // Background image for leaderboard
+                      Image({
+                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
+                        style: {
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: '100%',
+                          height: '100%',
+                          resizeMode: 'cover',
+                          zIndex: -1
+                        }
+                      }),
                       // Header
                       View({
                         style: {
@@ -1762,6 +1807,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             ),
 
             // Results Screen (separate page)
+            // NOTE: DO NOT REMOVE THE 16:9 ASPECT RATIO - This maintains consistency with all other screens
+            // NOTE: The 16:9 aspect ratio is critical for proper display across all devices
             UINode.if(
               this.showResultsBinding,
               View({
@@ -1779,6 +1826,21 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for results screen background
                 },
                 children: [
+                  // Background image for results screen
+                  Image({
+                    source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
+                    style: {
+                      position: 'absolute',
+                      top: -16,
+                      left: -16,
+                      right: -16,
+                      bottom: -16,
+                      width: 'calc(100% + 32px)',
+                      height: 'calc(100% + 32px)',
+                      resizeMode: 'cover',
+                      zIndex: -1
+                    }
+                  }),
                   // Header
                   View({
                     style: {
