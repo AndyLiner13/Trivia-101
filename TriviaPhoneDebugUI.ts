@@ -2274,20 +2274,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 4,
-                paddingRight: 4,
-                paddingTop: 4
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8
               },
               children: [
                 ui.Pressable({
                   style: {
                     width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
                     backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                       settings.category === 'General' ? '#FFFFFF' : '#191919'
                     ),
                     borderRadius: 8,
-                    paddingTop: 10,
-                    paddingBottom: 10,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -2296,7 +2297,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Text({
                       text: 'General Trivia',
                       style: {
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: '600',
                         color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                           settings.category === 'General' ? '#000000' : '#FFFFFF'
@@ -2313,20 +2314,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 4,
-                paddingRight: 4,
-                paddingTop: 4
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8
               },
               children: [
                 ui.Pressable({
                   style: {
                     width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
                     backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                       settings.category === 'Another Category' ? '#FFFFFF' : '#191919'
                     ),
                     borderRadius: 8,
-                    paddingTop: 10,
-                    paddingBottom: 10,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -2335,7 +2337,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Text({
                       text: 'Another Category',
                       style: {
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: '600',
                         color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                           settings.category === 'Another Category' ? '#000000' : '#FFFFFF'
@@ -2352,20 +2354,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 4,
-                paddingRight: 4,
-                paddingTop: 4
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8
               },
               children: [
                 ui.Pressable({
                   style: {
                     width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
                     backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                       settings.category === 'Italian Brainrot Quiz' ? '#FFFFFF' : '#191919'
                     ),
                     borderRadius: 8,
-                    paddingTop: 10,
-                    paddingBottom: 10,
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
@@ -2374,7 +2377,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Text({
                       text: 'Italian Brainrot',
                       style: {
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: '600',
                         color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                           settings.category === 'Italian Brainrot Quiz' ? '#000000' : '#FFFFFF'
@@ -2393,7 +2396,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: '100%',
                 paddingLeft: 4,
                 paddingRight: 5,
-                paddingTop: 4,
+                paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -2477,7 +2480,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: '100%',
                 paddingLeft: 4,
                 paddingRight: 5,
-                paddingTop: 4,
+                paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -2561,7 +2564,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: '100%',
                 paddingLeft: 4,
                 paddingRight: 5,
-                paddingTop: 4,
+                paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -2937,9 +2940,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 flexDirection: 'column',
                 paddingLeft: 8,
                 paddingRight: 8,
-                paddingBottom: 8,
-                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#0066FF' : 'transparent') // BLUE-3 - within green (slightly different)
+                paddingBottom: 8
               },
               children: [
                 // Start Game button (directly in blue container)
@@ -3046,9 +3047,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.isHostBinding.derive(isHost => isHost),
           ui.View({
             style: {
-              alignItems: 'center',
-              borderWidth: 2,
-              borderColor: '#00FF00' // Green - nested within red
+              alignItems: 'center'
             },
             children: [
               // Game Settings Button
