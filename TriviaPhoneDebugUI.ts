@@ -2664,7 +2664,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1929783661121249'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1465645924559637'))),
           style: {
             width: '100%',
             height: '100%',
