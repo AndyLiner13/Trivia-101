@@ -2156,7 +2156,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         height: 28,
                         tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                           settings.timeLimit > 30 ? '#FFFFFF' : '#666666'
-                        )
+                     Can you change the following text in the pop-up:
+
+   )
                       }
                     })
                   ]
@@ -2385,10 +2387,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             backgroundColor: '#FFFFFF',
-            borderRadius: 8,
+            borderRadius: 20,
             padding: 8,
-            minWidth: 280,
-            maxWidth: 320
+            minWidth: 140,
+            maxWidth: 140,
+            marginHorizontal: 8
           },
           children: [
             // Title
@@ -2402,7 +2405,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.Text({
                   text: 'Game Settings',
                   style: {
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: '700',
                     color: '#000000',
                     textAlign: 'center'
@@ -2431,18 +2434,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
                       style: {
-                        width: 36,
-                        height: 36,
+                        width: 24,
+                        height: 24,
                         tintColor: '#000000'
                       }
                     }),
                     ui.Text({
                       text: 'Timer Settings',
                       style: {
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: '#000000',
-                        marginLeft: 8
+                        marginLeft: 6
                       }
                     })
                   ]
@@ -2462,18 +2465,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))),
                       style: {
-                        width: 36,
-                        height: 36,
+                        width: 24,
+                        height: 24,
                         tintColor: '#000000'
                       }
                     }),
                     ui.Text({
                       text: 'Difficulty Levels',
                       style: {
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: '#000000',
-                        marginLeft: 8
+                        marginLeft: 6
                       }
                     })
                   ]
@@ -2492,18 +2495,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
                       style: {
-                        width: 36,
-                        height: 36,
+                        width: 20,
+                        height: 20,
                         tintColor: '#000000'
                       }
                     }),
                     ui.Text({
                       text: 'Game Modes',
                       style: {
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: '#000000',
-                        marginLeft: 8
+                        marginLeft: 6
                       }
                     })
                   ]
@@ -2532,7 +2535,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Text({
                       text: 'Got it',
                       style: {
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: '700',
                         color: '#FFFFFF',
                         textAlign: 'center'
