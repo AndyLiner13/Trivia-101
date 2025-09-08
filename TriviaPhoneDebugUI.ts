@@ -2671,127 +2671,29 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private renderPreGameScreen(): ui.UINode {
     return ui.View({
       style: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        borderWidth: 2,
-        borderColor: '#FF0000' // Red - layer within phone frame
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+        borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
       },
       children: [
-        // Role Badge
-        ui.View({
+        // Full-screen background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1465645924559637'))),
           style: {
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: 20,
-            paddingHorizontal: 24,
-            paddingVertical: 16,
-            alignItems: 'center',
-            shadowColor: '#000000',
-            shadowOffset: [0, 4],
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            marginBottom: 32,
-            borderWidth: 2,
-            borderColor: '#00FF00' // Green - nested within red
-          },
-          children: [
-            ui.Text({
-              text: ui.Binding.derive([this.isHostBinding], (isHost) => isHost ? '👑 You are the Host' : '👤 You are a Participant'),
-              style: {
-                fontSize: 18,
-                fontWeight: '600',
-                color: '#4B5563',
-                textAlign: 'center'
-              }
-            })
-          ]
-        }),
-        // Host Controls
-        ui.UINode.if(
-          this.isHostBinding.derive(isHost => isHost),
-          ui.View({
-            style: {
-              alignItems: 'center',
-              borderWidth: 2,
-              borderColor: '#00FF00' // Green - nested within red
-            },
-            children: [
-              // Game Settings Button
-              ui.Pressable({
-                style: {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  width: 150,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  shadowColor: '#000000',
-                  shadowOffset: [0, 2],
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4
-                },
-                onPress: () => this.navigateToGameSettings(),
-                children: [
-                  ui.Text({
-                    text: '⚙️ Game Settings',
-                    style: {
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: '#6366F1',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              }),
-              // Start Game Button
-              ui.Pressable({
-                style: {
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  width: 150,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  shadowColor: '#000000',
-                  shadowOffset: [0, 2],
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  borderWidth: 2,
-                  borderColor: '#0000FF' // Blue - nested within green
-                },
-                onPress: () => this.handleStartGame(),
-                children: [
-                  ui.Text({
-                    text: '🎯 Start Game',
-                    style: {
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: '#6366F1',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              })
-            ]
-          })
-        ),
-        // Participant Waiting Message
-        ui.UINode.if(
-          ui.Binding.derive([this.isHostBinding], (isHost) => !isHost),
-          ui.Text({
-            text: 'Waiting for host to start the game...',
-            style: {
-              fontSize: 16,
-              color: '#FFFFFF',
-              textAlign: 'center',
-              opacity: 0.9
-            }
-          })
-        )
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover'
+          }
+        })
       ]
     });
   }
