@@ -2437,16 +2437,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               children: [
-                // Timer option
+                // Options container
                 ui.View({
                   style: {
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'center',
-                    paddingHorizontal: 6,
-                    paddingVertical: 4,
-                    marginBottom: 8
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    alignSelf: 'center'
                   },
+                  children: [
+                    // Timer option
+                    ui.View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 6,
+                        paddingVertical: 4,
+                        marginBottom: 8
+                      },
                   children: [
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
@@ -2482,16 +2489,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Difficulty option
-                ui.View({
-                  style: {
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'center',
-                    paddingHorizontal: 6,
-                    paddingVertical: 4,
-                    marginBottom: 8
-                  },
+                    // Difficulty option
+                    ui.View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 6,
+                        paddingVertical: 4,
+                        marginBottom: 8
+                      },
                   children: [
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
@@ -2527,15 +2533,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Game mode option
-                ui.View({
-                  style: {
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'center',
-                    paddingHorizontal: 6,
-                    paddingVertical: 4
-                  },
+                    // Game mode option
+                    ui.View({
+                      style: {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 6,
+                        paddingVertical: 4
+                      },
                   children: [
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
@@ -2570,6 +2575,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     })
                   ]
                 })
+                ]
+              })
               ]
             }),
 
