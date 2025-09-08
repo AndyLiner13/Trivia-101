@@ -3336,7 +3336,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column',
             paddingLeft: 8,
             paddingRight: 8,
-            paddingTop: 50, // Leave space for header
+            paddingTop: 48, // 8px spacing from header
             paddingBottom: 8
           },
           children: [
@@ -3991,7 +3991,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column',
             paddingLeft: 8,
             paddingRight: 8,
-            paddingTop: 50, // Leave space for header
+            paddingTop: 48, // 8px spacing from header
             paddingBottom: 8
           },
           children: [
