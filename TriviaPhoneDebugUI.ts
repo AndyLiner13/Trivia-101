@@ -129,6 +129,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Info pop-up binding
   private showInfoPopupBinding = new ui.Binding(false);
+  private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'gamemode'>('timer');
 
   // Host status binding
   private isHostBinding = new ui.Binding(false);
@@ -2175,7 +2176,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     marginLeft: 5
                   },
-                  onPress: () => this.showInfoPopupBinding.set(true),
+                  onPress: () => {
+                    this.infoPopupTypeBinding.set('timer');
+                    this.showInfoPopupBinding.set(true);
+                  },
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
@@ -2260,7 +2264,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     marginLeft: 5
                   },
-                  onPress: () => this.showInfoPopupBinding.set(true),
+                  onPress: () => {
+                    this.infoPopupTypeBinding.set('difficulty');
+                    this.showInfoPopupBinding.set(true);
+                  },
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
@@ -2343,7 +2350,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     marginLeft: 5
                   },
-                  onPress: () => this.showInfoPopupBinding.set(true),
+                  onPress: () => {
+                    this.infoPopupTypeBinding.set('gamemode');
+                    this.showInfoPopupBinding.set(true);
+                  },
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
@@ -2402,7 +2412,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Text({
-                  text: 'Game Settings',
+                  text: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                    switch (type) {
+                      case 'timer': return 'Timer';
+                      case 'difficulty': return 'Difficulty';
+                      case 'gamemode': return 'Game Settings';
+                      default: return 'Game Settings';
+                    }
+                  }),
                   style: {
                     fontSize: 14,
                     fontWeight: '700',
@@ -2431,7 +2448,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                      source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                        switch (type) {
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer_off
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')));
+                        }
+                      }),
                       style: {
                         width: 24,
                         height: 24,
@@ -2439,7 +2463,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }
                     }),
                     ui.Text({
-                      text: 'Timer Settings',
+                      text: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                        switch (type) {
+                          case 'timer': return 'None';
+                          case 'difficulty': return 'Easy';
+                          case 'gamemode': return 'Timer Settings';
+                          default: return 'Timer Settings';
+                        }
+                      }),
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
@@ -2462,7 +2493,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))),
+                      source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                        switch (type) {
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))); // sentiment_neutral
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405')));
+                        }
+                      }),
                       style: {
                         width: 24,
                         height: 24,
@@ -2470,7 +2508,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }
                     }),
                     ui.Text({
-                      text: 'Difficulty Levels',
+                      text: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                        switch (type) {
+                          case 'timer': return '30 Seconds';
+                          case 'difficulty': return 'Medium';
+                          case 'gamemode': return 'Difficulty Levels';
+                          default: return 'Difficulty Levels';
+                        }
+                      }),
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
@@ -2492,15 +2537,29 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                      source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                        switch (type) {
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))); // more_time
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))); // skull
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265')));
+                        }
+                      }),
                       style: {
-                        width: 20,
-                        height: 20,
+                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
+                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
                         tintColor: '#000000'
                       }
                     }),
                     ui.Text({
-                      text: 'Game Modes',
+                      text: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
+                        switch (type) {
+                          case 'timer': return '90 Seconds';
+                          case 'difficulty': return 'Hard';
+                          case 'gamemode': return 'Game Modes';
+                          default: return 'Game Modes';
+                        }
+                      }),
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
