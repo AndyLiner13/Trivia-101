@@ -135,6 +135,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private isReadyBinding = new ui.Binding(false);
   private isReady = false;
 
+  // Button pressed state to prevent white flash
+  private buttonPressedBinding = new ui.Binding(false);
+
   constructor() {
     super();
     this.isReady = false;
@@ -2749,11 +2752,17 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center',
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
+                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding, this.buttonPressedBinding], (isHost, isReady, isPressed) => 
                   isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
                 )
               },
-              onPress: () => this.handleReadyButtonPress(),
+              onPress: () => {
+                this.buttonPressedBinding.set(true);
+              },
+              onRelease: () => {
+                this.buttonPressedBinding.set(false);
+                this.handleReadyButtonPress();
+              },
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
