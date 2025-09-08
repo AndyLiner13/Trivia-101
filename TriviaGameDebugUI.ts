@@ -533,8 +533,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
                           style: {
-                            width: 32, // Reduced from 48
-                            height: 32 // Reduced from 48
+                            width: 36, // Scaled up from 32
+                            height: 36 // Scaled up from 32
                           }
                         })
                       }),
@@ -547,8 +547,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
                           style: {
-                            width: 32, // Reduced from 48
-                            height: 32 // Reduced from 48
+                            width: 36, // Scaled up from 32
+                            height: 36 // Scaled up from 32
                           }
                         })
                       }),
@@ -561,8 +561,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
                           style: {
-                            width: 32, // Reduced from 48
-                            height: 32 // Reduced from 48
+                            width: 36, // Scaled up from 32
+                            height: 36 // Scaled up from 32
                           }
                         })
                       })
