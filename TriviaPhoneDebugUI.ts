@@ -127,6 +127,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showOutlinesBinding = new ui.Binding(false);
   private showOutlines: boolean = false;
 
+  // Info pop-up binding
+  private showInfoPopupBinding = new ui.Binding(false);
+
   // Host status binding
   private isHostBinding = new ui.Binding(false);
   private currentHostStatus = false;
@@ -2160,7 +2163,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 }),
 
                 // Info icon container
-                ui.View({
+                ui.Pressable({
                   style: {
                     backgroundColor: '#FFFFFF',
                     borderRadius: 5,
@@ -2171,6 +2174,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     marginLeft: 5
                   },
+                  onPress: () => this.showInfoPopupBinding.set(true),
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
@@ -2244,7 +2248,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 }),
 
                 // Info icon container
-                ui.View({
+                ui.Pressable({
                   style: {
                     backgroundColor: '#FFFFFF',
                     borderRadius: 5,
@@ -2255,6 +2259,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     marginLeft: 5
                   },
+                  onPress: () => this.showInfoPopupBinding.set(true),
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
@@ -2326,7 +2331,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 }),
 
                 // Info icon container
-                ui.View({
+                ui.Pressable({
                   style: {
                     backgroundColor: '#FFFFFF',
                     borderRadius: 5,
@@ -2337,6 +2342,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     marginLeft: 5
                   },
+                  onPress: () => this.showInfoPopupBinding.set(true),
                   children: [
                     ui.Image({
                       source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
@@ -2344,6 +2350,192 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         width: 28,
                         height: 28,
                         tintColor: '#000000'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Info pop-up
+        ui.UINode.if(
+          this.showInfoPopupBinding,
+          this.renderInfoPopup()
+        )
+      ]
+    });
+  }
+
+  private renderInfoPopup(): ui.UINode {
+    return ui.View({
+      style: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000
+      },
+      children: [
+        ui.View({
+          style: {
+            backgroundColor: '#FFFFFF',
+            borderRadius: 8,
+            padding: 8,
+            minWidth: 280,
+            maxWidth: 320
+          },
+          children: [
+            // Title
+            ui.View({
+              style: {
+                paddingTop: 2,
+                paddingBottom: 2,
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: 'Game Settings',
+                  style: {
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: '#000000',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Content
+            ui.View({
+              style: {
+                paddingTop: 8
+              },
+              children: [
+                // Timer option
+                ui.View({
+                  style: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 8,
+                    padding: 4,
+                    marginBottom: 8
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                      style: {
+                        width: 36,
+                        height: 36,
+                        tintColor: '#000000'
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Timer Settings',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#000000',
+                        marginLeft: 8
+                      }
+                    })
+                  ]
+                }),
+
+                // Difficulty option
+                ui.View({
+                  style: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 8,
+                    padding: 4,
+                    marginBottom: 8
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))),
+                      style: {
+                        width: 36,
+                        height: 36,
+                        tintColor: '#000000'
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Difficulty Levels',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#000000',
+                        marginLeft: 8
+                      }
+                    })
+                  ]
+                }),
+
+                // Game mode option
+                ui.View({
+                  style: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 8,
+                    padding: 4
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                      style: {
+                        width: 36,
+                        height: 36,
+                        tintColor: '#000000'
+                      }
+                    }),
+                    ui.Text({
+                      text: 'Game Modes',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#000000',
+                        marginLeft: 8
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Got it button
+            ui.View({
+              style: {
+                paddingTop: 8,
+                alignItems: 'center'
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#0fba09',
+                    borderRadius: 8,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    minWidth: 120,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.showInfoPopupBinding.set(false),
+                  children: [
+                    ui.Text({
+                      text: 'Got it',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        textAlign: 'center'
                       }
                     })
                   ]
@@ -2382,54 +2574,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             style: {
               flex: 1,
               padding: 8,
-              paddingBottom: 11,
-              borderWidth: 2,
-              borderColor: '#00FF00' // Green - 1st nested container
-            },
-            children: [
-              this.renderTwoOptionsPage()
-            ]
-          })
-        ),
-
-        // Bottom status bar
-        this.renderStatusBar()
-      ]
-    });
-  }
-
-  private renderTriviaGameWithFourOptions(): ui.UINode {
-    return ui.View({
-      style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: ui.Binding.derive([
-          this.showResultBinding,
-          this.isCorrectAnswerBinding
-        ], (showResult, isCorrect) => {
-          if (showResult) {
-            return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
-          }
-          return '#6366F1'; // Default blue
-        }),
-        flexDirection: 'column',
-        borderWidth: 2,
-        borderColor: '#FF0000' // Red - top container
-      },
-      children: [
-        // Show normal game content when NOT showing results
-        ui.UINode.if(
-          ui.Binding.derive([this.showResultBinding], (showResult) => !showResult),
-          ui.View({
-            style: {
-              flex: 1,
-              padding: 8,
               paddingBottom: 12,
               borderWidth: 2,
               borderColor: '#00FF00' // Green - 1st nested container
             },
             children: [
-              this.renderFourOptionsPage()
+              this.renderTwoOptionsPage()
             ]
           })
         ),
