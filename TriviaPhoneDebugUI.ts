@@ -2694,6 +2694,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                backgroundColor: 'rgba(0, 255, 0, 0.5)', // GREEN neon background
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN-1 - shared container
               },
@@ -2774,7 +2775,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: '#FF1493', // Neon pink background
+                backgroundColor: 'rgba(0, 128, 255, 0.5)', // Neon blue background for GREEN-2 (50% opacity)
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent') // GREEN-2 - crown container (slightly different)
               },
@@ -2796,7 +2797,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             position: 'absolute',
-            top: 0,
+            top: '40%', // Start below the header (40% from top)
             left: 0,
             right: 0,
             bottom: 0,
@@ -2810,6 +2811,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             flex: 1,
+            backgroundColor: 'rgba(0, 255, 128, 0.5)', // Neon green background for GREEN-2 (50% opacity)
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent') // GREEN-2 - within red (slightly different)
           }
@@ -2821,6 +2823,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column',
             justifyContent: 'flex-end',
             alignItems: 'center',
+            backgroundColor: 'rgba(128, 0, 255, 0.5)', // Neon purple background for GREEN-3 (50% opacity)
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF66' : 'transparent') // GREEN-3 - within red (slightly different)
           },
@@ -2828,6 +2831,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // "You are the host!" text container
             ui.View({
               style: {
+                width: '100%', // Fill the full screen width
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within green (simplified)
               },
@@ -2869,12 +2873,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         justifyContent: 'center',
                         alignItems: 'center',
                         paddingHorizontal: 24,
-                        shadowColor: '#000000',
-                        shadowOffset: [0, 2],
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
-                        width: '100%',
-                        marginBottom: 8
+                        width: '100%'
                       },
                       onPress: () => this.handleStartGame(),
                       children: [
@@ -2907,10 +2906,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         justifyContent: 'center',
                         alignItems: 'center',
                         paddingHorizontal: 24,
-                        shadowColor: '#000000',
-                        shadowOffset: [0, 2],
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
                         width: '100%'
                       },
                       onPress: () => this.navigateToGameSettings(),
