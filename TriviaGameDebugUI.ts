@@ -437,13 +437,12 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       top: 0,
-                      left: '15.9%', // 127px out of 800px total width
-                      right: '15.9%', // 127px out of 800px total width
-                      height: 66,
+                      left: 0, // Fill width from left edge
+                      right: 0, // Fill width to right edge
                       alignItems: 'center',
                       justifyContent: 'center',
                       paddingHorizontal: 8,
-                      paddingVertical: 8,
+                      paddingVertical: 8, // 8px padding for height that hugs the text
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for header
                     },
@@ -462,7 +461,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   View({
                     style: {
                       position: 'absolute',
-                      top: 358, // Reduced gap from avatar grid (385 - 27px)
+                      bottom: 0, // Moved to bottom of screen
                       left: '3%', // 24px out of 800px total width
                       right: '3%', // 24px out of 800px total width
                       height: 65,
@@ -488,9 +487,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   View({
                     style: {
                       position: 'absolute',
-                      top: 73, // Reduced gap from header (80 - 7px)
-                      left: '10%', // Adjusted to make room for left icons
-                      right: '10%', // Adjusted to make room for right icons
+                      top: 48, // Moved up to touch bottom of header (was 73)
+                      left: '15%', // Increased margin to make container narrower
+                      right: '15%', // Increased margin to make container narrower
                       bottom: '20%', // Leave more space for the waiting message
                       flexDirection: 'row',
                       flexWrap: 'wrap',
@@ -508,13 +507,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       left: 0, // Start at left edge
-                      top: 73, // Moved down to match avatar grid
+                      top: 0, // Fill from top of viewport
+                      bottom: 0, // Fill to bottom of viewport
                       width: 80, // Slightly wider for better spacing
-                      height: 320, // Shorter height to fit all icons
                       flexDirection: 'column',
-                      justifyContent: 'space-between', // Space icons evenly
+                      justifyContent: 'space-between', // Distribute icons evenly across full height
                       alignItems: 'center',
-                      paddingVertical: 5, // Reduced from 10 to 5 for smaller vertical gap
+                      paddingVertical: 16, // Add some padding from top and bottom edges
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for left icons
                     },
@@ -528,8 +527,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
                           style: {
-                            width: 48, // Scaled down from 64
-                            height: 48 // Scaled down from 64
+                            width: 32, // Reduced from 48
+                            height: 32 // Reduced from 48
                           }
                         })
                       }),
@@ -542,8 +541,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
                           style: {
-                            width: 48, // Scaled down from 64
-                            height: 48 // Scaled down from 64
+                            width: 32, // Reduced from 48
+                            height: 32 // Reduced from 48
                           }
                         })
                       }),
@@ -556,8 +555,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
                           style: {
-                            width: 48, // Scaled down from 64
-                            height: 48 // Scaled down from 64
+                            width: 32, // Reduced from 48
+                            height: 32 // Reduced from 48
                           }
                         })
                       })
@@ -569,13 +568,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       right: 0, // Start at right edge
-                      top: 80, // Moved down from top to fit better
+                      top: 0, // Fill from top of viewport
+                      bottom: 0, // Fill to bottom of viewport
                       width: 80, // Slightly wider for better spacing
-                      height: 320, // Shorter height to fit all icons
                       flexDirection: 'column',
-                      justifyContent: 'space-between', // Space icons evenly
+                      justifyContent: 'space-between', // Distribute icons evenly across full height
                       alignItems: 'center',
-                      paddingVertical: 10, // Reduced from 20 to 10 for smaller vertical gap
+                      paddingVertical: 16, // Add some padding from top and bottom edges
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for right icons
                     },
@@ -589,8 +588,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
                           style: {
-                            width: 48, // Scaled down from 64
-                            height: 48 // Scaled down from 64
+                            width: 32, // Reduced from 48
+                            height: 32 // Reduced from 48
                           }
                         })
                       }),
@@ -603,8 +602,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
                           style: {
-                            width: 48, // Scaled down from 64
-                            height: 48 // Scaled down from 64
+                            width: 32, // Reduced from 48
+                            height: 32 // Reduced from 48
                           }
                         })
                       }),
@@ -617,8 +616,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
                           style: {
-                            width: 48, // Scaled down from 64
-                            height: 48 // Scaled down from 64
+                            width: 32, // Reduced from 48
+                            height: 32 // Reduced from 48
                           }
                         })
                       })
