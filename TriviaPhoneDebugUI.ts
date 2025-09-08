@@ -1613,7 +1613,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   onPress: () => this.debugShowScreen('two-options'),
                   children: [
                     ui.Text({
-                      text: '2️⃣ 2 Options',
+                      text: '2A',
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
@@ -1636,7 +1636,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   onPress: () => this.debugShowScreen('four-options'),
                   children: [
                     ui.Text({
-                      text: '4️⃣ 4 Options',
+                      text: '4A',
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
