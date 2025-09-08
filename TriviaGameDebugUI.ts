@@ -2737,7 +2737,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
           style: {
             flexDirection: 'column',
             alignItems: 'center',
-            marginBottom: 6, // Reduced from 12 to 6 (50% reduction)
+            marginBottom: 3, // Reduced from 6 to 3 for tighter vertical spacing
             marginRight: 12, // Increased from 8 to 12 for better wrapping
             marginLeft: 12, // Added left margin for better wrapping
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
