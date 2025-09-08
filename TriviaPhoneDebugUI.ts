@@ -89,7 +89,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   };
 
   // View mode for navigation
-  private currentViewMode: 'pre-game' | 'game-settings' = 'pre-game';
+  private currentViewMode: 'pre-game' | 'game-settings' = 'game-settings';
 
   // UI bindings
   private currentQuestionIndexBinding = new ui.Binding(0);
@@ -121,7 +121,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Game settings bindings
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
-  private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
+  private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('game-settings');
   
   // Debug outline toggle binding
   private showOutlinesBinding = new ui.Binding(false);
@@ -2138,427 +2138,501 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       style: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#6366F1',
-        flexDirection: 'column',
-        borderWidth: 2,
-        borderColor: '#FF0000' // Red - layer within phone frame
+        position: 'relative'
       },
       children: [
-        // Header with lock/unlock
-        ui.View({
+        // Background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2225071587959777'))),
           style: {
-            padding: 16,
-            alignItems: 'center',
-            borderWidth: 2,
-            borderColor: '#00FF00' // Green - nested within red
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                borderRadius: 20,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
-              },
-              onPress: () => this.toggleSettingsLock(),
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                    settings.isLocked ? '🔒' : '🔓'
-                  ),
-                  style: {
-                    fontSize: 16,
-                    marginRight: 8
-                  }
-                }),
-                ui.Text({
-                  text: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                    settings.isLocked ? 'Settings Locked' : 'Settings Unlocked'
-                  ),
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#000000'
-                  }
-                })
-              ]
-            })
-          ]
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
         }),
 
-        // Scrollable settings content
-        ui.ScrollView({
-          style: {
-            flex: 1,
-            padding: 16,
-            paddingBottom: 80,
-            opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-              settings.isLocked ? 0.6 : 1
-            ),
-            borderWidth: 2,
-            borderColor: '#00FF00' // Green - nested within red
-          },
-          children: [
-            // Number of Questions
-            ui.View({
-              style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
-              },
-              children: [
-                ui.Text({
-                  text: 'Number of Questions',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#000000',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }
-                }),
-                ui.View({
-                  style: {
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    borderWidth: 2,
-                    borderColor: '#800080' // Purple - nested within blue
-                  },
-                  children: [1, 5, 10, 15, 20].map(count =>
-                    ui.Pressable({
-                      style: {
-                        flex: 1,
-                        backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.numberOfQuestions === count ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)'
-                        ),
-                        borderRadius: 8,
-                        paddingVertical: 12,
-                        marginHorizontal: 4,
-                        alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#000000' // Black - nested within purple
-                      },
-                      onPress: () => this.updateGameSetting('numberOfQuestions', count),
-                      children: [
-                        ui.Text({
-                          text: count.toString(),
-                          style: {
-                            fontSize: 12,
-                            fontWeight: '600',
-                            color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.numberOfQuestions === count ? '#6366F1' : '#FFFFFF'
-                            )
-                          }
-                        })
-                      ]
-                    })
-                  )
-                })
-              ]
-            }),
-
-            // Category
-            ui.View({
-              style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
-              },
-              children: [
-                ui.Text({
-                  text: 'Category',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#000000',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }
-                }),
-                ui.View({
-                  style: {
-                    flexDirection: 'column',
-                    borderWidth: 2,
-                    borderColor: '#800080' // Purple - nested within blue
-                  },
-                  children: ['General', 'Italian Brainrot Quiz'].map(category =>
-                    ui.Pressable({
-                      style: {
-                        backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === category ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)'
-                        ),
-                        borderRadius: 8,
-                        paddingVertical: 12,
-                        paddingHorizontal: 16,
-                        marginBottom: 8,
-                        alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#000000' // Black - nested within purple
-                      },
-                      onPress: () => this.updateGameSetting('category', category),
-                      children: [
-                        ui.Text({
-                          text: category,
-                          style: {
-                            fontSize: 12,
-                            fontWeight: '600',
-                            color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.category === category ? '#6366F1' : '#FFFFFF'
-                            ),
-                            textAlign: 'center'
-                          }
-                        })
-                      ]
-                    })
-                  )
-                })
-              ]
-            }),
-
-            // Difficulty
-            ui.View({
-              style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
-              },
-              children: [
-                ui.Text({
-                  text: 'Difficulty',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#000000',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }
-                }),
-                ui.View({
-                  style: {
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    borderWidth: 2,
-                    borderColor: '#800080' // Purple - nested within blue
-                  },
-                  children: ['easy', 'medium', 'hard'].map(difficulty =>
-                    ui.Pressable({
-                      style: {
-                        flex: 1,
-                        backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.difficulty === difficulty ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)'
-                        ),
-                        borderRadius: 8,
-                        paddingVertical: 12,
-                        marginHorizontal: 4,
-                        alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#000000' // Black - nested within purple
-                      },
-                      onPress: () => this.updateGameSetting('difficulty', difficulty),
-                      children: [
-                        ui.Text({
-                          text: difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
-                          style: {
-                            fontSize: 12,
-                            fontWeight: '600',
-                            color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.difficulty === difficulty ? '#6366F1' : '#FFFFFF'
-                            )
-                          }
-                        })
-                      ]
-                    })
-                  )
-                })
-              ]
-            }),
-
-            // Time Limit
-            ui.View({
-              style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
-              },
-              children: [
-                ui.Text({
-                  text: 'Question Time Limit',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#000000',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }
-                }),
-                ui.View({
-                  style: {
-                    flexDirection: 'row',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    borderWidth: 2,
-                    borderColor: '#800080' // Purple - nested within blue
-                  },
-                  children: [10, 15, 30, 45, 60].map(time =>
-                    ui.Pressable({
-                      style: {
-                        width: '18%',
-                        backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.timeLimit === time ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)'
-                        ),
-                        borderRadius: 8,
-                        paddingVertical: 8,
-                        marginBottom: 8,
-                        alignItems: 'center',
-                        borderWidth: 2,
-                        borderColor: '#000000' // Black - nested within purple
-                      },
-                      onPress: () => this.updateGameSetting('timeLimit', time),
-                      children: [
-                        ui.Text({
-                          text: `${time}s`,
-                          style: {
-                            fontSize: 10,
-                            fontWeight: '600',
-                            color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.timeLimit === time ? '#6366F1' : '#FFFFFF'
-                            )
-                          }
-                        })
-                      ]
-                    })
-                  )
-                })
-              ]
-            }),
-
-            // Options
-            ui.View({
-              style: {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 12,
-                padding: 16,
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
-              },
-              children: [
-                ui.Text({
-                  text: 'Options',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#000000',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }
-                }),
-                // Auto-Advance
-                ui.Pressable({
-                  style: {
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.autoAdvance ? '#16A34A' : '#DC2626'
-                    ),
-                    borderRadius: 8,
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    marginBottom: 8,
-                    alignItems: 'center',
-                    borderWidth: 2,
-                    borderColor: '#800080' // Purple - nested within blue
-                  },
-                  onPress: () => this.updateGameSetting('autoAdvance', !this.gameSettings.autoAdvance),
-                  children: [
-                    ui.Text({
-                      text: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                        `Auto-Advance: ${settings.autoAdvance ? 'ON' : 'OFF'}`
-                      ),
-                      style: {
-                        fontSize: 12,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-                // Mute During Questions
-                ui.Pressable({
-                  style: {
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.muteDuringQuestions ? '#16A34A' : '#DC2626'
-                    ),
-                    borderRadius: 8,
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    alignItems: 'center',
-                    borderWidth: 2,
-                    borderColor: '#800080' // Purple - nested within blue
-                  },
-                  onPress: () => this.updateGameSetting('muteDuringQuestions', !this.gameSettings.muteDuringQuestions),
-                  children: [
-                    ui.Text({
-                      text: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                        `Mute Audio: ${settings.muteDuringQuestions ? 'ON' : 'OFF'}`
-                      ),
-                      style: {
-                        fontSize: 12,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
-                })
-              ]
-            })
-          ]
-        }),
-
-        // Fixed Confirm Button
+        // Confirm Settings button at bottom
         ui.View({
           style: {
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            padding: 16,
-            backgroundColor: 'rgba(99, 102, 241, 0.9)',
-            borderWidth: 2,
-            borderColor: '#00FF00' // Green - nested within red
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            paddingBottom: 8
           },
           children: [
             ui.Pressable({
               style: {
+                width: '100%',
+                height: '100%',
                 backgroundColor: '#FFFFFF',
-                borderRadius: 12,
-                paddingVertical: 16,
-                alignItems: 'center',
-                borderWidth: 2,
-                borderColor: '#0000FF' // Blue - nested within green
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
               },
               onPress: () => this.navigateToPreGame(),
               children: [
                 ui.Text({
                   text: 'Confirm Settings',
                   style: {
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: '600',
-                    color: '#000000'
+                    color: '#111111',
+                    textAlign: 'center'
                   }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Settings content
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 58,
+            flexDirection: 'column'
+          },
+          children: [
+            // Top row - Light/Dark mode and Settings icon
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              },
+              children: [
+                // Light/Dark mode container
+                ui.View({
+                  style: {
+                    backgroundColor: '#191919',
+                    borderRadius: 8,
+                    padding: 4,
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                      style: {
+                        width: 24,
+                        height: 24,
+                        tintColor: '#FFFFFF'
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                      style: {
+                        width: 24,
+                        height: 24,
+                        tintColor: '#FFFFFF'
+                      }
+                    })
+                  ]
+                }),
+
+                // Settings icon container
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 5,
+                    padding: 2,
+                    width: 32,
+                    height: 32,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: '#000000'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Category selection - General Trivia
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 4,
+                paddingRight: 4,
+                paddingTop: 4
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'General' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'General'),
+                  children: [
+                    ui.Text({
+                      text: 'General Trivia',
+                      style: {
+                        fontSize: 20,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'General' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Category selection - Another Category
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 4,
+                paddingRight: 4,
+                paddingTop: 4
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Another Category' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Another Category'),
+                  children: [
+                    ui.Text({
+                      text: 'Another Category',
+                      style: {
+                        fontSize: 20,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Another Category' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Category selection - Italian Brainrot
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 4,
+                paddingRight: 4,
+                paddingTop: 4
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Italian Brainrot Quiz'),
+                  children: [
+                    ui.Text({
+                      text: 'Italian Brainrot',
+                      style: {
+                        fontSize: 20,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Italian Brainrot Quiz' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Timer settings row
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 4,
+                paddingRight: 5,
+                paddingTop: 4,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              },
+              children: [
+                // Timer options container
+                ui.View({
+                  style: {
+                    backgroundColor: '#191919',
+                    borderRadius: 8,
+                    padding: 4,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start'
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer_off
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.timeLimit === 0 ? '#FFFFFF' : '#666666'
+                        ),
+                        marginRight: 2
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.timeLimit > 0 ? '#FFFFFF' : '#666666'
+                        ),
+                        marginRight: 2
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.timeLimit > 30 ? '#FFFFFF' : '#666666'
+                        )
+                      }
+                    })
+                  ]
+                }),
+
+                // Info icon container
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 5,
+                    padding: 2,
+                    width: 32,
+                    height: 32,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginLeft: 5
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: '#000000'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Difficulty settings row
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 4,
+                paddingRight: 5,
+                paddingTop: 4,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              },
+              children: [
+                // Difficulty options container
+                ui.View({
+                  style: {
+                    backgroundColor: '#191919',
+                    borderRadius: 8,
+                    padding: 4,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start'
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.difficulty === 'easy' ? '#FFFFFF' : '#666666'
+                        ),
+                        marginRight: 2
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.difficulty === 'medium' ? '#FFFFFF' : '#666666'
+                        ),
+                        marginRight: 2
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.difficulty === 'hard' ? '#FFFFFF' : '#666666'
+                        )
+                      }
+                    })
+                  ]
+                }),
+
+                // Info icon container
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 5,
+                    padding: 2,
+                    width: 32,
+                    height: 32,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginLeft: 5
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: '#000000'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Game mode settings row
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 4,
+                paddingRight: 5,
+                paddingTop: 4,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              },
+              children: [
+                // Game mode options container
+                ui.View({
+                  style: {
+                    backgroundColor: '#191919',
+                    borderRadius: 8,
+                    padding: 4,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start'
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.autoAdvance ? '#FFFFFF' : '#666666'
+                        ),
+                        marginRight: 2
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))), // bolt
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          !settings.muteDuringQuestions ? '#FFFFFF' : '#666666'
+                        ),
+                        marginRight: 2
+                      }
+                    }),
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))), // all_inclusive
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: '#666666' // Always dimmed as per reference
+                      }
+                    })
+                  ]
+                }),
+
+                // Info icon container
+                ui.View({
+                  style: {
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 5,
+                    padding: 2,
+                    width: 32,
+                    height: 32,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginLeft: 5
+                  },
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                      style: {
+                        width: 28,
+                        height: 28,
+                        tintColor: '#000000'
+                      }
+                    })
+                  ]
                 })
               ]
             })
@@ -2664,7 +2738,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1465645924559637'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2225071587959777'))),
           style: {
             width: '100%',
             height: '100%',
