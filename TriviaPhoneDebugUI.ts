@@ -1525,7 +1525,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     children: [
                       // Background image
                       ui.Image({
-                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('791326273594709'))),
+                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
                         style: {
                           width: '100%',
                           height: '100%',
@@ -3020,10 +3020,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // Points display container
             ui.View({
               style: {
-                backgroundColor: '#000000',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 paddingHorizontal: 8,
-                paddingVertical: 8,
+                paddingVertical: 7,
                 justifyContent: 'center',
                 alignItems: 'center'
               },
@@ -3043,7 +3043,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // Settings icon container
             ui.View({
               style: {
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 5,
                 padding: 2,
                 width: 32,
@@ -3055,9 +3055,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.Image({
                   source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
                   style: {
-                    width: 28,
-                    height: 28,
-                    tintColor: '#000000'
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
                   }
                 })
               ]
@@ -3196,7 +3196,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   onPress: () => this.handleAnswerSelect(3),
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // star
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2403112933423824'))), // star
                       style: {
                         width: 50,
                         height: 50,
