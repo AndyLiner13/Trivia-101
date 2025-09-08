@@ -1729,7 +1729,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      backgroundColor: 'red',
                       alignItems: 'center',
                       justifyContent: 'center',
                       display: this.showErrorBinding.derive(show => show ? 'flex' : 'none'),
@@ -1737,23 +1736,18 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for error screen overlay
                     },
                     children: [
-                      // Big warning emoji
-                      Text({
-                        text: '⚠️',
+                      // Background image
+                      Image({
+                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('765365063138745'))),
                         style: {
-                          fontSize: 80,
-                          marginBottom: 20
-                        }
-                      }),
-                      // Error message
-                      Text({
-                        text: this.errorMessageBinding,
-                        style: {
-                          fontSize: 18,
-                          fontWeight: 'bold',
-                          color: 'white',
-                          textAlign: 'center',
-                          lineHeight: 1.4
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: '100%',
+                          height: '100%',
+                          resizeMode: 'cover'
                         }
                       })
                     ]
