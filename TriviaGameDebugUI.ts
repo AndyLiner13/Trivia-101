@@ -493,7 +493,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   View({
                     style: {
                       position: 'absolute',
-                      top: 48, // Moved up to touch bottom of header (was 73)
+                      top: 40, // Moved up 8 pixels from 48
                       left: '10%', // Reduced margin to make container wider
                       right: '10%', // Reduced margin to make container wider
                       bottom: '20%', // Leave more space for the waiting message
