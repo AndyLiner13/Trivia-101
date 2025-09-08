@@ -127,6 +127,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showOutlinesBinding = new ui.Binding(false);
   private showOutlines: boolean = false;
 
+  // DEBUG MODE PROPERTIES
+  // =====================
+  // IMPORTANT: The debug panel is STRICTLY for navigation and visual testing only.
+  // Debug buttons should ALWAYS show the corresponding UI screen regardless of actual game state.
+  // Never add conditional logic that could prevent viewing any debug screen.
+  // The debug panel is NOT for testing real game functionality - it's purely for UI navigation.
+  private debugMode: boolean = true; // Always true in this debug component
+  private debugCurrentScreen: string = 'pre-game-host'; // Tracks which debug screen to show
+  private debugCurrentScreenBinding = new ui.Binding<string>('pre-game-host');
+
   // Info pop-up binding
   private showInfoPopupBinding = new ui.Binding(false);
   private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'gamemode'>('timer');
@@ -1273,201 +1283,177 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateGameSetting('isLocked', !this.gameSettings.isLocked);
   }
 
+  // DEBUG NAVIGATION METHOD
+  // =======================
+  // CRITICAL: This method is PURELY for UI navigation and visual testing.
+  // The debug panel should NEVER test actual game functionality.
+  // Every debug button click should ALWAYS show the corresponding screen.
+  // There should be NO conditional logic that prevents viewing any debug screen.
+  // This is strictly for designers and developers to view different UI states.
   debugShowScreen(screenType: string): void {
+    // IMPORTANT: Set the debug screen tracker first - this ensures the screen will show
+    this.debugCurrentScreen = screenType;
+    this.debugCurrentScreenBinding.set(screenType);
+    
+    // Set up the necessary bindings to force the UI to show the requested screen
+    // These are the MINIMUM required bindings to make each screen visible
     switch (screenType) {
       case 'pre-game':
+        // Pre-game screen (generic)
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(false);
         this.showResultBinding.set(false);
         break;
         
       case 'pre-game-host':
+        // Pre-game screen for host user
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(false);
         this.showResultBinding.set(false);
-        this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
+        this.isHostBinding.set(true);
+        this.currentHostStatus = true;
         break;
         
       case 'pre-game-participant':
+        // Pre-game screen for participant user
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(false);
         this.showResultBinding.set(false);
-        this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
+        this.isHostBinding.set(false);
+        this.currentHostStatus = false;
         break;
         
       case 'game-settings':
+        // Game settings configuration screen
         this.currentViewModeBinding.set('game-settings');
         this.gameStartedBinding.set(false);
         this.showResultBinding.set(false);
         break;
         
       case 'two-options':
+        // Two-answer question screen (2A)
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
         this.screenTypeBinding.set('two-options');
         this.showResultBinding.set(false);
-        // Set up a mock question for debugging
+        // Mock question data for visual testing only
         this.currentQuestion = {
-          question: 'What is the capital of France?',
-          answers: ['Paris', 'London'],
+          question: 'Debug: Two Options Question?',
+          answers: ['Option A', 'Option B'],
           correctAnswer: 0,
           image: null
         };
         break;
         
       case 'four-options':
+        // Four-answer question screen (4A)
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
         this.screenTypeBinding.set('four-options');
         this.showResultBinding.set(false);
-        // Set up a mock question for debugging
+        // Mock question data for visual testing only
         this.currentQuestion = {
-          question: 'Which planet is known as the Red Planet?',
-          answers: ['Venus', 'Mars', 'Jupiter', 'Saturn'],
+          question: 'Debug: Four Options Question?',
+          answers: ['Option A', 'Option B', 'Option C', 'Option D'],
           correctAnswer: 1,
-          image: null
-        };
-        break;
-        
-      case 'results-correct':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
-        this.showResultBinding.set(true);
-        this.isCorrectAnswerBinding.set(true);
-        this.selectedAnswerBinding.set(0);
-        this.currentQuestion = {
-          question: 'What is 2 + 2?',
-          answers: ['3', '4'],
-          correctAnswer: 1,
-          image: null
-        };
-        break;
-        
-      case 'results-wrong':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
-        this.showResultBinding.set(true);
-        this.isCorrectAnswerBinding.set(false);
-        this.selectedAnswerBinding.set(1);
-        this.currentQuestion = {
-          question: 'What is the largest planet?',
-          answers: ['Earth', 'Mars'],
-          correctAnswer: 0,
-          image: null
-        };
-        break;
-        
-      case 'results-timeout':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
-        this.showResultBinding.set(true);
-        this.isCorrectAnswerBinding.set(false);
-        this.selectedAnswerBinding.set(null); // No answer selected
-        this.currentQuestion = {
-          question: 'What color is the sky?',
-          answers: ['Blue', 'Green'],
-          correctAnswer: 0,
           image: null
         };
         break;
         
       case 'results-host-correct':
+        // Results screen for host with correct answer
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('results');
         this.showResultBinding.set(true);
         this.isCorrectAnswerBinding.set(true);
         this.selectedAnswerBinding.set(0);
-        this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
+        this.isHostBinding.set(true);
+        this.currentHostStatus = true;
+        // Mock question data for visual testing only
         this.currentQuestion = {
-          question: 'What is 2 + 2?',
-          answers: ['3', '4'],
-          correctAnswer: 1,
+          question: 'Debug: Host Correct Question?',
+          answers: ['Correct Answer', 'Wrong Answer'],
+          correctAnswer: 0,
           image: null
         };
         break;
         
       case 'results-host-wrong':
+        // Results screen for host with wrong answer
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('results');
         this.showResultBinding.set(true);
         this.isCorrectAnswerBinding.set(false);
         this.selectedAnswerBinding.set(1);
-        this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
+        this.isHostBinding.set(true);
+        this.currentHostStatus = true;
+        // Mock question data for visual testing only
         this.currentQuestion = {
-          question: 'What is the largest planet?',
-          answers: ['Earth', 'Mars'],
+          question: 'Debug: Host Wrong Question?',
+          answers: ['Correct Answer', 'Wrong Answer'],
           correctAnswer: 0,
           image: null
         };
         break;
         
       case 'results-participant-correct':
+        // Results screen for participant with correct answer
+        // CRITICAL: This should ALWAYS show when this debug button is clicked
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
+        this.screenTypeBinding.set('results');
         this.showResultBinding.set(true);
         this.isCorrectAnswerBinding.set(true);
         this.selectedAnswerBinding.set(0);
-        this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
-        this.showLeaderboardBinding.set(false); // Participants don't need leaderboard buttons
+        this.isHostBinding.set(false);
+        this.currentHostStatus = false;
+        this.showLeaderboardBinding.set(false);
+        // Mock question data for visual testing only
         this.currentQuestion = {
-          question: 'What is 2 + 2?',
-          answers: ['3', '4'],
-          correctAnswer: 1,
-          image: null
-        };
-        break;
-        
-      case 'results-participant-wrong':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
-        this.showResultBinding.set(true);
-        this.isCorrectAnswerBinding.set(false);
-        this.selectedAnswerBinding.set(1);
-        this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
-        this.showLeaderboardBinding.set(false); // Participants don't need leaderboard buttons
-        this.currentQuestion = {
-          question: 'What is the largest planet?',
-          answers: ['Earth', 'Mars'],
+          question: 'Debug: Participant Correct Question?',
+          answers: ['Correct Answer', 'Wrong Answer'],
           correctAnswer: 0,
           image: null
         };
         break;
         
-      case 'waiting':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false);
-        this.screenTypeBinding.set('waiting');
-        this.showResultBinding.set(false);
-        this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
-        break;
-        
-      case 'participant-waiting':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false);
-        this.screenTypeBinding.set('waiting');
-        this.showResultBinding.set(false);
-        this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
-        break;
-        
-      case 'leaderboard':
+      case 'results-participant-wrong':
+        // Results screen for participant with wrong answer
+        // CRITICAL: This should ALWAYS show when this debug button is clicked
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
-        this.screenTypeBinding.set('waiting');
-        this.showResultBinding.set(false);
-        this.showLeaderboardBinding.set(true);
+        this.screenTypeBinding.set('results');
+        this.showResultBinding.set(true);
+        this.isCorrectAnswerBinding.set(false);
+        this.selectedAnswerBinding.set(1);
+        this.isHostBinding.set(false);
+        this.currentHostStatus = false;
+        this.showLeaderboardBinding.set(false);
+        // Mock question data for visual testing only
+        this.currentQuestion = {
+          question: 'Debug: Participant Wrong Question?',
+          answers: ['Correct Answer', 'Wrong Answer'],
+          correctAnswer: 0,
+          image: null
+        };
         break;
         
       default:
+        // Fallback to pre-game host screen
+        this.debugCurrentScreen = 'pre-game-host';
+        this.debugCurrentScreenBinding.set('pre-game-host');
+        this.currentViewModeBinding.set('pre-game');
+        this.gameStartedBinding.set(false);
+        this.showResultBinding.set(false);
+        this.isHostBinding.set(true);
+        this.currentHostStatus = true;
         break;
     }
+    
+    // DEBUG LOG: Always log which screen was requested for debugging purposes
+    console.log(`🔧 Debug Panel Navigation: Showing ${screenType} screen`);
   }
 
   private toggleOutlines(): void {
@@ -1531,29 +1517,48 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ),
 
                 // Pre-game screen - shows when game hasn't started
+                // DEBUG MODE: Always show when debug panel requests it
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding], (mode, started) => 
-                    mode === 'pre-game' && !started
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.gameStartedBinding], (debugScreen, mode, started) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested pre-game screens
+                    debugScreen === 'pre-game' || debugScreen === 'pre-game-host' || debugScreen === 'pre-game-participant' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && !started)
                   ),
                   this.renderPreGameScreen()
                 ),
+                // Game settings screen
+                // DEBUG MODE: Always show when debug panel requests it
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding], (mode) => mode === 'game-settings'),
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding], (debugScreen, mode) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'game-settings' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'game-settings')
+                  ),
                   this.renderGameSettings()
                 ),
 
                 // Two-options question screen
+                // DEBUG MODE: Always show when debug panel requests it
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
-                    mode === 'pre-game' && started && screenType === 'two-options'
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (debugScreen, mode, screenType, started) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'two-options' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && started && screenType === 'two-options')
                   ),
                   this.renderTriviaGameWithTwoOptions()
                 ),
 
                 // Four-options question screen
+                // DEBUG MODE: Always show when debug panel requests it
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
-                    mode === 'pre-game' && started && screenType === 'four-options'
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (debugScreen, mode, screenType, started) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'four-options' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && started && screenType === 'four-options')
                   ),
                   ui.View({
                     style: {
@@ -1579,6 +1584,30 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       this.renderFourOptionsPage()
                     ]
                   })
+                ),
+
+                // Results screen - participant correct
+                // DEBUG MODE: This screen should ALWAYS show when debug panel requests it
+                ui.UINode.if(
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding, this.isCorrectAnswerBinding, this.isHostBinding], (debugScreen, mode, screenType, started, showResult, isCorrect, isHost) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'results-participant-correct' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && started && screenType === 'results' && showResult && isCorrect && !isHost)
+                  ),
+                  this.renderParticipantCorrectResults()
+                ),
+
+                // Results screen - participant wrong
+                // DEBUG MODE: This screen should ALWAYS show when debug panel requests it
+                ui.UINode.if(
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding, this.isCorrectAnswerBinding, this.isHostBinding], (debugScreen, mode, screenType, started, showResult, isCorrect, isHost) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'results-participant-wrong' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && started && screenType === 'results' && showResult && !isCorrect && !isHost)
+                  ),
+                  this.renderParticipantWrongResults()
                 )
               ]
             })
@@ -3422,6 +3451,409 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     fontSize: 18,
                     fontWeight: '600',
                     color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderParticipantCorrectResults(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      },
+      children: [
+        // Background image (green success background)
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('791326273594709'))), // Using green background from pre-game ready state
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Top navigation bar with 4A-style layout
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            height: 48
+          },
+          children: [
+            // Light/Dark mode toggle
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 4,
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
+                })
+              ]
+            }),
+
+            // Points display container (like 4A page)
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))), // settings icon
+                  style: {
+                    width: 26,
+                    height: 26,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Checkmark container - centered in middle of screen
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: 136,
+            height: 136,
+            marginTop: -68, // Half of height to center vertically
+            marginLeft: -68, // Half of width to center horizontally
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            // Large checkmark circle
+            ui.View({
+              style: {
+                width: 136,
+                height: 136,
+                borderRadius: 68,
+                backgroundColor: '#22C55E', // Green background for checkmark
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowOffset: [0, 4],
+                shadowRadius: 12,
+                shadowColor: 'rgba(0, 0, 0, 0.25)',
+                shadowOpacity: 1
+              },
+              children: [
+                // Checkmark icon
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))), // Using settings icon as placeholder for checkmark
+                  style: {
+                    width: 80,
+                    height: 80,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Points display underneath checkmark
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 88, // Position below the checkmark (68 + 20 spacing)
+            height: 50,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '+1200 points',
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                textShadowOffset: [0, 2],
+                textShadowRadius: 4,
+                textShadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            })
+          ]
+        }),
+
+        // Bottom status bar (like 4A page with question info)
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {}, // No action for status bar
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                  }),
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderParticipantWrongResults(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      },
+      children: [
+        // Background image (red failure background)
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))), // Using red background
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Top navigation bar with 4A-style layout
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
+          },
+          children: [
+            // Light/Dark mode container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 4,
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
+                })
+              ]
+            }),
+
+            // Points display container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1003669655537991'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Center content with X icon and message
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: [{ translateX: -50 }, { translateY: -50 }],
+            alignItems: 'center',
+            justifyContent: 'center'
+          },
+          children: [
+            // X mark icon for wrong answer
+            ui.View({
+              style: {
+                backgroundColor: '#EF4444',
+                borderRadius: 50,
+                width: 100,
+                height: 100,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 20
+              },
+              children: [
+                ui.Text({
+                  text: '✗',
+                  style: {
+                    fontSize: 60,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // "Better luck next time!" text
+            ui.View({
+              style: {
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                borderRadius: 12,
+                paddingHorizontal: 24,
+                paddingVertical: 12
+              },
+              children: [
+                ui.Text({
+                  text: 'Better luck next time!',
+                  style: {
+                    fontSize: 24,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
