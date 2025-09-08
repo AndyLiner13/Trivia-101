@@ -71,7 +71,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private score = 0;
   private selectedAnswer: number | null = null;
   private showResult = false;
-  private gameStarted = false;
+  private gameStarted = true;
   private answerSubmitted = false;
 
   // Current question data from TriviaGame
@@ -99,7 +99,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private stableQuestionIndex: number = 0;
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
-  private gameStartedBinding = new ui.Binding(false);
+  private gameStartedBinding = new ui.Binding(true);
   private gameEndedBinding = new ui.Binding(false);
   private isCorrectAnswerBinding = new ui.Binding(false);
   private correctAnswerIndexBinding = new ui.Binding<number | null>(null);
@@ -113,10 +113,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private layoutTypeBinding = new ui.Binding<'two-options' | 'four-options'>('four-options');
 
   // Explicit screen type binding for routing from TriviaGame
-  private screenTypeBinding = new ui.Binding<'waiting' | 'two-options' | 'four-options' | 'results'>('waiting');
+  private screenTypeBinding = new ui.Binding<'waiting' | 'two-options' | 'four-options' | 'results'>('four-options');
 
   // Non-reactive screen type for immediate render decisions
-  private currentScreenType: 'waiting' | 'two-options' | 'four-options' | 'results' = 'waiting';
+  private currentScreenType: 'waiting' | 'two-options' | 'four-options' | 'results' = 'four-options';
   private lastQuestionType: 'two-options' | 'four-options' = 'four-options';
 
   // Game settings bindings
@@ -1402,7 +1402,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         
       case 'waiting':
         this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false); // Changed from true to false to show pre-game screen
+        this.gameStartedBinding.set(true);
         this.screenTypeBinding.set('waiting');
         this.showResultBinding.set(false);
         this.isHostBinding.set(true); // Force host mode
@@ -1499,6 +1499,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding], (mode) => mode === 'game-settings'),
                   this.renderGameSettings()
+                ),
+
+                // Two-options question screen
+                ui.UINode.if(
+                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
+                    mode === 'pre-game' && started && screenType === 'two-options'
+                  ),
+                  this.renderTriviaGameWithTwoOptions()
+                ),
+
+                // Four-options question screen
+                ui.UINode.if(
+                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
+                    mode === 'pre-game' && started && screenType === 'four-options'
+                  ),
+                  this.renderTriviaGameWithFourOptions()
                 )
               ]
             })
