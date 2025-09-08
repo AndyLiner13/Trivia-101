@@ -2623,41 +2623,26 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private renderTriviaGameWithTwoOptions(): ui.UINode {
     return ui.View({
       style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: ui.Binding.derive([
-          this.showResultBinding,
-          this.isCorrectAnswerBinding
-        ], (showResult, isCorrect) => {
-          if (showResult) {
-            return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
-          }
-          return '#6366F1'; // Default blue
-        }),
-        flexDirection: 'column',
-        borderWidth: 2,
-        borderColor: '#FF0000' // Red - top container
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
       },
       children: [
-        // Show normal game content when NOT showing results
-        ui.UINode.if(
-          ui.Binding.derive([this.showResultBinding], (showResult) => !showResult),
-          ui.View({
-            style: {
-              flex: 1,
-              padding: 8,
-              paddingBottom: 12,
-              borderWidth: 2,
-              borderColor: '#00FF00' // Green - 1st nested container
-            },
-            children: [
-              this.renderTwoOptionsPage()
-            ]
-          })
-        ),
-
-        // Bottom status bar
-        this.renderStatusBar()
+        // Background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+        this.renderTwoOptionsPage()
       ]
     });
   }
@@ -3214,30 +3199,235 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private renderTwoOptionsPage(): ui.UINode {
     return ui.View({
       style: {
-        flex: 1,
-        flexDirection: 'column',
-        padding: 8,
-        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-        borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue - 2nd nested container
+        width: '100%',
+        height: '100%',
+        position: 'relative'
       },
       children: [
+        // Header with light/dark mode toggle and settings icon
         ui.View({
           style: {
-            flex: 1,
-            marginBottom: 8,
-            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
           },
-          children: [this.createAnswerButton(2)]
+          children: [
+            // Light/Dark mode container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 4,
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
+                })
+              ]
+            }),
+
+            // Points display container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                  style: {
+                    width: 26,
+                    height: 26,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
         }),
+
+        // Answer buttons grid - positioned between header and status bar
         ui.View({
           style: {
-            flex: 1,
-            marginTop: 8,
-            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 58, // Leave space for the status bar
+            flexDirection: 'column',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 50, // Leave space for header
+            paddingBottom: 8
           },
-          children: [this.createAnswerButton(3)]
+          children: [
+            // Top row
+            ui.View({
+              style: {
+                flexDirection: 'row',
+                flex: 1,
+                marginBottom: 4
+              },
+              children: [
+                // Full-width red circle button
+                ui.Pressable({
+                  style: {
+                    flex: 1,
+                    backgroundColor: '#d70f33',
+                    borderRadius: 16,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowOffset: [0, 0],
+                    shadowRadius: 9.6,
+                    shadowColor: 'rgba(0, 0, 0, 0.21)',
+                    shadowOpacity: 1
+                  },
+                  onPress: () => this.handleAnswerSelect(0),
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
+                      style: {
+                        width: 55,
+                        height: 54,
+                        tintColor: '#FFFFFF'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Bottom row
+            ui.View({
+              style: {
+                flexDirection: 'row',
+                flex: 1,
+                marginTop: 4
+              },
+              children: [
+                // Full-width green square button
+                ui.Pressable({
+                  style: {
+                    flex: 1,
+                    backgroundColor: '#2db22c',
+                    borderRadius: 16,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowOffset: [0, 0],
+                    shadowRadius: 9.6,
+                    shadowColor: 'rgba(0, 0, 0, 0.21)',
+                    shadowOpacity: 1
+                  },
+                  onPress: () => this.handleAnswerSelect(1),
+                  children: [
+                    ui.Image({
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1317550153280256'))), // square
+                      style: {
+                        width: 54,
+                        height: 55,
+                        tintColor: '#FFFFFF'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Status bar - using same layout as Confirm Settings button
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {}, // No action for status bar
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding, this.showLeaderboardBinding], (index, settings, showLeaderboard) => {
+                    // Only update the question number when not showing leaderboard to prevent footer updates during transition
+                    if (!showLeaderboard) {
+                      this.stableQuestionIndex = index;
+                    }
+                    return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
+                  }),
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
         })
       ]
     });
