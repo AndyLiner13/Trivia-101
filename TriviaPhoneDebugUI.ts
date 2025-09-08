@@ -2433,7 +2433,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // Content
             ui.View({
               style: {
-                paddingTop: 8
+                paddingTop: 8,
+                alignItems: 'center'
               },
               children: [
                 // Timer option
@@ -2441,9 +2442,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 8,
-                    padding: 4,
+                    alignSelf: 'center',
+                    paddingHorizontal: 6,
+                    paddingVertical: 4,
                     marginBottom: 8
                   },
                   children: [
@@ -2486,9 +2487,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 8,
-                    padding: 4,
+                    alignSelf: 'center',
+                    paddingHorizontal: 6,
+                    paddingVertical: 4,
                     marginBottom: 8
                   },
                   children: [
@@ -2531,9 +2532,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 8,
-                    padding: 4
+                    alignSelf: 'center',
+                    paddingHorizontal: 6,
+                    paddingVertical: 4
                   },
                   children: [
                     ui.Image({
