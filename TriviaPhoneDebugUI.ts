@@ -4074,10 +4074,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             position: 'absolute',
-            bottom: 74, // Position above the status bar (58px height + 16px margin)
+            bottom: 80, // Position above the status bar (58px height + 22px margin)
             left: 16,
             right: 16,
-            height: 56,
+            height: 42,
             justifyContent: 'center',
             alignItems: 'center'
           },
@@ -4315,7 +4315,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             height: 80, // Increased height to accommodate two lines
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 60 // Match close icon width (120px / 2 = 60px on each side)
+            paddingHorizontal: 40 // Match close icon width (120px / 2 = 60px on each side)
           },
           children: [
             ui.Text({
@@ -4373,37 +4373,52 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }),
 
         // Next Question button
-        ui.Pressable({
-          onPress: () => console.log('Next Question pressed'),
+        ui.View({
           style: {
             position: 'absolute',
-            bottom: 84, // Position above status bar (58 + 26 margin)
-            left: 24,
-            right: 24,
-            paddingVertical: 8,
-            backgroundColor: '#FFFFFF',
-            borderRadius: 26,
-            flexDirection: 'row',
+            bottom: 80, // Position above the status bar (58px height + 22px margin)
+            left: 16,
+            right: 16,
+            height: 42,
             justifyContent: 'center',
             alignItems: 'center'
           },
           children: [
-            ui.Text({
-              text: 'Next Question',
+            ui.Pressable({
               style: {
-                fontSize: 18,
-                fontWeight: '600',
-                color: '#000000',
-                marginRight: 8
-              }
-            }),
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward icon
-              style: {
-                width: 24,
-                height: 24,
-                tintColor: '#000000'
-              }
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingHorizontal: 8
+              },
+              onPress: () => {
+                // Handle next question logic
+                console.log('✅ Next Question pressed');
+              },
+              children: [
+                ui.Text({
+                  text: 'Next Question',
+                  style: {
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: '#000000',
+                    textAlign: 'center',
+                    flex: 1
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#000000'
+                  }
+                })
+              ]
             })
           ]
         })
