@@ -124,8 +124,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
   
   // Debug outline toggle binding
-  private showOutlinesBinding = new ui.Binding(true);
-  private showOutlines: boolean = true;
+  private showOutlinesBinding = new ui.Binding(false);
+  private showOutlines: boolean = false;
 
   // Host status binding
   private isHostBinding = new ui.Binding(false);
@@ -2694,7 +2694,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                backgroundColor: 'rgba(0, 255, 0, 0.5)', // GREEN neon background
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN-1 - shared container
               },
@@ -2708,10 +2707,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   children: [
                     ui.View({
                       style: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                        borderRadius: 20,
-                        paddingHorizontal: 8,
-                        paddingVertical: 6,
+                        backgroundColor: '#191919',
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        paddingVertical: 4,
                         flexDirection: 'row',
                         alignItems: 'center',
                         flex: 1
@@ -2720,18 +2719,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
                           style: {
-                            width: 20,
-                            height: 20,
+                            width: 24,
+                            height: 24,
                             tintColor: '#FFFFFF',
-                            marginRight: 4
+                            marginRight: 4,
+                            marginTop: 4,
+                            marginBottom: 4
                           }
                         }),
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
                           style: {
-                            width: 20,
-                            height: 20,
-                            tintColor: '#FFFFFF'
+                            width: 24,
+                            height: 24,
+                            tintColor: '#FFFFFF',
+                            marginTop: 4,
+                            marginBottom: 4
                           }
                         })
                       ]
@@ -2748,7 +2751,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   children: [
                     ui.View({
                       style: {
-                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        backgroundColor: '#FFFFFF',
                         borderRadius: 12,
                         padding: 8
                       },
@@ -2758,7 +2761,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           style: {
                             width: 20,
                             height: 20,
-                            tintColor: '#FFFFFF'
+                            tintColor: '#000000'
                           }
                         })
                       ]
@@ -2776,7 +2779,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: 'rgba(0, 128, 255, 0.5)', // Neon blue background for GREEN-2 (50% opacity)
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent') // GREEN-2 - crown container (slightly different)
               },
@@ -2813,7 +2815,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             flex: 1,
-            backgroundColor: 'rgba(0, 255, 128, 0.5)', // Neon green background for GREEN-2 (50% opacity)
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent') // GREEN-2 - within red (slightly different)
           }
@@ -2825,7 +2826,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column',
             justifyContent: 'flex-end',
             alignItems: 'center',
-            backgroundColor: 'rgba(128, 0, 255, 0.5)', // Neon purple background for GREEN-3 (50% opacity)
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF66' : 'transparent') // GREEN-3 - within red (slightly different)
           },
@@ -2834,7 +2834,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%', // Fill the full screen width
-                marginTop: 35, // Move text down more
+                marginTop: 16, // Move text up a bit
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within green (simplified)
               },
@@ -2846,7 +2846,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     fontWeight: '600',
                     color: '#FFFFFF',
                     textAlign: 'center',
-                    marginBottom: 10
+                    marginBottom: 16
                   }
                 })
               ]
@@ -2857,6 +2857,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 flexDirection: 'column',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingBottom: 8,
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0066FF' : 'transparent') // BLUE-3 - within green (slightly different)
               },
