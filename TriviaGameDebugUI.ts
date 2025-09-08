@@ -122,8 +122,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   ];
   
   // Debug outline toggle binding
-  private showOutlinesBinding = new Binding(true);
-  private showOutlines: boolean = true;
+  private showOutlinesBinding = new Binding(false);
+  private showOutlines: boolean = false;
 
   // Theme mode binding (light/dark)
   private isDarkModeBinding = new Binding(false);
@@ -418,19 +418,25 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for configuration screen background
                 },
                 children: [
-                  // Background image
-                  Image({
-                    source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
+                  // Background image container for proper centering
+                  View({
                     style: {
                       position: 'absolute',
-                      top: -16,
-                      left: -16,
-                      right: -16,
-                      bottom: -16,
-                      width: 'calc(100% + 32px)',
-                      height: 'calc(100% + 32px)',
-                      resizeMode: 'cover'
-                    }
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    },
+                    children: Image({
+                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1301516008296278'))),
+                      style: {
+                        width: '100%',
+                        height: '100%',
+                        resizeMode: 'contain'
+                      }
+                    })
                   }),
                   // Header
                   View({
@@ -449,7 +455,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     children: Text({
                       text: 'General Trivia',
                       style: {
-                        fontSize: 24, // Scaled down from 32
+                        fontSize: 20, // Scaled down from 24
                         fontWeight: 'bold',
                         color: 'white',
                         textAlign: 'center'
