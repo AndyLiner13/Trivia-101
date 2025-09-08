@@ -124,7 +124,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
   
   // Debug outline toggle binding
-  private showOutlinesBinding = new ui.Binding(true);
+  private showOutlinesBinding = new ui.Binding(false);
   private showOutlines: boolean = false;
 
   // Host status binding
@@ -2826,22 +2826,41 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }
                 })
               ]
-            }),
+            })
+          ]
+        }),
 
-            // Crown icon directly in header container
+        // Crown container - separate from buttons
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 230, // Moved up 80 pixels from 200
+            left: 0,
+            right: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            paddingBottom: 8,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#66FF00' : 'transparent'), // GREEN-4 - crown container (variation)
+            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(153, 0, 255, 0.5)' : 'transparent'), // Violet fill (complementary to green)
+            zIndex: 11 // Higher than buttons container
+          },
+          children: [
             ui.Image({
               source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
               style: {
-                width: 97,
-                height: 87,
-                marginTop: -150,
+                width: 90,
+                height: 81,
                 tintColor: '#F7CE23'
               }
             })
           ]
         }),
 
-        // Buttons container - now positioned on top of the full-height red container
+        // Buttons container - now only contains text and buttons
         ui.View({
           style: {
             position: 'absolute',
