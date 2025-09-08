@@ -1383,7 +1383,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         
       case 'waiting':
         this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
+        this.gameStartedBinding.set(false); // Changed from true to false to show pre-game screen
         this.screenTypeBinding.set('waiting');
         this.showResultBinding.set(false);
         this.isHostBinding.set(true); // Force host mode
@@ -1417,6 +1417,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   render(): ui.UINode {
+    // Log screen dimensions
+    console.log('📱 Phone Screen Dimensions:');
+    console.log('   Height (top to bottom): 388 pixels');
+    console.log('   Width (left to right): 188 pixels');
+    console.log('   Total frame: 200x400 pixels (with 6px padding)');
+    console.log('   Screen area: 188x388 pixels (usable content area)');
+
     return ui.View({
       style: {
         width: '100%',
@@ -2654,22 +2661,234 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         right: 0,
         bottom: 0,
         borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-        borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
+        borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // RED - innermost rim
       },
       children: [
         // Full-screen background image
         ui.Image({
           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1465645924559637'))),
           style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Content overlay
+        ui.View({
+          style: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            width: '100%',
-            height: '100%',
-            resizeMode: 'cover'
+            flexDirection: 'column',
+            paddingTop: 20,
+            paddingBottom: 20
+          },
+          children: [
+            // Header with icons
+            ui.View({
+              style: {
+                width: '100%',
+                paddingHorizontal: 8,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN - within red
+              },
+          children: [
+            // Light/Dark mode switch
+            ui.View({
+              style: {
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: 20,
+                paddingHorizontal: 8,
+                paddingVertical: 6,
+                flexDirection: 'row',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // BLUE - within green
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
+                  style: {
+                    width: 20,
+                    height: 20,
+                    tintColor: '#FFFFFF',
+                    marginRight: 4
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
+                  style: {
+                    width: 20,
+                    height: 20,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            }),
+            // Settings icon with rounded box
+            ui.View({
+              style: {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                borderRadius: 12,
+                padding: 8,
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // BLUE - within green
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))),
+                  style: {
+                    width: 20,
+                    height: 20,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Crown icon positioned in upper-middle area
+        ui.View({
+          style: {
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingTop: 40,
+            paddingBottom: 20,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN - within red
+          },
+          children: [
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
+              style: {
+                width: 64,
+                height: 58,
+                tintColor: '#F7CE23'
+              }
+            })
+          ]
+        }),
+
+        // Spacer to push bottom content down
+        ui.View({
+          style: {
+            flex: 1,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN - within red
           }
+        }),
+
+        // Bottom section with text and buttons
+        ui.View({
+          style: {
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // GREEN - within red
+          },
+          children: [
+            // "You are the host!" text
+            ui.Text({
+              text: 'You are the host!',
+              style: {
+                fontSize: 18,
+                fontWeight: '600',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 16
+              }
+            }),
+
+            // Buttons container
+            ui.View({
+              style: {
+                width: '100%',
+                flexDirection: 'column',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // BLUE - within green
+              },
+              children: [
+                // Start Game button
+                ui.Pressable({
+                  style: {
+                    height: 48,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingHorizontal: 24,
+                    shadowColor: '#000000',
+                    shadowOffset: [0, 2],
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    width: '100%',
+                    marginBottom: 8,
+                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // PURPLE - within blue
+                  },
+                  onPress: () => this.handleStartGame(),
+                  children: [
+                    ui.Text({
+                      text: 'Start Game',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#7C3AED',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                }),
+
+                // Game Settings button
+                ui.Pressable({
+                  style: {
+                    height: 48,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingHorizontal: 24,
+                    shadowColor: '#000000',
+                    shadowOffset: [0, 2],
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    width: '100%',
+                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // PURPLE - within blue
+                  },
+                  onPress: () => this.navigateToGameSettings(),
+                  children: [
+                    ui.Text({
+                      text: 'Game Settings',
+                      style: {
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#7C3AED',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+          ]
         })
       ]
     });
