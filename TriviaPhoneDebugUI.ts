@@ -2912,43 +2912,34 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.View({
                   style: {
                     borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#BA55D3' : 'transparent') // PURPLE-3 - within blue (slightly different)
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#2F2F2F' : 'transparent') // BLACK-3 - within blue (simplified)
                   },
                   children: [
-                    // Start Game button final container
-                    ui.View({
+                    ui.Pressable({
                       style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#2F2F2F' : 'transparent') // BLACK-3 - within purple (slightly different)
+                        height: 48,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 24,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 24,
+                        shadowColor: '#000000',
+                        shadowOffset: [0, 2],
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        width: '100%',
+                        marginBottom: 8
                       },
+                      onPress: () => this.handleStartGame(),
                       children: [
-                        ui.Pressable({
+                        ui.Text({
+                          text: 'Start Game',
                           style: {
-                            height: 48,
-                            backgroundColor: '#FFFFFF',
-                            borderRadius: 24,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            paddingHorizontal: 24,
-                            shadowColor: '#000000',
-                            shadowOffset: [0, 2],
-                            shadowOpacity: 0.2,
-                            shadowRadius: 4,
-                            width: '100%',
-                            marginBottom: 8
-                          },
-                          onPress: () => this.handleStartGame(),
-                          children: [
-                            ui.Text({
-                              text: 'Start Game',
-                              style: {
-                                fontSize: 16,
-                                fontWeight: '600',
-                                color: '#7C3AED',
-                                textAlign: 'center'
-                              }
-                            })
-                          ]
+                            fontSize: 16,
+                            fontWeight: '600',
+                            color: '#7C3AED',
+                            textAlign: 'center'
+                          }
                         })
                       ]
                     })
@@ -2959,42 +2950,33 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.View({
                   style: {
                     borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#DA70D6' : 'transparent') // PURPLE-4 - within blue (slightly different)
+                    borderColor: this.showOutlinesBinding.derive(show => show ? '#404040' : 'transparent') // BLACK-4 - within blue (simplified, slightly different)
                   },
                   children: [
-                    // Game Settings button final container
-                    ui.View({
+                    ui.Pressable({
                       style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#404040' : 'transparent') // BLACK-4 - within purple (slightly different)
+                        height: 48,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 24,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 24,
+                        shadowColor: '#000000',
+                        shadowOffset: [0, 2],
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        width: '100%'
                       },
+                      onPress: () => this.navigateToGameSettings(),
                       children: [
-                        ui.Pressable({
+                        ui.Text({
+                          text: 'Game Settings',
                           style: {
-                            height: 48,
-                            backgroundColor: '#FFFFFF',
-                            borderRadius: 24,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            paddingHorizontal: 24,
-                            shadowColor: '#000000',
-                            shadowOffset: [0, 2],
-                            shadowOpacity: 0.2,
-                            shadowRadius: 4,
-                            width: '100%'
-                          },
-                          onPress: () => this.navigateToGameSettings(),
-                          children: [
-                            ui.Text({
-                              text: 'Game Settings',
-                              style: {
-                                fontSize: 16,
-                                fontWeight: '600',
-                                color: '#7C3AED',
-                                textAlign: 'center'
-                              }
-                            })
-                          ]
+                            fontSize: 16,
+                            fontWeight: '600',
+                            color: '#7C3AED',
+                            textAlign: 'center'
+                          }
                         })
                       ]
                     })
