@@ -2776,10 +2776,6 @@ export class TriviaGame extends ui.UIComponent {
                                       borderRadius: 22.5, // Increased from 17.5 to 22.5
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                      shadowColor: 'black',
-                                      shadowOpacity: 0.3,
-                                      shadowRadius: 6,
-                                      shadowOffset: [0, 3],
                                     },
                                     children: Text({
                                       text: this.timerBinding,
@@ -2964,10 +2960,6 @@ export class TriviaGame extends ui.UIComponent {
                                     borderRadius: 22.5, // Increased from 17.5 to 22.5
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    shadowColor: 'black',
-                                    shadowOpacity: 0.3,
-                                    shadowRadius: 6,
-                                    shadowOffset: [0, 3],
                                   },
                                   children: Text({
                                     text: this.timerBinding,
@@ -3183,11 +3175,7 @@ export class TriviaGame extends ui.UIComponent {
                         borderRadius: 12,
                         padding: 20,
                         alignItems: 'center',
-                        maxWidth: '60%',
-                        shadowColor: 'black',
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                        shadowOffset: [0, 4],
+                        maxWidth: '60%'
                       },
                       children: [
                         Text({
@@ -3238,11 +3226,7 @@ export class TriviaGame extends ui.UIComponent {
                             backgroundColor: 'white',
                             borderRadius: 8,
                             paddingHorizontal: 20, // Reduced from 24 to 20
-                            paddingVertical: 6, // Reduced from 8 to 6
-                            shadowColor: 'black',
-                            shadowOpacity: 0.15,
-                            shadowRadius: 4,
-                            shadowOffset: [0, 2],
+                            paddingVertical: 6 // Reduced from 8 to 6
                           },
                           children: Text({
                             text: 'Leaderboard',
@@ -3277,11 +3261,7 @@ export class TriviaGame extends ui.UIComponent {
                                 marginBottom: 3, // Reduced from 8 to 3 for tight spacing
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1],
+                                justifyContent: 'space-between'
                               },
                               children: [
                                 View({
@@ -3348,11 +3328,7 @@ export class TriviaGame extends ui.UIComponent {
                                 marginBottom: 3, // Reduced from 8 to 3
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1],
+                                justifyContent: 'space-between'
                               },
                               children: [
                                 View({
@@ -3418,11 +3394,7 @@ export class TriviaGame extends ui.UIComponent {
                                 marginBottom: 3, // Reduced from 8 to 3
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1],
+                                justifyContent: 'space-between'
                               },
                               children: [
                                 View({
