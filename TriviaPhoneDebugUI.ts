@@ -1542,12 +1542,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       width: '100%',
                       height: '100%',
-                      backgroundColor: ui.Binding.derive([
-                        this.isCorrectAnswerBinding,
-                        this.selectedAnswerBinding
-                      ], (isCorrect, selectedAnswer) => {
-                        return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
-                      }),
+                      backgroundColor: 'transparent',
                       justifyContent: 'flex-start',
                       alignItems: 'center',
                       padding: 8,
@@ -1556,6 +1551,27 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
+                      // Background image for correct/wrong
+                      ui.Image({
+                        source: ui.Binding.derive([
+                          this.isCorrectAnswerBinding,
+                          this.selectedAnswerBinding
+                        ], (isCorrect, selectedAnswer) => {
+                          const textureId = isCorrect ? '1168577108523290' : '781887657533527';
+                          return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+                        }),
+                        style: {
+                          position: 'absolute',
+                          top: -20,
+                          left: -8,
+                          right: -8,
+                          bottom: -8,
+                          width: 'calc(100% + 16px)',
+                          height: 'calc(100% + 28px)',
+                          resizeMode: 'cover',
+                          zIndex: -1
+                        }
+                      }),
                       // Main content container with green border
                       ui.View({
                         style: {
@@ -1740,12 +1756,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       width: '100%',
                       height: '100%',
-                      backgroundColor: ui.Binding.derive([
-                        this.isCorrectAnswerBinding,
-                        this.selectedAnswerBinding
-                      ], (isCorrect, selectedAnswer) => {
-                        return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
-                      }),
+                      backgroundColor: 'transparent',
                       justifyContent: 'center',
                       alignItems: 'center',
                       padding: 12,
@@ -1754,6 +1765,27 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
+                      // Background image for correct/wrong
+                      ui.Image({
+                        source: ui.Binding.derive([
+                          this.isCorrectAnswerBinding,
+                          this.selectedAnswerBinding
+                        ], (isCorrect, selectedAnswer) => {
+                          const textureId = isCorrect ? '1168577108523290' : '781887657533527';
+                          return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+                        }),
+                        style: {
+                          position: 'absolute',
+                          top: -12,
+                          left: -12,
+                          right: -12,
+                          bottom: -12,
+                          width: 'calc(100% + 24px)',
+                          height: 'calc(100% + 24px)',
+                          resizeMode: 'cover',
+                          zIndex: -1
+                        }
+                      }),
                       ui.View({
                         style: {
                           flex: 1,
