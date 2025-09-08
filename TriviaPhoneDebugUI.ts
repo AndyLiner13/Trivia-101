@@ -3470,9 +3470,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         position: 'relative'
       },
       children: [
-        // Background image (green success background)
+        // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('791326273594709'))), // Using green background from pre-game ready state
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3576,7 +3576,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Checkmark container - centered in middle of screen
+        // Checkmark container - moved up from center
         ui.View({
           style: {
             position: 'absolute',
@@ -3584,37 +3584,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: '50%',
             width: 136,
             height: 136,
-            marginTop: -68, // Half of height to center vertically
+            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
             marginLeft: -68, // Half of width to center horizontally
             justifyContent: 'center',
             alignItems: 'center'
           },
           children: [
-            // Large checkmark circle
-            ui.View({
+            // Checkmark icon (no green circle background)
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2019383778812059'))), // Using specified check icon
               style: {
-                width: 136,
-                height: 136,
-                borderRadius: 68,
-                backgroundColor: '#22C55E', // Green background for checkmark
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowOffset: [0, 4],
-                shadowRadius: 12,
-                shadowColor: 'rgba(0, 0, 0, 0.25)',
-                shadowOpacity: 1
-              },
-              children: [
-                // Checkmark icon
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))), // Using settings icon as placeholder for checkmark
-                  style: {
-                    width: 80,
-                    height: 80,
-                    tintColor: '#FFFFFF'
-                  }
-                })
-              ]
+                width: 120,
+                height: 120,
+                tintColor: '#FFFFFF'
+              }
             })
           ]
         }),
@@ -3626,7 +3609,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 88, // Position below the checkmark (68 + 20 spacing)
+            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
             height: 50,
             justifyContent: 'center',
             alignItems: 'center'
@@ -3638,10 +3621,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 fontSize: 24,
                 fontWeight: '700',
                 color: '#FFFFFF',
-                textAlign: 'center',
-                textShadowOffset: [0, 2],
-                textShadowRadius: 4,
-                textShadowColor: 'rgba(0, 0, 0, 0.5)'
+                textAlign: 'center'
+                // Removed drop shadow properties
               }
             })
           ]
