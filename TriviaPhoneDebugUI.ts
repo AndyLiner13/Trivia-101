@@ -2396,7 +2396,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             backgroundColor: '#FFFFFF',
-            borderRadius: 12,
+            borderRadius: 8,
             padding: 8,
             minWidth: 140,
             maxWidth: 140,
@@ -2593,7 +2593,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.Pressable({
                   style: {
                     backgroundColor: '#0fba09',
-                    borderRadius: 8,
+                    borderRadius: 4,
                     paddingVertical: 8,
                     paddingHorizontal: 16,
                     minWidth: 120,
