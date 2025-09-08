@@ -2754,7 +2754,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       },
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))),
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
                           style: {
                             width: 20,
                             height: 20,
@@ -2833,6 +2833,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%', // Fill the full screen width
+                marginTop: 35, // Move text down more
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#1A1A1A' : 'transparent') // BLACK-2 - within green (simplified)
               },
@@ -2840,11 +2841,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.Text({
                   text: 'You are the host!',
                   style: {
-                    fontSize: 18,
+                    fontSize: 21, // Made smaller to fit on one line
                     fontWeight: '600',
                     color: '#FFFFFF',
                     textAlign: 'center',
-                    marginBottom: 16
+                    marginBottom: 10
                   }
                 })
               ]
