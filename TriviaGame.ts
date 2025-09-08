@@ -2216,275 +2216,202 @@ export class TriviaGame extends ui.UIComponent {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'linear-gradient(180deg, #7C3AED 0%, #3B82F6 100%)',
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: 16
                 },
                 children: [
+                  // Background image container for proper centering
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    },
+                    children: Image({
+                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
+                      style: {
+                        width: '100%',
+                        height: '100%',
+                        resizeMode: 'contain'
+                      }
+                    })
+                  }),
                   // Header
                   View({
                     style: {
                       position: 'absolute',
-                      top: '8%',
-                      left: 0,
-                      right: 0,
-                      alignItems: 'center'
+                      top: 0,
+                      left: 0, // Fill width from left edge
+                      right: 0, // Fill width to right edge
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 8,
+                      paddingVertical: 8, // 8px padding for height that hugs the text
                     },
                     children: Text({
-                      text: 'Players Ready',
+                      text: 'General Trivia',
                       style: {
-                        fontSize: 18,
+                        fontSize: 20, // Scaled down from 24
                         fontWeight: 'bold',
-                        color: 'black',
+                        color: 'white',
                         textAlign: 'center'
                       }
                     })
                   }),
 
-                  // Players Section
+                  // Waiting for host message
                   View({
                     style: {
                       position: 'absolute',
-                      top: '18%',
-                      left: '8%',
-                      right: '8%',
-                      bottom: '35%',
-                      alignItems: 'center'
+                      bottom: -15, // Moved down further (10 pixels more)
+                      left: '25%', // Centered with equal margins
+                      right: '25%', // Centered with equal margins
+                      height: 65,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 8,
+                      paddingVertical: 8,
+                    },
+                    children: Text({
+                      text: 'Waiting for host...',
+                      style: {
+                        fontSize: 18, // Scaled down from 20
+                        fontWeight: 'bold',
+                        color: 'white',
+                        textAlign: 'center'
+                      }
+                    })
+                  }),
+
+                  // Players avatars grid
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: 40, // Moved up 8 pixels from 48
+                      left: '10%', // Reduced margin to make container wider
+                      right: '10%', // Reduced margin to make container wider
+                      bottom: '20%', // Leave more space for the waiting message
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      paddingHorizontal: 10,
+                    },
+                    children: this.createStaticPlayersComponents()
+                  }),
+
+                  // Left side icons (Lock, Sentiment Neutral, Timer)
+                  View({
+                    style: {
+                      position: 'absolute',
+                      left: 0, // Start at left edge
+                      top: 0, // Fill from top of viewport
+                      bottom: 0, // Fill to bottom of viewport
+                      width: 80, // Slightly wider for better spacing
+                      flexDirection: 'column',
+                      justifyContent: 'space-between', // Distribute icons evenly across full height
+                      alignItems: 'center',
+                      paddingVertical: 72, // Increased from 16 to 50 for more top/bottom margins
                     },
                     children: [
-                      // Player count header
+                      // Lock icon
                       View({
                         style: {
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginBottom: 12
                         },
-                        children: [
-                          Text({
-                            text: '👥',
-                            style: {
-                              fontSize: 16,
-                              marginRight: 8
-                            }
-                          }),
-                          Text({
-                            text: 'Players',
-                            style: {
-                              fontSize: 16,
-                              fontWeight: '600',
-                              color: 'black'
-                            }
-                          })
-                        ]
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
+                          style: {
+                            width: 36, // Scaled up from 32
+                            height: 36 // Scaled up from 32
+                          }
+                        })
                       }),
-
-                      // Players grid
+                      // Sentiment Neutral icon
                       View({
                         style: {
-                          flex: 1,
-                          width: '100%',
-                          flexDirection: 'row',
-                          flexWrap: 'wrap',
-                          justifyContent: 'center'
                         },
-                        children: this.createStaticPlayersComponents()
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
+                          style: {
+                            width: 36, // Scaled up from 32
+                            height: 36 // Scaled up from 32
+                          }
+                        })
+                      }),
+                      // Timer icon
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                          style: {
+                            width: 36, // Scaled up from 32
+                            height: 36 // Scaled up from 32
+                          }
+                        })
                       })
                     ]
                   }),
 
-                  // Game Settings Panel - Bottom
+                  // Right side icons (Autoplay, All Inclusive, Bolt)
                   View({
                     style: {
                       position: 'absolute',
-                      bottom: '8%',
-                      left: '8%',
-                      right: '8%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      borderRadius: 12,
-                      padding: 12
+                      right: 0, // Start at right edge
+                      top: 0, // Fill from top of viewport
+                      bottom: 0, // Fill to bottom of viewport
+                      width: 80, // Slightly wider for better spacing
+                      flexDirection: 'column',
+                      justifyContent: 'space-between', // Distribute icons evenly across full height
+                      alignItems: 'center',
+                      paddingVertical: 72, // Increased from 16 to 72 to match left side
                     },
                     children: [
+                      // Autoplay icon
                       View({
                         style: {
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
                         },
-                        children: [
-                          // Category
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1
-                            },
-                            children: [
-                              Text({
-                                text: 'Category:',
-                                style: {
-                                  fontSize: 10,
-                                  color: '#6B7280',
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => config.category),
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '600',
-                                  color: '#1F2937'
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Questions
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1
-                            },
-                            children: [
-                              Text({
-                                text: 'Questions:',
-                                style: {
-                                  fontSize: 10,
-                                  color: '#6B7280',
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => `Q${config.numQuestions}`),
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '600',
-                                  color: '#1F2937'
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Time
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1
-                            },
-                            children: [
-                              Text({
-                                text: 'Time:',
-                                style: {
-                                  fontSize: 10,
-                                  color: '#6B7280',
-                                  marginBottom: 4
-                                }
-                              }),
-                              View({
-                                style: {
-                                  flexDirection: 'row',
-                                  alignItems: 'center'
-                                },
-                                children: [
-                                  Text({
-                                    text: '⏱️',
-                                    style: {
-                                      fontSize: 12,
-                                      marginRight: 4
-                                    }
-                                  }),
-                                  Text({
-                                    text: this.gameConfigBinding.derive(config => `${config.timeLimit}s`),
-                                    style: {
-                                      fontSize: 12,
-                                      fontWeight: '600',
-                                      color: '#1F2937'
-                                    }
-                                  })
-                                ]
-                              })
-                            ]
-                          }),
-
-                          // Difficulty
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1
-                            },
-                            children: [
-                              Text({
-                                text: 'Difficulty:',
-                                style: {
-                                  fontSize: 10,
-                                  color: '#6B7280',
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => {
-                                  const diff = config.difficulty;
-                                  return diff.charAt(0).toUpperCase() + diff.slice(1);
-                                }),
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '600',
-                                  color: '#1F2937'
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Auto-Advance
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1
-                            },
-                            children: [
-                              Text({
-                                text: 'Auto:',
-                                style: {
-                                  fontSize: 10,
-                                  color: '#6B7280',
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => config.autoAdvance ? '▶️' : '⏸️'),
-                                style: {
-                                  fontSize: 14
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Mute
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1
-                            },
-                            children: [
-                              Text({
-                                text: 'Audio:',
-                                style: {
-                                  fontSize: 10,
-                                  color: '#6B7280',
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: '🔊',
-                                style: {
-                                  fontSize: 14
-                                }
-                              })
-                            ]
-                          })
-                        ]
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                          style: {
+                            width: 32, // Scaled down from 48 by 4px
+                            height: 32 // Scaled down from 48 by 4px
+                          }
+                        })
+                      }),
+                      // All Inclusive icon
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
+                          style: {
+                            width: 36, // Scaled down from 48 by 4px
+                            height: 36 // Scaled down from 48 by 4px
+                          }
+                        })
+                      }),
+                      // Bolt icon
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
+                          style: {
+                            width: 36, // Scaled down from 48 by 4px
+                            height: 36 // Scaled down from 48 by 4px
+                          }
+                        })
                       })
                     ]
-                  })
+                  }),
+
+
                 ]
               })
             ),

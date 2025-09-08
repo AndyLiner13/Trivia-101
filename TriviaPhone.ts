@@ -3487,7 +3487,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Checkmark container - moved up from center
+        // Checkmark container - centered
         ui.View({
           style: {
             position: 'absolute',
@@ -3495,7 +3495,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: '50%',
             width: 136,
             height: 136,
-            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginTop: -68, // Half of height to center vertically
             marginLeft: -68, // Half of width to center horizontally
             justifyContent: 'center',
             alignItems: 'center'
@@ -3508,32 +3508,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: 120,
                 height: 120,
                 tintColor: '#FFFFFF'
-              }
-            })
-          ]
-        }),
-
-        // Points display underneath checkmark
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            right: 0,
-            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            ui.Text({
-              text: '+1200 points',
-              style: {
-                fontSize: 24,
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center'
-                // Removed drop shadow properties
               }
             })
           ]
@@ -3696,7 +3670,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Close icon container - moved up from center
+        // Close icon container - centered
         ui.View({
           style: {
             position: 'absolute',
@@ -3704,7 +3678,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: '50%',
             width: 136,
             height: 136,
-            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginTop: -68, // Half of height to center vertically
             marginLeft: -68, // Half of width to center horizontally
             justifyContent: 'center',
             alignItems: 'center'
@@ -3717,33 +3691,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: 120,
                 height: 120,
                 tintColor: '#FFFFFF'
-              }
-            })
-          ]
-        }),
-
-        // Message display underneath close icon
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            right: 0,
-            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
-            height: 80, // Increased height to accommodate two lines
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 40 // Match close icon width (120px / 2 = 60px on each side)
-          },
-          children: [
-            ui.Text({
-              text: 'You need to lock in twin',
-              style: {
-                fontSize: 20, // Reduced from 24 to 20
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center'
-                // Removed drop shadow properties
               }
             })
           ]
@@ -3906,7 +3853,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Checkmark container - moved up from center
+        // Checkmark container - centered
         ui.View({
           style: {
             position: 'absolute',
@@ -3914,7 +3861,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: '50%',
             width: 136,
             height: 136,
-            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginTop: -68, // Half of height to center vertically
             marginLeft: -68, // Half of width to center horizontally
             justifyContent: 'center',
             alignItems: 'center'
@@ -3927,32 +3874,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: 120,
                 height: 120,
                 tintColor: '#FFFFFF'
-              }
-            })
-          ]
-        }),
-
-        // Points display underneath checkmark
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            right: 0,
-            marginTop: 16, // Moved up from 32 to 16 (16 pixels higher)
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            ui.Text({
-              text: '+1200 points',
-              style: {
-                fontSize: 24,
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center'
-                // Removed drop shadow properties
               }
             })
           ]
