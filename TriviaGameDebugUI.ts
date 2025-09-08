@@ -430,7 +430,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       justifyContent: 'center'
                     },
                     children: Image({
-                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1301516008296278'))),
+                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
                       style: {
                         width: '100%',
                         height: '100%',
@@ -594,8 +594,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
                           style: {
-                            width: 48, // Scaled up from 32 to match left side
-                            height: 48 // Scaled up from 32 to match left side
+                            width: 32, // Scaled down from 48 by 4px
+                            height: 32 // Scaled down from 48 by 4px
                           }
                         })
                       }),
@@ -608,8 +608,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
                           style: {
-                            width: 48, // Scaled up from 32 to match left side
-                            height: 48 // Scaled up from 32 to match left side
+                            width: 36, // Scaled down from 48 by 4px
+                            height: 36 // Scaled down from 48 by 4px
                           }
                         })
                       }),
@@ -622,8 +622,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
                           style: {
-                            width: 48, // Scaled up from 32 to match left side
-                            height: 48 // Scaled up from 32 to match left side
+                            width: 36, // Scaled down from 48 by 4px
+                            height: 36 // Scaled down from 48 by 4px
                           }
                         })
                       })
