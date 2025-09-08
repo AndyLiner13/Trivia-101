@@ -2722,10 +2722,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
                           style: {
-                            width: 16,
-                            height: 16,
+                            width: 20,
+                            height: 20,
                             tintColor: '#FFFFFF',
-                            marginRight: 4,
+                            marginRight: 8,
                             marginTop: 4,
                             marginBottom: 4
                           }
@@ -2733,11 +2733,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
                           style: {
-                            width: 16,
-                            height: 16,
+                            width: 20,
+                            height: 20,
                             tintColor: '#FFFFFF',
                             marginTop: 4,
-                            marginBottom: 4
+                            marginBottom: 4,
+                            opacity: 0.35
                           }
                         })
                       ]
@@ -2762,8 +2763,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
                           style: {
-                            width: 18,
-                            height: 18,
+                            width: 22,
+                            height: 22,
                             tintColor: '#000000'
                           }
                         })
