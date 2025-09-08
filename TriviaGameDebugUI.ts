@@ -580,7 +580,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       flexDirection: 'column',
                       justifyContent: 'space-between', // Distribute icons evenly across full height
                       alignItems: 'center',
-                      paddingVertical: 16, // Add some padding from top and bottom edges
+                      paddingVertical: 72, // Increased from 16 to 72 to match left side
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for right icons
                     },
@@ -594,8 +594,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
                           style: {
-                            width: 32, // Reduced from 48
-                            height: 32 // Reduced from 48
+                            width: 48, // Scaled up from 32 to match left side
+                            height: 48 // Scaled up from 32 to match left side
                           }
                         })
                       }),
@@ -608,8 +608,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
                           style: {
-                            width: 32, // Reduced from 48
-                            height: 32 // Reduced from 48
+                            width: 48, // Scaled up from 32 to match left side
+                            height: 48 // Scaled up from 32 to match left side
                           }
                         })
                       }),
@@ -622,8 +622,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                         children: Image({
                           source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
                           style: {
-                            width: 32, // Reduced from 48
-                            height: 32 // Reduced from 48
+                            width: 48, // Scaled up from 32 to match left side
+                            height: 48 // Scaled up from 32 to match left side
                           }
                         })
                       })
