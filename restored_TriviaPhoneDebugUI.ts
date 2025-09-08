@@ -89,7 +89,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   };
 
   // View mode for navigation
-  private currentViewMode: 'pre-game' | 'game-settings' = 'pre-game';
+  private currentViewMode: 'pre-game' | 'game-settings' = 'game-settings';
 
   // UI bindings
   private currentQuestionIndexBinding = new ui.Binding(0);
@@ -113,10 +113,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private layoutTypeBinding = new ui.Binding<'two-options' | 'four-options'>('four-options');
 
   // Explicit screen type binding for routing from TriviaGame
-  private screenTypeBinding = new ui.Binding<'waiting' | 'two-options' | 'four-options' | 'results'>('four-options');
+  private screenTypeBinding = new ui.Binding<'waiting' | 'two-options' | 'four-options' | 'results'>('waiting');
 
   // Non-reactive screen type for immediate render decisions
-  private currentScreenType: 'waiting' | 'two-options' | 'four-options' | 'results' = 'four-options';
+  private currentScreenType: 'waiting' | 'two-options' | 'four-options' | 'results' = 'waiting';
   private lastQuestionType: 'two-options' | 'four-options' = 'four-options';
 
   // Game settings bindings
@@ -134,9 +134,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Ready state binding for participants
   private isReadyBinding = new ui.Binding(false);
   private isReady = false;
-
-  // Button pressed state to prevent white flash
-  private buttonPressedBinding = new ui.Binding(false);
 
   constructor() {
     super();
@@ -875,21 +872,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
   }
 
-  private handleGameSettingsOrReadyButton(): void {
-    if (this.isHost()) {
-      this.navigateToGameSettings();
-    } else {
-      this.buttonPressedBinding.set(true);
-    }
-  }
-
-  private handleGameSettingsOrReadyButtonRelease(): void {
-    if (!this.isHost()) {
-      this.buttonPressedBinding.set(false);
-      this.handleReadyButtonPress();
-    }
-  }
-
   // Trivia game methods
   private startGame(): void {
     this.gameStarted = true;
@@ -1277,22 +1259,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.showResultBinding.set(false);
         break;
         
-      case 'pre-game-host':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false);
-        this.showResultBinding.set(false);
-        this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
-        break;
-        
-      case 'pre-game-participant':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false);
-        this.showResultBinding.set(false);
-        this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
-        break;
-        
       case 'game-settings':
         this.currentViewModeBinding.set('game-settings');
         this.gameStartedBinding.set(false);
@@ -1376,7 +1342,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.isCorrectAnswerBinding.set(true);
         this.selectedAnswerBinding.set(0);
         this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
         this.currentQuestion = {
           question: 'What is 2 + 2?',
           answers: ['3', '4'],
@@ -1392,7 +1357,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.isCorrectAnswerBinding.set(false);
         this.selectedAnswerBinding.set(1);
         this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
         this.currentQuestion = {
           question: 'What is the largest planet?',
           answers: ['Earth', 'Mars'],
@@ -1408,7 +1372,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.isCorrectAnswerBinding.set(true);
         this.selectedAnswerBinding.set(0);
         this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
         this.showLeaderboardBinding.set(false); // Participants don't need leaderboard buttons
         this.currentQuestion = {
           question: 'What is 2 + 2?',
@@ -1425,7 +1388,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.isCorrectAnswerBinding.set(false);
         this.selectedAnswerBinding.set(1);
         this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
         this.showLeaderboardBinding.set(false); // Participants don't need leaderboard buttons
         this.currentQuestion = {
           question: 'What is the largest planet?',
@@ -1437,20 +1399,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         
       case 'waiting':
         this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false);
+        this.gameStartedBinding.set(false); // Changed from true to false to show pre-game screen
         this.screenTypeBinding.set('waiting');
         this.showResultBinding.set(false);
         this.isHostBinding.set(true); // Force host mode
-        this.currentHostStatus = true; // Update the host status for isHost() method
         break;
         
       case 'participant-waiting':
         this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(false);
+        this.gameStartedBinding.set(true);
         this.screenTypeBinding.set('waiting');
         this.showResultBinding.set(false);
         this.isHostBinding.set(false); // Force participant mode
-        this.currentHostStatus = false; // Update the host status for isHost() method
         break;
         
       case 'leaderboard':
@@ -1536,45 +1496,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding], (mode) => mode === 'game-settings'),
                   this.renderGameSettings()
-                ),
-
-                // Two-options question screen
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
-                    mode === 'pre-game' && started && screenType === 'two-options'
-                  ),
-                  this.renderTriviaGameWithTwoOptions()
-                ),
-
-                // Four-options question screen
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
-                    mode === 'pre-game' && started && screenType === 'four-options'
-                  ),
-                  ui.View({
-                    style: {
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0
-                    },
-                    children: [
-                      // Background image
-                      ui.Image({
-                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
-                        style: {
-                          width: '100%',
-                          height: '100%',
-                          resizeMode: 'cover',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0
-                        }
-                      }),
-                      this.renderFourOptionsPage()
-                    ]
-                  })
                 )
               ]
             })
@@ -1617,7 +1538,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     marginBottom: 8,
                     alignItems: 'center'
                   },
-                  onPress: () => this.debugShowScreen('pre-game-host'),
+                  onPress: () => this.debugShowScreen('waiting'),
                   children: [
                     ui.Text({
                       text: 'Pre-Game (Host)',
@@ -1640,7 +1561,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     marginBottom: 8,
                     alignItems: 'center'
                   },
-                  onPress: () => this.debugShowScreen('pre-game-participant'),
+                  onPress: () => this.debugShowScreen('participant-waiting'),
                   children: [
                     ui.Text({
                       text: 'Pre-Game (Participant)',
@@ -1689,7 +1610,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   onPress: () => this.debugShowScreen('two-options'),
                   children: [
                     ui.Text({
-                      text: '2A',
+                      text: '2️⃣ 2 Options',
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
@@ -1712,7 +1633,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   onPress: () => this.debugShowScreen('four-options'),
                   children: [
                     ui.Text({
-                      text: '4A',
+                      text: '4️⃣ 4 Options',
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
@@ -2452,9 +2373,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.Binding.derive([this.isReadyBinding], (isReady) => 
-            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '791326273594709')))
-          ),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('791326273594709'))),
           style: {
             width: '100%',
             height: '100%',
@@ -2544,37 +2463,34 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }),
 
         // Crown container - separate from buttons
-        ui.UINode.if(
-          this.isHostBinding.derive(isHost => isHost),
-          ui.View({
-            style: {
-              position: 'absolute',
-              bottom: 230, // Moved up 80 pixels from 200
-              left: 0,
-              right: 0,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingLeft: 8,
-              paddingRight: 8,
-              paddingTop: 8,
-              paddingBottom: 8,
-              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-              borderColor: this.showOutlinesBinding.derive(show => show ? '#66FF00' : 'transparent'), // GREEN-4 - crown container (variation)
-              backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(153, 0, 255, 0.5)' : 'transparent'), // Violet fill (complementary to green)
-              zIndex: 11 // Higher than buttons container
-            },
-            children: [
-              ui.Image({
-                source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
-                style: {
-                  width: 90,
-                  height: 81,
-                  tintColor: '#F7CE23'
-                }
-              })
-            ]
-          })
-        ),
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 230, // Moved up 80 pixels from 200
+            left: 0,
+            right: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            paddingBottom: 8,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#66FF00' : 'transparent'), // GREEN-4 - crown container (variation)
+            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(153, 0, 255, 0.5)' : 'transparent'), // Violet fill (complementary to green)
+            zIndex: 11 // Higher than buttons container
+          },
+          children: [
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
+              style: {
+                width: 90,
+                height: 81,
+                tintColor: '#F7CE23'
+              }
+            })
+          ]
+        }),
 
         // Buttons container - now only contains text and buttons
         ui.View({
@@ -2595,61 +2511,54 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           },
           children: [
             // "You are the host!" text
-            ui.UINode.if(
-              this.isHostBinding.derive(isHost => isHost),
-              ui.View({
-                style: {
-                  width: '100%',
-                  height: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                  borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent'), // BLUE - within green
-                  backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 255, 0, 0.5)' : 'transparent') // Yellow fill (complementary to blue)
-                },
-                children: [
-                  ui.Text({
-                    text: 'You are the host!',
-                    style: {
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: '#FFFFFF',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              })
-            ),
-            // Start Game button (only for hosts)
-            ui.UINode.if(
-              this.isHostBinding.derive(isHost => isHost),
-              ui.Pressable({
-                style: {
-                  width: '100%',
-                  height: 42,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                  borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent'), // PURPLE - within blue
-                  backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 128, 0.5)' : '#FFFFFF') // Spring green fill (complementary to purple)
-                },
-                onPress: () => this.handleStartGame(),
-                children: [
-                  ui.Text({
-                    text: 'Start Game',
-                    style: {
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: '#111111',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              })
-            ),
+            ui.View({
+              style: {
+                width: '100%',
+                height: 30,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 8,
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent'), // BLUE - within green
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 255, 0, 0.5)' : 'transparent') // Yellow fill (complementary to blue)
+              },
+              children: [
+                ui.Text({
+                  text: 'You are the host!',
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: 42,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 8,
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent'), // PURPLE - within blue
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 128, 0.5)' : '#FFFFFF') // Spring green fill (complementary to purple)
+              },
+              onPress: () => this.handleStartGame(),
+              children: [
+                ui.Text({
+                  text: 'Start Game',
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
             ui.Pressable({
               style: {
                 width: '100%',
@@ -2659,28 +2568,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center',
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding, this.buttonPressedBinding], (isHost, isReady, isPressed) => 
-                  isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
-                )
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : '#FFFFFF') // Fuchsia fill (complementary to purple)
               },
-              onPress: () => {
-                this.buttonPressedBinding.set(true);
-              },
-              onRelease: () => {
-                this.buttonPressedBinding.set(false);
-                this.handleReadyButtonPress();
-              },
+              onPress: () => this.navigateToGameSettings(),
               children: [
                 ui.Text({
-                  text: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                    isHost ? 'Game Settings' : (isReady ? 'Not Ready' : 'Ready Up')
-                  ),
+                  text: 'Game Settings',
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                      isHost ? '#111111' : (isReady ? '#FFFFFF' : '#111111')
-                    ),
+                    color: '#111111',
                     textAlign: 'center'
                   }
                 })
@@ -2705,7 +2602,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         // Full-screen background image
         ui.Image({
           source: ui.Binding.derive([this.isReadyBinding], (isReady) => 
-            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '1358485312536960')))
+            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '791326273594709')))
           ),
           style: {
             width: '100%',
@@ -2852,12 +2749,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center',
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding, this.buttonPressedBinding], (isHost, isReady, isPressed) => 
+                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
                   isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
                 )
               },
-              onPress: () => this.handleGameSettingsOrReadyButton(),
-              onRelease: () => this.handleGameSettingsOrReadyButtonRelease(),
+              onPress: () => this.handleReadyButtonPress(),
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
@@ -2902,7 +2798,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             if (!showLeaderboard) {
               this.stableQuestionIndex = index;
             }
-            return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
+            return `Question ${this.stableQuestionIndex + 1}/${settings.numberOfQuestions}`;
           }),
           style: {
             fontSize: 12,
@@ -3024,290 +2920,39 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private renderFourOptionsPage(): ui.UINode {
     return ui.View({
       style: {
-        width: '100%',
-        height: '100%',
-        position: 'relative'
+        flex: 1,
+        flexDirection: 'column',
+        padding: 9,
+        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+        borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue - 2nd nested container
       },
       children: [
-        // Header with light/dark mode toggle and settings icon
+        // Top row (buttons 0 and 1) - Fixed static buttons
         ui.View({
           style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
             flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 8
+            flex: 1,
+            marginBottom: 0,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
           },
           children: [
-            // Light/Dark mode container
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
-            // Points display container
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 7,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
-                  style: {
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
-
-            // Settings icon container
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 1,
-                width: 32,
-                height: 32,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
-                  style: {
-                    width: 26,
-                    height: 26,
-                    tintColor: '#FFFFFF'
-                  }
-                })
-              ]
-            })
+            this.createAnswerButton(0),
+            this.createAnswerButton(1)
           ]
         }),
-
-        // Answer buttons grid - positioned between header and status bar
+        // Bottom row (buttons 2 and 3) - Fixed static buttons
         ui.View({
           style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 58, // Leave space for the status bar
-            flexDirection: 'column',
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 50, // Leave space for header
-            paddingBottom: 8
+            flexDirection: 'row',
+            flex: 1,
+            marginTop: 0,
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple - 3rd nested container
           },
           children: [
-            // Top row
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                flex: 1,
-                marginBottom: 4
-              },
-              children: [
-                // Top-left button (Red)
-                ui.Pressable({
-                  style: {
-                    flex: 1,
-                    backgroundColor: '#d70f33',
-                    borderRadius: 16,
-                    marginRight: 4,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowOffset: [0, 0],
-                    shadowRadius: 9.6,
-                    shadowColor: 'rgba(0, 0, 0, 0.21)',
-                    shadowOpacity: 1
-                  },
-                  onPress: () => this.handleAnswerSelect(0),
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
-                      style: {
-                        width: 55,
-                        height: 54,
-                        tintColor: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-
-                // Top-right button (Yellow)
-                ui.Pressable({
-                  style: {
-                    flex: 1,
-                    backgroundColor: '#f7ce23',
-                    borderRadius: 16,
-                    marginLeft: 4,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowOffset: [0, 0],
-                    shadowRadius: 9.6,
-                    shadowColor: 'rgba(0, 0, 0, 0.21)',
-                    shadowOpacity: 1
-                  },
-                  onPress: () => this.handleAnswerSelect(1),
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1317550153280256'))), // square
-                      style: {
-                        width: 54,
-                        height: 55,
-                        tintColor: '#FFFFFF'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-
-            // Bottom row
-            ui.View({
-              style: {
-                flexDirection: 'row',
-                flex: 1,
-                marginTop: 4
-              },
-              children: [
-                // Bottom-left button (Green)
-                ui.Pressable({
-                  style: {
-                    flex: 1,
-                    backgroundColor: '#2db22c',
-                    borderRadius: 16,
-                    marginRight: 4,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowOffset: [0, 0],
-                    shadowRadius: 9.6,
-                    shadowColor: 'rgba(0, 0, 0, 0.21)',
-                    shadowOpacity: 1
-                  },
-                  onPress: () => this.handleAnswerSelect(2),
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // triangle
-                      style: {
-                        width: 55,
-                        height: 54,
-                        tintColor: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-
-                // Bottom-right button (Blue)
-                ui.Pressable({
-                  style: {
-                    flex: 1,
-                    backgroundColor: '#2773ea',
-                    borderRadius: 16,
-                    marginLeft: 4,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowOffset: [0, 0],
-                    shadowRadius: 9.6,
-                    shadowColor: 'rgba(0, 0, 0, 0.21)',
-                    shadowOpacity: 1
-                  },
-                  onPress: () => this.handleAnswerSelect(3),
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2403112933423824'))), // star
-                      style: {
-                        width: 50,
-                        height: 50,
-                        tintColor: '#FFFFFF'
-                      }
-                    })
-                  ]
-                })
-              ]
-            })
-          ]
-        }),
-
-        // Status bar - using same layout as Confirm Settings button
-        ui.View({
-          style: {
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 58,
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 0,
-            paddingBottom: 8
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#FFFFFF',
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              onPress: () => {}, // No action for status bar
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding, this.showLeaderboardBinding], (index, settings, showLeaderboard) => {
-                    // Only update the question number when not showing leaderboard to prevent footer updates during transition
-                    if (!showLeaderboard) {
-                      this.stableQuestionIndex = index;
-                    }
-                    return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
-                  }),
-                  style: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    color: '#111111',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            })
+            this.createAnswerButton(2),
+            this.createAnswerButton(3)
           ]
         })
       ]
