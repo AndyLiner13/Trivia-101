@@ -4051,7 +4051,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
+            marginTop: 16, // Moved up from 32 to 16 (16 pixels higher)
             height: 50,
             justifyContent: 'center',
             alignItems: 'center'
@@ -4074,7 +4074,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             position: 'absolute',
-            bottom: 80, // Position above the status bar (58px height + 22px margin)
+            bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
             left: 16,
             right: 16,
             height: 42,
@@ -4304,32 +4304,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Message display underneath close icon
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            right: 0,
-            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
-            height: 80, // Increased height to accommodate two lines
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 40 // Match close icon width (120px / 2 = 60px on each side)
-          },
-          children: [
-            ui.Text({
-              text: 'You need to lock in twin',
-              style: {
-                fontSize: 20, // Reduced from 24 to 20
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center'
-                // Removed drop shadow properties
-              }
-            })
-          ]
-        }),
+        // NOTE: Textbox removed from host wrong screen per user request - no message display needed
 
         // Bottom status bar (like 4A page with question info)
         ui.View({
@@ -4376,7 +4351,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             position: 'absolute',
-            bottom: 80, // Position above the status bar (58px height + 22px margin)
+            bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
             left: 16,
             right: 16,
             height: 42,
