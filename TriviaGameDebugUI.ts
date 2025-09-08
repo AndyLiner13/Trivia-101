@@ -325,21 +325,55 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         justifyContent: 'center'
       },
       children: [
-        // Main game container with 16:9 aspect ratio
-        View({
-          style: {
-            width: '100vw', // Use full viewport width
-            aspectRatio: 16/9, // Maintain 16:9 aspect ratio
-            backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#F3F4F6'),
-            position: 'relative',
-            overflow: 'hidden',
-            shadowColor: 'black',
-            shadowOpacity: 0.3,
-            shadowRadius: 12,
-            shadowOffset: [0, 6],
-            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-            borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for main container
-          },
+        // Error Screen (standalone screen)
+        UINode.if(
+          this.showErrorBinding,
+          View({
+            style: {
+              width: '100vw', // Use full viewport width
+              aspectRatio: 16/9, // Maintain 16:9 aspect ratio
+              backgroundColor: 'transparent',
+              position: 'relative',
+              overflow: 'hidden',
+              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+              borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for error screen
+            },
+            children: [
+              // Background image
+              Image({
+                source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('765365063138745'))),
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100%',
+                  height: '100%',
+                  resizeMode: 'cover'
+                }
+              })
+            ]
+          })
+        ),
+
+        // Main game container with 16:9 aspect ratio (only show when not on error screen)
+        UINode.if(
+          this.showErrorBinding.derive(showError => !showError),
+          View({
+            style: {
+              width: '100vw', // Use full viewport width
+              aspectRatio: 16/9, // Maintain 16:9 aspect ratio
+              backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? '#1F2937' : '#F3F4F6'),
+              position: 'relative',
+              overflow: 'hidden',
+              shadowColor: 'black',
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              shadowOffset: [0, 6],
+              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+              borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for main container
+            },
           children: [
             // Configuration Screen (shows initially)
             UINode.if(
@@ -360,7 +394,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                 children: [
                   // Background image
                   Image({
-                    source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('765365063138745'))),
+                    source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
                     style: {
                       position: 'absolute',
                       top: -16,
@@ -665,10 +699,10 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               })
             ),
 
-            // Game UI (shows when game is running, but not on config or results screen)
+            // Game UI (shows when game is running, but not on config, results, or error screen)
             UINode.if(
-              Binding.derive([this.showConfigBinding, this.showResultsBinding], (showConfig, showResults) => 
-                !showConfig && !showResults
+              Binding.derive([this.showConfigBinding, this.showResultsBinding, this.showErrorBinding], (showConfig, showResults, showError) => 
+                !showConfig && !showResults && !showError
               ),
               View({
                 style: {
@@ -1721,37 +1755,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     ]
                   }),
 
-                  // Error Screen overlay
-                  View({
-                    style: {
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      display: this.showErrorBinding.derive(show => show ? 'flex' : 'none'),
-                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red border for error screen overlay
-                    },
-                    children: [
-                      // Background image
-                      Image({
-                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('765365063138745'))),
-                        style: {
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          width: '100%',
-                          height: '100%',
-                          resizeMode: 'cover'
-                        }
-                      })
-                    ]
-                  })
+                  // Error Screen overlay - MOVED TO SEPARATE SCREEN
+                  // This overlay has been removed and replaced with a standalone error screen below
                 ]
               })
             ),
@@ -2044,7 +2049,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
               })
             )
           ]
-        }),
+        })),
 
         // Debug Panel (below the main game UI)
         View({
