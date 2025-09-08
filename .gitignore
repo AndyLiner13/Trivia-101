@@ -3,6 +3,7 @@
 .operations.log
 .editor
 HorizonWorldSnippets/
+.editor/
 
 # Node modules
 node_modules/
