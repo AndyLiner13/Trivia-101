@@ -2788,7 +2788,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     width: 97,
                     height: 87,
-                    marginTop: 24,
+                    marginTop: 34,
                     tintColor: '#F7CE23'
                   }
                 })
