@@ -2684,7 +2684,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             right: 0,
             height: '40%', // Take up only 40% of screen height for header
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingTop: 8,
+            paddingRight: 8
           },
           children: [
             // Top row - Light/Dark mode and Settings icon sharing green container
@@ -2710,7 +2713,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         backgroundColor: '#191919',
                         borderRadius: 8,
                         paddingHorizontal: 12,
-                        paddingVertical: 4,
+                        paddingVertical: 1,
                         flexDirection: 'row',
                         alignItems: 'center',
                         flex: 1
@@ -2719,8 +2722,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
                           style: {
-                            width: 24,
-                            height: 24,
+                            width: 16,
+                            height: 16,
                             tintColor: '#FFFFFF',
                             marginRight: 4,
                             marginTop: 4,
@@ -2730,8 +2733,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
                           style: {
-                            width: 24,
-                            height: 24,
+                            width: 16,
+                            height: 16,
                             tintColor: '#FFFFFF',
                             marginTop: 4,
                             marginBottom: 4
@@ -2752,15 +2755,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.View({
                       style: {
                         backgroundColor: '#FFFFFF',
-                        borderRadius: 12,
+                        borderRadius: 8,
                         padding: 8
                       },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
                           style: {
-                            width: 20,
-                            height: 20,
+                            width: 18,
+                            height: 18,
                             tintColor: '#000000'
                           }
                         })
@@ -2788,7 +2791,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     width: 97,
                     height: 87,
-                    marginTop: 34,
+                    marginTop: 24,
                     tintColor: '#F7CE23'
                   }
                 })
