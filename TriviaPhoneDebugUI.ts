@@ -2239,7 +2239,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       style: {
                         width: 24,
                         height: 24,
-                        tintColor: '#FFFFFF'
+                        tintColor: 'rgba(255, 255, 255, 0.35)'
                       }
                     })
                   ]
@@ -2394,8 +2394,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 4,
-                paddingRight: 5,
+                paddingLeft: 8,
+                paddingRight: 8,
                 paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
@@ -2478,8 +2478,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 4,
-                paddingRight: 5,
+                paddingLeft: 8,
+                paddingRight: 8,
                 paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
@@ -2562,8 +2562,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 4,
-                paddingRight: 5,
+                paddingLeft: 8,
+                paddingRight: 8,
                 paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
@@ -2798,7 +2798,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       style: {
                         width: 24,
                         height: 24,
-                        tintColor: '#FFFFFF'
+                        tintColor: 'rgba(255, 255, 255, 0.35)'
                       }
                     })
                   ]
