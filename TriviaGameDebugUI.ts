@@ -468,8 +468,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                     style: {
                       position: 'absolute',
                       bottom: -15, // Moved down further (10 pixels more)
-                      left: '2%', // Moved more to the left (was 3%)
-                      right: '11%', // Adjusted right margin to shift text leftward
+                      left: '25%', // Centered with equal margins
+                      right: '25%', // Centered with equal margins
                       height: 65,
                       alignItems: 'center',
                       justifyContent: 'center',
