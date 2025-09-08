@@ -3879,20 +3879,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Next Question button
-        ui.UINode.if(
-          this.showLeaderboardBinding,
-          ui.View({
-            style: {
-              position: 'absolute',
-              bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
-              left: 16,
-              right: 16,
-              height: 42,
-              justifyContent: 'center',
-              alignItems: 'center'
-            },
-            children: [
+        // Bottom status bar (like 4A page with question info)
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            // Show Next Question button when leaderboard is shown, otherwise show status bar
+            ui.UINode.if(
+              this.showLeaderboardBinding,
               ui.Pressable({
                 style: {
                   width: '100%',
@@ -3930,48 +3933,35 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   })
                 ]
               })
-            ]
-          })
-        ),
-
-        // Bottom status bar (like 4A page with question info)
-        ui.View({
-          style: {
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 58,
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 0,
-            paddingBottom: 8
-          },
-          children: [
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#FFFFFF',
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              onPress: () => {}, // No action for status bar
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
-                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
-                  }),
-                  style: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    color: '#111111',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            })
+            ),
+            // Show status bar when leaderboard is not shown
+            ui.UINode.if(
+              this.showLeaderboardBinding.derive(showLeaderboard => !showLeaderboard),
+              ui.Pressable({
+                style: {
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                },
+                onPress: () => {}, // No action for status bar
+                children: [
+                  ui.Text({
+                    text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                      return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                    }),
+                    style: {
+                      fontSize: 18,
+                      fontWeight: '600',
+                      color: '#111111',
+                      textAlign: 'center'
+                    }
+                  })
+                ]
+              })
+            )
           ]
         })
       ]
@@ -4133,47 +4123,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingBottom: 8
           },
           children: [
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#FFFFFF',
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              onPress: () => {}, // No action for status bar
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
-                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
-                  }),
-                  style: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    color: '#111111',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            })
-          ]
-        }),
-
-        // Next Question button
-        ui.UINode.if(
-          this.showLeaderboardBinding,
-          ui.View({
-            style: {
-              position: 'absolute',
-              bottom: 80, // Position moved down from 120 to 80 (closer to bottom)
-              left: 16,
-              right: 16,
-              height: 42,
-              justifyContent: 'center',
-              alignItems: 'center'
-            },
-            children: [
+            // Show Next Question button when leaderboard is shown, otherwise show status bar
+            ui.UINode.if(
+              this.showLeaderboardBinding,
               ui.Pressable({
                 style: {
                   width: '100%',
@@ -4211,9 +4163,37 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   })
                 ]
               })
-            ]
-          })
-        )
+            ),
+            // Show status bar when leaderboard is not shown
+            ui.UINode.if(
+              this.showLeaderboardBinding.derive(showLeaderboard => !showLeaderboard),
+              ui.Pressable({
+                style: {
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                },
+                onPress: () => {}, // No action for status bar
+                children: [
+                  ui.Text({
+                    text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                      return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                    }),
+                    style: {
+                      fontSize: 18,
+                      fontWeight: '600',
+                      color: '#111111',
+                      textAlign: 'center'
+                    }
+                  })
+                ]
+              })
+            )
+          ]
+        })
       ]
     });
   }
