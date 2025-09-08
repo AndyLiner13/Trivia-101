@@ -2456,24 +2456,41 @@ export class TriviaGame extends ui.UIComponent {
                               justifyContent: 'center',
                             },
                                 children: [
-                                  // Timer on the left
+                                  // Timer with alarm icon
                                   View({
                                     style: {
-                                      width: 45, // Increased from 35 to 45
-                                      height: 45, // Increased from 35 to 45
-                                      backgroundColor: '#FF6B35',
-                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                      position: 'relative',
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                     },
-                                    children: Text({
-                                      text: this.timerBinding,
-                                      style: {
-                                        fontSize: 16, // Increased from 12 to 16
-                                        fontWeight: 'bold',
-                                        color: 'white'
-                                      }
-                                    })
+                                    children: [
+                                      // Alarm icon background
+                                      Image({
+                                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
+                                        style: {
+                                          width: 45,
+                                          height: 45,
+                                          tintColor: '#000000',
+                                          marginTop: -3
+                                        }
+                                      }),
+                                      // Timer text overlaid in center
+                                      View({
+                                        style: {
+                                          position: 'absolute',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        },
+                                        children: Text({
+                                          text: this.timerBinding,
+                                          style: {
+                                            fontSize: 14,
+                                            fontWeight: 'bold',
+                                            color: '#000000'
+                                          }
+                                        })
+                                      })
+                                    ]
                                   })
                                 ]
                               }),
@@ -2573,24 +2590,41 @@ export class TriviaGame extends ui.UIComponent {
                               justifyContent: 'center',
                             },
                                 children: [
-                                  // Timer on the left
+                                  // Timer with alarm icon
                                   View({
                                     style: {
-                                      width: 45, // Increased from 35 to 45
-                                      height: 45, // Increased from 35 to 45
-                                      backgroundColor: '#FF6B35',
-                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                      position: 'relative',
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                     },
-                                    children: Text({
-                                      text: this.timerBinding,
-                                      style: {
-                                        fontSize: 16, // Increased from 12 to 16
-                                        fontWeight: 'bold',
-                                        color: 'white'
-                                      }
-                                    })
+                                    children: [
+                                      // Alarm icon background
+                                      Image({
+                                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
+                                        style: {
+                                          width: 45,
+                                          height: 45,
+                                          tintColor: '#000000',
+                                          marginTop: -3
+                                        }
+                                      }),
+                                      // Timer text overlaid in center
+                                      View({
+                                        style: {
+                                          position: 'absolute',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        },
+                                        children: Text({
+                                          text: this.timerBinding,
+                                          style: {
+                                            fontSize: 14,
+                                            fontWeight: 'bold',
+                                            color: '#000000'
+                                          }
+                                        })
+                                      })
+                                    ]
                                   })
                                 ]
                               }),
@@ -2694,28 +2728,41 @@ export class TriviaGame extends ui.UIComponent {
                               justifyContent: 'center',
                             },
                                 children: [
-                                  // Timer on the left
+                                  // Timer with alarm icon
                                   View({
                                     style: {
-                                      width: 45, // Increased from 35 to 45
-                                      height: 45, // Increased from 35 to 45
-                                      backgroundColor: '#FF6B35',
-                                      borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                      position: 'relative',
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                      shadowColor: 'black',
-                                      shadowOpacity: 0.3,
-                                      shadowRadius: 6,
-                                      shadowOffset: [0, 3],
                                     },
-                                    children: Text({
-                                      text: this.timerBinding,
-                                      style: {
-                                        fontSize: 16, // Increased from 12 to 16
-                                        fontWeight: 'bold',
-                                        color: 'white'
-                                      }
-                                    })
+                                    children: [
+                                      // Alarm icon background
+                                      Image({
+                                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
+                                        style: {
+                                          width: 45,
+                                          height: 45,
+                                          tintColor: '#000000',
+                                          marginTop: -3
+                                        }
+                                      }),
+                                      // Timer text overlaid in center
+                                      View({
+                                        style: {
+                                          position: 'absolute',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        },
+                                        children: Text({
+                                          text: this.timerBinding,
+                                          style: {
+                                            fontSize: 14,
+                                            fontWeight: 'bold',
+                                            color: '#000000'
+                                          }
+                                        })
+                                      })
+                                    ]
                                   })
                                 ]
                               }),
@@ -2885,25 +2932,38 @@ export class TriviaGame extends ui.UIComponent {
                               children: [
                                 View({
                                   style: {
-                                    width: 45, // Increased from 35 to 45
-                                    height: 45, // Increased from 35 to 45
-                                    backgroundColor: '#FF6B35',
-                                    borderRadius: 22.5, // Increased from 17.5 to 22.5
+                                    position: 'relative',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    shadowColor: 'black',
-                                    shadowOpacity: 0.3,
-                                    shadowRadius: 6,
-                                    shadowOffset: [0, 3],
                                   },
-                                  children: Text({
-                                    text: this.timerBinding,
-                                    style: {
-                                      fontSize: 16, // Increased from 12 to 16
-                                      fontWeight: 'bold',
-                                      color: 'white'
-                                    }
-                                  })
+                                  children: [
+                                    // Alarm icon background
+                                    Image({
+                                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
+                                      style: {
+                                        width: 45,
+                                        height: 45,
+                                        tintColor: '#000000',
+                                        marginTop: -3
+                                      }
+                                    }),
+                                    // Timer text overlaid in center
+                                    View({
+                                      style: {
+                                        position: 'absolute',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      },
+                                      children: Text({
+                                        text: this.timerBinding,
+                                        style: {
+                                          fontSize: 14,
+                                          fontWeight: 'bold',
+                                          color: '#000000'
+                                        }
+                                      })
+                                    })
+                                  ]
                                 })
                               ]
                             }),
