@@ -2738,8 +2738,8 @@ export class TriviaGameDebugUI extends ui.UIComponent {
             flexDirection: 'column',
             alignItems: 'center',
             marginBottom: 3, // Reduced from 6 to 3 for tighter vertical spacing
-            marginRight: 12, // Increased from 8 to 12 for better wrapping
-            marginLeft: 12, // Added left margin for better wrapping
+            marginRight: 10, // Reduced from 12 to 8 for tighter horizontal spacing
+            marginLeft: 10, // Reduced from 12 to 8 for tighter horizontal spacing
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for avatar container
           },
