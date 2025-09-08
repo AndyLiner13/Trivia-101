@@ -3531,6 +3531,67 @@ export class TriviaGame extends ui.UIComponent {
                                   marginHorizontal: 16
                                 },
                                 children: [
+                                  // Winner Avatar
+                                  View({
+                                    style: {
+                                      width: 56,
+                                      height: 56,
+                                      borderRadius: 28,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      marginBottom: 8,
+                                      borderWidth: 2,
+                                      borderColor: '#6B7280',
+                                      overflow: 'hidden'
+                                    },
+                                    children: [
+                                      // Show headshot if available
+                                      UINode.if(
+                                        this.leaderboardDataBinding.derive(players => {
+                                          if (players.length > 1) {
+                                            const playerId = players[1].playerId;
+                                            return this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
+                                          }
+                                          return false;
+                                        }),
+                                        Image({
+                                          source: this.leaderboardDataBinding.derive(players => {
+                                            if (players.length > 1) {
+                                              const playerId = players[1].playerId;
+                                              const headshot = this.playerHeadshots.get(playerId);
+                                              return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                            }
+                                            return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                          }),
+                                          style: {
+                                            width: 56,
+                                            height: 56,
+                                            borderRadius: 28
+                                          }
+                                        })
+                                      ),
+                                      // Show initial letter as fallback
+                                      UINode.if(
+                                        this.leaderboardDataBinding.derive(players => {
+                                          if (players.length > 1) {
+                                            const playerId = players[1].playerId;
+                                            return !(this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null);
+                                          }
+                                          return true;
+                                        }),
+                                        Text({
+                                          text: this.leaderboardDataBinding.derive(players =>
+                                            players.length > 1 ? players[1].name.charAt(0).toUpperCase() : '2'
+                                          ),
+                                          style: {
+                                            fontSize: 20,
+                                            fontWeight: 'bold',
+                                            color: '#374151'
+                                          }
+                                        })
+                                      )
+                                    ]
+                                  }),
                                   // Name
                                   Text({
                                     text: this.leaderboardDataBinding.derive(players =>
@@ -3589,6 +3650,67 @@ export class TriviaGame extends ui.UIComponent {
                                   marginHorizontal: 16
                                 },
                                 children: [
+                                  // Winner Avatar
+                                  View({
+                                    style: {
+                                      width: 64,
+                                      height: 64,
+                                      borderRadius: 32,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      marginBottom: 8,
+                                      borderWidth: 3,
+                                      borderColor: '#F59E0B',
+                                      overflow: 'hidden'
+                                    },
+                                    children: [
+                                      // Show headshot if available
+                                      UINode.if(
+                                        this.leaderboardDataBinding.derive(players => {
+                                          if (players.length > 0) {
+                                            const playerId = players[0].playerId;
+                                            return this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
+                                          }
+                                          return false;
+                                        }),
+                                        Image({
+                                          source: this.leaderboardDataBinding.derive(players => {
+                                            if (players.length > 0) {
+                                              const playerId = players[0].playerId;
+                                              const headshot = this.playerHeadshots.get(playerId);
+                                              return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                            }
+                                            return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                          }),
+                                          style: {
+                                            width: 64,
+                                            height: 64,
+                                            borderRadius: 32
+                                          }
+                                        })
+                                      ),
+                                      // Show initial letter as fallback
+                                      UINode.if(
+                                        this.leaderboardDataBinding.derive(players => {
+                                          if (players.length > 0) {
+                                            const playerId = players[0].playerId;
+                                            return !(this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null);
+                                          }
+                                          return true;
+                                        }),
+                                        Text({
+                                          text: this.leaderboardDataBinding.derive(players =>
+                                            players.length > 0 ? players[0].name.charAt(0).toUpperCase() : 'W'
+                                          ),
+                                          style: {
+                                            fontSize: 24,
+                                            fontWeight: 'bold',
+                                            color: '#92400E'
+                                          }
+                                        })
+                                      )
+                                    ]
+                                  }),
                                   // Name
                                   Text({
                                     text: this.leaderboardDataBinding.derive(players =>
@@ -3647,6 +3769,67 @@ export class TriviaGame extends ui.UIComponent {
                                   marginHorizontal: 16
                                 },
                                 children: [
+                                  // Winner Avatar
+                                  View({
+                                    style: {
+                                      width: 48,
+                                      height: 48,
+                                      borderRadius: 24,
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      marginBottom: 8,
+                                      borderWidth: 2,
+                                      borderColor: '#F97316',
+                                      overflow: 'hidden'
+                                    },
+                                    children: [
+                                      // Show headshot if available
+                                      UINode.if(
+                                        this.leaderboardDataBinding.derive(players => {
+                                          if (players.length > 2) {
+                                            const playerId = players[2].playerId;
+                                            return this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
+                                          }
+                                          return false;
+                                        }),
+                                        Image({
+                                          source: this.leaderboardDataBinding.derive(players => {
+                                            if (players.length > 2) {
+                                              const playerId = players[2].playerId;
+                                              const headshot = this.playerHeadshots.get(playerId);
+                                              return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                            }
+                                            return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                                          }),
+                                          style: {
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 24
+                                          }
+                                        })
+                                      ),
+                                      // Show initial letter as fallback
+                                      UINode.if(
+                                        this.leaderboardDataBinding.derive(players => {
+                                          if (players.length > 2) {
+                                            const playerId = players[2].playerId;
+                                            return !(this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null);
+                                          }
+                                          return true;
+                                        }),
+                                        Text({
+                                          text: this.leaderboardDataBinding.derive(players =>
+                                            players.length > 2 ? players[2].name.charAt(0).toUpperCase() : '3'
+                                          ),
+                                          style: {
+                                            fontSize: 16,
+                                            fontWeight: 'bold',
+                                            color: '#9A3412'
+                                          }
+                                        })
+                                      )
+                                    ]
+                                  }),
                                   // Name
                                   Text({
                                     text: this.leaderboardDataBinding.derive(players =>
@@ -3699,7 +3882,7 @@ export class TriviaGame extends ui.UIComponent {
                         })
                       }),
 
-                      // "Play Again" button at bottom
+                      // Bottom section with additional winners or stats
                       View({
                         style: {
                           position: 'absolute',
@@ -3708,27 +3891,65 @@ export class TriviaGame extends ui.UIComponent {
                           right: 0,
                           alignItems: 'center'
                         },
-                        children: Pressable({
-                          style: {
-                            backgroundColor: '#3B82F6',
-                            borderRadius: 8,
-                            paddingHorizontal: 24,
-                            paddingVertical: 12
-                          },
-                          onPress: () => {
-                            // Reset game and return to waiting state
-                            this.showGameOverBinding.set(false);
-                            this.resetGameState();
-                          },
-                          children: Text({
-                            text: 'Play Again',
-                            style: {
-                              fontSize: 16,
-                              fontWeight: 'bold',
-                              color: 'white'
-                            }
-                          })
-                        })
+                        children: [
+                          // Show additional winners if there are more than 3 players
+                          UINode.if(
+                            this.leaderboardDataBinding.derive(players => players.length > 3),
+                            View({
+                              style: {
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                marginBottom: 16
+                              },
+                              children: [
+                                // 4th Place and beyond
+                                ...Array.from({ length: 5 }, (_, i) => {
+                                  const place = i + 4;
+                                  return View({
+                                    style: {
+                                      alignItems: 'center',
+                                      marginHorizontal: 8
+                                    },
+                                    children: [
+                                      Text({
+                                        text: this.leaderboardDataBinding.derive(players =>
+                                          players.length > place - 1 ? `${place}th` : ''
+                                        ),
+                                        style: {
+                                          fontSize: 10,
+                                          fontWeight: 'bold',
+                                          color: '#6B7280',
+                                          marginBottom: 4
+                                        }
+                                      }),
+                                      Text({
+                                        text: this.leaderboardDataBinding.derive(players =>
+                                          players.length > place - 1 ? players[place - 1].name : ''
+                                        ),
+                                        style: {
+                                          fontSize: 10,
+                                          color: '#374151',
+                                          textAlign: 'center',
+                                          maxWidth: 60
+                                        }
+                                      }),
+                                      Text({
+                                        text: this.leaderboardDataBinding.derive(players =>
+                                          players.length > place - 1 ? players[place - 1].score.toString() : ''
+                                        ),
+                                        style: {
+                                          fontSize: 10,
+                                          fontWeight: 'bold',
+                                          color: '#6B7280'
+                                        }
+                                      })
+                                    ]
+                                  });
+                                })
+                              ]
+                            })
+                          )
+                        ]
                       })
                     ]
                   }),
