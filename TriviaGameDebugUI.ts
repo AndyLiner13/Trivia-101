@@ -269,7 +269,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     
     if (currentPlayers.length === 0) {
       // Return fake data if no players are present
-      console.log("⚠️ No players found, returning fake leaderboard data");
       return [
         { name: "Debug Player", score: 10, playerId: "12345", headshotImageSource: undefined },
         { name: "Debug Player", score: 8, playerId: "12345", headshotImageSource: undefined },
@@ -291,8 +290,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       }
     }
     
-    console.log(`✅ Found player with lowest ID: ${lowestIdPlayer.name.get()} (ID: ${lowestId})`);
-    
     // Get player headshot using Social API
     let headshotImageSource: ImageSource | undefined;
     try {
@@ -301,7 +298,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
         highRes: true
       });
     } catch (error) {
-      console.log("⚠️ Could not get headshot for player");
     }
     
     // Create 5 entries for the player with the lowest ID
@@ -2501,7 +2497,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
     // If we've gone through all questions, reset to beginning
     if (this.italianBrainrotQuestionsCurrentIndex >= this.italianBrainrotQuestionsShuffledIndices.length) {
       this.italianBrainrotQuestionsCurrentIndex = 0;
-      console.log("🔄 Reset Italian Brainrot questions to beginning");
     }
 
     const questionIndex = this.italianBrainrotQuestionsShuffledIndices[this.italianBrainrotQuestionsCurrentIndex];
@@ -3064,7 +3059,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private async debugShowResultsScreen(): Promise<void> {
-    console.log("✅ Showing results screen");
     
     // Generate and set leaderboard data for the podium
     const leaderboardData = await this.generateRealLeaderboard();
@@ -3080,7 +3074,6 @@ export class TriviaGameDebugUI extends ui.UIComponent {
   }
 
   private async debugShowLeaderboardScreen(): Promise<void> {
-    console.log("✅ Showing leaderboard screen");
     
     // Generate and set leaderboard data
     const leaderboardData = await this.generateRealLeaderboard();
@@ -3107,9 +3100,9 @@ export class TriviaGameDebugUI extends ui.UIComponent {
           highRes: true
         });
         this.realPlayerAvatars.set('debug', headshotImageSource);
-        console.log(`✅ Loaded avatar for debug leaderboard: ${firstPlayer.name.get()}`);
+        
       } catch (error) {
-        console.log("⚠️ Could not load avatar for debug leaderboard");
+        
         this.realPlayerAvatars.set('debug', null);
       }
     } else {
