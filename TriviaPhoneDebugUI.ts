@@ -2664,7 +2664,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1465645924559637'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1929783661121249'))),
           style: {
             width: '100%',
             height: '100%',
@@ -2713,7 +2713,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         paddingHorizontal: 8,
                         paddingVertical: 6,
                         flexDirection: 'row',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        flex: 1
                       },
                       children: [
                         ui.Image({
@@ -2858,68 +2859,52 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#0066FF' : 'transparent') // BLUE-3 - within green (slightly different)
               },
               children: [
-                // Start Game button container
-                ui.View({
+                // Start Game button (directly in blue container)
+                ui.Pressable({
                   style: {
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#2F2F2F' : 'transparent') // BLACK-3 - within blue (simplified)
+                    height: 48,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingHorizontal: 24,
+                    width: '100%'
                   },
+                  onPress: () => this.handleStartGame(),
                   children: [
-                    ui.Pressable({
+                    ui.Text({
+                      text: 'Start Game',
                       style: {
-                        height: 48,
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: 24,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 24,
-                        width: '100%'
-                      },
-                      onPress: () => this.handleStartGame(),
-                      children: [
-                        ui.Text({
-                          text: 'Start Game',
-                          style: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#7C3AED',
-                            textAlign: 'center'
-                          }
-                        })
-                      ]
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#7C3AED',
+                        textAlign: 'center'
+                      }
                     })
                   ]
                 }),
 
-                // Game Settings button container
-                ui.View({
+                // Game Settings button (directly in blue container)
+                ui.Pressable({
                   style: {
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#404040' : 'transparent') // BLACK-4 - within blue (simplified, slightly different)
+                    height: 48,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingHorizontal: 24,
+                    width: '100%'
                   },
+                  onPress: () => this.navigateToGameSettings(),
                   children: [
-                    ui.Pressable({
+                    ui.Text({
+                      text: 'Game Settings',
                       style: {
-                        height: 48,
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: 24,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 24,
-                        width: '100%'
-                      },
-                      onPress: () => this.navigateToGameSettings(),
-                      children: [
-                        ui.Text({
-                          text: 'Game Settings',
-                          style: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#7C3AED',
-                            textAlign: 'center'
-                          }
-                        })
-                      ]
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#7C3AED',
+                        textAlign: 'center'
+                      }
                     })
                   ]
                 })
