@@ -2416,7 +2416,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     switch (type) {
                       case 'timer': return 'Timer';
                       case 'difficulty': return 'Difficulty';
-                      case 'gamemode': return 'Game Settings';
+                      case 'gamemode': return 'Modifiers';
                       default: return 'Game Settings';
                     }
                   }),
@@ -2452,7 +2452,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer_off
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')));
                         }
                       }),
@@ -2467,7 +2467,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return 'None';
                           case 'difficulty': return 'Easy';
-                          case 'gamemode': return 'Timer Settings';
+                          case 'gamemode': return 'Auto Continue';
                           default: return 'Timer Settings';
                         }
                       }),
@@ -2497,7 +2497,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))); // sentiment_neutral
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))); // bolt
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405')));
                         }
                       }),
@@ -2512,7 +2512,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return '30 Seconds';
                           case 'difficulty': return 'Medium';
-                          case 'gamemode': return 'Difficulty Levels';
+                          case 'gamemode': return 'Skip Leaderboard';
                           default: return 'Difficulty Levels';
                         }
                       }),
@@ -2541,7 +2541,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))); // more_time
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))); // skull
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))); // all_inclusive
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265')));
                         }
                       }),
@@ -2556,7 +2556,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return '90 Seconds';
                           case 'difficulty': return 'Hard';
-                          case 'gamemode': return 'Game Modes';
+                          case 'gamemode': return 'Unlimited Rounds';
                           default: return 'Game Modes';
                         }
                       }),
