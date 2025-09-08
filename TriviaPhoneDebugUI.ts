@@ -2752,148 +2752,96 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
         }),
 
-        // Header anchored to top
+        // Header anchored to top - now fills full viewport height
         ui.View({
           style: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            bottom: 58,
+            bottom: 0, // Changed from 58 to 0 to fill viewport height
             flexDirection: 'column',
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0033' : 'transparent'), // RED-2 - header container (variation)
             backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 204, 0.5)' : 'transparent') // Aqua fill (complementary to red)
           },
           children: [
-            // Top row - Light/Dark mode and Settings icon
+            // Light/Dark mode container
             ui.View({
               style: {
-                width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                borderRadius: 8,
+                padding: 4,
                 flexDirection: 'row',
-                justifyContent: 'space-between',
                 alignItems: 'center',
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#33FF00' : 'transparent'), // GREEN-3 - within red (variation)
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(204, 0, 255, 0.5)' : 'transparent') // Purple fill (complementary to green)
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000CC' : 'transparent'), // BLUE-4 - within red
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 204, 0, 0.5)' : '#191919') // Gold fill (complementary to blue)
               },
               children: [
-                // Light/Dark mode container
-                ui.View({
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
                   style: {
-                    borderRadius: 8,
-                    padding: 4,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0000CC' : 'transparent'), // BLUE-4 - within green (variation)
-                    backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 204, 0, 0.5)' : '#191919') // Gold fill (complementary to blue)
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
-                      style: {
-                        width: 24,
-                        height: 24,
-                        tintColor: '#FFFFFF'
-                      }
-                    }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
-                      style: {
-                        width: 24,
-                        height: 24,
-                        tintColor: 'rgba(255, 255, 255, 0.35)'
-                      }
-                    })
-                  ]
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
                 }),
-
-                // Settings icon container
-                ui.View({
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
                   style: {
-                    borderRadius: 5,
-                    padding: 2,
-                    width: 32,
-                    height: 32,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#CC0000' : 'transparent'), // BLUE-5 - within green (variation)
-                    backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 51, 0.5)' : '#FFFFFF') // Chartreuse fill (complementary to blue)
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: '#000000'
-                      }
-                    })
-                  ]
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
                 })
               ]
             }),
 
-            // Crown icon underneath the shared container
+            // Settings icon container
             ui.View({
               style: {
-                flex: 1,
-                width: '100%',
-                flexDirection: 'column',
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                borderRadius: 5,
+                padding: 2,
+                width: 32,
+                height: 32,
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#66FF00' : 'transparent'), // GREEN-4 - within red (variation)
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(153, 0, 255, 0.5)' : 'transparent') // Violet fill (complementary to green)
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#CC0000' : 'transparent'), // BLUE-5 - within red
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 51, 0.5)' : '#FFFFFF') // Chartreuse fill (complementary to blue)
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
                   style: {
-                    width: 97,
-                    height: 87,
-                    marginTop: -150,
-                    tintColor: '#F7CE23'
+                    width: 28,
+                    height: 28,
+                    tintColor: '#000000'
                   }
                 })
               ]
-            })
-          ]
-        }),
+            }),
 
-        // "You are the host!" text positioned above buttons
-        ui.View({
-          style: {
-            position: 'absolute',
-            bottom: 116, // Position above the buttons (58px for each button)
-            left: 0,
-            right: 0,
-            height: 30, // Fixed height for the text
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-            borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent'), // BLUE - within red (variation)
-            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 255, 0, 0.5)' : 'transparent') // Yellow fill (complementary to blue)
-          },
-          children: [
-            ui.Text({
-              text: 'You are the host!',
+            // Crown icon directly in header container
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
               style: {
-                fontSize: 18, // Slightly smaller than before
-                fontWeight: '600',
-                color: '#FFFFFF',
-                textAlign: 'center'
+                width: 97,
+                height: 87,
+                marginTop: -150,
+                tintColor: '#F7CE23'
               }
             })
           ]
         }),
 
-        // Buttons container - anchored to bottom of screen
+        // Buttons container - now positioned on top of the full-height red container
         ui.View({
           style: {
             position: 'absolute',
@@ -2901,90 +2849,86 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: 0,
             right: 0,
             flexDirection: 'column',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            paddingBottom: 8,
             borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
             borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent'), // GREEN-2 - within red (variation)
-            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : 'transparent') // Pink fill (complementary to green)
+            backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : 'transparent'), // Pink fill (complementary to green)
+            zIndex: 10 // Ensure buttons appear on top of the red container
           },
           children: [
-            // Start Game button container (matching Confirm Settings structure)
+            // "You are the host!" text
             ui.View({
               style: {
                 width: '100%',
-                height: 58,
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
-                paddingBottom: 8,
+                height: 30,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 8,
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#0033FF' : 'transparent'), // BLUE-2 - within green (variation)
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 128, 0, 0.5)' : 'transparent') // Orange fill (complementary to blue)
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent'), // BLUE - within green
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 255, 0, 0.5)' : 'transparent') // Yellow fill (complementary to blue)
               },
               children: [
-                ui.Pressable({
+                ui.Text({
+                  text: 'You are the host!',
                   style: {
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent'), // PURPLE - within blue
-                    backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 128, 0.5)' : '#FFFFFF') // Spring green fill (complementary to purple)
-                  },
-                  onPress: () => this.handleStartGame(),
-                  children: [
-                    ui.Text({
-                      text: 'Start Game',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: '#111111',
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
                 })
               ]
             }),
-
-            // Game Settings button container (matching Confirm Settings structure)
-            ui.View({
+            ui.Pressable({
               style: {
                 width: '100%',
-                height: 58,
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
-                paddingBottom: 8,
-                marginBottom: 0,
+                height: 42,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 8,
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#3300FF' : 'transparent'), // BLUE-3 - within green (variation)
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(128, 255, 0, 0.5)' : 'transparent') // Lime fill (complementary to blue)
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent'), // PURPLE - within blue
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 128, 0.5)' : '#FFFFFF') // Spring green fill (complementary to purple)
               },
+              onPress: () => this.handleStartGame(),
               children: [
-                ui.Pressable({
+                ui.Text({
+                  text: 'Start Game',
                   style: {
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
-                    backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : '#FFFFFF') // Fuchsia fill (complementary to purple)
-                  },
-                  onPress: () => this.navigateToGameSettings(),
-                  children: [
-                    ui.Text({
-                      text: 'Game Settings',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: '#111111',
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: 42,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#8000FF' : 'transparent'), // PURPLE-2 - within blue (variation)
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 0, 128, 0.5)' : '#FFFFFF') // Fuchsia fill (complementary to purple)
+              },
+              onPress: () => this.navigateToGameSettings(),
+              children: [
+                ui.Text({
+                  text: 'Game Settings',
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
                 })
               ]
             })
