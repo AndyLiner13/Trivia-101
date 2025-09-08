@@ -1473,7 +1473,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                               if (shouldUpdate) {
                                 this.stableQuestionIndex = index;
                               }
-                              return `Question ${this.stableQuestionIndex + 1}/${settings.numberOfQuestions}`;
+                              return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
                             }),
                             style: {
                               fontSize: 12,
@@ -2243,7 +2243,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             if (shouldUpdate) {
               this.stableQuestionIndex = index;
             }
-            return `Question ${this.stableQuestionIndex + 1}/${settings.numberOfQuestions}`;
+            return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
           }),
           style: {
             fontSize: 12,
