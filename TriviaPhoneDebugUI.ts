@@ -1478,7 +1478,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: '100%',
                 backgroundColor: ui.Binding.derive([this.screenTypeBinding, this.currentViewModeBinding, this.gameStartedBinding], (screenType, mode, started) => {
                   if (mode === 'game-settings') return '#6366F1';
-                  if (started && (screenType === 'two-options' || screenType === 'four-options')) return '#6366F1';
+                  if (started && (screenType === 'two-options' || screenType === 'four-options')) return 'transparent';
                   if (started && screenType === 'results') return '#FFFFFF'; // Will be overridden by feedback screen
                   return '#FFFFFF';
                 }),
@@ -1503,12 +1503,26 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       width: '100%',
                       height: '100%',
-                      backgroundColor: '#6366F1',
+                      backgroundColor: 'transparent',
                       flexDirection: 'column',
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
+                      // Background image
+                      ui.Image({
+                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2225071587959777'))),
+                        style: {
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: '100%',
+                          height: '100%',
+                          resizeMode: 'cover'
+                        }
+                      }),
                       this.renderTwoOptionsPage(),
                       this.renderStatusBar()
                     ]
@@ -1524,12 +1538,26 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       width: '100%',
                       height: '100%',
-                      backgroundColor: '#6366F1',
+                      backgroundColor: 'transparent',
                       flexDirection: 'column',
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#FF0000' : 'transparent') // Red - layer within phone frame
                     },
                     children: [
+                      // Background image
+                      ui.Image({
+                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2225071587959777'))),
+                        style: {
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: '100%',
+                          height: '100%',
+                          resizeMode: 'cover'
+                        }
+                      }),
                       this.renderFourOptionsPage(),
                       this.renderStatusBar()
                     ]
