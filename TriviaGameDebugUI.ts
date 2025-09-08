@@ -519,7 +519,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                       flexDirection: 'column',
                       justifyContent: 'space-between', // Distribute icons evenly across full height
                       alignItems: 'center',
-                      paddingVertical: 16, // Add some padding from top and bottom edges
+                      paddingVertical: 72, // Increased from 16 to 50 for more top/bottom margins
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for left icons
                     },
