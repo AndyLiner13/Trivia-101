@@ -1608,6 +1608,30 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     (mode === 'pre-game' && started && screenType === 'results' && showResult && !isCorrect && !isHost)
                   ),
                   this.renderParticipantWrongResults()
+                ),
+
+                // Results screen - host correct
+                // DEBUG MODE: This screen should ALWAYS show when debug panel requests it
+                ui.UINode.if(
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding, this.isCorrectAnswerBinding, this.isHostBinding], (debugScreen, mode, screenType, started, showResult, isCorrect, isHost) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'results-host-correct' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && started && screenType === 'results' && showResult && isCorrect && isHost)
+                  ),
+                  this.renderHostCorrectResults()
+                ),
+
+                // Results screen - host wrong
+                // DEBUG MODE: This screen should ALWAYS show when debug panel requests it
+                ui.UINode.if(
+                  ui.Binding.derive([this.debugCurrentScreenBinding, this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding, this.isCorrectAnswerBinding, this.isHostBinding], (debugScreen, mode, screenType, started, showResult, isCorrect, isHost) => 
+                    // PRIORITY 1: Debug mode - always show if debug panel requested this screen
+                    debugScreen === 'results-host-wrong' ||
+                    // PRIORITY 2: Normal mode - show only when all conditions are met
+                    (mode === 'pre-game' && started && screenType === 'results' && showResult && !isCorrect && isHost)
+                  ),
+                  this.renderHostWrongResults()
                 )
               ]
             })
@@ -3874,6 +3898,512 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }
                 })
               ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderHostCorrectResults(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      },
+      children: [
+        // Background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Top navigation bar with 4A-style layout
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
+          },
+          children: [
+            // Light/Dark mode toggle
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 4,
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
+                })
+              ]
+            }),
+
+            // Points display container (like 4A page)
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Checkmark container - moved up from center
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: 136,
+            height: 136,
+            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginLeft: -68, // Half of width to center horizontally
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            // Checkmark icon (no green circle background)
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2019383778812059'))), // Using specified check icon
+              style: {
+                width: 120,
+                height: 120,
+                tintColor: '#FFFFFF'
+              }
+            })
+          ]
+        }),
+
+        // Points display underneath checkmark
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
+            height: 50,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: '+1200 points',
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
+                // Removed drop shadow properties
+              }
+            })
+          ]
+        }),
+
+        // Next Question button
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 74, // Position above the status bar (58px height + 16px margin)
+            left: 16,
+            right: 16,
+            height: 56,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingHorizontal: 8
+              },
+              onPress: () => {
+                // Handle next question logic
+                console.log('✅ Next Question pressed');
+              },
+              children: [
+                ui.Text({
+                  text: 'Next Question',
+                  style: {
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: '#000000',
+                    textAlign: 'center',
+                    flex: 1
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#000000'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Bottom status bar (like 4A page with question info)
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {}, // No action for status bar
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                  }),
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private renderHostWrongResults(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      },
+      children: [
+        // Background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('648661411200941'))),
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Top navigation bar with 4A-style layout
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
+          },
+          children: [
+            // Light/Dark mode toggle
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 4,
+                flexDirection: 'row',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                }),
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: 'rgba(255, 255, 255, 0.35)'
+                  }
+                })
+              ]
+            }),
+
+            // Points display container (like 4A page)
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Close icon container - moved up from center
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: 136,
+            height: 136,
+            marginTop: -90, // Moved up from -68 to -120 (52 pixels higher)
+            marginLeft: -68, // Half of width to center horizontally
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            // Close icon
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24587675990884692'))), // close icon
+              style: {
+                width: 120,
+                height: 120,
+                tintColor: '#FFFFFF'
+              }
+            })
+          ]
+        }),
+
+        // Message display underneath close icon
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 32, // Moved up significantly from 60 to 8 (52 pixels higher to match checkmark movement)
+            height: 80, // Increased height to accommodate two lines
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 60 // Match close icon width (120px / 2 = 60px on each side)
+          },
+          children: [
+            ui.Text({
+              text: 'You need to lock in twin',
+              style: {
+                fontSize: 20, // Reduced from 24 to 20
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
+                // Removed drop shadow properties
+              }
+            })
+          ]
+        }),
+
+        // Bottom status bar (like 4A page with question info)
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {}, // No action for status bar
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                  }),
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#111111',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Next Question button
+        ui.Pressable({
+          onPress: () => console.log('Next Question pressed'),
+          style: {
+            position: 'absolute',
+            bottom: 84, // Position above status bar (58 + 26 margin)
+            left: 24,
+            right: 24,
+            paddingVertical: 8,
+            backgroundColor: '#FFFFFF',
+            borderRadius: 26,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: 'Next Question',
+              style: {
+                fontSize: 18,
+                fontWeight: '600',
+                color: '#000000',
+                marginRight: 8
+              }
+            }),
+            ui.Image({
+              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1806442143313699'))), // arrow_forward icon
+              style: {
+                width: 24,
+                height: 24,
+                tintColor: '#000000'
+              }
             })
           ]
         })
