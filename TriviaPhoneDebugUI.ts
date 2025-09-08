@@ -121,7 +121,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Game settings bindings
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
-  private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('game-settings');
+  private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
   
   // Debug outline toggle binding
   private showOutlinesBinding = new ui.Binding(false);
@@ -2912,10 +2912,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                flexDirection: 'column',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingBottom: 8
+                flexDirection: 'column'
               },
               children: [
                 // Start Game button container (matching Confirm Settings structure)
@@ -2926,8 +2923,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     paddingLeft: 8,
                     paddingRight: 8,
                     paddingTop: 8,
-                    paddingBottom: 8,
-                    marginBottom: 8
+                    paddingBottom: 8
                   },
                   children: [
                     ui.Pressable({
@@ -2963,7 +2959,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     paddingLeft: 8,
                     paddingRight: 8,
                     paddingTop: 8,
-                    paddingBottom: 8
+                    paddingBottom: 8,
+                    marginBottom: 8
                   },
                   children: [
                     ui.Pressable({
