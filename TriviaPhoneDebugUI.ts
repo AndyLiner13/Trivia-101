@@ -1349,21 +1349,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         };
         break;
         
-      case 'results-host-timeout':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
-        this.showResultBinding.set(true);
-        this.isCorrectAnswerBinding.set(false);
-        this.selectedAnswerBinding.set(null); // No answer selected
-        this.isHostBinding.set(true); // Force host mode
-        this.currentQuestion = {
-          question: 'What color is the sky?',
-          answers: ['Blue', 'Green'],
-          correctAnswer: 0,
-          image: null
-        };
-        break;
-        
       case 'results-participant-correct':
         this.currentViewModeBinding.set('pre-game');
         this.gameStartedBinding.set(true);
@@ -1391,22 +1376,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.currentQuestion = {
           question: 'What is the largest planet?',
           answers: ['Earth', 'Mars'],
-          correctAnswer: 0,
-          image: null
-        };
-        break;
-        
-      case 'results-participant-timeout':
-        this.currentViewModeBinding.set('pre-game');
-        this.gameStartedBinding.set(true);
-        this.showResultBinding.set(true);
-        this.isCorrectAnswerBinding.set(false);
-        this.selectedAnswerBinding.set(null); // No answer selected
-        this.isHostBinding.set(false); // Force participant mode
-        this.showLeaderboardBinding.set(false); // Participants don't need leaderboard buttons
-        this.currentQuestion = {
-          question: 'What color is the sky?',
-          answers: ['Blue', 'Green'],
           correctAnswer: 0,
           image: null
         };
@@ -1577,7 +1546,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         this.isCorrectAnswerBinding,
                         this.selectedAnswerBinding
                       ], (isCorrect, selectedAnswer) => {
-                        if (selectedAnswer === null) return '#F59E0B'; // Orange for time's up
                         return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
                       }),
                       justifyContent: 'flex-start',
@@ -1606,7 +1574,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                               this.selectedAnswerBinding
                             ], (isCorrect, selectedAnswer) => {
                               if (isCorrect) return '✅';
-                              if (selectedAnswer === null) return '⏰'; // Clock emoji for time's up
                               return '❌';
                             }),
                             style: {
@@ -1621,7 +1588,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                               this.selectedAnswerBinding
                             ], (isCorrect, selectedAnswer) => {
                               if (isCorrect) return 'Correct!';
-                              if (selectedAnswer === null) return 'Time\'s Up!';
                               return 'Wrong!';
                             }),
                             style: {
@@ -1778,7 +1744,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         this.isCorrectAnswerBinding,
                         this.selectedAnswerBinding
                       ], (isCorrect, selectedAnswer) => {
-                        if (selectedAnswer === null) return '#F59E0B'; // Orange for time's up
                         return isCorrect ? '#22C55E' : '#EF4444'; // Green for correct, red for wrong
                       }),
                       justifyContent: 'center',
@@ -1805,7 +1770,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                               this.selectedAnswerBinding
                             ], (isCorrect, selectedAnswer) => {
                               if (isCorrect) return '✅';
-                              if (selectedAnswer === null) return '⏰'; // Clock emoji for time's up
                               return '❌';
                             }),
                             style: {
@@ -1820,7 +1784,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                               this.selectedAnswerBinding
                             ], (isCorrect, selectedAnswer) => {
                               if (isCorrect) return 'Correct!';
-                              if (selectedAnswer === null) return 'Time\'s Up!';
                               return 'Wrong!';
                             }),
                             style: {
@@ -2055,29 +2018,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Host Results Screen - Time's Up
-                ui.Pressable({
-                  style: {
-                    backgroundColor: '#4A5568',
-                    borderRadius: 8,
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    marginBottom: 8,
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.debugShowScreen('results-host-timeout'),
-                  children: [
-                    ui.Text({
-                      text: '👑 Host - Time\'s Up',
-                      style: {
-                        fontSize: 12,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-
                 // Participant Results Screen - Correct
                 ui.Pressable({
                   style: {
@@ -2115,29 +2055,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   children: [
                     ui.Text({
                       text: '👤 Participant - Wrong',
-                      style: {
-                        fontSize: 12,
-                        fontWeight: '600',
-                        color: '#FFFFFF'
-                      }
-                    })
-                  ]
-                }),
-
-                // Participant Results Screen - Time's Up
-                ui.Pressable({
-                  style: {
-                    backgroundColor: '#4A5568',
-                    borderRadius: 8,
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    marginBottom: 16,
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.debugShowScreen('results-participant-timeout'),
-                  children: [
-                    ui.Text({
-                      text: '👤 Participant - Time\'s Up',
                       style: {
                         fontSize: 12,
                         fontWeight: '600',
