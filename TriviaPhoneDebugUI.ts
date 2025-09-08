@@ -2682,7 +2682,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: 0,
             left: 0,
             right: 0,
-            width: '100%',
+            height: '40%', // Take up only 40% of screen height for header
             flexDirection: 'column',
             alignItems: 'center'
           },
@@ -2805,44 +2805,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // Crown icon underneath the shared container
             ui.View({
               style: {
+                flex: 1,
+                width: '100%',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#FF1493', // Neon pink background
                 borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                 borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF33' : 'transparent') // GREEN-2 - crown container (slightly different)
               },
               children: [
-                // Crown icon element container
-                ui.View({
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
                   style: {
-                    borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                    borderColor: this.showOutlinesBinding.derive(show => show ? '#0066FF' : 'transparent') // BLUE-3 - within green (slightly different)
-                  },
-                  children: [
-                    // Crown icon final container
-                    ui.View({
-                      style: {
-                        borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                        borderColor: this.showOutlinesBinding.derive(show => show ? '#BA55D3' : 'transparent') // PURPLE-3 - within blue (slightly different)
-                      },
-                      children: [
-                        // Crown image container
-                        ui.View({
-                          style: {
-                            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                            borderColor: this.showOutlinesBinding.derive(show => show ? '#2F2F2F' : 'transparent') // BLACK-3 - within purple (slightly different)
-                          },
-                          children: [
-                            ui.Image({
-                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
-                              style: {
-                                width: 32,
-                                height: 29,
-                                tintColor: '#F7CE23'
-                              }
-                            })
-                          ]
-                        })
-                      ]
-                    })
-                  ]
+                    width: 32,
+                    height: 29,
+                    tintColor: '#F7CE23'
+                  }
                 })
               ]
             })
