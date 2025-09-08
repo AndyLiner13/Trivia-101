@@ -110,10 +110,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showLeaderboardBinding = new ui.Binding(false);
   private answerSubmittedBinding = new ui.Binding(false);
 
-  // Game over screen binding
-  private showGameOverBinding = new ui.Binding(false);
-
-  // Leaderboard data for game over screen
+  // Leaderboard data for results screen
   private leaderboardDataBinding = new ui.Binding<Array<{name: string, score: number, playerId: string}>>([]);
 
   // Current question binding to prevent flashing
@@ -1081,41 +1078,19 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     hostId: string, 
     finalLeaderboard?: Array<{name: string, score: number, playerId: string}> 
   }): void {
-    console.log("✅ TriviaPhone: Transitioning to GAME OVER screen");
+    console.log("✅ TriviaPhone: Game ended - staying on current screen");
 
-    // Reset game state to show game over screen
+    // Mark game as ended but don't change screens - just stay on the current feedback screen
     this.gameStarted = false;
     this.gameStartedBinding.set(false);
     this.gameEndedBinding.set(true); // Mark game as ended
-    this.showResult = false;
-    this.showResultBinding.set(false);
+    this.gameEnded = true; // Set the flag
+    
+    // Don't change the current screen - let it stay on the feedback screen
+    // This allows players to see their final result (right/wrong/time's up)
+    
+    // Hide leaderboard since game is over
     this.showLeaderboardBinding.set(false);
-    this.selectedAnswer = null;
-    this.selectedAnswerBinding.set(null);
-    this.currentQuestionIndex = 0;
-    this.currentQuestionIndexBinding.set(0);
-    this.answerSubmitted = false;
-    this.answerSubmittedBinding.set(false);
-    
-    // Set screen type to waiting
-    this.currentScreenType = 'waiting';
-    this.screenTypeBinding.set('waiting');
-    
-    // Clear current question data
-    this.currentQuestion = null;
-    this.currentQuestionBinding.set(null); // Clear binding
-    
-    // Show game over screen with podium instead of leaderboard
-    if (eventData.finalLeaderboard && eventData.finalLeaderboard.length > 0) {
-      // Store leaderboard data for the game over screen
-      this.leaderboardDataBinding.set(eventData.finalLeaderboard);
-      this.showGameOverBinding.set(true);
-      
-      // Hide game over screen after 10 seconds and return to start screen
-      this.async.setTimeout(() => {
-        this.showGameOverBinding.set(false);
-      }, 10000); // Show for 10 seconds
-    }
   }
 
   private onTriviaGameReset(eventData: { hostId: string }): void {
@@ -1293,8 +1268,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 // Pre-game screen - shows when game hasn't started
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding], (mode, started) => 
-                    mode === 'pre-game' && !started
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.gameEndedBinding, this.showResultBinding], (mode, started, gameEnded, showResult) => 
+                    mode === 'pre-game' && !started && (!gameEnded || !showResult)
                   ),
                   this.renderPreGameScreen()
                 ),
@@ -1339,8 +1314,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
                 // Feedback screen - shows right/wrong when results are displayed
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding], (mode, started, showResult) => 
-                    mode === 'pre-game' && started && showResult
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding], (mode, started, showResult, gameEnded) => 
+                    mode === 'pre-game' && (started || gameEnded) && showResult
                   ),
                   ui.View({
                     style: {
@@ -1440,7 +1415,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           alignSelf: 'center',
                           opacity: ui.Binding.derive([this.showLeaderboardBinding, this.gameStartedBinding, this.gameEndedBinding, this.currentQuestionIndexBinding, this.gameSettingsBinding, this.isHostBinding],
                             (showLeaderboard, gameStarted, gameEnded, currentIndex, settings, isHost) =>
-                              showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions ? 1 : 0
+                              (showLeaderboard && gameStarted && !gameEnded && isHost && (currentIndex + 1) >= settings.numberOfQuestions) ||
+                              (gameEnded && isHost) ? 1 : 0
                           )
                         },
                         onPress: () => this.endGame(),
@@ -1491,253 +1467,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                             }
                           })
                         ]
-                      })
-                    ]
-                  })
-                ),
-                
-                // Game Over screen - shows podium with final results
-                ui.UINode.if(
-                  ui.Binding.derive([this.showGameOverBinding], (showGameOver) => showGameOver),
-                  ui.View({
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: '#FFFFFF',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 16
-                    },
-                    children: [
-                      // Header
-                      ui.View({
-                        style: {
-                          position: 'absolute',
-                          top: '8%',
-                          left: 0,
-                          right: 0,
-                          alignItems: 'center'
-                        },
-                        children: ui.Text({
-                          text: '🎉 Game Complete! 🎉',
-                          style: {
-                            fontSize: 24,
-                            fontWeight: 'bold',
-                            color: '#1F2937',
-                            textAlign: 'center'
-                          }
-                        })
-                      }),
-
-                      // Podium Section
-                      ui.View({
-                        style: {
-                          position: 'absolute',
-                          top: '25%',
-                          left: 0,
-                          right: 0,
-                          bottom: '25%',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        },
-                        children: ui.View({
-                          style: {
-                            flexDirection: 'row',
-                            alignItems: 'flex-end',
-                            justifyContent: 'center'
-                          },
-                          children: [
-                            // 2nd Place
-                            ui.View({
-                              style: {
-                                alignItems: 'center',
-                                marginHorizontal: 8
-                              },
-                              children: [
-                                ui.Text({
-                                  text: this.leaderboardDataBinding.derive(players =>
-                                    players.length > 1 ? players[1].name : 'Player 2'
-                                  ),
-                                  style: {
-                                    fontSize: 12,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937',
-                                    textAlign: 'center',
-                                    marginBottom: 8
-                                  }
-                                }),
-                                ui.View({
-                                  style: {
-                                    width: 50,
-                                    height: 40,
-                                    backgroundColor: '#9CA3AF',
-                                    borderRadius: 8,
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  },
-                                  children: [
-                                    ui.Text({
-                                      text: '2nd',
-                                      style: {
-                                        fontSize: 12,
-                                        fontWeight: 'bold',
-                                        color: '#374151'
-                                      }
-                                    }),
-                                    ui.Text({
-                                      text: this.leaderboardDataBinding.derive(players =>
-                                        players.length > 1 ? players[1].score.toString() : '0'
-                                      ),
-                                      style: {
-                                        fontSize: 10,
-                                        fontWeight: '600',
-                                        color: '#4B5563'
-                                      }
-                                    })
-                                  ]
-                                })
-                              ]
-                            }),
-
-                            // 1st Place
-                            ui.View({
-                              style: {
-                                alignItems: 'center',
-                                marginHorizontal: 8
-                              },
-                              children: [
-                                ui.Text({
-                                  text: this.leaderboardDataBinding.derive(players =>
-                                    players.length > 0 ? players[0].name : 'Winner'
-                                  ),
-                                  style: {
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937',
-                                    textAlign: 'center',
-                                    marginBottom: 8
-                                  }
-                                }),
-                                ui.View({
-                                  style: {
-                                    width: 60,
-                                    height: 50,
-                                    backgroundColor: '#FBBF24',
-                                    borderRadius: 8,
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  },
-                                  children: [
-                                    ui.Text({
-                                      text: '🥇 1st',
-                                      style: {
-                                        fontSize: 14,
-                                        fontWeight: 'bold',
-                                        color: '#92400E'
-                                      }
-                                    }),
-                                    ui.Text({
-                                      text: this.leaderboardDataBinding.derive(players =>
-                                        players.length > 0 ? players[0].score.toString() : '0'
-                                      ),
-                                      style: {
-                                        fontSize: 12,
-                                        fontWeight: '600',
-                                        color: '#B45309'
-                                      }
-                                    })
-                                  ]
-                                })
-                              ]
-                            }),
-
-                            // 3rd Place
-                            ui.View({
-                              style: {
-                                alignItems: 'center',
-                                marginHorizontal: 8
-                              },
-                              children: [
-                                ui.Text({
-                                  text: this.leaderboardDataBinding.derive(players =>
-                                    players.length > 2 ? players[2].name : 'Player 3'
-                                  ),
-                                  style: {
-                                    fontSize: 12,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937',
-                                    textAlign: 'center',
-                                    marginBottom: 8
-                                  }
-                                }),
-                                ui.View({
-                                  style: {
-                                    width: 50,
-                                    height: 35,
-                                    backgroundColor: '#D97706',
-                                    borderRadius: 8,
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  },
-                                  children: [
-                                    ui.Text({
-                                      text: '3rd',
-                                      style: {
-                                        fontSize: 12,
-                                        fontWeight: 'bold',
-                                        color: '#78350F'
-                                      }
-                                    }),
-                                    ui.Text({
-                                      text: this.leaderboardDataBinding.derive(players =>
-                                        players.length > 2 ? players[2].score.toString() : '0'
-                                      ),
-                                      style: {
-                                        fontSize: 10,
-                                        fontWeight: '600',
-                                        color: '#92400E'
-                                      }
-                                    })
-                                  ]
-                                })
-                              ]
-                            })
-                          ]
-                        })
-                      }),
-
-                      // Play Again Button
-                      ui.View({
-                        style: {
-                          position: 'absolute',
-                          bottom: '8%',
-                          left: 0,
-                          right: 0,
-                          alignItems: 'center'
-                        },
-                        children: ui.Pressable({
-                          style: {
-                            backgroundColor: '#6366F1',
-                            borderRadius: 12,
-                            paddingHorizontal: 24,
-                            paddingVertical: 12,
-                            alignItems: 'center'
-                          },
-                          onPress: () => {
-                            this.showGameOverBinding.set(false);
-                            this.gameEndedBinding.set(false);
-                          },
-                          children: [
-                            ui.Text({
-                              text: '🎮 Play Again',
-                              style: {
-                                fontSize: 16,
-                                fontWeight: '600',
-                                color: '#FFFFFF'
-                              }
-                            })
-                          ]
-                        })
                       })
                     ]
                   })
