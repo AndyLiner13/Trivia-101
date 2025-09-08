@@ -436,291 +436,196 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                   View({
                     style: {
                       position: 'absolute',
-                      top: '8%',
-                      left: 0,
-                      right: 0,
+                      top: 0,
+                      left: '15.9%', // 127px out of 800px total width
+                      right: '15.9%', // 127px out of 800px total width
+                      height: 66,
                       alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 8,
+                      paddingVertical: 8,
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
                       borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for header
                     },
                     children: Text({
-                      text: 'Players Ready',
+                      text: 'General Trivia',
                       style: {
-                        fontSize: 18,
+                        fontSize: 24, // Scaled down from 32
                         fontWeight: 'bold',
-                        color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black'),
+                        color: 'white',
                         textAlign: 'center'
                       }
                     })
                   }),
 
-                  // Players Section
+                  // Waiting for host message
                   View({
                     style: {
                       position: 'absolute',
-                      top: '18%',
-                      left: '8%',
-                      right: '8%',
-                      bottom: '35%',
+                      top: 358, // Reduced gap from avatar grid (385 - 27px)
+                      left: '3%', // 24px out of 800px total width
+                      right: '3%', // 24px out of 800px total width
+                      height: 65,
                       alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 8,
+                      paddingVertical: 8,
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for players section
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for waiting message
+                    },
+                    children: Text({
+                      text: 'Waiting for host...',
+                      style: {
+                        fontSize: 20, // Scaled down from 28
+                        fontWeight: 'bold',
+                        color: 'white',
+                        textAlign: 'center'
+                      }
+                    })
+                  }),
+
+                  // Players avatars grid
+                  View({
+                    style: {
+                      position: 'absolute',
+                      top: 73, // Reduced gap from header (80 - 7px)
+                      left: '10%', // Adjusted to make room for left icons
+                      right: '10%', // Adjusted to make room for right icons
+                      bottom: '20%', // Leave more space for the waiting message
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      alignItems: 'flex-start',
+                      paddingHorizontal: 10,
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for players grid
+                    },
+                    children: this.createPlayerAvatarsGrid()
+                  }),
+
+                  // Left side icons (Lock, Sentiment Neutral, Timer)
+                  View({
+                    style: {
+                      position: 'absolute',
+                      left: 0, // Start at left edge
+                      top: 73, // Moved down to match avatar grid
+                      width: 80, // Slightly wider for better spacing
+                      height: 320, // Shorter height to fit all icons
+                      flexDirection: 'column',
+                      justifyContent: 'space-between', // Space icons evenly
+                      alignItems: 'center',
+                      paddingVertical: 5, // Reduced from 10 to 5 for smaller vertical gap
+                      borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for left icons
                     },
                     children: [
-                      // Player count header
+                      // Lock icon
                       View({
                         style: {
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginBottom: 12,
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for player count header
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for lock icon container
                         },
-                        children: [
-                          Text({
-                            text: '👥',
-                            style: {
-                              fontSize: 16,
-                              marginRight: 8
-                            }
-                          }),
-                          Text({
-                            text: 'Players',
-                            style: {
-                              fontSize: 16,
-                              fontWeight: '600',
-                              color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : 'black')
-                            }
-                          })
-                        ]
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
+                          style: {
+                            width: 48, // Scaled down from 64
+                            height: 48 // Scaled down from 64
+                          }
+                        })
                       }),
-
-                      // Players grid
+                      // Sentiment Neutral icon
                       View({
                         style: {
-                          flex: 1,
-                          width: '100%',
-                          flexDirection: 'row',
-                          flexWrap: 'wrap',
-                          justifyContent: 'center',
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for players grid
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for sentiment icon container
                         },
-                        children: this.createStaticPlayersComponents()
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
+                          style: {
+                            width: 48, // Scaled down from 64
+                            height: 48 // Scaled down from 64
+                          }
+                        })
+                      }),
+                      // Timer icon
+                      View({
+                        style: {
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer icon container
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                          style: {
+                            width: 48, // Scaled down from 64
+                            height: 48 // Scaled down from 64
+                          }
+                        })
                       })
                     ]
                   }),
 
-                  // Game Settings Panel - Bottom
+                  // Right side icons (Autoplay, All Inclusive, Bolt)
                   View({
                     style: {
                       position: 'absolute',
-                      bottom: '8%',
-                      left: '8%',
-                      right: '8%',
-                      backgroundColor: this.isDarkModeBinding.derive(isDark => isDark ? 'rgba(55, 65, 81, 0.95)' : 'rgba(255, 255, 255, 0.95)'),
-                      borderRadius: 12,
-                      padding: 12,
+                      right: 0, // Start at right edge
+                      top: 80, // Moved down from top to fit better
+                      width: 80, // Slightly wider for better spacing
+                      height: 320, // Shorter height to fit all icons
+                      flexDirection: 'column',
+                      justifyContent: 'space-between', // Space icons evenly
+                      alignItems: 'center',
+                      paddingVertical: 10, // Reduced from 20 to 10 for smaller vertical gap
                       borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for game settings panel
+                      borderColor: this.showOutlinesBinding.derive(show => show ? '#00FF00' : 'transparent') // Green border for right icons
                     },
                     children: [
+                      // Autoplay icon
                       View({
                         style: {
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
                           borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for settings row container
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for autoplay icon container
                         },
-                        children: [
-                          // Category
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1,
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for category section
-                            },
-                            children: [
-                              Text({
-                                text: 'Category:',
-                                style: {
-                                  fontSize: 10,
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => config.category),
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '600',
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Questions
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1,
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for questions section
-                            },
-                            children: [
-                              Text({
-                                text: 'Questions:',
-                                style: {
-                                  fontSize: 10,
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => `Q${config.numQuestions}`),
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '600',
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Time
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1,
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for time section
-                            },
-                            children: [
-                              Text({
-                                text: 'Time:',
-                                style: {
-                                  fontSize: 10,
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
-                                  marginBottom: 4
-                                }
-                              }),
-                              View({
-                                style: {
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                                  borderColor: this.showOutlinesBinding.derive(show => show ? '#000000' : 'transparent') // Black border for time content container
-                                },
-                                children: [
-                                  Text({
-                                    text: '⏱️',
-                                    style: {
-                                      fontSize: 12,
-                                      marginRight: 4
-                                    }
-                                  }),
-                                  Text({
-                                    text: this.gameConfigBinding.derive(config => `${config.timeLimit}s`),
-                                    style: {
-                                      fontSize: 12,
-                                      fontWeight: '600',
-                                      color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
-                                    }
-                                  })
-                                ]
-                              })
-                            ]
-                          }),
-
-                          // Difficulty
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1,
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for difficulty section
-                            },
-                            children: [
-                              Text({
-                                text: 'Difficulty:',
-                                style: {
-                                  fontSize: 10,
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => {
-                                  const diff = config.difficulty;
-                                  return diff.charAt(0).toUpperCase() + diff.slice(1);
-                                }),
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '600',
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? 'white' : '#1F2937')
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Auto-Advance
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1,
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for auto-advance section
-                            },
-                            children: [
-                              Text({
-                                text: 'Auto:',
-                                style: {
-                                  fontSize: 10,
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: this.gameConfigBinding.derive(config => config.autoAdvance ? '▶️' : '⏸️'),
-                                style: {
-                                  fontSize: 14
-                                }
-                              })
-                            ]
-                          }),
-
-                          // Mute
-                          View({
-                            style: {
-                              alignItems: 'center',
-                              flex: 1,
-                              borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                              borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for mute section
-                            },
-                            children: [
-                              Text({
-                                text: 'Audio:',
-                                style: {
-                                  fontSize: 10,
-                                  color: this.isDarkModeBinding.derive(isDark => isDark ? '#9CA3AF' : '#6B7280'),
-                                  marginBottom: 4
-                                }
-                              }),
-                              Text({
-                                text: '🔊',
-                                style: {
-                                  fontSize: 14
-                                }
-                              })
-                            ]
-                          })
-                        ]
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                          style: {
+                            width: 48, // Scaled down from 64
+                            height: 48 // Scaled down from 64
+                          }
+                        })
+                      }),
+                      // All Inclusive icon
+                      View({
+                        style: {
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for all inclusive icon container
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
+                          style: {
+                            width: 48, // Scaled down from 64
+                            height: 48 // Scaled down from 64
+                          }
+                        })
+                      }),
+                      // Bolt icon
+                      View({
+                        style: {
+                          borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                          borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for bolt icon container
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
+                          style: {
+                            width: 48, // Scaled down from 64
+                            height: 48 // Scaled down from 64
+                          }
+                        })
                       })
                     ]
-                  })
+                  }),
+
+
                 ]
               })
             ),
@@ -2814,6 +2719,167 @@ export class TriviaGameDebugUI extends ui.UIComponent {
       )
     );
     
+    return components;
+  }
+
+  private createPlayerAvatarsGrid(): UINode[] {
+    const components: UINode[] = [];
+
+    // Create 15 player avatar placeholders with names (5x3 grid)
+    for (let i = 0; i < 15; i++) {
+      components.push(
+        View({
+          style: {
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: 6, // Reduced from 12 to 6 (50% reduction)
+            marginRight: 12, // Increased from 8 to 12 for better wrapping
+            marginLeft: 12, // Added left margin for better wrapping
+            borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+            borderColor: this.showOutlinesBinding.derive(show => show ? '#800080' : 'transparent') // Purple border for avatar container
+          },
+          children: [
+            // Avatar container (square 1:1 aspect ratio)
+            View({
+              style: {
+                width: 50, // Square frame
+                height: 50, // Square frame
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for avatar frame
+              },
+              children: [
+                // Show player avatar with different expressions (alternate between cover and contain)
+                UINode.if(
+                  this.playersUpdateTrigger.derive(() => {
+                    const currentPlayers = this.world.getPlayers();
+                    return currentPlayers.length > 0;
+                  }),
+                  UINode.if(
+                    this.playersUpdateTrigger.derive(() => {
+                      const currentPlayers = this.world.getPlayers();
+                      if (currentPlayers.length > 0) {
+                        // Find player with lowest ID
+                        let lowestIdPlayer = currentPlayers[0];
+                        let lowestId = BigInt(currentPlayers[0].id.toString());
+
+                        for (const player of currentPlayers) {
+                          const playerId = BigInt(player.id.toString());
+                          if (playerId < lowestId) {
+                            lowestId = playerId;
+                            lowestIdPlayer = player;
+                          }
+                        }
+
+                        const playerId = lowestIdPlayer.id.toString();
+                        const hasHeadshot = this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
+                        return hasHeadshot;
+                      }
+                      return false;
+                    }),
+                    Image({
+                      source: this.playersUpdateTrigger.derive(() => {
+                        const currentPlayers = this.world.getPlayers();
+                        if (currentPlayers.length > 0) {
+                          // Find player with lowest ID
+                          let lowestIdPlayer = currentPlayers[0];
+                          let lowestId = BigInt(currentPlayers[0].id.toString());
+
+                          for (const player of currentPlayers) {
+                            const playerId = BigInt(player.id.toString());
+                            if (playerId < lowestId) {
+                              lowestId = playerId;
+                              lowestIdPlayer = player;
+                            }
+                          }
+
+                          const playerId = lowestIdPlayer.id.toString();
+                          const headshot = this.playerHeadshots.get(playerId);
+                          return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                        }
+                        return ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
+                      }),
+                      style: {
+                        width: 50, // Square image
+                        height: 50, // Square image
+                        resizeMode: i % 2 === 0 ? 'cover' : 'contain' // Alternate between cover and contain for different expressions
+                      }
+                    }),
+                    Text({
+                      text: this.playersUpdateTrigger.derive(() => {
+                        const currentPlayers = this.world.getPlayers();
+                        if (currentPlayers.length > 0) {
+                          // Find player with lowest ID
+                          let lowestIdPlayer = currentPlayers[0];
+                          let lowestId = BigInt(currentPlayers[0].id.toString());
+
+                          for (const player of currentPlayers) {
+                            const playerId = BigInt(player.id.toString());
+                            if (playerId < lowestId) {
+                              lowestId = playerId;
+                              lowestIdPlayer = player;
+                            }
+                          }
+
+                          return lowestIdPlayer.name.get().charAt(0).toUpperCase();
+                        }
+                        return "";
+                      }),
+                      style: {
+                        fontSize: 20, // Larger for better visibility in square frame
+                        fontWeight: 'bold',
+                        color: '#6B7280'
+                      }
+                    })
+                  ),
+                  // Empty placeholder for unused slots
+                  View({
+                    style: {
+                      width: 50,
+                      height: 50
+                    }
+                  })
+                )
+              ]
+            }),
+            // Player name below avatar
+            Text({
+              text: this.playersUpdateTrigger.derive(() => {
+                const currentPlayers = this.world.getPlayers();
+                if (currentPlayers.length > 0) {
+                  // Find player with lowest ID
+                  let lowestIdPlayer = currentPlayers[0];
+                  let lowestId = BigInt(currentPlayers[0].id.toString());
+
+                  for (const player of currentPlayers) {
+                    const playerId = BigInt(player.id.toString());
+                    if (playerId < lowestId) {
+                      lowestId = playerId;
+                      lowestIdPlayer = player;
+                    }
+                  }
+
+                  return lowestIdPlayer.name.get();
+                }
+                return "";
+              }),
+              style: {
+                fontSize: 10, // Small text for name
+                fontWeight: '500',
+                color: 'white',
+                textAlign: 'center',
+                marginTop: 2, // Reduced from 4 to 2 (50% reduction)
+                maxWidth: 60,
+                overflow: 'hidden'
+              }
+            })
+          ]
+        })
+      );
+    }
+
     return components;
   }
 
