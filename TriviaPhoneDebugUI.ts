@@ -2864,13 +2864,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 // Start Game button (directly in blue container)
                 ui.Pressable({
                   style: {
-                    height: 48,
+                    height: 42,
                     backgroundColor: '#FFFFFF',
-                    borderRadius: 24,
+                    borderRadius: 12,
                     justifyContent: 'center',
                     alignItems: 'center',
                     paddingHorizontal: 24,
-                    width: '100%'
+                    width: '100%',
+                    marginBottom: 8
                   },
                   onPress: () => this.handleStartGame(),
                   children: [
@@ -2879,7 +2880,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       style: {
                         fontSize: 16,
                         fontWeight: '600',
-                        color: '#7C3AED',
+                        color: '#000000',
                         textAlign: 'center'
                       }
                     })
@@ -2889,9 +2890,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 // Game Settings button (directly in blue container)
                 ui.Pressable({
                   style: {
-                    height: 48,
+                    height: 42,
                     backgroundColor: '#FFFFFF',
-                    borderRadius: 24,
+                    borderRadius: 12,
                     justifyContent: 'center',
                     alignItems: 'center',
                     paddingHorizontal: 24,
@@ -2904,7 +2905,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       style: {
                         fontSize: 16,
                         fontWeight: '600',
-                        color: '#7C3AED',
+                        color: '#000000',
                         textAlign: 'center'
                       }
                     })
