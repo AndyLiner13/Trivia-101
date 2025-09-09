@@ -533,8 +533,8 @@ export class TriviaGame extends ui.UIComponent {
     new Binding(0.3)    // Bolt icon (slot 2) - modifiers.powerUps
   ];
   
-  // Dynamic icon source bindings for lock/ar face, timer and difficulty
-  private lockIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841')))); // Default: AR face icon
+  // Dynamic icon source bindings for lock, timer and difficulty
+  private lockIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613')))); // Default: lock icon
   private timerIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')))); // Default: normal timer
   private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533')))); // Default: medium difficulty
   
@@ -673,7 +673,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Initialize icon visibility with default state
     this.updateIconVisibility();
-    this.updateLockIcon('host-pregame'); // Initialize with host pre-game state (AR face icon)
+    this.updateLockIcon('host-pregame'); // Initialize with host pre-game state (lock icon)
     
     // Initialize the UI (shows config screen by default)
     this.resetGameState();
@@ -1426,7 +1426,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
     this.showConfigBinding.set(false); // Keep config hidden
-    this.updateLockIcon('host-pregame'); // Game ended, back to host pre-game state
+    this.updateLockIcon('host-pregame'); // Game ended, back to host pre-game state (lock icon)
     this.showErrorBinding.set(false);
     
     // Generate final leaderboard data and show game over screen
@@ -2058,12 +2058,12 @@ export class TriviaGame extends ui.UIComponent {
         break;
       case 'host-pregame':
       case 'participant-ready':
-        // Host pre-game and participant ready screens: Show AR face icon
-        iconAsset = BigInt('1247632857052841'); // ar_on_you
+        // Host pre-game and participant ready screens: Show lock icon (based on lock state)
+        iconAsset = this.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821'); // lock vs lock_open_right
         break;
       default:
-        // Default fallback to AR face icon
-        iconAsset = BigInt('1247632857052841'); // ar_on_you
+        // Default fallback to lock icon
+        iconAsset = this.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821'); // lock vs lock_open_right
         break;
     }
     
@@ -2094,7 +2094,7 @@ export class TriviaGame extends ui.UIComponent {
     if (eventData.isHost && this.world.getLocalPlayer().id.toString() === this.hostPlayerId) {
       // Update lock icon based on the host's current view mode
       if (eventData.viewMode === 'preGame') {
-        // Host pre-game should show AR face icon
+        // Host pre-game should show lock icon
         this.updateLockIcon('host-pregame');
       } else if (eventData.viewMode === 'gameSettings') {
         // Game settings should show lock/unlock toggle
