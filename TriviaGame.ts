@@ -690,10 +690,82 @@ export class TriviaGame extends ui.UIComponent {
       await this.loadPlayerHeadshot(player, 'INIT');
     }
     
+    // Preload all game assets (icons, backgrounds, question images) for better performance
+    await this.preloadGameAssets();
+    
     // Detect host player for existing players
     this.detectHostPlayer();
     
     console.log('✅ TriviaGame startup completed successfully');
+  }
+
+  private async preloadGameAssets(): Promise<void> {
+    console.log('⏳ Preloading game assets (icons, backgrounds, question images)...');
+    
+    // List of all texture IDs used in the game
+    const assetTextureIds = [
+      // Lock icons
+      '667887239673613',    // lock
+      '1667289068007821',   // lock_open_right
+      
+      // Timer icons
+      '2035737657163790',   // timer (normal)
+      '1466620987937637',   // timer_off
+      '1830264154592827',   // more_time
+      
+      // Difficulty icons
+      '794548760190405',    // sentiment_satisfied (easy)
+      '1138269638213533',   // sentiment_neutral (medium)
+      '712075511858553',    // skull (hard)
+      
+      // Other icons
+      '1997295517705951',   // logout
+      '1209829437577245',   // alarm icon
+      '24898127093144614',  // info_i
+      
+      // Shape icons (answer buttons)
+      '1290982519195562',   // triangle
+      '764343253011569',    // square
+      '797899126007085',    // circle
+      '1286736292915198',   // diamond
+      
+      // Background textures
+      '2770757216446813',   // TriviaGame configuration background
+      '1358485312536960',   // TriviaPhone question pages background
+      '1357119322709193',   // TriviaPhone pre-game background
+      '2225071587959777',   // TriviaPhone main background
+      '789207380187265',    // Left side icon background
+      '3148012692041551',   // Center icon background
+      '1320579906276560',   // Right side icon background
+      
+      // Question image textures from imageTextureMap
+      ...Object.values(imageTextureMap)
+    ];
+    
+    // Preload all assets by creating TextureAsset instances
+    const preloadPromises = assetTextureIds.map(async (textureId) => {
+      try {
+        const textureAsset = new hz.TextureAsset(BigInt(textureId));
+        // Creating an ImageSource forces the texture to be loaded
+        const imageSource = ImageSource.fromTextureAsset(textureAsset);
+        return imageSource;
+      } catch (error) {
+        console.log(`❌ Failed to preload asset texture ${textureId}: ${error}`);
+        return null;
+      }
+    });
+    
+    // Wait for all assets to finish preloading
+    const results = await Promise.all(preloadPromises);
+    const successCount = results.filter(result => result !== null).length;
+    const iconCount = 17; // First 17 are icons (including 4 shape icons)
+    const backgroundCount = 7; // Next 7 are backgrounds
+    const questionImageCount = Object.values(imageTextureMap).length;
+    
+    console.log(`✅ Successfully preloaded ${successCount}/${assetTextureIds.length} game assets:`);
+    console.log(`   - Icons (including shapes): ~${Math.min(successCount, iconCount)} loaded`);
+    console.log(`   - Backgrounds: ~${Math.min(Math.max(successCount - iconCount, 0), backgroundCount)} loaded`);
+    console.log(`   - Question Images: ~${Math.max(successCount - iconCount - backgroundCount, 0)}/${questionImageCount} loaded`);
   }
 
   private async loadTriviaQuestions(): Promise<void> {
