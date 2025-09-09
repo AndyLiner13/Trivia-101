@@ -147,11 +147,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private isHostBinding = new ui.Binding(false);
   private currentHostStatus = false;
 
-  // Ready state and button press bindings
-  private isReadyBinding = new ui.Binding(false);
-  private isReady = false;
-  private buttonPressedBinding = new ui.Binding(false);
-
   // Info popup bindings
   private showInfoPopupBinding = new ui.Binding(false);
   private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'modifiers'>('timer');
@@ -162,7 +157,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   constructor() {
     super();
-    this.isReady = false;
   }
 
   // Methods to interact with the native leaderboard system
@@ -1486,13 +1480,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   this.renderParticipantWrongResults()
                 ),
                 
-                // Waiting screen - default state during game
-                ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding], (mode, screenType, started) => 
-                    mode === 'pre-game' && started && (screenType === 'waiting' || !screenType)
-                  ),
-                  this.renderWaitingScreen()
-                ),
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding], (mode) => mode === 'game-settings'),
                   this.renderGameSettings()
@@ -2389,9 +2376,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.Binding.derive([this.isReadyBinding], (isReady) => 
-            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '791326273594709')))
-          ),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
           style: {
             width: '100%',
             height: '100%',
@@ -2519,192 +2504,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                  isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
-                )
+                backgroundColor: '#FFFFFF'
               },
-              onPress: () => this.handleGameSettingsOrReadyButton(),
-              onRelease: () => this.handleGameSettingsOrReadyButtonRelease(),
+              onPress: () => this.navigateToGameSettings(),
               children: [
                 ui.Text({
-                  text: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                    isHost ? 'Game Settings' : (isReady ? 'Not Ready' : 'Ready Up')
-                  ),
+                  text: 'Game Settings',
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                      isHost ? '#111111' : (isReady ? '#FFFFFF' : '#111111')
-                    ),
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            })
-          ]
-        })
-      ]
-    });
-  }
-
-  private renderWaitingScreen(): ui.UINode {
-    return ui.View({
-      style: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
-      },
-      children: [
-        // Full-screen background image
-        ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('797739146176423'))),
-          style: {
-            width: '100%',
-            height: '100%',
-            resizeMode: 'cover',
-            position: 'absolute',
-            top: 0,
-            left: 0
-          }
-        }),
-
-        // Header anchored to top - now fills full viewport height
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0, // Changed from 58 to 0 to fill viewport height
-            flexDirection: 'column'
-          },
-          children: [
-          ]
-        }),
-
-        // Crown container - separate from buttons
-        ui.UINode.if(
-          this.isHostBinding.derive(isHost => isHost),
-          ui.View({
-            style: {
-              position: 'absolute',
-              bottom: 230, // Moved up 80 pixels from 200
-              left: 0,
-              right: 0,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingLeft: 8,
-              paddingRight: 8,
-              paddingTop: 8,
-              paddingBottom: 8,
-              zIndex: 11 // Higher than buttons container
-            },
-            children: [
-              ui.Image({
-                source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))),
-                style: {
-                  width: 90,
-                  height: 81,
-                  tintColor: '#F7CE23'
-                }
-              })
-            ]
-          })
-        ),
-
-        // Buttons container - now only contains text and buttons
-        ui.View({
-          style: {
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            flexDirection: 'column',
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 8,
-            paddingBottom: 8,
-            zIndex: 10 // Ensure buttons appear on top of the red container
-          },
-          children: [
-            // "You are the host!" text
-            ui.UINode.if(
-              this.isHostBinding.derive(isHost => isHost),
-              ui.View({
-                style: {
-                  width: '100%',
-                  height: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 8
-                },
-                children: [
-                  ui.Text({
-                    text: 'You are the host!',
-                    style: {
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: '#FFFFFF',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              })
-            ),
-            // Start Game button (only for hosts)
-            ui.UINode.if(
-              this.isHostBinding.derive(isHost => isHost),
-              ui.Pressable({
-                style: {
-                  width: '100%',
-                  height: 42,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  backgroundColor: '#FFFFFF'
-                },
-                onPress: () => this.handleStartGame(),
-                children: [
-                  ui.Text({
-                    text: 'Start Game',
-                    style: {
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: '#111111',
-                      textAlign: 'center'
-                    }
-                  })
-                ]
-              })
-            ),
-            // Game Settings button (for both hosts and participants)
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: 42,
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                  isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
-                )
-              },
-              onPress: () => this.handleGameSettingsOrReadyButton(),
-              onRelease: () => this.handleGameSettingsOrReadyButtonRelease(),
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                    isHost ? 'Game Settings' : (isReady ? 'Not Ready' : 'Ready Up')
-                  ),
-                  style: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    color: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
-                      isHost ? '#111111' : (isReady ? '#FFFFFF' : '#111111')
-                    ),
+                    color: '#111111',
                     textAlign: 'center'
                   }
                 })
@@ -2841,7 +2650,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3064,7 +2873,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3339,33 +3148,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     });
   }
 
-  private handleGameSettingsOrReadyButton(): void {
-    if (this.isHost()) {
-      // Host: Navigate to game settings (don't change button pressed state)
-      this.navigateToGameSettings();
-    } else {
-      // Non-host: Set button pressed state
-      this.buttonPressedBinding.set(true);
-    }
-  }
 
-  private handleGameSettingsOrReadyButtonRelease(): void {
-    if (!this.isHost()) {
-      this.buttonPressedBinding.set(false);
-      this.handleReadyButtonPress();
-    }
-  }
-
-  private handleReadyButtonPress(): void {
-    if (this.isHost()) {
-      // Host should navigate to game settings
-      this.navigateToGameSettings();
-    } else {
-      // Participant should toggle ready state
-      this.isReady = !this.isReady;
-      this.isReadyBinding.set(this.isReady);
-    }
-  }
 
   private renderParticipantCorrectResults(): ui.UINode {
     return ui.View({
@@ -4120,11 +3903,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset host status
     this.currentHostStatus = this.isHost();
     this.isHostBinding.set(this.currentHostStatus);
-    
-    // Reset ready state
-    this.isReady = false;
-    this.isReadyBinding.set(false);
-    this.buttonPressedBinding.set(false);
     
     // Reset info popup
     this.showInfoPopupBinding.set(false);
