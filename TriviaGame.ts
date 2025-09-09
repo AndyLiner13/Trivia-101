@@ -2,6 +2,7 @@ import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
 import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
+import { PhoneManager } from './PhoneManager';
 
 // Interface for tracking phone assignments
 interface PhoneAssignment {
@@ -611,9 +612,8 @@ export class TriviaGame extends ui.UIComponent {
   private gameLoopTimeoutId: number | null = null;
   private timerInterval: number | null = null;
 
-  // Phone management properties
-  private phoneAssignments: PhoneAssignment[] = [];
-  private maxPhones = 20; // Maximum number of phone entities we expect
+  // Phone management - delegated to PhoneManager
+  private phoneManager: PhoneManager | null = null;
 
   // Player headshot cache - maps player ID to ImageSource
   private playerHeadshots = new Map<string, ImageSource | null>();
@@ -636,8 +636,8 @@ export class TriviaGame extends ui.UIComponent {
       this.handlePreviewModeTransition();
     }
     
-    // Initialize phone management
-    this.discoverPhoneEntities();
+    // Initialize phone management via PhoneManager
+    this.initializePhoneManager();
     this.setupPlayerEvents();
     
     // Register this TriviaGame instance with the world for TriviaPhone access
@@ -5404,20 +5404,16 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   // Phone management methods
-  private discoverPhoneEntities(): void {
-    // Find all entities in the world with the "TriviaPhone" tag
-    const allEntitiesInWorld = this.world.getEntitiesWithTags(['TriviaPhone']);
-
-    for (const entity of allEntitiesInWorld) {
-      this.phoneAssignments.push({
-        phoneEntity: entity,
-        assignedPlayer: null,
-        isInUse: false
-      });
-
-      // Initially set the phone to be invisible
-      entity.visible.set(false);
-    }
+  private async initializePhoneManager(): Promise<void> {
+    console.log('📱 Initializing PhoneManager...');
+    
+    // Create PhoneManager instance
+    this.phoneManager = new PhoneManager();
+    
+    // Initialize the phone manager
+    await this.phoneManager.start();
+    
+    console.log('✅ PhoneManager initialized successfully');
   }
 
   private setupPlayerEvents(): void {
@@ -5444,13 +5440,14 @@ export class TriviaGame extends ui.UIComponent {
     // Initialize the reactive binding with current players
     this.playersListBinding.set([...this.currentPlayers]);
     
-    existingPlayers.forEach(player => {
-      this.assignPhoneToPlayer(player);
-    });
+    // PhoneManager will automatically assign phones to existing players through its initialization
   }
 
   private onPlayerEnter(player: hz.Player): void {
-    this.assignPhoneToPlayer(player);
+    console.log(`👥 Player joined: ${player.name.get()}`);
+    
+    // PhoneManager will automatically handle phone assignment via its own event handlers
+    // We just need to handle TriviaGame-specific logic here
     
     // Load player headshot using Social API
     this.loadPlayerHeadshot(player, 'RUNTIME');
@@ -5487,7 +5484,9 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onPlayerExit(player: hz.Player): void {
-    this.releasePlayerPhone(player);
+    console.log(`👋 Player left: ${player.name.get()}`);
+    
+    // PhoneManager will automatically handle phone release via its own event handlers
     
     // Clean up player headshot from cache
     const playerId = player.id.toString();
@@ -5619,53 +5618,20 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private assignPhoneToPlayer(player: hz.Player): void {
-    // Check if player already has a phone assigned
-    const existingAssignment = this.phoneAssignments.find(
-      assignment => assignment.assignedPlayer === player
-    );
-
-    if (existingAssignment) {
-      return;
-    }
-
-    // Find an available phone
-    const availablePhone = this.phoneAssignments.find(
-      assignment => !assignment.isInUse && assignment.assignedPlayer === null
-    );
-
-    if (availablePhone) {
-      // Assign the phone to the player
-      availablePhone.assignedPlayer = player;
-      availablePhone.isInUse = true;
-
-      // Make the phone visible only to this player
-      availablePhone.phoneEntity.visible.set(false); // Hide from everyone first
-      // Note: Player-specific visibility may need to be handled differently in Horizon
-      // You may need to use a different approach for per-player visibility
-      availablePhone.phoneEntity.visible.set(true);
-
-      // Asset Pool Gizmo will handle ownership assignment automatically
+    // Delegate to PhoneManager
+    if (this.phoneManager) {
+      this.phoneManager.assignPhoneToPlayer(player);
     } else {
-      // Optionally create a new phone entity dynamically if none available
-      // This would require instantiating a new CustomUI entity
-      this.createNewPhoneForPlayer(player);
+      console.log('❌ PhoneManager not initialized');
     }
   }
 
   private releasePlayerPhone(player: hz.Player): void {
-    const playerAssignment = this.phoneAssignments.find(
-      assignment => assignment.assignedPlayer === player
-    );
-
-    if (playerAssignment) {
-      // Hide the phone entity
-      playerAssignment.phoneEntity.visible.set(false);
-
-      // Asset Pool Gizmo will handle ownership removal automatically
-
-      // Mark as available
-      playerAssignment.assignedPlayer = null;
-      playerAssignment.isInUse = false;
+    // Delegate to PhoneManager
+    if (this.phoneManager) {
+      this.phoneManager.releasePlayerPhone(player);
+    } else {
+      console.log('❌ PhoneManager not initialized');
     }
   }
 
@@ -5677,41 +5643,47 @@ export class TriviaGame extends ui.UIComponent {
 
   // Public method to get phone assignment for a player (for debugging)
   public getPlayerPhone(player: hz.Player): hz.Entity | null {
-    const assignment = this.phoneAssignments.find(
-      assignment => assignment.assignedPlayer === player
-    );
-    return assignment ? assignment.phoneEntity : null;
+    if (this.phoneManager) {
+      return this.phoneManager.getPlayerPhone(player);
+    }
+    console.log('❌ PhoneManager not initialized');
+    return null;
   }
 
   // Public method to get all assignments (for debugging)
   public getAssignments(): PhoneAssignment[] {
-    return [...this.phoneAssignments];
+    if (this.phoneManager) {
+      return this.phoneManager.getPhoneAssignments();
+    }
+    console.log('❌ PhoneManager not initialized');
+    return [];
   }
 
   // Method to handle phone availability changes
   public notifyPhoneAvailable(phoneEntity: hz.Entity): void {
-    const assignment = this.phoneAssignments.find(
-      assignment => assignment.phoneEntity === phoneEntity
-    );
-
-    if (assignment && assignment.isInUse) {
-      assignment.isInUse = false;
-
-      // Try to assign to any waiting players if needed
-      this.tryAssignWaitingPlayers();
+    // With PhoneManager, this is automatically handled
+    if (this.phoneManager) {
+      console.log('📱 Phone availability handled by PhoneManager');
+    } else {
+      console.log('❌ PhoneManager not initialized');
     }
   }
 
-  private tryAssignWaitingPlayers(): void {
-    // Find players without phones and try to assign them
-    const playersWithoutPhones = this.world.getPlayers().filter(player => {
-      return !this.phoneAssignments.some(
-        assignment => assignment.assignedPlayer === player
-      );
-    });
+  // Helper method for debugging phone assignments
+  public debugPhoneAssignments(): void {
+    if (this.phoneManager) {
+      this.phoneManager.debugPhoneAssignments();
+    } else {
+      console.log('❌ PhoneManager not initialized');
+    }
+  }
 
-    for (const player of playersWithoutPhones) {
-      this.assignPhoneToPlayer(player);
+  // Helper method to refresh phone assignments if needed
+  public refreshPhoneAssignments(): void {
+    if (this.phoneManager) {
+      this.phoneManager.refreshAllAssignments();
+    } else {
+      console.log('❌ PhoneManager not initialized');
     }
   }
 }
