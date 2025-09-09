@@ -516,17 +516,17 @@ export class TriviaGame extends ui.UIComponent {
     new Binding('#16A34A')  // Default green
   ];
   
-  // Icon visibility bindings for configuration screen
-  private leftIconVisibility = [
-    new Binding(false), // Lock icon (slot 0) - not used in new system
-    new Binding(true),  // Sentiment icon (slot 1) - difficulty type
-    new Binding(true)   // Timer icon (slot 2) - timer type
+  // Icon opacity bindings for configuration screen (always rendered, but opacity changes)
+  private leftIconOpacity = [
+    new Binding(1.0),   // Lock icon (slot 0) - always visible now
+    new Binding(1.0),   // Sentiment icon (slot 1) - difficulty type - always visible
+    new Binding(1.0)    // Timer icon (slot 2) - timer type - always visible
   ];
   
-  private rightIconVisibility = [
-    new Binding(true),  // Autoplay icon (slot 0) - modifiers.autoAdvance
-    new Binding(true),  // All Inclusive icon (slot 1) - modifiers.bonusRounds
-    new Binding(true)   // Bolt icon (slot 2) - modifiers.powerUps
+  private rightIconOpacity = [
+    new Binding(0.3),   // Autoplay icon (slot 0) - modifiers.autoAdvance
+    new Binding(0.3),   // All Inclusive icon (slot 1) - modifiers.bonusRounds
+    new Binding(0.3)    // Bolt icon (slot 2) - modifiers.powerUps
   ];
   
   // Dynamic icon source bindings for timer and difficulty
@@ -2012,17 +2012,15 @@ export class TriviaGame extends ui.UIComponent {
     }
     this.difficultyIconSourceBinding.set(ImageSource.fromTextureAsset(new hz.TextureAsset(difficultyIconAsset)));
     
-    // Timer and difficulty icons are always visible
-    this.leftIconVisibility[2].set(true); // Timer icon
-    this.leftIconVisibility[1].set(true); // Difficulty icon
+    // Left side icons are always fully visible (lock, difficulty, timer)
+    this.leftIconOpacity[0].set(1.0); // Lock icon - always visible
+    this.leftIconOpacity[1].set(1.0); // Difficulty icon - always visible  
+    this.leftIconOpacity[2].set(1.0); // Timer icon - always visible
     
-    // Modifiers control right side icon visibility (can be all, some, or none)
-    this.rightIconVisibility[0].set(this.modifiers.autoAdvance);    // Autoplay
-    this.rightIconVisibility[1].set(this.modifiers.bonusRounds);   // All Inclusive
-    this.rightIconVisibility[2].set(this.modifiers.powerUps);     // Bolt
-    
-    // Lock icon is not used in new system
-    this.leftIconVisibility[0].set(false);
+    // Right side modifiers control opacity (1.0 = enabled, 0.3 = disabled)
+    this.rightIconOpacity[0].set(this.modifiers.autoAdvance ? 1.0 : 0.3);    // Autoplay
+    this.rightIconOpacity[1].set(this.modifiers.bonusRounds ? 1.0 : 0.3);   // All Inclusive  
+    this.rightIconOpacity[2].set(this.modifiers.powerUps ? 1.0 : 0.3);      // Bolt
   }
 
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
@@ -2416,51 +2414,45 @@ export class TriviaGame extends ui.UIComponent {
                       paddingVertical: 72, // Increased from 16 to 50 for more top/bottom margins
                     },
                     children: [
-                      // Lock icon (hidden in new system)
-                      UINode.if(
-                        this.leftIconVisibility[0],
-                        View({
+                      // Lock icon (now visible with opacity control)
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
                           style: {
-                          },
-                          children: Image({
-                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
-                            style: {
-                              width: 36, // Scaled up from 32
-                              height: 36 // Scaled up from 32
-                            }
-                          })
+                            width: 36, // Scaled up from 32
+                            height: 36, // Scaled up from 32
+                            opacity: this.leftIconOpacity[0]
+                          }
                         })
-                      ),
+                      }),
                       // Difficulty icon (dynamic based on selected difficulty)
-                      UINode.if(
-                        this.leftIconVisibility[1],
-                        View({
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: this.difficultyIconSourceBinding,
                           style: {
-                          },
-                          children: Image({
-                            source: this.difficultyIconSourceBinding,
-                            style: {
-                              width: 36, // Scaled up from 32
-                              height: 36 // Scaled up from 32
-                            }
-                          })
+                            width: 36, // Scaled up from 32
+                            height: 36, // Scaled up from 32
+                            opacity: this.leftIconOpacity[1]
+                          }
                         })
-                      ),
+                      }),
                       // Timer icon (dynamic based on selected timer type)
-                      UINode.if(
-                        this.leftIconVisibility[2],
-                        View({
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: this.timerIconSourceBinding,
                           style: {
-                          },
-                          children: Image({
-                            source: this.timerIconSourceBinding,
-                            style: {
-                              width: 36, // Scaled up from 32
-                              height: 36 // Scaled up from 32
-                            }
-                          })
+                            width: 36, // Scaled up from 32
+                            height: 36, // Scaled up from 32
+                            opacity: this.leftIconOpacity[2]
+                          }
                         })
-                      )
+                      })
                     ]
                   }),
 
@@ -2479,50 +2471,44 @@ export class TriviaGame extends ui.UIComponent {
                     },
                     children: [
                       // Autoplay icon (modifier: autoAdvance)
-                      UINode.if(
-                        this.rightIconVisibility[0],
-                        View({
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
                           style: {
-                          },
-                          children: Image({
-                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
-                            style: {
-                              width: 32, // Scaled down from 48 by 4px
-                              height: 32 // Scaled down from 48 by 4px
-                            }
-                          })
+                            width: 32, // Scaled down from 48 by 4px
+                            height: 32, // Scaled down from 48 by 4px
+                            opacity: this.rightIconOpacity[0]
+                          }
                         })
-                      ),
+                      }),
                       // All Inclusive icon (modifier: bonusRounds)
-                      UINode.if(
-                        this.rightIconVisibility[1],
-                        View({
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
                           style: {
-                          },
-                          children: Image({
-                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
-                            style: {
-                              width: 36, // Scaled down from 48 by 4px
-                              height: 36 // Scaled down from 48 by 4px
-                            }
-                          })
+                            width: 36, // Scaled down from 48 by 4px
+                            height: 36, // Scaled down from 48 by 4px
+                            opacity: this.rightIconOpacity[1]
+                          }
                         })
-                      ),
+                      }),
                       // Bolt icon (modifier: powerUps)
-                      UINode.if(
-                        this.rightIconVisibility[2],
-                        View({
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
                           style: {
-                          },
-                          children: Image({
-                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
-                            style: {
-                              width: 36, // Scaled down from 48 by 4px
-                              height: 36 // Scaled down from 48 by 4px
-                            }
-                          })
+                            width: 36, // Scaled down from 48 by 4px
+                            height: 36, // Scaled down from 48 by 4px
+                            opacity: this.rightIconOpacity[2]
+                          }
                         })
-                      )
+                      })
                     ]
                   }),
 
