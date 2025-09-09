@@ -2460,7 +2460,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Text({
-                  text: 'Are you sure?',
+                  text: ui.Binding.derive([this.isHostBinding], (isHost) => 
+                    isHost ? 'End Game?' : 'Are you sure?'
+                  ),
                   style: {
                     fontSize: 14,
                     fontWeight: '700',
@@ -2540,35 +2542,69 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleLogoutConfirm(): void {
-    console.log('🚪 TriviaPhone: User confirmed logout');
+    const isHost = this.isHost();
     
-    // Send logout event to TriviaGame to remove this player from active players
-    this.sendNetworkBroadcastEvent(triviaPlayerLogoutEvent, {
-      playerId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
-    });
-    
-    // Navigate to pre-game screen
-    this.currentViewMode = 'pre-game';
-    this.currentViewModeBinding.set('pre-game');
-    
-    // Close the popup
-    this.showLogoutPopupBinding.set(false);
-    
-    // Reset game state for this player
-    this.gameStarted = false;
-    this.gameStartedBinding.set(false);
-    this.currentQuestionIndex = 0;
-    this.currentQuestionIndexBinding.set(0);
-    this.score = 0;
-    this.scoreBinding.set(0);
-    this.selectedAnswer = null;
-    this.selectedAnswerBinding.set(null);
-    this.showResult = false;
-    this.showResultBinding.set(false);
-    this.answerSubmitted = false;
-    this.answerSubmittedBinding.set(false);
-    
-    console.log('✅ TriviaPhone: Logout completed - user returned to pre-game screen');
+    if (isHost) {
+      console.log('🚪 TriviaPhone: Host confirmed logout - ending game for everyone');
+      
+      // Send game reset event to end the game for all players
+      this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
+        hostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+      });
+      
+      // Navigate to pre-game screen
+      this.currentViewMode = 'pre-game';
+      this.currentViewModeBinding.set('pre-game');
+      
+      // Close the popup
+      this.showLogoutPopupBinding.set(false);
+      
+      // Reset game state for this player
+      this.gameStarted = false;
+      this.gameStartedBinding.set(false);
+      this.currentQuestionIndex = 0;
+      this.currentQuestionIndexBinding.set(0);
+      this.score = 0;
+      this.scoreBinding.set(0);
+      this.selectedAnswer = null;
+      this.selectedAnswerBinding.set(null);
+      this.showResult = false;
+      this.showResultBinding.set(false);
+      this.answerSubmitted = false;
+      this.answerSubmittedBinding.set(false);
+      
+      console.log('✅ TriviaPhone: Host logout completed - game ended for all players');
+    } else {
+      console.log('🚪 TriviaPhone: Participant confirmed logout');
+      
+      // Send logout event to TriviaGame to remove this player from active players
+      this.sendNetworkBroadcastEvent(triviaPlayerLogoutEvent, {
+        playerId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+      });
+      
+      // Navigate to pre-game screen
+      this.currentViewMode = 'pre-game';
+      this.currentViewModeBinding.set('pre-game');
+      
+      // Close the popup
+      this.showLogoutPopupBinding.set(false);
+      
+      // Reset game state for this player
+      this.gameStarted = false;
+      this.gameStartedBinding.set(false);
+      this.currentQuestionIndex = 0;
+      this.currentQuestionIndexBinding.set(0);
+      this.score = 0;
+      this.scoreBinding.set(0);
+      this.selectedAnswer = null;
+      this.selectedAnswerBinding.set(null);
+      this.showResult = false;
+      this.showResultBinding.set(false);
+      this.answerSubmitted = false;
+      this.answerSubmittedBinding.set(false);
+      
+      console.log('✅ TriviaPhone: Participant logout completed - returned to pre-game screen');
+    }
   }
 
   private renderTriviaGameWithTwoOptions(): ui.UINode {
