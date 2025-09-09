@@ -4501,7 +4501,7 @@ export class TriviaGame extends ui.UIComponent {
                       style: {
                         fontSize: 18,
                         fontWeight: 'bold',
-                        color: 'black'
+                        color: 'white'
                       }
                     })
                   )
@@ -4519,7 +4519,7 @@ export class TriviaGame extends ui.UIComponent {
                 }),
                 style: {
                   fontSize: 10,
-                  color: 'black',
+                  color: 'white',
                   textAlign: 'center',
                   maxWidth: 60,
                   overflow: 'hidden'

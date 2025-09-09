@@ -2470,7 +2470,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ]
               })
             ),
-            // Start Game button (only for hosts)
+            // Start Game button - only show for hosts
             ui.UINode.if(
               this.isHostBinding.derive(isHost => isHost),
               ui.Pressable({
@@ -2480,7 +2480,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  marginBottom: 8,
                   backgroundColor: '#FFFFFF'
                 },
                 onPress: () => this.handleStartGame(),
@@ -2497,28 +2496,35 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ]
               })
             ),
-            ui.Pressable({
-              style: {
-                width: '100%',
-                height: 42,
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#FFFFFF'
-              },
-              onPress: () => this.navigateToGameSettings(),
-              children: [
-                ui.Text({
-                  text: 'Game Settings',
-                  style: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    color: '#111111',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            })
+            // Game Settings button - only show for participants when lock is NOT enabled
+            ui.UINode.if(
+              ui.Binding.derive([this.isHostBinding, this.gameSettingsBinding], (isHost, settings) =>
+                isHost || !settings.isLocked
+              ),
+              ui.Pressable({
+                style: {
+                  width: '100%',
+                  height: 42,
+                  borderRadius: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: '#FFFFFF',
+                  marginTop: 8
+                },
+                onPress: () => this.currentViewModeBinding.set('game-settings'),
+                children: [
+                  ui.Text({
+                    text: 'Game Settings',
+                    style: {
+                      fontSize: 18,
+                      fontWeight: '600',
+                      color: '#111111',
+                      textAlign: 'center'
+                    }
+                  })
+                ]
+              })
+            )
           ]
         })
       ]
@@ -2650,7 +2656,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
           style: {
             width: '100%',
             height: '100%',
@@ -2873,7 +2879,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
           style: {
             width: '100%',
             height: '100%',
