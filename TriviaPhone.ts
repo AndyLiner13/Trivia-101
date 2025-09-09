@@ -16,6 +16,7 @@ const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings
 const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
 const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
 const triviaAwardPointsEvent = new hz.NetworkEvent<{ playerId: string; points: number }>('triviaAwardPoints');
+const triviaPlayerLogoutEvent = new hz.NetworkEvent<{ playerId: string }>('triviaPlayerLogout');
 
 // Host view mode events
 const hostViewModeEvent = new hz.NetworkEvent<{ hostId: string, viewMode: 'pre-game' | 'game-settings' }>('hostViewMode');
@@ -150,6 +151,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Info popup bindings
   private showInfoPopupBinding = new ui.Binding(false);
   private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'modifiers'>('timer');
+
+  // Logout popup binding
+  private showLogoutPopupBinding = new ui.Binding(false);
 
   // Debug outline toggle binding
   private showOutlinesBinding = new ui.Binding(false);
@@ -2171,6 +2175,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.UINode.if(
           this.showInfoPopupBinding,
           this.renderInfoPopup()
+        ),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
         )
       ]
     });
@@ -2415,6 +2425,150 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         })
       ]
     });
+  }
+
+  private renderLogoutPopup(): ui.UINode {
+    return ui.View({
+      style: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000
+      },
+      children: [
+        ui.View({
+          style: {
+            backgroundColor: '#FFFFFF',
+            borderRadius: 8,
+            padding: 8,
+            minWidth: 140,
+            maxWidth: 140,
+            marginHorizontal: 4
+          },
+          children: [
+            // Title
+            ui.View({
+              style: {
+                paddingTop: 2,
+                paddingBottom: 8,
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: 'Are you sure?',
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '700',
+                    color: '#000000',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Yes button (green)
+            ui.View({
+              style: {
+                paddingBottom: 8,
+                alignItems: 'center'
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#16A34A',
+                    borderRadius: 4,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    minWidth: 120,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.handleLogoutConfirm(),
+                  children: [
+                    ui.Text({
+                      text: 'Yes',
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // No button (red)
+            ui.View({
+              style: {
+                alignItems: 'center'
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#DC2626',
+                    borderRadius: 4,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    minWidth: 120,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.showLogoutPopupBinding.set(false),
+                  children: [
+                    ui.Text({
+                      text: 'No',
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
+  private handleLogoutConfirm(): void {
+    console.log('🚪 TriviaPhone: User confirmed logout');
+    
+    // Send logout event to TriviaGame to remove this player from active players
+    this.sendNetworkBroadcastEvent(triviaPlayerLogoutEvent, {
+      playerId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+    });
+    
+    // Navigate to pre-game screen
+    this.currentViewMode = 'pre-game';
+    this.currentViewModeBinding.set('pre-game');
+    
+    // Close the popup
+    this.showLogoutPopupBinding.set(false);
+    
+    // Reset game state for this player
+    this.gameStarted = false;
+    this.gameStartedBinding.set(false);
+    this.currentQuestionIndex = 0;
+    this.currentQuestionIndexBinding.set(0);
+    this.score = 0;
+    this.scoreBinding.set(0);
+    this.selectedAnswer = null;
+    this.selectedAnswerBinding.set(null);
+    this.showResult = false;
+    this.showResultBinding.set(false);
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
+    
+    console.log('✅ TriviaPhone: Logout completed - user returned to pre-game screen');
   }
 
   private renderTriviaGameWithTwoOptions(): ui.UINode {
@@ -2835,7 +2989,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }),
 
             // Settings icon container
-            ui.View({
+            ui.Pressable({
               style: {
                 backgroundColor: '#191919',
                 borderRadius: 8,
@@ -2844,6 +2998,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: 32,
                 justifyContent: 'center',
                 alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
+                this.showLogoutPopupBinding.set(true);
               },
               children: [
                 ui.Image({
@@ -2993,7 +3151,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             })
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }
@@ -3058,7 +3222,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }),
 
             // Settings icon container
-            ui.View({
+            ui.Pressable({
               style: {
                 backgroundColor: '#191919',
                 borderRadius: 8,
@@ -3067,6 +3231,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: 32,
                 justifyContent: 'center',
                 alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
+                this.showLogoutPopupBinding.set(true);
               },
               children: [
                 ui.Image({
@@ -3278,7 +3446,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             })
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }
@@ -3345,7 +3519,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }),
 
             // Settings icon container
-            ui.View({
+            ui.Pressable({
               style: {
                 backgroundColor: '#191919',
                 borderRadius: 8,
@@ -3354,6 +3528,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: 32,
                 justifyContent: 'center',
                 alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
+                this.showLogoutPopupBinding.set(true);
               },
               children: [
                 ui.Image({
@@ -3434,7 +3612,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             })
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }
@@ -3499,7 +3683,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }),
 
             // Settings icon container
-            ui.View({
+            ui.Pressable({
               style: {
                 backgroundColor: '#191919',
                 borderRadius: 8,
@@ -3508,6 +3692,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: 32,
                 justifyContent: 'center',
                 alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
+                this.showLogoutPopupBinding.set(true);
               },
               children: [
                 ui.Image({
@@ -3588,7 +3776,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             })
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }
@@ -3653,7 +3847,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }),
 
             // Settings icon container
-            ui.View({
+            ui.Pressable({
               style: {
                 backgroundColor: '#191919',
                 borderRadius: 8,
@@ -3662,6 +3856,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: 32,
                 justifyContent: 'center',
                 alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
+                this.showLogoutPopupBinding.set(true);
               },
               children: [
                 ui.Image({
@@ -3787,7 +3985,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               })
             )
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }
@@ -3852,7 +4056,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             }),
 
             // Settings icon container
-            ui.View({
+            ui.Pressable({
               style: {
                 backgroundColor: '#191919',
                 borderRadius: 8,
@@ -3861,6 +4065,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 height: 32,
                 justifyContent: 'center',
                 alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
+                this.showLogoutPopupBinding.set(true);
               },
               children: [
                 ui.Image({
@@ -3988,7 +4196,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               })
             )
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }

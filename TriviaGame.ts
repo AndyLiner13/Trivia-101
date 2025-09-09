@@ -255,6 +255,11 @@ const triviaPlayerUpdateEvent = new hz.NetworkEvent<{
   answerCount: number;
 }>('triviaPlayerUpdate');
 
+// Logout event for when players opt out of the game
+const triviaPlayerLogoutEvent = new hz.NetworkEvent<{
+  playerId: string;
+}>('triviaPlayerLogout');
+
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
   {
@@ -1137,6 +1142,9 @@ export class TriviaGame extends ui.UIComponent {
 
     // Listen for player tracking synchronization events
     this.connectNetworkBroadcastEvent(triviaPlayerUpdateEvent, this.onPlayerUpdate.bind(this));
+    
+    // Listen for player logout events
+    this.connectNetworkBroadcastEvent(triviaPlayerLogoutEvent, this.onPlayerLogout.bind(this));
   }
 
   private resetGameState(): void {
@@ -5628,6 +5636,26 @@ export class TriviaGame extends ui.UIComponent {
 
     // Update answer count binding
     this.answerCountBinding.set(eventData.answerCount.toString());
+  }
+
+  private onPlayerLogout(eventData: { playerId: string }): void {
+    console.log(`🚪 TriviaGame: Player ${eventData.playerId} logged out and will be excluded from answer counts`);
+    
+    // Remove the player from playersInWorld set so they won't count toward answer requirements
+    this.playersInWorld.delete(eventData.playerId);
+    
+    // Also remove from playersAnswered if they had answered the current question
+    this.playersAnswered.delete(eventData.playerId);
+    
+    // Update answer count binding to reflect the change
+    this.answerCountBinding.set(this.playersAnswered.size.toString());
+    
+    // Broadcast updated player tracking state to all clients
+    this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
+      playersInWorld: Array.from(this.playersInWorld),
+      playersAnswered: Array.from(this.playersAnswered),
+      answerCount: this.playersAnswered.size
+    });
   }
 
   private onUIStateUpdate(eventData: { showConfig: boolean, showResults: boolean, showWaiting: boolean, showLeaderboard: boolean, showError: boolean, errorMessage?: string }): void {
