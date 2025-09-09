@@ -529,6 +529,10 @@ export class TriviaGame extends ui.UIComponent {
     new Binding(true)   // Bolt icon (slot 2) - modifiers.powerUps
   ];
   
+  // Dynamic icon source bindings for timer and difficulty
+  private timerIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')))); // Default: normal timer
+  private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533')))); // Default: medium difficulty
+  
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
   private isLocalPlayerHost: boolean = false;
@@ -1974,14 +1978,43 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private updateIconVisibility(): void {
-    // Timer type controls which timer icon shows (only 1 of 3)
-    // For now, we'll show all timer icons since we only have one timer icon in the layout
-    // Left side icon 2 (timer) - always show for timer type selection
-    this.leftIconVisibility[2].set(true);
+    // Update timer icon based on selected timer type
+    let timerIconAsset: bigint;
+    switch (this.timerType) {
+      case 'slow':
+        timerIconAsset = BigInt('2035737657163790'); // timer_off
+        break;
+      case 'normal':
+        timerIconAsset = BigInt('2035737657163790'); // timer (same as slow)
+        break;
+      case 'fast':
+        timerIconAsset = BigInt('1830264154592827'); // more_time
+        break;
+      default:
+        timerIconAsset = BigInt('2035737657163790'); // default to normal
+    }
+    this.timerIconSourceBinding.set(ImageSource.fromTextureAsset(new hz.TextureAsset(timerIconAsset)));
     
-    // Difficulty type controls which difficulty icon shows (only 1 of 3)
-    // Left side icon 1 (sentiment) - always show for difficulty type selection
-    this.leftIconVisibility[1].set(true);
+    // Update difficulty icon based on selected difficulty type
+    let difficultyIconAsset: bigint;
+    switch (this.difficultyType) {
+      case 'easy':
+        difficultyIconAsset = BigInt('794548760190405'); // sentiment_satisfied
+        break;
+      case 'medium':
+        difficultyIconAsset = BigInt('1138269638213533'); // sentiment_neutral
+        break;
+      case 'hard':
+        difficultyIconAsset = BigInt('712075511858553'); // skull
+        break;
+      default:
+        difficultyIconAsset = BigInt('1138269638213533'); // default to medium
+    }
+    this.difficultyIconSourceBinding.set(ImageSource.fromTextureAsset(new hz.TextureAsset(difficultyIconAsset)));
+    
+    // Timer and difficulty icons are always visible
+    this.leftIconVisibility[2].set(true); // Timer icon
+    this.leftIconVisibility[1].set(true); // Difficulty icon
     
     // Modifiers control right side icon visibility (can be all, some, or none)
     this.rightIconVisibility[0].set(this.modifiers.autoAdvance);    // Autoplay
@@ -2398,14 +2431,14 @@ export class TriviaGame extends ui.UIComponent {
                           })
                         })
                       ),
-                      // Sentiment Neutral icon (difficulty selection)
+                      // Difficulty icon (dynamic based on selected difficulty)
                       UINode.if(
                         this.leftIconVisibility[1],
                         View({
                           style: {
                           },
                           children: Image({
-                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
+                            source: this.difficultyIconSourceBinding,
                             style: {
                               width: 36, // Scaled up from 32
                               height: 36 // Scaled up from 32
@@ -2413,14 +2446,14 @@ export class TriviaGame extends ui.UIComponent {
                           })
                         })
                       ),
-                      // Timer icon (timer selection)
+                      // Timer icon (dynamic based on selected timer type)
                       UINode.if(
                         this.leftIconVisibility[2],
                         View({
                           style: {
                           },
                           children: Image({
-                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                            source: this.timerIconSourceBinding,
                             style: {
                               width: 36, // Scaled up from 32
                               height: 36 // Scaled up from 32
