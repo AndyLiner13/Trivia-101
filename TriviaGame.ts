@@ -215,6 +215,7 @@ const triviaSettingsUpdateEvent = new hz.NetworkEvent<{
     timeLimit: number;
     timerType: string;
     difficultyType: string;
+    isLocked: boolean;
     modifiers: {
       autoAdvance: boolean;
       powerUps: boolean;
@@ -222,6 +223,9 @@ const triviaSettingsUpdateEvent = new hz.NetworkEvent<{
     };
   };
 }>('triviaSettingsUpdate');
+
+// Host view mode events
+const hostViewModeEvent = new hz.NetworkEvent<{ hostId: string, viewMode: 'pre-game' | 'game-settings' }>('hostViewMode');
 
 // Timer synchronization events
 const triviaTimerUpdateEvent = new hz.NetworkEvent<{
@@ -529,13 +533,15 @@ export class TriviaGame extends ui.UIComponent {
     new Binding(0.3)    // Bolt icon (slot 2) - modifiers.powerUps
   ];
   
-  // Dynamic icon source bindings for timer and difficulty
+  // Dynamic icon source bindings for lock/ar face, timer and difficulty
+  private lockIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841')))); // Default: AR face icon
   private timerIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')))); // Default: normal timer
   private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533')))); // Default: medium difficulty
   
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
   private isLocalPlayerHost: boolean = false;
+  private isShowingConfigScreen: boolean = true; // Track config screen state for icon updates
   private gameConfig = {
     timeLimit: 30,
     autoAdvance: true,
@@ -547,6 +553,7 @@ export class TriviaGame extends ui.UIComponent {
   // Modifier settings from TriviaPhone
   private timerType: string = 'normal';
   private difficultyType: string = 'medium';
+  private isLocked: boolean = true;
   private modifiers = {
     autoAdvance: false,
     powerUps: false,
@@ -666,6 +673,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Initialize icon visibility with default state
     this.updateIconVisibility();
+    this.updateLockIcon('host-pregame'); // Initialize with host pre-game state (AR face icon)
     
     // Initialize the UI (shows config screen by default)
     this.resetGameState();
@@ -964,6 +972,9 @@ export class TriviaGame extends ui.UIComponent {
 
     // Listen for settings update events from TriviaPhone
     this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, this.onSettingsUpdate.bind(this));
+
+    // Listen for host view mode changes
+    this.connectNetworkBroadcastEvent(hostViewModeEvent, this.onHostViewModeChanged.bind(this));
 
     // Listen for timer synchronization events
     this.connectNetworkBroadcastEvent(triviaTimerUpdateEvent, this.onTimerUpdate.bind(this));
@@ -1415,6 +1426,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showLeaderboardBinding.set(false);
     this.isShowingLeaderboard = false;
     this.showConfigBinding.set(false); // Keep config hidden
+    this.updateLockIcon('host-pregame'); // Game ended, back to host pre-game state
     this.showErrorBinding.set(false);
     
     // Generate final leaderboard data and show game over screen
@@ -1953,7 +1965,7 @@ export class TriviaGame extends ui.UIComponent {
     this.showNextQuestion();
   }
 
-  private async onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }): Promise<void> {
+  private async onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, isLocked: boolean, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }): Promise<void> {
     
     // Update the game configuration immediately when settings change in TriviaPhone
     this.gameConfig = {
@@ -1967,11 +1979,17 @@ export class TriviaGame extends ui.UIComponent {
     // Store modifier settings for icon visibility
     this.timerType = eventData.settings.timerType;
     this.difficultyType = eventData.settings.difficultyType;
+    this.isLocked = eventData.settings.isLocked;
     this.modifiers = eventData.settings.modifiers;
     
     // Update the binding to reflect changes in the UI
     this.gameConfigBinding.set(this.gameConfig);
     this.updateIconVisibility();
+    
+    // Update lock icon if we're in config screen (lock state may have changed)
+    if (this.isShowingConfigScreen) {
+      this.updateLockIcon('config');
+    }
     
     // Update questions based on new category and difficulty (now async with lazy loading)
     await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
@@ -2023,6 +2041,35 @@ export class TriviaGame extends ui.UIComponent {
     this.rightIconOpacity[2].set(this.modifiers.powerUps ? 1.0 : 0.3);      // Bolt
   }
 
+  private updateLockIcon(screenType: 'config' | 'question' | 'results' | 'leaderboard' | 'host-pregame' | 'participant-ready'): void {
+    // Update icon based on screen type and current state
+    let iconAsset: bigint;
+    
+    switch (screenType) {
+      case 'config':
+        // Game settings page: Show lock icon (locked/unlocked based on state)
+        iconAsset = this.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821'); // lock vs lock_open_right
+        break;
+      case 'question':
+      case 'results':
+      case 'leaderboard':
+        // Question, results, and leaderboard screens: Show logout icon
+        iconAsset = BigInt('1997295517705951'); // logout
+        break;
+      case 'host-pregame':
+      case 'participant-ready':
+        // Host pre-game and participant ready screens: Show AR face icon
+        iconAsset = BigInt('1247632857052841'); // ar_on_you
+        break;
+      default:
+        // Default fallback to AR face icon
+        iconAsset = BigInt('1247632857052841'); // ar_on_you
+        break;
+    }
+    
+    this.lockIconSourceBinding.set(ImageSource.fromTextureAsset(new hz.TextureAsset(iconAsset)));
+  }
+
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
     
     // Update host information
@@ -2039,6 +2086,20 @@ export class TriviaGame extends ui.UIComponent {
     // Only allow the host to advance to the next question
     if (data.playerId === this.hostPlayerId) {
       this.advanceToNextQuestion();
+    }
+  }
+
+  private onHostViewModeChanged(eventData: { viewMode: string, isHost: boolean }): void {
+    // Only update icons for the host player
+    if (eventData.isHost && this.world.getLocalPlayer().id.toString() === this.hostPlayerId) {
+      // Update lock icon based on the host's current view mode
+      if (eventData.viewMode === 'preGame') {
+        // Host pre-game should show AR face icon
+        this.updateLockIcon('host-pregame');
+      } else if (eventData.viewMode === 'gameSettings') {
+        // Game settings should show lock/unlock toggle
+        this.updateLockIcon('config');
+      }
     }
   }
 
@@ -2120,6 +2181,7 @@ export class TriviaGame extends ui.UIComponent {
 
     // Hide config screen and start game locally
     this.showConfigBinding.set(false);
+    this.updateLockIcon('question'); // Update icon for question screen
     this.showErrorBinding.set(false); // Hide any error screen
 
     // Apply current configuration
@@ -2169,6 +2231,7 @@ export class TriviaGame extends ui.UIComponent {
 
     // Hide config screen
     this.showConfigBinding.set(false);
+    this.updateLockIcon('question'); // Update icon for question screen
 
     // Apply configuration
     this.timeRemaining = this.gameConfig.timeLimit;
@@ -2202,6 +2265,7 @@ export class TriviaGame extends ui.UIComponent {
     this.errorMessageBinding.set(message);
     this.showErrorBinding.set(true);
     this.showConfigBinding.set(false);
+    this.updateLockIcon('host-pregame'); // Error screen shows host pre-game state
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
@@ -2221,6 +2285,7 @@ export class TriviaGame extends ui.UIComponent {
   private hideErrorScreen(): void {
     this.showErrorBinding.set(false);
     this.showConfigBinding.set(true);
+    this.updateLockIcon('config'); // Update icon for config screen
 
     // Broadcast UI state update to hide error and show config
     this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
@@ -2414,12 +2479,12 @@ export class TriviaGame extends ui.UIComponent {
                       paddingVertical: 72, // Increased from 16 to 50 for more top/bottom margins
                     },
                     children: [
-                      // Lock icon (now visible with opacity control)
+                      // Lock/AR face icon (dynamic based on screen type)
                       View({
                         style: {
                         },
                         children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
+                          source: this.lockIconSourceBinding,
                           style: {
                             width: 36, // Scaled up from 32
                             height: 36, // Scaled up from 32
@@ -4789,6 +4854,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Reset all UI bindings to safe defaults
     this.showConfigBinding.set(true);
+    this.updateLockIcon('config'); // Update icon for config screen
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
@@ -4944,6 +5010,7 @@ export class TriviaGame extends ui.UIComponent {
     
     // Show the configuration screen
     this.showConfigBinding.set(true);
+    this.updateLockIcon('config'); // Update icon for config screen
     this.showErrorBinding.set(false);
     
     // Broadcast UI state update to show config screen
@@ -5168,6 +5235,22 @@ export class TriviaGame extends ui.UIComponent {
   private onUIStateUpdate(eventData: { showConfig: boolean, showResults: boolean, showWaiting: boolean, showLeaderboard: boolean, showError: boolean, errorMessage?: string }): void {
     // Update UI state bindings from network event
     this.showConfigBinding.set(eventData.showConfig);
+    
+    // Determine screen type for icon update
+    let screenType: 'config' | 'question' | 'results' | 'leaderboard' | 'host-pregame' | 'participant-ready';
+    if (eventData.showConfig) {
+      screenType = 'config';
+    } else if (eventData.showResults) {
+      screenType = 'results';
+    } else if (eventData.showLeaderboard) {
+      screenType = 'leaderboard';
+    } else if (eventData.showError || eventData.showWaiting) {
+      screenType = 'host-pregame';
+    } else {
+      screenType = 'question';
+    }
+    this.updateLockIcon(screenType);
+    
     this.showResultsBinding.set(eventData.showResults);
     this.showWaitingBinding.set(eventData.showWaiting);
     this.showLeaderboardBinding.set(eventData.showLeaderboard);

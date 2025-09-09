@@ -12,10 +12,13 @@ const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { tim
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
-const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }>('triviaSettingsUpdate');
+const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, isLocked: boolean, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }>('triviaSettingsUpdate');
 const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
 const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
 const triviaAwardPointsEvent = new hz.NetworkEvent<{ playerId: string; points: number }>('triviaAwardPoints');
+
+// Host view mode events
+const hostViewModeEvent = new hz.NetworkEvent<{ hostId: string, viewMode: 'pre-game' | 'game-settings' }>('hostViewMode');
 
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
@@ -90,6 +93,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     timerType: 'normal' as 'fast' | 'normal' | 'slow',
     // Difficulty options (one must be selected) 
     difficultyType: 'medium' as 'easy' | 'medium' | 'hard',
+    // Lock state (toggleable by host only)
+    isLocked: true,
     // Modifiers (can select multiple, none, or all)
     modifiers: {
       autoAdvance: false,
@@ -901,6 +906,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         timeLimit: this.gameSettings.timeLimit,
         timerType: this.gameSettings.timerType,
         difficultyType: this.gameSettings.difficultyType,
+        isLocked: this.gameSettings.isLocked,
         modifiers: this.gameSettings.modifiers
       }
     });
@@ -1291,11 +1297,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private navigateToGameSettings(): void {
     this.currentViewMode = 'game-settings';
     this.currentViewModeBinding.set('game-settings');
+    // Notify TriviaGame that host is in game settings
+    this.sendNetworkBroadcastEvent(hostViewModeEvent, {
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
+      viewMode: 'game-settings'
+    });
   }
 
   private navigateToPreGame(): void {
     this.currentViewMode = 'pre-game';
     this.currentViewModeBinding.set('pre-game');
+    // Notify TriviaGame that host is in pre-game
+    this.sendNetworkBroadcastEvent(hostViewModeEvent, {
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
+      viewMode: 'pre-game'
+    });
   }
 
   private updateGameSetting(key: string, value: any): void {
@@ -1337,6 +1353,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.sendSettingsUpdate();
   }
 
+  // Lock toggle method (host only)
+  private toggleLock(): void {
+    this.gameSettings.isLocked = !this.gameSettings.isLocked;
+    this.gameSettingsBinding.set({ ...this.gameSettings });
+    this.sendSettingsUpdate();
+  }
+
   // Modifier toggle methods
   private toggleModifier(modifier: 'autoAdvance' | 'powerUps' | 'bonusRounds'): void {
     // Toggle the modifier value
@@ -1363,6 +1386,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         timeLimit: this.gameSettings.timeLimit,
         timerType: this.gameSettings.timerType,
         difficultyType: this.gameSettings.difficultyType,
+        isLocked: this.gameSettings.isLocked,
         modifiers: this.gameSettings.modifiers
       }
     });
@@ -1593,8 +1617,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Lock icon container (red)
-                ui.View({
+                // Lock toggle button (interactive)
+                ui.Pressable({
                   style: {
                     backgroundColor: '#191919',
                     borderRadius: 8,
@@ -1604,13 +1628,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     justifyContent: 'center',
                     alignItems: 'center'
                   },
+                  onPress: () => this.toggleLock(),
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
+                      source: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
+                        ui.ImageSource.fromTextureAsset(new hz.TextureAsset(
+                          settings.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821') // lock vs lock_open_right
+                        ))
+                      ),
                       style: {
                         width: 26,
                         height: 26,
-                        tintColor: '#FF4444' // Red color
+                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.isLocked ? '#FF4444' : '#44FF44' // Red when locked, green when unlocked
+                        )
                       }
                     })
                   ]
@@ -2443,34 +2474,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }
                 })
               ]
-            }),
-
-            // Lock icon container (red)
-            ui.View({
-              style: {
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                borderRadius: 8,
-                padding: 1,
-                width: 32,
-                height: 32,
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#CC0000' : 'transparent'), // BLUE-5 - within red
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 51, 0.5)' : '#191919') // Chartreuse fill (complementary to blue)
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
-                  style: {
-                    width: 26,
-                    height: 26,
-                    tintColor: '#FF4444' // Red color
-                  }
-                })
-              ]
             })
           ]
         }),
@@ -2666,31 +2669,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     width: 24,
                     height: 24,
                     tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
-            // Lock icon container (red)
-            ui.View({
-              style: {
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                borderRadius: 8,
-                padding: 1,
-                width: 32,
-                height: 32,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
-                  style: {
-                    width: 26,
-                    height: 26,
-                    tintColor: '#FF4444' // Red color
                   }
                 })
               ]
