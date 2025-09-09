@@ -39,10 +39,10 @@ const hostChangedEvent = new hz.NetworkEvent<{
 const triviaQuestions: any[] = [];
 
 const answerShapes = [
-  { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
-  { iconId: '1286736292915198', color: '#3B82F6', shape: 'Square' },
-  { iconId: '1290982519195562', color: '#EAB308', shape: 'Triangle' },
-  { iconId: '1286736292915198', color: '#22C55E', shape: 'Diamond', rotation: 45 }
+  { iconId: '1290982519195562', color: '#DC2626', shape: 'Triangle' },
+  { iconId: '764343253011569', color: '#2563EB', shape: 'Square' },
+  { iconId: '797899126007085', color: '#EAB308', shape: 'Circle' },
+  { iconId: '1286736292915198', color: '#16A34A', shape: 'Diamond', rotation: 45 }
 ];
 
 class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
@@ -2465,7 +2465,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('797739146176423'))),
           style: {
             width: '100%',
             height: '100%',
