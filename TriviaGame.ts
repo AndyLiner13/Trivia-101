@@ -502,10 +502,9 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfigBinding = new Binding({
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 20,
+    numQuestions: 5,
     category: "Italian Brainrot Quiz",
-    difficulty: "easy",
-    unlimitedQuestions: false
+    difficulty: "easy"
   });
   private hostPlayerIdBinding = new Binding<string | null>(null);
   private isLocalPlayerHostBinding = new Binding(false);
@@ -549,10 +548,9 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfig = {
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 20, // Default to 20 questions per game
+    numQuestions: 5,
     category: "Italian Brainrot Quiz",
-    difficulty: "easy",
-    unlimitedQuestions: false // New option for unlimited questions mode
+    difficulty: "easy"
   };
 
   // Modifier settings from TriviaPhone
@@ -627,14 +625,6 @@ export class TriviaGame extends ui.UIComponent {
   private italianBrainrotImageCache = new Map<string, ImageSource>();
   private currentItalianBrainrotImageId: string | null = null;
   private isCurrentlyItalianBrainrot: boolean = false;
-
-  // Question caching and shuffling system
-  private gameQuestionsCache = new Map<string, TriviaQuestion>();
-  private currentGameQuestionIds: string[] = []; // Pre-shuffled order for current game
-  private usedQuestionIds = new Set<string>(); // Track used questions across games
-  private availableQuestionPool: TriviaQuestion[] = []; // All available questions for current category
-  private isUnlimitedQuestions: boolean = false;
-  private defaultQuestionsPerGame: number = 20;
 
   async start() {
     console.log('🚀 TriviaGame starting up');
@@ -850,151 +840,6 @@ export class TriviaGame extends ui.UIComponent {
   // Check if current quiz is Italian Brainrot
   private isItalianBrainrotQuiz(): boolean {
     return this.isCurrentlyItalianBrainrot;
-  }
-
-  // Pseudorandom number generator using host's date/time as seed
-  private createSeededRandom(seed: number): () => number {
-    let x = Math.sin(seed) * 10000;
-    return function() {
-      x = Math.sin(x) * 10000;
-      return x - Math.floor(x);
-    };
-  }
-
-  // Generate deterministic shuffle based on host's date/time
-  private createGameSeed(): number {
-    const now = new Date();
-    // Combine multiple time components for better entropy
-    const seed = now.getTime() + 
-                 now.getMilliseconds() * 1000 + 
-                 now.getSeconds() * 100000 + 
-                 now.getMinutes() * 10000000 +
-                 Math.floor(Math.random() * 1000000); // Additional pseudorandom component
-    return seed;
-  }
-
-  // Shuffle array using seeded random for deterministic results
-  private shuffleWithSeed<T>(array: T[], seed: number): T[] {
-    const shuffled = [...array];
-    const random = this.createSeededRandom(seed);
-    
-    // Fisher-Yates shuffle with seeded random
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    
-    return shuffled;
-  }
-
-  // Clear the game questions cache (called when returning to pre-game)
-  private clearGameQuestionsCache(): void {
-    this.gameQuestionsCache.clear();
-    this.currentGameQuestionIds = [];
-    console.log('🗑️ Game questions cache cleared');
-  }
-
-  // Get unused questions from the available pool
-  private getUnusedQuestions(allQuestions: TriviaQuestion[]): TriviaQuestion[] {
-    return allQuestions.filter(q => !this.usedQuestionIds.has(q.id.toString()));
-  }
-
-  // Reset used questions when all have been used
-  private resetUsedQuestionsIfNeeded(allQuestions: TriviaQuestion[]): void {
-    const unusedQuestions = this.getUnusedQuestions(allQuestions);
-    if (unusedQuestions.length === 0 && allQuestions.length > 0) {
-      console.log('♻️ All questions used, resetting pool for fresh rotation');
-      this.usedQuestionIds.clear();
-    }
-  }
-
-  // Pre-shuffle and cache questions for the current game
-  private prepareGameQuestions(allQuestions: TriviaQuestion[]): void {
-    this.clearGameQuestionsCache();
-    
-    // Reset used questions if all have been used
-    this.resetUsedQuestionsIfNeeded(allQuestions);
-    
-    // Get unused questions
-    let availableQuestions = this.getUnusedQuestions(allQuestions);
-    if (availableQuestions.length === 0) {
-      availableQuestions = allQuestions; // Fallback if something went wrong
-    }
-    
-    // Store available pool for unlimited mode
-    this.availableQuestionPool = availableQuestions;
-    
-    // Generate seed using host's date/time
-    const gameSeed = this.createGameSeed();
-    console.log(`🎲 Generated game seed: ${gameSeed}`);
-    
-    // Shuffle questions with deterministic seed
-    const shuffledQuestions = this.shuffleWithSeed(availableQuestions, gameSeed);
-    
-    // Determine question mode and cache accordingly
-    this.isUnlimitedQuestions = this.gameConfig.unlimitedQuestions;
-    
-    if (this.isUnlimitedQuestions) {
-      console.log('♾️ Unlimited questions mode - will cache dynamically');
-      // For unlimited mode, just prepare the shuffled pool
-      this.availableQuestionPool = shuffledQuestions;
-      this.currentGameQuestionIds = [];
-    } else {
-      // Limited mode - cache the exact number needed
-      const questionsNeeded = Math.min(this.gameConfig.numQuestions || this.defaultQuestionsPerGame, shuffledQuestions.length);
-      const gameQuestions = shuffledQuestions.slice(0, questionsNeeded);
-      
-      console.log(`📦 Caching ${gameQuestions.length} questions for limited game mode`);
-      
-      // Cache questions and store IDs in order
-      this.currentGameQuestionIds = [];
-      gameQuestions.forEach(question => {
-        const questionId = question.id.toString();
-        this.gameQuestionsCache.set(questionId, question);
-        this.currentGameQuestionIds.push(questionId);
-      });
-      
-      // Mark these questions as used
-      gameQuestions.forEach(q => this.usedQuestionIds.add(q.id.toString()));
-    }
-  }
-
-  // Get next question for unlimited mode
-  private getNextUnlimitedQuestion(): TriviaQuestion | null {
-    if (!this.isUnlimitedQuestions || this.availableQuestionPool.length === 0) {
-      return null;
-    }
-    
-    // Get next question from shuffled pool
-    const nextQuestion = this.availableQuestionPool[this.currentQuestionIndex % this.availableQuestionPool.length];
-    
-    // Cache only this question
-    const questionId = nextQuestion.id.toString();
-    this.gameQuestionsCache.set(questionId, nextQuestion);
-    
-    // Mark as used
-    this.usedQuestionIds.add(questionId);
-    
-    console.log(`🔄 Unlimited mode: Cached question ${this.currentQuestionIndex + 1} (ID: ${questionId})`);
-    
-    return nextQuestion;
-  }
-
-  // Clean up previous question cache for unlimited mode
-  private cleanupPreviousQuestionCache(): void {
-    if (!this.isUnlimitedQuestions) return;
-    
-    // Keep only the current question cached
-    const currentQuestionId = this.currentGameQuestionIds[this.currentQuestionIndex];
-    if (currentQuestionId) {
-      // Clear all except current
-      const currentQuestion = this.gameQuestionsCache.get(currentQuestionId);
-      this.gameQuestionsCache.clear();
-      if (currentQuestion) {
-        this.gameQuestionsCache.set(currentQuestionId, currentQuestion);
-      }
-      console.log(`🗑️ Unlimited mode: Cleaned up previous question cache`);
-    }
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -1216,23 +1061,29 @@ export class TriviaGame extends ui.UIComponent {
       // NO FALLBACKS - if no questions match the exact criteria, keep empty array
       // This will trigger error handling in handleStartGame
 
-      // Use new caching system instead of old shuffling
-      if (allQuestions.length > 0) {
-        // Prepare and cache questions using the new system
-        this.prepareGameQuestions(allQuestions);
-        
-        // Set triviaQuestions for compatibility with existing code
-        if (this.isUnlimitedQuestions) {
-          // For unlimited mode, use the available pool (will be managed dynamically)
-          this.triviaQuestions = this.availableQuestionPool;
-        } else {
-          // For limited mode, use cached questions in order
-          this.triviaQuestions = this.currentGameQuestionIds.map(id => this.gameQuestionsCache.get(id)!).filter(q => q);
+      // IMPORTANT: Shuffle the entire question pool BEFORE limiting to ensure variety
+      if (allQuestions.length > 1) {
+        // Use the same ultra-randomization algorithm as shuffleQuestions but for the full pool
+        for (let i = allQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
         }
-      } else {
-        this.triviaQuestions = [];
+        
+        // Additional randomization pass with timestamp entropy
+        const entropy = Date.now() % 1000;
+        for (let i = allQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor((Math.random() + entropy / 1000) * (i + 1)) % (i + 1);
+          [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+        }
       }
 
+      // Limit number of questions AFTER shuffling (but NOT for Italian Brainrot Quiz)
+      if (!isItalianBrainrot && this.gameConfig && this.gameConfig.numQuestions && allQuestions.length > this.gameConfig.numQuestions) {
+        allQuestions = allQuestions.slice(0, this.gameConfig.numQuestions);
+      } else if (isItalianBrainrot) {
+      }
+
+      this.triviaQuestions = allQuestions;
       this.currentQuestionIndex = 0;
 
     } catch (error) {
@@ -1292,10 +1143,6 @@ export class TriviaGame extends ui.UIComponent {
     this.timeRemaining = this.props.questionTimeLimit;
     this.totalAnswers = 0;
     this.isRunning = false;
-
-    // Clear game questions cache when returning to pre-game
-    this.clearGameQuestionsCache();
-    this.isUnlimitedQuestions = false;
 
     // Clear player tracking
     this.playersAnswered.clear();
@@ -1427,49 +1274,25 @@ export class TriviaGame extends ui.UIComponent {
 
     this.currentQuestionIndex = 0;
 
-    // Questions are already shuffled and cached by the new caching system
+    // Ensure questions are properly shuffled before starting
+    this.shuffleQuestions();
 
     this.showNextQuestion();
   }
 
   private showNextQuestion(): void {
-    if (!this.isRunning) {
+    if (!this.isRunning || this.triviaQuestions.length === 0) {
       return;
     }
 
-    let question: TriviaQuestion | null = null;
-
-    if (this.isUnlimitedQuestions) {
-      // For unlimited mode, get next question dynamically
-      question = this.getNextUnlimitedQuestion();
-      if (!question) {
-        this.endGame();
-        return;
-      }
-      
-      // Update the currentGameQuestionIds for unlimited mode tracking
-      this.currentGameQuestionIds[this.currentQuestionIndex] = question.id.toString();
-      
-      // Clean up previous question cache after getting new one
-      if (this.currentQuestionIndex > 0) {
-        this.cleanupPreviousQuestionCache();
-      }
-    } else {
-      // For limited mode, get from pre-cached questions
-      if (this.currentQuestionIndex >= this.currentGameQuestionIds.length) {
-        this.endGame();
-        return;
-      }
-      
-      const questionId = this.currentGameQuestionIds[this.currentQuestionIndex];
-      question = this.gameQuestionsCache.get(questionId) || null;
-      
-      if (!question) {
-        console.log(`❌ Question not found in cache: ${questionId}`);
-        this.endGame();
-        return;
-      }
+    // Get the next question in the shuffled order
+    if (this.currentQuestionIndex >= this.triviaQuestions.length) {
+      // If we've gone through all questions, end the game
+      this.endGame();
+      return;
     }
+
+    const question = this.triviaQuestions[this.currentQuestionIndex];
     
     // Create a copy of the question with shuffled answers
     const shuffledQuestion = this.shuffleQuestionAnswers(question);
@@ -1591,12 +1414,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private shuffleQuestions(): void {
-    // New caching system handles shuffling, so this method is only for legacy compatibility
-    if (this.gameQuestionsCache.size > 0 || this.currentGameQuestionIds.length > 0) {
-      // New caching system is active, no need to shuffle
-      return;
-    }
-    
     if (this.triviaQuestions.length <= 1) return;
 
     // Enhanced randomization to ensure completely unique question orders between games
@@ -1830,10 +1647,6 @@ export class TriviaGame extends ui.UIComponent {
     this.cleanupPreviousItalianBrainrotImage();
     this.italianBrainrotImageCache.clear();
     this.isCurrentlyItalianBrainrot = false;
-    
-    // Clear game questions cache when returning to pre-game
-    this.clearGameQuestionsCache();
-    this.isUnlimitedQuestions = false;
   }
 
   private showFinalLeaderboard(): void {
@@ -2212,11 +2025,6 @@ export class TriviaGame extends ui.UIComponent {
     // For Italian Brainrot quiz, clean up previous question image now that leaderboard is shown
     this.cleanupPreviousItalianBrainrotImage();
     
-    // For unlimited mode, clean up previous question cache after leaderboard is shown
-    if (this.isUnlimitedQuestions && this.currentQuestionIndex > 0) {
-      this.cleanupPreviousQuestionCache();
-    }
-    
     // Broadcast UI state update to show leaderboard
     this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
       showConfig: false,
@@ -2328,8 +2136,7 @@ export class TriviaGame extends ui.UIComponent {
       autoAdvance: eventData.settings.modifiers.autoAdvance,
       numQuestions: eventData.settings.numberOfQuestions,
       category: eventData.settings.category.toLowerCase(),
-      difficulty: eventData.settings.difficulty,
-      unlimitedQuestions: eventData.settings.numberOfQuestions === -1 // -1 indicates unlimited questions
+      difficulty: eventData.settings.difficulty
     };
     
     // Store modifier settings for icon visibility
@@ -2556,8 +2363,18 @@ export class TriviaGame extends ui.UIComponent {
       return;
     }
 
-    // Shuffling is now handled by the new caching system in updateQuestionsForCategory
-    // Questions are already pre-shuffled and cached with deterministic seed
+    // Ultra-randomize questions for completely unique order every game
+    // Multiple shuffle passes with different timing for maximum entropy
+    this.shuffleQuestions();
+    
+    // Additional delayed shuffles with different entropy at each time point
+    this.async.setTimeout(() => {
+      this.shuffleQuestions();
+    }, 5);
+    
+    this.async.setTimeout(() => {
+      this.shuffleQuestions();
+    }, 15);
 
     // Reset all player points to 0 for new game
     this.resetAllPlayerPoints();
