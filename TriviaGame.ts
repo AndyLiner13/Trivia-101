@@ -579,6 +579,14 @@ export class TriviaGame extends ui.UIComponent {
   private playerHeadshots = new Map<string, ImageSource | null>();
 
   async start() {
+    console.log('🚀 TriviaGame starting up');
+    
+    // Check if this is a preview mode transition by looking for existing state
+    const hasExistingState = (this.world as any).triviaGameState !== undefined;
+    if (hasExistingState) {
+      console.log('🔄 Detected preview mode transition - cleaning up previous state');
+      this.handlePreviewModeTransition();
+    }
     
     // Initialize phone management
     this.discoverPhoneEntities();
@@ -643,6 +651,8 @@ export class TriviaGame extends ui.UIComponent {
     
     // Detect host player for existing players
     this.detectHostPlayer();
+    
+    console.log('✅ TriviaGame startup completed successfully');
   }
 
   private async loadTriviaQuestions(): Promise<void> {
@@ -2197,7 +2207,7 @@ export class TriviaGame extends ui.UIComponent {
           style: {
             width: '100vw', // Use full viewport width
             aspectRatio: 16/9, // 16:9 aspect ratio
-            backgroundColor: '#F3F4F6',
+            backgroundColor: (this.props as any).backgroundColor,
             position: 'relative',
             overflow: 'hidden',
             shadowColor: 'black',
@@ -4077,8 +4087,8 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: [
                                 // 4th Place and beyond
-                                ...Array.from({ length: 5 }, (_, i) => {
-                                  const place = i + 4;
+                                ...Array.from({ length: 5 }, (_, i: number) => {
+                                  const place: number = i + 4;
                                   return View({
                                     style: {
                                       alignItems: 'center',
@@ -4086,7 +4096,7 @@ export class TriviaGame extends ui.UIComponent {
                                     },
                                     children: [
                                       Text({
-                                        text: this.leaderboardDataBinding.derive(players =>
+                                        text: this.leaderboardDataBinding.derive((players: Array<{name: string, score: number, playerId: string, headshotImageSource?: ImageSource}>): string =>
                                           players.length > place - 1 ? `${place}th` : ''
                                         ),
                                         style: {
@@ -4128,85 +4138,93 @@ export class TriviaGame extends ui.UIComponent {
                     ]
                   }),
 
-                  // Error Screen overlay
-                  ui.View({
+                  // Error Screen overlay - made less intrusive
+                  View({
                     style: {
                       position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      top: 20,
+                      left: 20,
+                      right: 20,
+                      backgroundColor: 'rgba(220, 38, 38, 0.95)',
+                      borderRadius: 8,
+                      padding: 12,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      display: this.showErrorBinding.derive(show => show ? 'flex' : 'none')
+                      display: this.showErrorBinding.derive(show => show ? 'flex' : 'none'),
+                      shadowColor: 'black',
+                      shadowOpacity: 0.5,
+                      shadowRadius: 4,
+                      shadowOffset: [0, 2],
+                      zIndex: 1000
                     },
-                    children: ui.View({
-                      style: {
-                        backgroundColor: 'white',
-                        borderRadius: 12,
-                        padding: 24,
-                        alignItems: 'center',
-                        maxWidth: '70%',
-                        shadowColor: 'black',
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                        shadowOffset: [0, 4]
-                      },
-                      children: [
-                        // Error icon
-                        ui.Text({
-                          text: '⚠️',
-                          style: {
-                            fontSize: 32,
-                            marginBottom: 12
-                          }
-                        }),
-                        // Error title
-                        ui.Text({
-                          text: 'No Questions Available',
-                          style: {
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            color: '#DC2626',
-                            marginBottom: 8,
-                            textAlign: 'center'
-                          }
-                        }),
-                        // Error message
-                        ui.Text({
-                          text: this.errorMessageBinding,
-                          style: {
-                            fontSize: 14,
-                            color: '#6B7280',
-                            textAlign: 'center',
-                            lineHeight: 1.4,
-                            marginBottom: 16
-                          }
-                        }),
-                        // Back to config button
-                        ui.Pressable({
-                          style: {
-                            backgroundColor: '#3B82F6',
-                            borderRadius: 6,
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            alignItems: 'center'
-                          },
-                          onPress: () => this.hideErrorScreen(),
-                          children: [
-                            ui.Text({
-                              text: 'Back to Settings',
-                              style: {
-                                fontSize: 14,
-                                fontWeight: '600',
-                                color: 'white'
-                              }
-                            })
-                          ]
-                        })
-                      ]
-                    })
+                    children: [
+                      View({
+                        style: {
+                          backgroundColor: 'white',
+                          borderRadius: 6,
+                          padding: 12,
+                          alignItems: 'center',
+                          maxWidth: '80%',
+                          shadowColor: 'black',
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          shadowOffset: [0, 2]
+                        },
+                        children: [
+                          // Error icon
+                          ui.Text({
+                            text: '⚠️',
+                            style: {
+                              fontSize: 20,
+                              marginBottom: 6
+                            }
+                          }),
+                          // Error title
+                          ui.Text({
+                            text: 'No Questions Available',
+                            style: {
+                              fontSize: 14,
+                              fontWeight: 'bold',
+                              color: '#DC2626',
+                              marginBottom: 4,
+                              textAlign: 'center'
+                            }
+                          }),
+                          // Error message
+                          ui.Text({
+                            text: this.errorMessageBinding,
+                            style: {
+                              fontSize: 12,
+                              color: '#6B7280',
+                              textAlign: 'center',
+                              lineHeight: 1.3,
+                              marginBottom: 8
+                            }
+                          }),
+                          // Dismiss button (smaller and less prominent)
+                          ui.Pressable({
+                            style: {
+                              backgroundColor: '#6B7280',
+                              borderRadius: 4,
+                              paddingHorizontal: 12,
+                              paddingVertical: 6,
+                              alignItems: 'center'
+                            },
+                            onPress: () => this.hideErrorScreen(),
+                            children: [
+                              ui.Text({
+                                text: 'Dismiss',
+                                style: {
+                                  fontSize: 12,
+                                  fontWeight: '500',
+                                  color: 'white'
+                                }
+                              })
+                            ]
+                          })
+                        ]
+                      })
+                    ]
                   })
                 ]
               })
@@ -4649,6 +4667,120 @@ export class TriviaGame extends ui.UIComponent {
     }
     
     super.dispose();
+  }
+
+  // Public method to handle preview mode transitions (can be called externally)
+  public onPreviewModeTransition(): void {
+    this.handlePreviewModeTransition();
+  }
+
+  // Enhanced method to handle preview mode transitions
+  private handlePreviewModeTransition(): void {
+    console.log('🔄 Preview mode transition detected - performing comprehensive cleanup');
+    
+    // Stop all running operations
+    this.isRunning = false;
+    this.stopTimer();
+    
+    // Clear all timers with safety checks
+    if (this.roundTimeoutId) {
+      this.async.clearTimeout(this.roundTimeoutId);
+      this.roundTimeoutId = null;
+    }
+    if (this.gameLoopTimeoutId) {
+      this.async.clearTimeout(this.gameLoopTimeoutId);
+      this.gameLoopTimeoutId = null;
+    }
+    if (this.timerInterval) {
+      this.async.clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    
+    // Reset all UI bindings to safe defaults
+    this.showConfigBinding.set(true);
+    this.showResultsBinding.set(false);
+    this.showWaitingBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.showGameOverBinding.set(false);
+    this.showErrorBinding.set(false);
+    
+    // Reset internal state flags
+    this.isShowingResults = false;
+    this.isShowingLeaderboard = false;
+    this.answerRevealed = false;
+    this.answerRevealedBinding.set(false);
+    
+    // Clear question and answer data
+    this.currentQuestion = null;
+    this.currentQuestionIndex = 0;
+    this.questionBinding.set("Configure your trivia game settings and press Start when ready!");
+    this.questionImageBinding.set(null);
+    this.centerQuestionBinding.set(false);
+    
+    // Clear answer texts and counts
+    for (let i = 0; i < 4; i++) {
+      this.answerTexts[i].set("");
+      this.currentAnswerCounts[i] = 0;
+    }
+    this.answerCountsBinding.set([0, 0, 0, 0]);
+    this.answerCountBinding.set("0");
+    this.answerCountTracking.set(4);
+    
+    // Reset timer display
+    const timeLimit = (this.props as any).questionTimeLimit || 30;
+    this.timeRemaining = timeLimit;
+    this.timerBinding.set(timeLimit.toString());
+    
+    // Clear player tracking
+    this.playersAnswered.clear();
+    this.playersInWorld.clear();
+    this.hasLocalPlayerAnswered = false;
+    
+    // Reset leaderboard data
+    this.leaderboardDataBinding.set([]);
+    
+    // Clear any pending async operations by resetting question loading state
+    this.isLoadingCategory = false;
+    this.loadedCategories.clear();
+    
+    // Reinitialize player tracking for current world state
+    const currentPlayers = this.world.getPlayers();
+    this.playersInWorld.clear();
+    currentPlayers.forEach(player => {
+      this.playersInWorld.add(player.id.toString());
+    });
+    
+    // Reset host detection
+    this.hostPlayerId = null;
+    this.isLocalPlayerHost = false;
+    this.isLocalPlayerHostBinding.set(false);
+    this.detectHostPlayer();
+    
+    // Clear any cached player headshots that might be causing issues
+    this.playerHeadshots.clear();
+    
+    // Reinitialize players list for UI
+    this.currentPlayers = currentPlayers.map(player => ({
+      id: player.id.toString(),
+      name: player.name.get()
+    }));
+    this.playersListBinding.set([...this.currentPlayers]);
+    
+    // Broadcast comprehensive reset state to all clients
+    this.sendNetworkBroadcastEvent(triviaUIStateEvent, {
+      showConfig: true,
+      showResults: false,
+      showWaiting: false,
+      showLeaderboard: false,
+      showError: false
+    });
+    
+    // Send game reset event to ensure TriviaPhones are also reset
+    this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
+      hostId: this.hostPlayerId || 'unknown'
+    });
+    
+    console.log('✅ Preview mode transition cleanup completed successfully');
   }
 
   // Handle state requests from TriviaPhone

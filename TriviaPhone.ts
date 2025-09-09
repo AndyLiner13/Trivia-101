@@ -606,19 +606,30 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   onFocus(player: hz.Player): void {
-    // Mark that the player is now focused on the UI
-    this.isPlayerFocusedOnUI = true;
+    try {
+      // Mark that the player is now focused on the UI
+      this.isPlayerFocusedOnUI = true;
+      console.log('✅ TriviaPhone: Player focused on UI');
 
-    // Show the TriviaPhone when focused - make it visible to all players
-    this.entity.visible.set(true);
+      // Show the TriviaPhone when focused - make it visible to all players
+      this.entity.visible.set(true);
+    } catch (error) {
+      console.log('❌ TriviaPhone: Error in onFocus:', error);
+      this.isPlayerFocusedOnUI = false;
+    }
   }
 
   onUnfocus(player: hz.Player): void {
-    // Mark that the player is no longer focused on the UI
-    this.isPlayerFocusedOnUI = false;
+    try {
+      // Mark that the player is no longer focused on the UI
+      this.isPlayerFocusedOnUI = false;
+      console.log('✅ TriviaPhone: Player unfocused from UI');
 
-    // Hide the TriviaPhone when unfocused - make it invisible to all players
-    this.hideTriviaPhone();
+      // Hide the TriviaPhone when unfocused - make it invisible to all players
+      this.hideTriviaPhone();
+    } catch (error) {
+      console.log('❌ TriviaPhone: Error in onUnfocus:', error);
+    }
   }
 
   private hideTriviaPhone(): void {
@@ -659,8 +670,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // For VR users, check if y position is 0 OR if the phone is very far from the player
     // This ensures first-time VR users can see the phone on their first click
     const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
-    const shouldShow = isVRUser ? 
-      (phonePosition.y <= 0.1 || phonePosition.distance(playerPosition) > 5) : 
+    const shouldShow = isVRUser ?
+      (phonePosition.y <= 0.1 || phonePosition.distance(playerPosition) > 5) :
       (phonePosition.distance(playerPosition) > 10);
 
     if (shouldShow) {
@@ -679,6 +690,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
         }
       } catch (error) {
+        console.log('❌ TriviaPhone: Could not capture camera position:', error);
       }
 
       // If phone is not assigned to anyone, assign it to this player
@@ -745,27 +757,48 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // First prepare the UI
       this.openUIForPlayer(player);
 
-      // Set focus state immediately to prevent H key from working during the transition
-      this.isPlayerFocusedOnUI = true;
-
       // For VR users, skip focusUI to avoid hiding other players
       const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
       if (!isVRUser) {
-        // Wait 25ms for position change to take effect, then focus the UI (reduced from 100ms)
+        // Wait 25ms for position change to take effect, then focus the UI with retry logic
         this.async.setTimeout(() => {
-          try {
-            player.focusUI(this.entity, { duration: 0.1 });
-          } catch (focusError) {
-            // If focus fails, reset the focus state
-            this.isPlayerFocusedOnUI = false;
-          }
+          this.attemptFocusWithRetry(player, 0);
         }, 25);
+      } else {
+        // For VR users, set focus state immediately since we skip focusUI
+        this.isPlayerFocusedOnUI = true;
       }
       // For VR users, we skip the focusUI call to prevent the player invisibility bug
 
     } catch (error) {
+      console.log('❌ TriviaPhone: Error in openAndFocusUIForPlayer:', error);
       // If something goes wrong, reset the focus state
       this.isPlayerFocusedOnUI = false;
+    }
+  }
+
+  private attemptFocusWithRetry(player: hz.Player, attemptCount: number): void {
+    const maxRetries = 3;
+    const retryDelay = 100; // 100ms delay between retries
+
+    try {
+      player.focusUI(this.entity, { duration: 0.1 });
+      // Only set focus state after successful focus operation
+      this.isPlayerFocusedOnUI = true;
+      console.log('✅ TriviaPhone: Focus operation successful');
+    } catch (focusError) {
+      console.log(`❌ TriviaPhone: Focus operation failed (attempt ${attemptCount + 1}/${maxRetries}):`, focusError);
+
+      if (attemptCount < maxRetries - 1) {
+        // Try again after delay
+        this.async.setTimeout(() => {
+          this.attemptFocusWithRetry(player, attemptCount + 1);
+        }, retryDelay);
+      } else {
+        // All retries exhausted, reset focus state
+        console.log('❌ TriviaPhone: All focus retry attempts exhausted');
+        this.isPlayerFocusedOnUI = false;
+      }
     }
   }
 
@@ -2425,7 +2458,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding, this.buttonPressedBinding], (isHost, isReady, isPressed) => 
+                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
                   isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
                 )
               },
@@ -2649,7 +2682,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding, this.buttonPressedBinding], (isHost, isReady, isPressed) => 
+                backgroundColor: ui.Binding.derive([this.isHostBinding, this.isReadyBinding], (isHost, isReady) => 
                   isHost ? '#FFFFFF' : (isReady ? '#cb002f' : '#FFFFFF')
                 )
               },
@@ -3360,7 +3393,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private handleGameSettingsOrReadyButton(): void {
     if (this.isHost()) {
-      // Host: Navigate to game settings
+      // Host: Navigate to game settings (don't change button pressed state)
       this.navigateToGameSettings();
     } else {
       // Non-host: Set button pressed state
@@ -4208,6 +4241,70 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         })
       ]
     });
+  }
+
+  // Public method to handle preview mode transitions (can be called externally)
+  public onPreviewModeTransition(): void {
+    this.handlePreviewModeTransition();
+  }
+
+  // Enhanced method to handle preview mode transitions
+  private handlePreviewModeTransition(): void {
+    console.log('🔄 TriviaPhone: Preview mode transition detected - performing comprehensive cleanup');
+    
+    // Reset all game state to initial values
+    this.gameStarted = false;
+    this.gameEnded = false;
+    this.currentQuestionIndex = 0;
+    this.currentQuestion = null;
+    this.currentQuestionBinding.set(null);
+    this.score = 0;
+    this.selectedAnswer = null;
+    this.showResult = false;
+    this.answerSubmitted = false;
+
+    // Reset all bindings
+    this.gameStartedBinding.set(false);
+    this.gameEndedBinding.set(false);
+    this.currentQuestionIndexBinding.set(0);
+    this.scoreBinding.set(0);
+    this.selectedAnswerBinding.set(null);
+    this.showResultBinding.set(false);
+    this.showLeaderboardBinding.set(false);
+    this.answerSubmittedBinding.set(false);
+    this.isCorrectAnswerBinding.set(false);
+    this.correctAnswerIndexBinding.set(null);
+    
+    // Reset layout and screen types
+    this.layoutTypeBinding.set('four-options');
+    this.currentScreenType = 'waiting';
+    this.screenTypeBinding.set('waiting');
+    this.lastQuestionType = 'four-options';
+    
+    // Reset view mode
+    this.currentViewMode = 'pre-game';
+    this.currentViewModeBinding.set('pre-game');
+    
+    // Reset host status
+    this.currentHostStatus = this.isHost();
+    this.isHostBinding.set(this.currentHostStatus);
+    
+    // Reset ready state
+    this.isReady = false;
+    this.isReadyBinding.set(false);
+    this.buttonPressedBinding.set(false);
+    
+    // Reset info popup
+    this.showInfoPopupBinding.set(false);
+    
+    // Clear leaderboard data
+    this.leaderboardDataBinding.set([]);
+    
+    // Reset stable question index
+    this.stableQuestionIndex = 0;
+    this.updateFooterBinding.set(false);
+    
+    console.log('✅ TriviaPhone: Preview mode transition cleanup completed successfully');
   }
 }
 
