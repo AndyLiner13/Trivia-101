@@ -1576,7 +1576,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column'
           },
           children: [
-            // Top row - Light/Dark mode and Settings icon
+            // Top row - Settings icon
             ui.View({
               style: {
                 width: '100%',
@@ -1584,39 +1584,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 paddingRight: 8,
                 paddingTop: 8,
                 flexDirection: 'row',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center'
               },
               children: [
-                // Light/Dark mode container
-                ui.View({
-                  style: {
-                    backgroundColor: '#191919',
-                    borderRadius: 8,
-                    padding: 4,
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                  },
-                  children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
-                      style: {
-                        width: 24,
-                        height: 24,
-                        tintColor: '#FFFFFF'
-                      }
-                    }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
-                      style: {
-                        width: 24,
-                        height: 24,
-                        tintColor: 'rgba(255, 255, 255, 0.35)'
-                      }
-                    })
-                  ]
-                }),
-
                 // Lock toggle button (interactive)
                 ui.Pressable({
                   style: {
@@ -2442,39 +2413,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column'
           },
           children: [
-            // Light/Dark mode container
-            ui.View({
-              style: {
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center',
-                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
-                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000CC' : 'transparent'), // BLUE-4 - within red
-                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 204, 0, 0.5)' : '#191919') // Gold fill (complementary to blue)
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            })
           ]
         }),
 
@@ -2643,36 +2581,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column'
           },
           children: [
-            // Light/Dark mode container
-            ui.View({
-              style: {
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))),
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))),
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            })
           ]
         }),
 
@@ -2959,35 +2867,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode toggle
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
             // Points display container
             ui.View({
               style: {
@@ -3211,35 +3090,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode toggle
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
             // Points display container
             ui.View({
               style: {
@@ -3553,35 +3403,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode toggle
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
             // Points display container (like 4A page)
             ui.View({
               style: {
@@ -3736,35 +3557,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode toggle
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
             // Points display container (like 4A page)
             ui.View({
               style: {
@@ -3919,35 +3711,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode toggle
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
             // Points display container (like 4A page)
             ui.View({
               style: {
@@ -4147,35 +3910,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             paddingTop: 8
           },
           children: [
-            // Light/Dark mode toggle
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 4,
-                flexDirection: 'row',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('718380744580513'))), // light_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                }),
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('828932029475123'))), // dark_mode
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: 'rgba(255, 255, 255, 0.35)'
-                  }
-                })
-              ]
-            }),
-
             // Points display container (like 4A page)
             ui.View({
               style: {
