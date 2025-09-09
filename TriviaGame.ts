@@ -728,6 +728,7 @@ export class TriviaGame extends ui.UIComponent {
       '1997295517705951',   // logout
       '1209829437577245',   // alarm icon
       '24898127093144614',  // info_i
+      '1325134306066406',   // crown (host indicator)
       
       // Shape icons (answer buttons)
       '1290982519195562',   // triangle
@@ -2207,6 +2208,14 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
+  private forceUIRefresh(): void {
+    // Trigger UI update by incrementing the players update trigger
+    // This forces the crown icon to update and show for the host
+    this.updateTriggerCounter++;
+    this.playersUpdateTrigger.set(this.updateTriggerCounter);
+    console.log('✅ TriviaGame: Forced UI refresh to update host crown icon');
+  }
+
   private detectHostPlayer(): void {
     const allPlayers = this.world.getPlayers();
     const localPlayer = this.world.getLocalPlayer();
@@ -2236,6 +2245,9 @@ export class TriviaGame extends ui.UIComponent {
       this.sendNetworkBroadcastEvent(hostChangedEvent, {
         newHostId: this.hostPlayerId
       });
+      
+      // Force UI update to show crown icon for newly detected host
+      this.forceUIRefresh();
     } else {
       // Update local player host status based on current host
       this.isLocalPlayerHost = localPlayer ? this.hostPlayerId === localPlayer.id.toString() : false;
@@ -4548,7 +4560,8 @@ export class TriviaGame extends ui.UIComponent {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 4,
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  position: 'relative'
                 },
                 children: [
                   // Show headshot if available
@@ -4577,19 +4590,21 @@ export class TriviaGame extends ui.UIComponent {
                       style: {
                         width: 48,
                         height: 48,
-                        borderRadius: 8
+                        borderRadius: 8,
+                        zIndex: 2
                       }
                     })
                   ),
-                  // Show initial letter as fallback
+                  // Show initial letter as fallback (but not for host since they have crown)
                   UINode.if(
-                    this.playersUpdateTrigger.derive(() => {
+                    Binding.derive([this.playersUpdateTrigger, this.hostPlayerIdBinding], (playersCount, hostId) => {
                       const currentPlayers = this.world.getPlayers();
                       if (i < currentPlayers.length) {
                         const player = currentPlayers[i];
                         const playerId = player.id.toString();
                         const hasHeadshot = this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
-                        return !hasHeadshot; // Show letter when no headshot
+                        const isHost = playerId === hostId;
+                        return !hasHeadshot && !isHost; // Show letter when no headshot AND not host
                       }
                       return false;
                     }),
@@ -4606,6 +4621,31 @@ export class TriviaGame extends ui.UIComponent {
                         fontSize: 18,
                         fontWeight: 'bold',
                         color: 'white'
+                      }
+                    })
+                  ),
+                  // Yellow border overlay for host - shows in front of headshot
+                  UINode.if(
+                    Binding.derive([this.playersUpdateTrigger, this.hostPlayerIdBinding], (playersCount, hostId) => {
+                      const currentPlayers = this.world.getPlayers();
+                      if (i < currentPlayers.length && hostId) {
+                        const player = currentPlayers[i];
+                        const playerId = player.id.toString();
+                        return playerId === hostId;
+                      }
+                      return false;
+                    }),
+                    View({
+                      style: {
+                        width: 48,
+                        height: 48,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        borderRadius: 8,
+                        borderWidth: 2,
+                        borderColor: '#FFD700', // Same yellow as crown icon
+                        zIndex: 3 // Show in front of headshot
                       }
                     })
                   )
