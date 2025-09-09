@@ -199,6 +199,85 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateScoreDisplay();
   }
 
+  // Asset cache to keep images in memory permanently
+  private assetCache = new Map<string, ui.ImageSource>();
+
+  private async preloadTriviaPhoneAssets(): Promise<void> {
+    console.log('⏳ TriviaPhone: Preloading all assets for fast rendering...');
+    
+    // Define all texture IDs used in TriviaPhone
+    const assetTextureIds = [
+      // Background textures
+      '2225071587959777',   // Main TriviaPhone background
+      '1357119322709193',   // Pre-game background
+      '1358485312536960',   // Question pages background
+      
+      // Lock icons
+      '667887239673613',    // lock
+      '1667289068007821',   // lock_open_right
+      
+      // Timer icons
+      '2035737657163790',   // timer (normal)
+      '1466620987937637',   // timer_off
+      '1830264154592827',   // more_time
+      
+      // Difficulty icons
+      '794548760190405',    // sentiment_satisfied (easy)
+      '1138269638213533',   // sentiment_neutral (medium)
+      '712075511858553',    // skull (hard)
+      
+      // UI icons
+      '24898127093144614',  // info_i
+      '1997295517705951',   // logout
+      '1209829437577245',   // alarm icon
+      '2019383778812059',   // check
+      '24587675990884692',  // close
+      '1806442143313699',   // arrow_forward
+      
+      // Shape/answer icons
+      '1290982519195562',   // triangle
+      '764343253011569',    // square  
+      '797899126007085',    // circle
+      '1286736292915198',   // diamond
+      
+      // Modifier background icons
+      '789207380187265',    // Left side icon background
+      '3148012692041551',   // Center icon background
+      '1320579906276560'    // Right side icon background
+    ];
+    
+    let successCount = 0;
+    const startTime = Date.now();
+    
+    // Preload all assets and cache them
+    for (const textureId of assetTextureIds) {
+      try {
+        const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+        this.assetCache.set(textureId, imageSource);
+        successCount++;
+      } catch (error) {
+        console.log(`❌ TriviaPhone: Failed to preload asset ${textureId}:`, error);
+      }
+    }
+    
+    const loadTime = Date.now() - startTime;
+    console.log(`✅ TriviaPhone: Successfully preloaded ${successCount}/${assetTextureIds.length} assets in ${loadTime}ms`);
+    console.log('📦 TriviaPhone: All assets cached in memory for instant loading');
+  }
+
+  // Helper method to get cached asset or create new one
+  private getCachedImageSource(textureId: string): ui.ImageSource {
+    const cached = this.assetCache.get(textureId);
+    if (cached) {
+      return cached;
+    }
+    
+    // If not cached, create and cache it
+    const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+    this.assetCache.set(textureId, imageSource);
+    return imageSource;
+  }
+
   async start() {
     // Register this TriviaPhone instance with the world for TriviaGame access
     (this.world as any).triviaPhones = (this.world as any).triviaPhones || [];
@@ -215,6 +294,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Store the original position when the component starts
     this.originalPosition = this.entity.position.get().clone();
+
+    // Preload all TriviaPhone assets for fast rendering
+    await this.preloadTriviaPhoneAssets();
 
     // Initialize host status binding
     this.currentHostStatus = this.isHost();

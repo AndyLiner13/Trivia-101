@@ -618,6 +618,9 @@ export class TriviaGame extends ui.UIComponent {
   // Player headshot cache - maps player ID to ImageSource
   private playerHeadshots = new Map<string, ImageSource | null>();
 
+  // Asset cache to keep background images and icons in memory permanently  
+  private assetCache = new Map<string, ImageSource>();
+
   async start() {
     console.log('🚀 TriviaGame starting up');
     
@@ -749,12 +752,14 @@ export class TriviaGame extends ui.UIComponent {
       ...Object.values(imageTextureMap)
     ];
     
-    // Preload all assets by creating TextureAsset instances
+    // Preload all assets by creating TextureAsset instances and cache them
     const preloadPromises = assetTextureIds.map(async (textureId) => {
       try {
         const textureAsset = new hz.TextureAsset(BigInt(textureId));
         // Creating an ImageSource forces the texture to be loaded
         const imageSource = ImageSource.fromTextureAsset(textureAsset);
+        // Cache the ImageSource for permanent memory storage
+        this.assetCache.set(textureId, imageSource);
         return imageSource;
       } catch (error) {
         console.log(`❌ Failed to preload asset texture ${textureId}: ${error}`);
@@ -769,10 +774,24 @@ export class TriviaGame extends ui.UIComponent {
     const backgroundCount = 7; // Next 7 are backgrounds
     const questionImageCount = Object.values(imageTextureMap).length;
     
-    console.log(`✅ Successfully preloaded ${successCount}/${assetTextureIds.length} game assets:`);
-    console.log(`   - Icons (including shapes): ~${Math.min(successCount, iconCount)} loaded`);
-    console.log(`   - Backgrounds: ~${Math.min(Math.max(successCount - iconCount, 0), backgroundCount)} loaded`);
-    console.log(`   - Question Images: ~${Math.max(successCount - iconCount - backgroundCount, 0)}/${questionImageCount} loaded`);
+    console.log(`✅ Successfully preloaded and cached ${successCount}/${assetTextureIds.length} game assets:`);
+    console.log(`   - Icons (including shapes): ~${Math.min(successCount, iconCount)} cached in memory`);
+    console.log(`   - Backgrounds: ~${Math.min(Math.max(successCount - iconCount, 0), backgroundCount)} cached in memory`);
+    console.log(`   - Question Images: ~${Math.max(successCount - iconCount - backgroundCount, 0)}/${questionImageCount} cached in memory`);
+    console.log('📦 TriviaGame: All assets remain in memory for instant rendering');
+  }
+
+  // Helper method to get cached asset or create new one
+  private getCachedImageSource(textureId: string): ImageSource {
+    const cached = this.assetCache.get(textureId);
+    if (cached) {
+      return cached;
+    }
+    
+    // If not cached, create and cache it
+    const imageSource = ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+    this.assetCache.set(textureId, imageSource);
+    return imageSource;
   }
 
   private async loadTriviaQuestions(): Promise<void> {
