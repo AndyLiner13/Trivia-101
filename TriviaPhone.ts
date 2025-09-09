@@ -478,6 +478,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.onHostChanged(eventData);
     });
 
+    this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, (eventData) => {
+      this.onSettingsUpdate(eventData);
+    });
+
     // Request state immediately when component starts (for players joining mid-game)
     this.async.setTimeout(() => {
       this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
@@ -1215,6 +1219,24 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.isHostBinding.set(isLocalPlayerHost);
   }
 
+  private onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, isLocked: boolean, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }): void {
+    // Update local game settings when receiving updates from host
+    this.gameSettings = {
+      ...this.gameSettings,
+      numberOfQuestions: eventData.settings.numberOfQuestions,
+      category: eventData.settings.category,
+      difficulty: eventData.settings.difficulty as "easy" | "medium" | "hard",
+      timeLimit: eventData.settings.timeLimit,
+      timerType: eventData.settings.timerType as "normal" | "slow" | "fast",
+      difficultyType: eventData.settings.difficultyType as "easy" | "medium" | "hard",
+      isLocked: eventData.settings.isLocked,
+      modifiers: eventData.settings.modifiers
+    };
+    this.gameSettingsBinding.set(this.gameSettings);
+    
+    console.log(`📡 TriviaPhone: Received settings update - Lock status: ${eventData.settings.isLocked ? 'Locked' : 'Unlocked'}`);
+  }
+
   private endGame(): void {
     console.log("✅ TriviaPhone: END GAME button pressed by host");
     if (!this.isHost()) {
@@ -1351,6 +1373,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private toggleLock(): void {
     this.gameSettings.isLocked = !this.gameSettings.isLocked;
     this.gameSettingsBinding.set({ ...this.gameSettings });
+    console.log(`🔐 Host toggled lock to: ${this.gameSettings.isLocked ? 'LOCKED' : 'UNLOCKED'} - Broadcasting to participants`);
     this.sendSettingsUpdate();
   }
 
@@ -1575,35 +1598,38 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               children: [
-                // Lock toggle button (interactive)
-                ui.Pressable({
-                  style: {
-                    backgroundColor: '#191919',
-                    borderRadius: 8,
-                    padding: 1,
-                    width: 32,
-                    height: 32,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.toggleLock(),
-                  children: [
-                    ui.Image({
-                      source: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
-                        ui.ImageSource.fromTextureAsset(new hz.TextureAsset(
-                          settings.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821') // lock vs lock_open_right
-                        ))
-                      ),
-                      style: {
-                        width: 26,
-                        height: 26,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.isLocked ? '#FF4444' : '#44FF44' // Red when locked, green when unlocked
-                        )
-                      }
-                    })
-                  ]
-                })
+                // Lock toggle button (interactive) - only show for hosts
+                ui.UINode.if(
+                  this.isHostBinding,
+                  ui.Pressable({
+                    style: {
+                      backgroundColor: '#191919',
+                      borderRadius: 8,
+                      padding: 1,
+                      width: 32,
+                      height: 32,
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    },
+                    onPress: () => this.toggleLock(),
+                    children: [
+                      ui.Image({
+                        source: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
+                          ui.ImageSource.fromTextureAsset(new hz.TextureAsset(
+                            settings.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821') // lock vs lock_open_right
+                          ))
+                        ),
+                        style: {
+                          width: 26,
+                          height: 26,
+                          tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                            settings.isLocked ? '#FF4444' : '#44FF44' // Red when locked, green when unlocked
+                          )
+                        }
+                      })
+                    ]
+                  })
+                )
               ]
             }),
 
