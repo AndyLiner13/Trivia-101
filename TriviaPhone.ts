@@ -1220,7 +1220,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, isLocked: boolean, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }): void {
-    // Update local game settings when receiving updates from host
+    // Don't process our own updates to avoid feedback loops
+    const localPlayerId = this.world.getLocalPlayer()?.id.toString();
+    if (eventData.hostId === localPlayerId) {
+      return;
+    }
+    
+    // Update local game settings when receiving updates from any player
     this.gameSettings = {
       ...this.gameSettings,
       numberOfQuestions: eventData.settings.numberOfQuestions,
@@ -1234,7 +1240,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     };
     this.gameSettingsBinding.set(this.gameSettings);
     
-    console.log(`📡 TriviaPhone: Received settings update - Lock status: ${eventData.settings.isLocked ? 'Locked' : 'Unlocked'}`);
+    console.log(`📡 TriviaPhone: Received settings update from player ${eventData.hostId}:`);
+    console.log(`   - Category: ${eventData.settings.category}`);
+    console.log(`   - Difficulty: ${eventData.settings.difficulty}`);
+    console.log(`   - Timer: ${eventData.settings.timerType} (${eventData.settings.timeLimit}s)`);
+    console.log(`   - Lock status: ${eventData.settings.isLocked ? 'Locked' : 'Unlocked'}`);
   }
 
   private endGame(): void {
@@ -1394,8 +1404,19 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private sendSettingsUpdate(): void {
+    const isHost = this.isHost();
+    const canMakeChanges = isHost || !this.gameSettings.isLocked;
+    
+    if (!canMakeChanges) {
+      console.log(`⚠️ Settings update blocked - Player is not host and game is locked`);
+      return;
+    }
+    
+    const playerId = this.world.getLocalPlayer()?.id.toString() || 'unknown';
+    console.log(`📡 Broadcasting settings update from ${isHost ? 'HOST' : 'PARTICIPANT'} (${playerId})`);
+    
     this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
-      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
+      hostId: playerId, // Use actual player ID instead of always 'host'
       settings: {
         numberOfQuestions: this.gameSettings.numberOfQuestions,
         category: this.gameSettings.category,
