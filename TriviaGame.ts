@@ -615,6 +615,9 @@ export class TriviaGame extends ui.UIComponent {
   // Phone management - delegated to PhoneManager
   private phoneManager: PhoneManager | null = null;
 
+  // Track players who joined mid-game during results/leaderboard and need state updates
+  private playersJoinedDuringInterlude: Set<string> = new Set();
+
   // Player headshot cache - maps player ID to ImageSource
   private playerHeadshots = new Map<string, ImageSource | null>();
 
@@ -1271,6 +1274,9 @@ export class TriviaGame extends ui.UIComponent {
 
     // Reset game state for new game (but preserve isRunning)
     this.resetGameStateButKeepRunning();
+    
+    // Clear interlude tracking for fresh start
+    this.playersJoinedDuringInterlude.clear();
 
     this.currentQuestionIndex = 0;
 
@@ -1398,6 +1404,9 @@ export class TriviaGame extends ui.UIComponent {
       showLeaderboard: false,
       showError: false
     });
+
+    // Handle players who joined during results/leaderboard and need explicit state sync
+    this.syncPlayersJoinedDuringInterlude(serializableQuestion, answerCount);
 
     // Reset answer count when starting new question
     this.answerCountBinding.set("0");
@@ -1583,6 +1592,9 @@ export class TriviaGame extends ui.UIComponent {
     this.showConfigBinding.set(false); // Keep config hidden
     this.updateLockIcon('host-pregame'); // Game ended, back to host pre-game state (lock icon)
     this.showErrorBinding.set(false);
+    
+    // Clear interlude tracking since game is ending
+    this.playersJoinedDuringInterlude.clear();
     
     // Generate final leaderboard data and show game over screen
     this.generateRealLeaderboard().then(finalLeaderboard => {
@@ -5259,7 +5271,11 @@ export class TriviaGame extends ui.UIComponent {
         // For results or leaderboard, send waiting state so they see pre-game screen until next question
         gameState = 'waiting';
         responseData.gameState = gameState;
-        console.log(`📱 Player joined during results/leaderboard - sending pre-game state`);
+        
+        // Track this player as someone who joined during interlude
+        this.playersJoinedDuringInterlude.add(playerId);
+        
+        console.log(`📱 Player joined during results/leaderboard - sending pre-game state and tracking for next question`);
       } else if (this.currentQuestion) {
         // Game is active with a current question - sync to question screen
         gameState = 'playing';
@@ -5324,6 +5340,49 @@ export class TriviaGame extends ui.UIComponent {
     this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
   }
 
+  /**
+   * Syncs players who joined during results/leaderboard to the new question state
+   */
+  private syncPlayersJoinedDuringInterlude(serializableQuestion: SerializableQuestion, answerCount: number): void {
+    if (this.playersJoinedDuringInterlude.size === 0) {
+      return;
+    }
+
+    console.log(`🔄 Syncing ${this.playersJoinedDuringInterlude.size} players who joined during interlude to current question`);
+
+    // Send explicit state update to each player who joined during interlude
+    this.playersJoinedDuringInterlude.forEach(playerId => {
+      console.log(`📱 Syncing player ${playerId} from waiting state to question state`);
+      
+      // Send explicit state response to transition from waiting to playing
+      this.sendNetworkBroadcastEvent(triviaStateResponseEvent, {
+        requesterId: playerId,
+        gameState: 'playing',
+        currentQuestion: serializableQuestion,
+        questionIndex: this.currentQuestionIndex,
+        timeLimit: this.props.questionTimeLimit
+      });
+
+      // Also send the appropriate question type event specifically to this player
+      const questionData = {
+        question: serializableQuestion,
+        questionIndex: this.currentQuestionIndex,
+        timeLimit: this.props.questionTimeLimit,
+        totalQuestions: this.triviaQuestions.length
+      };
+
+      if (answerCount === 2) {
+        this.sendNetworkBroadcastEvent(triviaTwoOptionsEvent, questionData);
+      } else {
+        this.sendNetworkBroadcastEvent(triviaFourOptionsEvent, questionData);
+      }
+    });
+
+    // Clear the set since we've now synced these players
+    this.playersJoinedDuringInterlude.clear();
+    console.log(`✅ All players synced to current question, cleared interlude tracking`);
+  }
+
   private onGameReset(event: { hostId: string }): void {
     
     // Reset the game to pre-game configuration screen
@@ -5338,6 +5397,9 @@ export class TriviaGame extends ui.UIComponent {
     this.showResultsBinding.set(false);
     this.showWaitingBinding.set(false);
     this.showLeaderboardBinding.set(false);
+    
+    // Clear interlude tracking since game is resetting
+    this.playersJoinedDuringInterlude.clear();
     
     // Show the configuration screen
     this.showConfigBinding.set(true);
@@ -5491,6 +5553,9 @@ export class TriviaGame extends ui.UIComponent {
     // Clean up player headshot from cache
     const playerId = player.id.toString();
     this.playerHeadshots.delete(playerId);
+    
+    // Remove from interlude tracking if they were being tracked
+    this.playersJoinedDuringInterlude.delete(playerId);
     
     // Update players list for UI
     const currentPlayers = this.world.getPlayers().filter(p => p.id.toString() !== player.id.toString());
