@@ -12,7 +12,7 @@ const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { tim
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
-const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }>('triviaSettingsUpdate');
+const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }>('triviaSettingsUpdate');
 const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
 const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
 const triviaAwardPointsEvent = new hz.NetworkEvent<{ playerId: string; points: number }>('triviaAwardPoints');
@@ -86,9 +86,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     category: 'Italian Brainrot Quiz',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     timeLimit: 30,
-    autoAdvance: false,
-    muteDuringQuestions: false,
-    isLocked: false
+    // Timer options (one must be selected)
+    timerType: 'normal' as 'fast' | 'normal' | 'slow',
+    // Difficulty options (one must be selected) 
+    difficultyType: 'medium' as 'easy' | 'medium' | 'hard',
+    // Modifiers (can select multiple, none, or all)
+    modifiers: {
+      autoAdvance: false,
+      powerUps: false,
+      bonusRounds: false
+    }
   };
 
   // View mode for navigation
@@ -142,7 +149,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Info popup bindings
   private showInfoPopupBinding = new ui.Binding(false);
-  private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'gamemode'>('timer');
+  private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'modifiers'>('timer');
 
   // Debug outline toggle binding
   private showOutlinesBinding = new ui.Binding(false);
@@ -883,6 +890,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         numQuestions: this.gameSettings.numberOfQuestions
       }
     });
+
+    // Also send the settings update event with modifier information
+    this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
+      settings: {
+        numberOfQuestions: this.gameSettings.numberOfQuestions,
+        category: this.gameSettings.category,
+        difficulty: this.gameSettings.difficulty,
+        timeLimit: this.gameSettings.timeLimit,
+        timerType: this.gameSettings.timerType,
+        difficultyType: this.gameSettings.difficultyType,
+        modifiers: this.gameSettings.modifiers
+      }
+    });
   }
 
   // Trivia game methods
@@ -1278,20 +1299,73 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private updateGameSetting(key: string, value: any): void {
-    if (this.gameSettings.isLocked) return;
-
     (this.gameSettings as any)[key] = value;
     this.gameSettingsBinding.set({ ...this.gameSettings });
-
-    // Send settings update to TriviaGame immediately
-    this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
-      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
-      settings: { ...this.gameSettings }
-    });
+    this.sendSettingsUpdate();
   }
 
   private toggleSettingsLock(): void {
-    this.updateGameSetting('isLocked', !this.gameSettings.isLocked);
+    // No longer needed - removed lock functionality
+  }
+
+  // Timer type methods
+  private setTimerType(type: 'fast' | 'normal' | 'slow'): void {
+    
+    this.gameSettings.timerType = type;
+    // Update actual timeLimit based on timer type
+    switch (type) {
+      case 'fast':
+        this.gameSettings.timeLimit = 15;
+        break;
+      case 'normal':
+        this.gameSettings.timeLimit = 30;
+        break;
+      case 'slow':
+        this.gameSettings.timeLimit = 60;
+        break;
+    }
+    this.gameSettingsBinding.set({ ...this.gameSettings });
+    this.sendSettingsUpdate();
+  }
+
+  // Difficulty type methods
+  private setDifficultyType(type: 'easy' | 'medium' | 'hard'): void {
+    
+    this.gameSettings.difficultyType = type;
+    this.gameSettings.difficulty = type; // Keep backward compatibility
+    this.gameSettingsBinding.set({ ...this.gameSettings });
+    this.sendSettingsUpdate();
+  }
+
+  // Modifier toggle methods
+  private toggleModifier(modifier: 'autoAdvance' | 'powerUps' | 'bonusRounds'): void {
+    // Toggle the modifier value
+    this.gameSettings.modifiers[modifier] = !this.gameSettings.modifiers[modifier];
+    
+    // Force a deep copy of the entire gameSettings object to ensure binding updates
+    this.gameSettingsBinding.set({
+      ...this.gameSettings,
+      modifiers: {
+        ...this.gameSettings.modifiers
+      }
+    });
+    
+    this.sendSettingsUpdate();
+  }
+
+  private sendSettingsUpdate(): void {
+    this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
+      settings: {
+        numberOfQuestions: this.gameSettings.numberOfQuestions,
+        category: this.gameSettings.category,
+        difficulty: this.gameSettings.difficulty,
+        timeLimit: this.gameSettings.timeLimit,
+        timerType: this.gameSettings.timerType,
+        difficultyType: this.gameSettings.difficultyType,
+        modifiers: this.gameSettings.modifiers
+      }
+    });
   }
 
   render(): ui.UINode {
@@ -1687,38 +1761,52 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignSelf: 'flex-start'
                   },
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer_off
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.timeLimit === 0 ? '#FFFFFF' : '#666666'
-                        ),
-                        marginRight: 2
-                      }
+                    ui.Pressable({
+                      onPress: () => this.setTimerType('slow'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer_off
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.timerType === 'slow' ? '#FFFFFF' : '#666666'
+                            ),
+                            marginRight: 2
+                          }
+                        })
+                      ]
                     }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.timeLimit > 0 ? '#FFFFFF' : '#666666'
-                        ),
-                        marginRight: 2
-                      }
+                    ui.Pressable({
+                      onPress: () => this.setTimerType('normal'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.timerType === 'normal' ? '#FFFFFF' : '#666666'
+                            ),
+                            marginRight: 2
+                          }
+                        })
+                      ]
                     }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.timeLimit > 30 ? '#FFFFFF' : '#666666'
-
-   )
-                      }
+                    ui.Pressable({
+                      onPress: () => this.setTimerType('fast'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.timerType === 'fast' ? '#FFFFFF' : '#666666'
+                            )
+                          }
+                        })
+                      ]
                     })
                   ]
                 }),
@@ -1776,37 +1864,52 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignSelf: 'flex-start'
                   },
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.difficulty === 'easy' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
-                        ),
-                        marginRight: 2
-                      }
+                    ui.Pressable({
+                      onPress: () => this.setDifficultyType('easy'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.difficultyType === 'easy' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
+                            ),
+                            marginRight: 2
+                          }
+                        })
+                      ]
                     }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.difficulty === 'medium' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
-                        ),
-                        marginRight: 2
-                      }
+                    ui.Pressable({
+                      onPress: () => this.setDifficultyType('medium'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.difficultyType === 'medium' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
+                            ),
+                            marginRight: 2
+                          }
+                        })
+                      ]
                     }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.difficulty === 'hard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
-                        )
-                      }
+                    ui.Pressable({
+                      onPress: () => this.setDifficultyType('hard'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.difficultyType === 'hard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
+                            )
+                          }
+                        })
+                      ]
                     })
                   ]
                 }),
@@ -1841,7 +1944,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Game mode settings row
+            // Modifiers settings row
             ui.View({
               style: {
                 width: '100%',
@@ -1853,7 +1956,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               children: [
-                // Game mode options container
+                // Modifiers options container
                 ui.View({
                   style: {
                     backgroundColor: '#191919',
@@ -1864,35 +1967,52 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignSelf: 'flex-start'
                   },
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.autoAdvance ? '#FFFFFF' : '#666666'
-                        ),
-                        marginRight: 2
-                      }
+                    ui.Pressable({
+                      onPress: () => this.toggleModifier('autoAdvance'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.modifiers.autoAdvance ? '#FFFFFF' : '#666666'
+                            ),
+                            marginRight: 2
+                          }
+                        })
+                      ]
                     }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))), // bolt
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          !settings.muteDuringQuestions ? '#FFFFFF' : '#666666'
-                        ),
-                        marginRight: 2
-                      }
+                    ui.Pressable({
+                      onPress: () => this.toggleModifier('powerUps'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))), // bolt
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.modifiers.powerUps ? '#FFFFFF' : '#666666'
+                            ),
+                            marginRight: 2
+                          }
+                        })
+                      ]
                     }),
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))), // all_inclusive
-                      style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: '#666666' // Always dimmed as per reference
-                      }
+                    ui.Pressable({
+                      onPress: () => this.toggleModifier('bonusRounds'),
+                      children: [
+                        ui.Image({
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))), // all_inclusive
+                          style: {
+                            width: 28,
+                            height: 28,
+                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                              settings.modifiers.bonusRounds ? '#FFFFFF' : '#666666'
+                            )
+                          }
+                        })
+                      ]
                     })
                   ]
                 }),
@@ -1910,7 +2030,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     marginLeft: 5
                   },
                   onPress: () => {
-                    this.infoPopupTypeBinding.set('gamemode');
+                    this.infoPopupTypeBinding.set('modifiers');
                     this.showInfoPopupBinding.set(true);
                   },
                   children: [
@@ -1975,7 +2095,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     switch (type) {
                       case 'timer': return 'Timer';
                       case 'difficulty': return 'Difficulty';
-                      case 'gamemode': return 'Modifiers';
+                      case 'modifiers': return 'Modifiers';
                       default: return 'Game Settings';
                     }
                   }),
@@ -2019,13 +2139,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))); // none icon
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
+                          case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')));
                         }
                       }),
                       style: {
-                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 18 : 24),
-                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 18 : 24),
+                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'modifiers' ? 18 : 24),
+                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'modifiers' ? 18 : 24),
 
                         tintColor: '#000000'
                       }
@@ -2035,7 +2155,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return 'None';
                           case 'difficulty': return 'Easy';
-                          case 'gamemode': return 'AutoPlay';
+                          case 'modifiers': return 'AutoPlay';
                           default: return 'Timer Settings';
                         }
                       }),
@@ -2065,13 +2185,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))); // sentiment_neutral
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))); // bolt
+                          case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))); // bolt
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405')));
                         }
                       }),
                       style: {
-                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
-                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
+                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'modifiers' ? 20 : 24),
+                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'modifiers' ? 20 : 24),
 
                         tintColor: '#000000'
                       }
@@ -2081,7 +2201,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return '30 Seconds';
                           case 'difficulty': return 'Medium';
-                          case 'gamemode': return 'Questions Only';
+                          case 'modifiers': return 'Questions Only';
                           default: return 'Difficulty Levels';
                         }
                       }),
@@ -2109,13 +2229,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))); // more_time
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))); // skull
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))); // all_inclusive
+                          case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))); // all_inclusive
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265')));
                         }
                       }),
                       style: {
-                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
-                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'gamemode' ? 20 : 24),
+                        width: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'modifiers' ? 20 : 24),
+                        height: ui.Binding.derive([this.infoPopupTypeBinding], (type) => type === 'modifiers' ? 20 : 24),
                         tintColor: '#000000'
                       }
                     }),
@@ -2124,7 +2244,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         switch (type) {
                           case 'timer': return '90 Seconds';
                           case 'difficulty': return 'Hard';
-                          case 'gamemode': return 'Endless Mode';
+                          case 'modifiers': return 'Endless Mode';
                           default: return 'Game Modes';
                         }
                       }),

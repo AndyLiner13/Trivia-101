@@ -213,9 +213,13 @@ const triviaSettingsUpdateEvent = new hz.NetworkEvent<{
     category: string;
     difficulty: string;
     timeLimit: number;
-    autoAdvance: boolean;
-    muteDuringQuestions: boolean;
-    isLocked: boolean;
+    timerType: string;
+    difficultyType: string;
+    modifiers: {
+      autoAdvance: boolean;
+      powerUps: boolean;
+      bonusRounds: boolean;
+    };
   };
 }>('triviaSettingsUpdate');
 
@@ -512,6 +516,19 @@ export class TriviaGame extends ui.UIComponent {
     new Binding('#16A34A')  // Default green
   ];
   
+  // Icon visibility bindings for configuration screen
+  private leftIconVisibility = [
+    new Binding(false), // Lock icon (slot 0) - not used in new system
+    new Binding(true),  // Sentiment icon (slot 1) - difficulty type
+    new Binding(true)   // Timer icon (slot 2) - timer type
+  ];
+  
+  private rightIconVisibility = [
+    new Binding(true),  // Autoplay icon (slot 0) - modifiers.autoAdvance
+    new Binding(true),  // All Inclusive icon (slot 1) - modifiers.bonusRounds
+    new Binding(true)   // Bolt icon (slot 2) - modifiers.powerUps
+  ];
+  
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
   private isLocalPlayerHost: boolean = false;
@@ -521,6 +538,15 @@ export class TriviaGame extends ui.UIComponent {
     numQuestions: 5,
     category: "Italian Brainrot Quiz",
     difficulty: "easy"
+  };
+
+  // Modifier settings from TriviaPhone
+  private timerType: string = 'normal';
+  private difficultyType: string = 'medium';
+  private modifiers = {
+    autoAdvance: false,
+    powerUps: false,
+    bonusRounds: false
   };
 
   // Game data
@@ -633,6 +659,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Set up network event listeners
     this.setupNetworkEvents();
+    
+    // Initialize icon visibility with default state
+    this.updateIconVisibility();
     
     // Initialize the UI (shows config screen by default)
     this.resetGameState();
@@ -1920,22 +1949,47 @@ export class TriviaGame extends ui.UIComponent {
     this.showNextQuestion();
   }
 
-  private async onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, autoAdvance: boolean, muteDuringQuestions: boolean, isLocked: boolean } }): Promise<void> {
+  private async onSettingsUpdate(eventData: { hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }): Promise<void> {
     
     // Update the game configuration immediately when settings change in TriviaPhone
     this.gameConfig = {
       timeLimit: eventData.settings.timeLimit,
-      autoAdvance: eventData.settings.autoAdvance,
+      autoAdvance: eventData.settings.modifiers.autoAdvance,
       numQuestions: eventData.settings.numberOfQuestions,
       category: eventData.settings.category.toLowerCase(),
       difficulty: eventData.settings.difficulty
     };
     
+    // Store modifier settings for icon visibility
+    this.timerType = eventData.settings.timerType;
+    this.difficultyType = eventData.settings.difficultyType;
+    this.modifiers = eventData.settings.modifiers;
+    
     // Update the binding to reflect changes in the UI
     this.gameConfigBinding.set(this.gameConfig);
+    this.updateIconVisibility();
     
     // Update questions based on new category and difficulty (now async with lazy loading)
     await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
+  }
+
+  private updateIconVisibility(): void {
+    // Timer type controls which timer icon shows (only 1 of 3)
+    // For now, we'll show all timer icons since we only have one timer icon in the layout
+    // Left side icon 2 (timer) - always show for timer type selection
+    this.leftIconVisibility[2].set(true);
+    
+    // Difficulty type controls which difficulty icon shows (only 1 of 3)
+    // Left side icon 1 (sentiment) - always show for difficulty type selection
+    this.leftIconVisibility[1].set(true);
+    
+    // Modifiers control right side icon visibility (can be all, some, or none)
+    this.rightIconVisibility[0].set(this.modifiers.autoAdvance);    // Autoplay
+    this.rightIconVisibility[1].set(this.modifiers.bonusRounds);   // All Inclusive
+    this.rightIconVisibility[2].set(this.modifiers.powerUps);     // Bolt
+    
+    // Lock icon is not used in new system
+    this.leftIconVisibility[0].set(false);
   }
 
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
@@ -2329,42 +2383,51 @@ export class TriviaGame extends ui.UIComponent {
                       paddingVertical: 72, // Increased from 16 to 50 for more top/bottom margins
                     },
                     children: [
-                      // Lock icon
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
+                      // Lock icon (hidden in new system)
+                      UINode.if(
+                        this.leftIconVisibility[0],
+                        View({
                           style: {
-                            width: 36, // Scaled up from 32
-                            height: 36 // Scaled up from 32
-                          }
+                          },
+                          children: Image({
+                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))),
+                            style: {
+                              width: 36, // Scaled up from 32
+                              height: 36 // Scaled up from 32
+                            }
+                          })
                         })
-                      }),
-                      // Sentiment Neutral icon
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
+                      ),
+                      // Sentiment Neutral icon (difficulty selection)
+                      UINode.if(
+                        this.leftIconVisibility[1],
+                        View({
                           style: {
-                            width: 36, // Scaled up from 32
-                            height: 36 // Scaled up from 32
-                          }
+                          },
+                          children: Image({
+                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
+                            style: {
+                              width: 36, // Scaled up from 32
+                              height: 36 // Scaled up from 32
+                            }
+                          })
                         })
-                      }),
-                      // Timer icon
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                      ),
+                      // Timer icon (timer selection)
+                      UINode.if(
+                        this.leftIconVisibility[2],
+                        View({
                           style: {
-                            width: 36, // Scaled up from 32
-                            height: 36 // Scaled up from 32
-                          }
+                          },
+                          children: Image({
+                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                            style: {
+                              width: 36, // Scaled up from 32
+                              height: 36 // Scaled up from 32
+                            }
+                          })
                         })
-                      })
+                      )
                     ]
                   }),
 
@@ -2382,42 +2445,51 @@ export class TriviaGame extends ui.UIComponent {
                       paddingVertical: 72, // Increased from 16 to 72 to match left side
                     },
                     children: [
-                      // Autoplay icon
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                      // Autoplay icon (modifier: autoAdvance)
+                      UINode.if(
+                        this.rightIconVisibility[0],
+                        View({
                           style: {
-                            width: 32, // Scaled down from 48 by 4px
-                            height: 32 // Scaled down from 48 by 4px
-                          }
+                          },
+                          children: Image({
+                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                            style: {
+                              width: 32, // Scaled down from 48 by 4px
+                              height: 32 // Scaled down from 48 by 4px
+                            }
+                          })
                         })
-                      }),
-                      // All Inclusive icon
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
+                      ),
+                      // All Inclusive icon (modifier: bonusRounds)
+                      UINode.if(
+                        this.rightIconVisibility[1],
+                        View({
                           style: {
-                            width: 36, // Scaled down from 48 by 4px
-                            height: 36 // Scaled down from 48 by 4px
-                          }
+                          },
+                          children: Image({
+                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))),
+                            style: {
+                              width: 36, // Scaled down from 48 by 4px
+                              height: 36 // Scaled down from 48 by 4px
+                            }
+                          })
                         })
-                      }),
-                      // Bolt icon
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
+                      ),
+                      // Bolt icon (modifier: powerUps)
+                      UINode.if(
+                        this.rightIconVisibility[2],
+                        View({
                           style: {
-                            width: 36, // Scaled down from 48 by 4px
-                            height: 36 // Scaled down from 48 by 4px
-                          }
+                          },
+                          children: Image({
+                            source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))),
+                            style: {
+                              width: 36, // Scaled down from 48 by 4px
+                              height: 36 // Scaled down from 48 by 4px
+                            }
+                          })
                         })
-                      })
+                      )
                     ]
                   }),
 
