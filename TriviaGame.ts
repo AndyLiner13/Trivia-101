@@ -5227,6 +5227,103 @@ export class TriviaGame extends ui.UIComponent {
     this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
   }
 
+  private async syncNewPlayerToGameState(player: hz.Player): Promise<void> {
+    const playerId = player.id.toString();
+    
+    console.log(`🔄 Syncing new player ${player.name.get()} to current game state`);
+    
+    // Give the TriviaPhone a moment to initialize after phone assignment
+    this.async.setTimeout(async () => {
+      // Send a game registration event to notify all TriviaPhones of the current state
+      // The new player's phone will receive this and auto-request state sync
+      this.sendNetworkBroadcastEvent(triviaGameRegisteredEvent, {
+        isRunning: this.isRunning,
+        hasQuestions: this.triviaQuestions.length > 0
+      });
+      
+      // Also send the current game state directly as a fallback
+      await this.sendGameStateToNewPlayer(playerId);
+    }, 100); // Small delay to ensure phone is fully initialized
+  }
+
+  private async sendGameStateToNewPlayer(playerId: string): Promise<void> {
+    // Determine current game state
+    let gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended' = 'waiting';
+    let responseData: any = {
+      requesterId: playerId,
+      gameState: gameState
+    };
+
+    if (this.isRunning) {
+      if (this.isShowingResults || this.isShowingLeaderboard) {
+        // For results or leaderboard, send waiting state so they see pre-game screen until next question
+        gameState = 'waiting';
+        responseData.gameState = gameState;
+        console.log(`📱 Player joined during results/leaderboard - sending pre-game state`);
+      } else if (this.currentQuestion) {
+        // Game is active with a current question - sync to question screen
+        gameState = 'playing';
+        responseData.gameState = gameState;
+        
+        // Create serializable question for both response data and events
+        const serializableQuestion: SerializableQuestion = {
+          id: this.currentQuestion.id,
+          question: this.currentQuestion.question,
+          category: this.currentQuestion.category || 'General',
+          difficulty: this.currentQuestion.difficulty || 'easy',
+          image: this.currentQuestion.image, // Include the image field
+          answers: this.currentQuestion.answers
+        };
+        
+        responseData.currentQuestion = serializableQuestion;
+        responseData.questionIndex = this.currentQuestionIndex;
+        responseData.timeLimit = this.props.questionTimeLimit;
+        console.log(`📱 Player joined mid-question - syncing to current question ${this.currentQuestionIndex + 1}`);
+        
+        // Also send the appropriate question type event to ensure proper UI display
+        const answerCount = this.currentQuestion.answers ? this.currentQuestion.answers.length : 4;
+        if (answerCount === 2) {
+          // Send two-option question event
+          this.sendNetworkBroadcastEvent(triviaTwoOptionsEvent, {
+            question: serializableQuestion,
+            questionIndex: this.currentQuestionIndex,
+            timeLimit: this.props.questionTimeLimit,
+            totalQuestions: this.triviaQuestions.length
+          });
+        } else {
+          // Send four-option question event
+          this.sendNetworkBroadcastEvent(triviaFourOptionsEvent, {
+            question: serializableQuestion,
+            questionIndex: this.currentQuestionIndex,
+            timeLimit: this.props.questionTimeLimit,
+            totalQuestions: this.triviaQuestions.length
+          });
+        }
+        
+        // If timer is active, sync the new player to current timer state
+        if (this.timerInterval && this.timeRemaining > 0) {
+          console.log(`⏰ Syncing timer state: ${this.timeRemaining}s remaining`);
+          this.sendNetworkBroadcastEvent(triviaTimerUpdateEvent, {
+            timeRemaining: this.timeRemaining,
+            questionIndex: this.currentQuestionIndex
+          });
+        }
+      } else {
+        // Game is running but no current question - show pre-game screen
+        gameState = 'waiting';
+        responseData.gameState = gameState;
+        console.log(`📱 Player joined between questions - sending pre-game state`);
+      }
+    } else {
+      gameState = 'waiting';
+      responseData.gameState = gameState;
+      console.log(`📱 Player joined while game not running - sending pre-game state`);
+    }
+    
+    // Send the targeted state response directly to the new player
+    this.sendNetworkBroadcastEvent(triviaStateResponseEvent, responseData);
+  }
+
   private onGameReset(event: { hostId: string }): void {
     
     // Reset the game to pre-game configuration screen
@@ -5384,6 +5481,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Detect host player when a new player joins (only if no host is set yet)
     this.detectHostPlayer();
+    
+    // Sync new player to current game state if game is active
+    this.syncNewPlayerToGameState(player);
   }
 
   private onPlayerExit(player: hz.Player): void {
