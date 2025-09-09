@@ -509,6 +509,9 @@ export class TriviaGame extends ui.UIComponent {
   private hostPlayerIdBinding = new Binding<string | null>(null);
   private isLocalPlayerHostBinding = new Binding(false);
   
+  // Category name binding for pre-game screen display
+  private categoryNameBinding = new Binding("Italian Brainrot Quiz");
+  
   // Layout mode binding - determines if question should be centered (true) or at top (false)
   private centerQuestionBinding = new Binding(false);
   
@@ -695,6 +698,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Detect host player for existing players
     this.detectHostPlayer();
+    
+    // Initialize category display with default category
+    this.updateCategoryDisplay(this.gameConfig.category);
     
     console.log('✅ TriviaGame startup completed successfully');
   }
@@ -2058,6 +2064,9 @@ export class TriviaGame extends ui.UIComponent {
     this.gameConfigBinding.set(this.gameConfig);
     this.updateIconVisibility();
     
+    // Update category name display in pre-game screen
+    this.updateCategoryDisplay(eventData.settings.category);
+    
     // Update lock icon if we're in config screen (lock state may have changed)
     if (this.isShowingConfigScreen) {
       this.updateLockIcon('config');
@@ -2065,6 +2074,29 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update questions based on new category and difficulty (now async with lazy loading)
     await this.updateQuestionsForCategory(this.gameConfig.category, this.gameConfig.difficulty);
+  }
+
+  private updateCategoryDisplay(category: string): void {
+    // Convert category internal name to display name for pre-game screen
+    let displayName: string;
+    switch (category) {
+      case 'General':
+        displayName = 'General Trivia';
+        break;
+      case 'Another Category':
+        displayName = 'Another Category';
+        break;
+      case 'Italian Brainrot Quiz':
+        displayName = 'Italian Brainrot Quiz';
+        break;
+      default:
+        displayName = category; // Fallback to original category name
+        break;
+    }
+    
+    // Update the category name binding
+    this.categoryNameBinding.set(displayName);
+    console.log(`🏷️ Category display updated to: "${displayName}"`);
   }
 
   private updateIconVisibility(): void {
@@ -2486,7 +2518,7 @@ export class TriviaGame extends ui.UIComponent {
                       paddingVertical: 8, // 8px padding for height that hugs the text
                     },
                     children: Text({
-                      text: 'General Trivia',
+                      text: this.categoryNameBinding,
                       style: {
                         fontSize: 20, // Scaled down from 24
                         fontWeight: 'bold',
