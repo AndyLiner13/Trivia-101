@@ -144,6 +144,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showInfoPopupBinding = new ui.Binding(false);
   private infoPopupTypeBinding = new ui.Binding<'timer' | 'difficulty' | 'gamemode'>('timer');
 
+  // Debug outline toggle binding
+  private showOutlinesBinding = new ui.Binding(false);
+  private showOutlines: boolean = false;
+
   constructor() {
     super();
     this.isReady = false;
@@ -2263,7 +2267,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 borderRadius: 8,
                 padding: 4,
                 flexDirection: 'row',
-                alignItems: 'center'
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#0000CC' : 'transparent'), // BLUE-4 - within red
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(255, 204, 0, 0.5)' : '#191919') // Gold fill (complementary to blue)
               },
               children: [
                 ui.Image({
@@ -2296,7 +2303,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: 32,
                 height: 32,
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                borderWidth: this.showOutlinesBinding.derive(show => show ? 2 : 0),
+                borderColor: this.showOutlinesBinding.derive(show => show ? '#CC0000' : 'transparent'), // BLUE-5 - within red
+                backgroundColor: this.showOutlinesBinding.derive(show => show ? 'rgba(0, 255, 51, 0.5)' : '#191919') // Chartreuse fill (complementary to blue)
               },
               children: [
                 ui.Image({

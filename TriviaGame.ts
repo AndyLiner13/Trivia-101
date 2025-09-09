@@ -3211,259 +3211,433 @@ export class TriviaGame extends ui.UIComponent {
                       display: this.showLeaderboardBinding.derive(show => show ? 'flex' : 'none')
                     },
                     children: [
-                      // Header
-                      View({
+                      // Background image for leaderboard
+                      Image({
+                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2770757216446813'))),
                         style: {
                           position: 'absolute',
-                          top: 8, // Reduced from 12 to 8
+                          top: 0,
                           left: 0,
                           right: 0,
-                          alignItems: 'center'
-                        },
-                        children: View({
-                          style: {
-                            backgroundColor: 'white',
-                            borderRadius: 8,
-                            paddingHorizontal: 20, // Reduced from 24 to 20
-                            paddingVertical: 6, // Reduced from 8 to 6
-                            shadowColor: 'black',
-                            shadowOpacity: 0.15,
-                            shadowRadius: 4,
-                            shadowOffset: [0, 2],
-                          },
-                          children: Text({
-                            text: 'Leaderboard',
-                            style: {
-                              fontSize: 16, // Reduced from 18 to 16
-                              fontWeight: 'bold',
-                              color: '#1F2937'
-                            }
-                          })
-                        })
+                          bottom: 0,
+                          width: '100%',
+                          height: '100%',
+                          resizeMode: 'cover',
+                          zIndex: -1
+                        }
                       }),
-
-                      // Leaderboard list
+                      // Main content container
                       View({
                         style: {
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'flex-start',
+                          paddingHorizontal: 32,
+                          paddingVertical: 20,
                           position: 'absolute',
-                          top: 48, // Reduced from 60 to 48
-                          bottom: 10, // Reduced from 15 to 10
-                          left: '10%',
-                          right: '10%',
-                          flexDirection: 'column'
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0
                         },
                         children: [
-                          // Player entries with improved spacing
-                          UINode.if(
-                            this.leaderboardDataBinding.derive(players => players.length > 0),
-                            View({
+                          // Header - "Leaderboard" or "Game Over!"
+                          View({
+                            style: {
+                              backgroundColor: 'white',
+                              borderRadius: 8,
+                              paddingHorizontal: 9,
+                              paddingVertical: 9,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginBottom: 12
+                            },
+                            children: Text({
+                              text: this.showGameOverBinding.derive(isGameOver => isGameOver ? 'Game Over!' : 'Leaderboard'),
                               style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                borderRadius: 8,
-                                padding: 7, // Increased from 6 to 7 to match DebugUI
-                                marginBottom: 3, // Reduced from 8 to 3 for tight spacing
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1],
-                              },
-                              children: [
-                                View({
-                                  style: {
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    flex: 1
-                                  },
-                                  children: [
-                                    View({
-                                      style: {
-                                        width: 27, // Increased from 24 to 27
-                                        height: 27, // Increased from 24 to 27
-                                        borderRadius: 13.5, // Updated for new size
-                                        backgroundColor: '#F3F4F6',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: 12
-                                      },
-                                      children: Text({
-                                        text: '1',
-                                        style: {
-                                          fontSize: 12,
-                                          fontWeight: 'bold',
-                                          color: '#1F2937'
-                                        }
-                                      })
-                                    }),
-                                    Text({
-                                      text: this.leaderboardDataBinding.derive(players =>
-                                        players.length > 0 ? players[0].name : ''
-                                      ),
-                                      style: {
-                                        fontSize: 14,
-                                        fontWeight: '500',
-                                        color: '#1F2937'
-                                      }
-                                    })
-                                  ]
-                                }),
-                                Text({
-                                  text: this.leaderboardDataBinding.derive(players =>
-                                    players.length > 0 ? players[0].score.toString() : '0'
-                                  ),
-                                  style: {
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937',
-                                    marginRight: 8
-                                  }
-                                })
-                              ]
+                                fontSize: 21,
+                                fontWeight: 'bold',
+                                color: 'black',
+                                textAlign: 'center'
+                              }
                             })
-                          ),
+                          }),
 
-                          // Additional player entries...
-                          UINode.if(
-                            this.leaderboardDataBinding.derive(players => players.length > 1),
-                            View({
-                              style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                borderRadius: 8,
-                                padding: 7, // Reduced from 12 to 7
-                                marginBottom: 3, // Reduced from 8 to 3
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1],
-                              },
-                              children: [
+                          // Player Entries
+                          View({
+                            style: {
+                              width: '100%'
+                            },
+                            children: [
+                              // First Place
+                              UINode.if(
+                                this.leaderboardDataBinding.derive(players => players.length > 0),
                                 View({
                                   style: {
+                                    backgroundColor: 'white',
+                                    height: 56,
+                                    borderRadius: 10,
+                                    paddingHorizontal: 13,
+                                    paddingVertical: 0,
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    flex: 1
+                                    justifyContent: 'space-between',
+                                    marginBottom: 7
                                   },
                                   children: [
                                     View({
                                       style: {
-                                        width: 27, // Increased from 24 to 27
-                                        height: 27, // Increased from 24 to 27
-                                        borderRadius: 13.5, // Updated for new size
-                                        backgroundColor: '#F3F4F6',
+                                        flexDirection: 'row',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: 12
+                                        flex: 1
                                       },
-                                      children: Text({
-                                        text: '2',
-                                        style: {
-                                          fontSize: 12,
-                                          fontWeight: 'bold',
-                                          color: '#1F2937'
-                                        }
-                                      })
+                                      children: [
+                                        // Ranking number
+                                        View({
+                                          style: {
+                                            width: 38,
+                                            height: 25,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginRight: 10
+                                          },
+                                          children: Text({
+                                            text: '1',
+                                            style: {
+                                              fontSize: 22,
+                                              fontWeight: 'bold',
+                                              color: 'black'
+                                            }
+                                          })
+                                        }),
+                                        // Avatar
+                                        View({
+                                          style: {
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: 8,
+                                            backgroundColor: '#F3F4F6',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginRight: 10,
+                                            overflow: 'hidden'
+                                          },
+                                          children: [
+                                            UINode.if(
+                                              this.leaderboardDataBinding.derive(players =>
+                                                players.length > 0 && players[0].headshotImageSource
+                                              ),
+                                              Image({
+                                                source: this.leaderboardDataBinding.derive(players =>
+                                                  players.length > 0 && players[0].headshotImageSource ? players[0].headshotImageSource : null
+                                                ),
+                                                style: {
+                                                  width: 42,
+                                                  height: 42,
+                                                  borderRadius: 8
+                                                }
+                                              })
+                                            ),
+                                            UINode.if(
+                                              this.leaderboardDataBinding.derive(players =>
+                                                players.length > 0 && !players[0].headshotImageSource
+                                              ),
+                                              Text({
+                                                text: this.leaderboardDataBinding.derive(players =>
+                                                  players.length > 0 ? players[0].name.charAt(0).toUpperCase() : ''
+                                                ),
+                                                style: {
+                                                  fontSize: 13,
+                                                  fontWeight: 'bold',
+                                                  color: 'black'
+                                                }
+                                              })
+                                            )
+                                          ]
+                                        }),
+                                        // Player name
+                                        View({
+                                          style: {
+                                            flex: 1,
+                                            alignItems: 'flex-start',
+                                            justifyContent: 'center'
+                                          },
+                                          children: Text({
+                                            text: this.leaderboardDataBinding.derive(players =>
+                                              players.length > 0 ? players[0].name : ''
+                                            ),
+                                            style: {
+                                              fontSize: 17,
+                                              fontWeight: 'bold',
+                                              color: 'black',
+                                              textAlign: 'left'
+                                            }
+                                          })
+                                        })
+                                      ]
                                     }),
+                                    // Score
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
-                                        players.length > 1 ? players[1].name : ''
+                                        players.length > 0 ? players[0].score.toString() : '0'
                                       ),
                                       style: {
-                                        fontSize: 14,
-                                        fontWeight: '500',
-                                        color: '#1F2937'
+                                        fontSize: 17,
+                                        fontWeight: 'bold',
+                                        color: 'black',
+                                        marginRight: 8
                                       }
                                     })
                                   ]
-                                }),
-                                Text({
-                                  text: this.leaderboardDataBinding.derive(players =>
-                                    players.length > 1 ? players[1].score.toString() : '0'
-                                  ),
-                                  style: {
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937',
-                                    marginRight: 8
-                                  }
                                 })
-                              ]
-                            })
-                          ),
+                              ),
 
-                          UINode.if(
-                            this.leaderboardDataBinding.derive(players => players.length > 2),
-                            View({
-                              style: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                borderRadius: 8,
-                                padding: 7, // Reduced from 12 to 7
-                                marginBottom: 3, // Reduced from 8 to 3
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                shadowColor: 'black',
-                                shadowOpacity: 0.1,
-                                shadowRadius: 3,
-                                shadowOffset: [0, 1],
-                              },
-                              children: [
+                              // Second Place
+                              UINode.if(
+                                this.leaderboardDataBinding.derive(players => players.length > 1),
                                 View({
                                   style: {
+                                    backgroundColor: 'white',
+                                    height: 56,
+                                    borderRadius: 10,
+                                    paddingHorizontal: 13,
+                                    paddingVertical: 0,
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    flex: 1
+                                    justifyContent: 'space-between',
+                                    marginBottom: 7
                                   },
                                   children: [
                                     View({
                                       style: {
-                                        width: 27, // Increased from 24 to 27
-                                        height: 27, // Increased from 24 to 27
-                                        borderRadius: 13.5, // Updated for new size
-                                        backgroundColor: '#F3F4F6',
+                                        flexDirection: 'row',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: 12
+                                        flex: 1
                                       },
-                                      children: Text({
-                                        text: '3',
-                                        style: {
-                                          fontSize: 12,
-                                          fontWeight: 'bold',
-                                          color: '#1F2937'
-                                        }
-                                      })
+                                      children: [
+                                        // Ranking number
+                                        View({
+                                          style: {
+                                            width: 38,
+                                            height: 25,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginRight: 10
+                                          },
+                                          children: Text({
+                                            text: '2',
+                                            style: {
+                                              fontSize: 22,
+                                              fontWeight: 'bold',
+                                              color: 'black'
+                                            }
+                                          })
+                                        }),
+                                        // Avatar
+                                        View({
+                                          style: {
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: 8,
+                                            backgroundColor: '#F3F4F6',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginRight: 10,
+                                            overflow: 'hidden'
+                                          },
+                                          children: [
+                                            UINode.if(
+                                              this.leaderboardDataBinding.derive(players =>
+                                                players.length > 1 && players[1].headshotImageSource
+                                              ),
+                                              Image({
+                                                source: this.leaderboardDataBinding.derive(players =>
+                                                  players.length > 1 && players[1].headshotImageSource ? players[1].headshotImageSource : null
+                                                ),
+                                                style: {
+                                                  width: 42,
+                                                  height: 42,
+                                                  borderRadius: 8
+                                                }
+                                              })
+                                            ),
+                                            UINode.if(
+                                              this.leaderboardDataBinding.derive(players =>
+                                                players.length > 1 && !players[1].headshotImageSource
+                                              ),
+                                              Text({
+                                                text: this.leaderboardDataBinding.derive(players =>
+                                                  players.length > 1 ? players[1].name.charAt(0).toUpperCase() : ''
+                                                ),
+                                                style: {
+                                                  fontSize: 13,
+                                                  fontWeight: 'bold',
+                                                  color: 'black'
+                                                }
+                                              })
+                                            )
+                                          ]
+                                        }),
+                                        // Player name
+                                        View({
+                                          style: {
+                                            flex: 1,
+                                            alignItems: 'flex-start',
+                                            justifyContent: 'center'
+                                          },
+                                          children: Text({
+                                            text: this.leaderboardDataBinding.derive(players =>
+                                              players.length > 1 ? players[1].name : ''
+                                            ),
+                                            style: {
+                                              fontSize: 17,
+                                              fontWeight: 'bold',
+                                              color: 'black',
+                                              textAlign: 'left'
+                                            }
+                                          })
+                                        })
+                                      ]
                                     }),
+                                    // Score
                                     Text({
                                       text: this.leaderboardDataBinding.derive(players =>
-                                        players.length > 2 ? players[2].name : ''
+                                        players.length > 1 ? players[1].score.toString() : '0'
                                       ),
                                       style: {
-                                        fontSize: 14,
-                                        fontWeight: '500',
-                                        color: '#1F2937'
+                                        fontSize: 17,
+                                        fontWeight: 'bold',
+                                        color: 'black',
+                                        marginRight: 8
                                       }
                                     })
                                   ]
-                                }),
-                                Text({
-                                  text: this.leaderboardDataBinding.derive(players =>
-                                    players.length > 2 ? players[2].score.toString() : '0'
-                                  ),
-                                  style: {
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: '#1F2937',
-                                    marginRight: 8
-                                  }
                                 })
-                              ]
-                            })
-                          )
+                              ),
+
+                              // Third Place
+                              UINode.if(
+                                this.leaderboardDataBinding.derive(players => players.length > 2),
+                                View({
+                                  style: {
+                                    backgroundColor: 'white',
+                                    height: 56,
+                                    borderRadius: 10,
+                                    paddingHorizontal: 13,
+                                    paddingVertical: 0,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between'
+                                  },
+                                  children: [
+                                    View({
+                                      style: {
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        flex: 1
+                                      },
+                                      children: [
+                                        // Ranking number
+                                        View({
+                                          style: {
+                                            width: 38,
+                                            height: 25,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginRight: 10
+                                          },
+                                          children: Text({
+                                            text: '3',
+                                            style: {
+                                              fontSize: 22,
+                                              fontWeight: 'bold',
+                                              color: 'black'
+                                            }
+                                          })
+                                        }),
+                                        // Avatar
+                                        View({
+                                          style: {
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: 8,
+                                            backgroundColor: '#F3F4F6',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginRight: 10,
+                                            overflow: 'hidden'
+                                          },
+                                          children: [
+                                            UINode.if(
+                                              this.leaderboardDataBinding.derive(players =>
+                                                players.length > 2 && players[2].headshotImageSource
+                                              ),
+                                              Image({
+                                                source: this.leaderboardDataBinding.derive(players =>
+                                                  players.length > 2 && players[2].headshotImageSource ? players[2].headshotImageSource : null
+                                                ),
+                                                style: {
+                                                  width: 42,
+                                                  height: 42,
+                                                  borderRadius: 8
+                                                }
+                                              })
+                                            ),
+                                            UINode.if(
+                                              this.leaderboardDataBinding.derive(players =>
+                                                players.length > 2 && !players[2].headshotImageSource
+                                              ),
+                                              Text({
+                                                text: this.leaderboardDataBinding.derive(players =>
+                                                  players.length > 2 ? players[2].name.charAt(0).toUpperCase() : ''
+                                                ),
+                                                style: {
+                                                  fontSize: 13,
+                                                  fontWeight: 'bold',
+                                                  color: 'black'
+                                                }
+                                              })
+                                            )
+                                          ]
+                                        }),
+                                        // Player name
+                                        View({
+                                          style: {
+                                            flex: 1,
+                                            alignItems: 'flex-start',
+                                            justifyContent: 'center'
+                                          },
+                                          children: Text({
+                                            text: this.leaderboardDataBinding.derive(players =>
+                                              players.length > 2 ? players[2].name : ''
+                                            ),
+                                            style: {
+                                              fontSize: 17,
+                                              fontWeight: 'bold',
+                                              color: 'black',
+                                              textAlign: 'left'
+                                            }
+                                          })
+                                        })
+                                      ]
+                                    }),
+                                    // Score
+                                    Text({
+                                      text: this.leaderboardDataBinding.derive(players =>
+                                        players.length > 2 ? players[2].score.toString() : '0'
+                                      ),
+                                      style: {
+                                        fontSize: 17,
+                                        fontWeight: 'bold',
+                                        color: 'black',
+                                        marginRight: 8
+                                      }
+                                    })
+                                  ]
+                                })
+                              )
+                            ]
+                          })
                         ]
                       })
                     ]
