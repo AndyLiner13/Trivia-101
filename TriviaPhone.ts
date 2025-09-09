@@ -2401,7 +2401,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  marginBottom: 8
+                  marginBottom: 8,
+                  backgroundColor: '#FFFFFF'
                 },
                 onPress: () => this.handleStartGame(),
                 children: [
@@ -2623,7 +2624,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  marginBottom: 8
+                  marginBottom: 8,
+                  backgroundColor: '#FFFFFF'
                 },
                 onPress: () => this.handleStartGame(),
                 children: [
