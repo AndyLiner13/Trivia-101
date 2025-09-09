@@ -1593,7 +1593,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Settings icon container
+                // Lock icon container (red)
                 ui.View({
                   style: {
                     backgroundColor: '#191919',
@@ -1606,11 +1606,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
                       style: {
                         width: 26,
                         height: 26,
-                        tintColor: '#FFFFFF'
+                        tintColor: '#FF4444' // Red color
                       }
                     })
                   ]
@@ -1765,7 +1765,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.setTimerType('slow'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer_off
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))), // timer_off
                           style: {
                             width: 28,
                             height: 28,
@@ -2445,7 +2445,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Settings icon container
+            // Lock icon container (red)
             ui.View({
               style: {
                 position: 'absolute',
@@ -2463,11 +2463,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
                   style: {
                     width: 26,
                     height: 26,
-                    tintColor: '#FFFFFF'
+                    tintColor: '#FF4444' // Red color
                   }
                 })
               ]
@@ -2671,7 +2671,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Settings icon container
+            // Lock icon container (red)
             ui.View({
               style: {
                 position: 'absolute',
@@ -2686,11 +2686,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247632857052841'))),
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613'))), // lock icon
                   style: {
                     width: 26,
                     height: 26,
-                    tintColor: '#FFFFFF'
+                    tintColor: '#FF4444' // Red color
                   }
                 })
               ]

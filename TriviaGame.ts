@@ -1982,10 +1982,10 @@ export class TriviaGame extends ui.UIComponent {
     let timerIconAsset: bigint;
     switch (this.timerType) {
       case 'slow':
-        timerIconAsset = BigInt('2035737657163790'); // timer_off
+        timerIconAsset = BigInt('1466620987937637'); // timer_off
         break;
       case 'normal':
-        timerIconAsset = BigInt('2035737657163790'); // timer (same as slow)
+        timerIconAsset = BigInt('2035737657163790'); // timer
         break;
       case 'fast':
         timerIconAsset = BigInt('1830264154592827'); // more_time
