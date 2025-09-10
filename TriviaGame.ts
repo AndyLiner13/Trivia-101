@@ -2656,7 +2656,7 @@ export class TriviaGame extends ui.UIComponent {
                   View({
                     style: {
                       position: 'absolute',
-                      bottom: -15, // Moved down further (10 pixels more)
+                      bottom: 0, // Moved down further (10 pixels more)
                       left: '25%', // Centered with equal margins
                       right: '25%', // Centered with equal margins
                       height: 65,
