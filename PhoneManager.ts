@@ -16,8 +16,14 @@ export class PhoneManager extends ui.UIComponent {
   private phoneAssignments: PhoneAssignment[] = [];
 
   initializeUI() {
-    // Required by UIComponent - no UI needed for PhoneManager
-    return {};
+    // PhoneManager doesn't render UI, but must return a valid UINode
+    return ui.View({
+      style: {
+        width: 0,
+        height: 0
+      },
+      children: []
+    });
   }
 
   async start() {
