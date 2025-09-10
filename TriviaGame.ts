@@ -517,7 +517,7 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfigBinding = new Binding({
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 5,
+    numQuestions: 48,
     category: "Italian Brainrot Quiz",
     difficulty: "easy"
   });
@@ -557,7 +557,7 @@ export class TriviaGame extends ui.UIComponent {
   private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690')))); // Default: medium difficulty
   
   // Binding for displaying the number of questions in pre-game UI
-  private questionCountBinding = new Binding("5");
+  private questionCountBinding = new Binding("48");
   
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
@@ -566,7 +566,7 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfig = {
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 5,
+    numQuestions: 48,
     category: "Italian Brainrot Quiz",
     difficulty: "easy"
   };

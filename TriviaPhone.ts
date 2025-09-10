@@ -55,7 +55,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Game settings state
   private gameSettings = {
-    numberOfQuestions: 5,
+    numberOfQuestions: 48,
     category: 'Italian Brainrot Quiz',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     timeLimit: 30,
@@ -1751,7 +1751,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private updateGameSetting(key: string, value: any): void {
+    const oldCategory = this.gameSettings.category;
     (this.gameSettings as any)[key] = value;
+    
+    // Handle category changes
+    if (key === 'category') {
+      if (value === 'Italian Brainrot Quiz') {
+        // When switching TO Italian Brainrot Quiz, always set to 48 questions
+        this.gameSettings.numberOfQuestions = 48;
+      } else if (oldCategory === 'Italian Brainrot Quiz' && value !== 'Italian Brainrot Quiz') {
+        // When switching FROM Italian Brainrot Quiz to another category, round to nearest 5
+        const currentCount = this.gameSettings.numberOfQuestions || 5;
+        const roundedCount = Math.round(currentCount / 5) * 5;
+        // Ensure it stays within bounds after rounding
+        this.gameSettings.numberOfQuestions = Math.max(5, Math.min(95, roundedCount));
+      }
+    }
+    
     this.gameSettingsBinding.set({ ...this.gameSettings });
     this.sendSettingsUpdate();
   }
@@ -1966,7 +1982,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private incrementQuestionCount(): void {
     const currentCount = this.gameSettings.numberOfQuestions || 5;
-    const newCount = Math.min(currentCount + 5, 95); // Max 95 questions
+    let newCount = Math.min(currentCount + 5, 95); // Max 95 questions
+    
+    // Round to nearest 5 if not Italian Brainrot Quiz
+    if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+      newCount = Math.round(newCount / 5) * 5;
+      // Ensure it stays within bounds after rounding
+      newCount = Math.max(5, Math.min(95, newCount));
+    }
     
     this.updateGameSetting('numberOfQuestions', newCount);
     // Incremented question count to {newCount}
@@ -1974,7 +1997,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private decrementQuestionCount(): void {
     const currentCount = this.gameSettings.numberOfQuestions || 5;
-    const newCount = Math.max(currentCount - 5, 5); // Min 5 questions
+    let newCount = Math.max(currentCount - 5, 5); // Min 5 questions
+    
+    // Round to nearest 5 if not Italian Brainrot Quiz
+    if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+      newCount = Math.round(newCount / 5) * 5;
+      // Ensure it stays within bounds after rounding
+      newCount = Math.max(5, Math.min(95, newCount));
+    }
     
     this.updateGameSetting('numberOfQuestions', newCount);
     // Decremented question count to {newCount}
