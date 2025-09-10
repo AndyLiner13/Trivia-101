@@ -150,6 +150,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private gameSettingsBinding = new ui.Binding(this.gameSettings);
   private currentViewModeBinding = new ui.Binding<'pre-game' | 'game-settings'>('pre-game');
 
+  // Timeout tracking for cleanup during reset
+  private pendingTimeouts: Set<any> = new Set();
+  
+  // Flag to track if game has been reset (to prevent late leaderboard display)
+  private gameHasBeenReset: boolean = false;
+
   // Host status binding
   private isHostBinding = new ui.Binding(false);
   private currentHostStatus = false;
@@ -171,6 +177,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   constructor() {
     super();
+  }
+
+  // Clear all pending timeouts to prevent interference between games
+  private clearAllPendingTimeouts(): void {
+    this.pendingTimeouts.forEach(timeoutId => {
+      this.async.clearTimeout(timeoutId);
+    });
+    this.pendingTimeouts.clear();
   }
 
   // Methods to interact with the native leaderboard system
@@ -198,9 +212,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private updateScoreDisplayDelayed(): void {
-    this.async.setTimeout(() => {
+    const timeoutId = this.async.setTimeout(() => {
+      this.pendingTimeouts.delete(timeoutId);
       this.updateScoreDisplay();
     }, 1000); // Increased delay to 1000ms to give persistent storage more time to initialize
+    this.pendingTimeouts.add(timeoutId);
   }
 
   private updateScoreDisplayWithRetry(retryCount: number = 0): void {
@@ -222,7 +238,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const assetTextureIds = [
       // Background textures
       '2225071587959777',   // Main TriviaPhone background
-      '1357119322709193',   // Pre-game background
+      '9783264971776963',   // Pre-game background
       '1358485312536960',   // Question pages background
       
       // AnswerSubmitted screen backgrounds
@@ -590,11 +606,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     });
 
     // Request state immediately when component starts (for players joining mid-game)
-    this.async.setTimeout(() => {
+    const stateRequestTimeoutId = this.async.setTimeout(() => {
+      this.pendingTimeouts.delete(stateRequestTimeoutId);
       this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
         requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
     }, 1000); // Wait 1 second for everything to initialize
+    this.pendingTimeouts.add(stateRequestTimeoutId);
   }
 
   private setupKeyboardInput(): void {
@@ -875,9 +893,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
       if (!isVRUser) {
         // Wait 25ms for position change to take effect, then focus the UI with retry logic
-        this.async.setTimeout(() => {
+        const focusTimeoutId = this.async.setTimeout(() => {
+          this.pendingTimeouts.delete(focusTimeoutId);
           this.attemptFocusWithRetry(player, 0);
         }, 25);
+        this.pendingTimeouts.add(focusTimeoutId);
       } else {
         // For VR users, set focus state immediately since we skip focusUI
         this.isPlayerFocusedOnUI = true;
@@ -903,9 +923,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
       if (attemptCount < maxRetries - 1) {
         // Try again after delay
-        this.async.setTimeout(() => {
+        const retryTimeoutId = this.async.setTimeout(() => {
+          this.pendingTimeouts.delete(retryTimeoutId);
           this.attemptFocusWithRetry(player, attemptCount + 1);
         }, retryDelay);
+        this.pendingTimeouts.add(retryTimeoutId);
       } else {
         // All retries exhausted, reset focus state
         this.isPlayerFocusedOnUI = false;
@@ -924,9 +946,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const localPlayer = this.world.getLocalPlayer();
     if (localPlayer) {
       // Explicitly hide the TriviaPhone after a short delay to ensure unfocus completes
-      this.async.setTimeout(() => {
+      const hideTimeoutId = this.async.setTimeout(() => {
+        this.pendingTimeouts.delete(hideTimeoutId);
         this.hideTriviaPhone();
       }, 50);
+      this.pendingTimeouts.add(hideTimeoutId);
     }
   }
 
@@ -1058,6 +1082,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Trivia game methods
   private startGame(): void {
     this.gameStarted = true;
+    this.gameHasBeenReset = false; // ✅ Clear reset flag when new game starts
     this.currentQuestionIndex = 0;
     this.currentQuestion = null;
     this.score = 0;
@@ -1139,11 +1164,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // The local increment is the source of truth until the next game event
     }
     
-    // Update leaderboard binding - but don't show leaderboard if game has ended
-    this.showLeaderboardBinding.set(eventData.showLeaderboard && !this.gameEnded || false);
+    // Update leaderboard binding - but don't show leaderboard if game has ended or been reset
+    this.showLeaderboardBinding.set(eventData.showLeaderboard && !this.gameEnded && !this.gameHasBeenReset || false);
     
     // Log when leaderboard is shown
-    if (eventData.showLeaderboard && !this.gameEnded) {
+    if (eventData.showLeaderboard && !this.gameEnded && !this.gameHasBeenReset) {
       // Check if end game button should be visible
       const isLastQuestion = (this.currentQuestionIndex + 1) >= this.gameSettings.numberOfQuestions;
       const isHost = this.isHost();
@@ -1156,9 +1181,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // This ensures we sync with server state at appropriate times
     if (eventData.showLeaderboard) {
       // Wait a bit longer for the server to process the award, then sync
-      this.async.setTimeout(() => {
+      const scoreUpdateTimeoutId = this.async.setTimeout(() => {
+        this.pendingTimeouts.delete(scoreUpdateTimeoutId);
         this.updateScoreDisplayWithRetry(0);
       }, 2000); // Wait 2 seconds for server processing
+      this.pendingTimeouts.add(scoreUpdateTimeoutId);
     }
   }
 
@@ -1207,9 +1234,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Update footer immediately when receiving a new question
     this.updateFooterBinding.set(true);
-    this.async.setTimeout(() => {
+    const footerTimeoutId1 = this.async.setTimeout(() => {
+      this.pendingTimeouts.delete(footerTimeoutId1);
       this.updateFooterBinding.set(false);
     }, 100);
+    this.pendingTimeouts.add(footerTimeoutId1);
   }
 
   public onTriviaFourOptions(eventData: { 
@@ -1257,9 +1286,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Update footer immediately when receiving a new question
     this.updateFooterBinding.set(true);
-    this.async.setTimeout(() => {
+    const footerTimeoutId2 = this.async.setTimeout(() => {
+      this.pendingTimeouts.delete(footerTimeoutId2);
       this.updateFooterBinding.set(false);
     }, 100);
+    this.pendingTimeouts.add(footerTimeoutId2);
   }
 
   private onTriviaStateResponse(event: {
@@ -1358,8 +1389,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private onTriviaGameReset(eventData: { hostId: string }): void {
     
+    // ✅ Clear all pending timeouts to prevent interference with the new game
+    this.clearAllPendingTimeouts();
+    
+    // ✅ Set reset flag to prevent any late leaderboard displays
+    this.gameHasBeenReset = true;
+    
     // Reset all game state to initial values
     this.gameStarted = false;
+    this.gameEnded = false; // ✅ Reset game ended flag
     this.gameEndedBinding.set(false);
     this.currentQuestionIndex = 0;
     this.currentQuestion = null;
@@ -1381,15 +1419,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset layout type to default
     this.layoutTypeBinding.set('four-options');
     
+    // ✅ Reset screen type to waiting to override any results/leaderboard screen
+    this.currentScreenType = 'waiting';
+    this.screenTypeBinding.set('waiting');
+    
     // Navigate back to pre-game screen
     this.currentViewMode = 'pre-game';
     this.currentViewModeBinding.set('pre-game');
 
-    // Refresh opted-out status when game resets
+    // Refresh opted-out status when game resets (preserve opted-out status and game modifiers)
     this.checkOptedOutStatus();
 
     // Update score display from persistent storage after reset with robust retry
     this.updateScoreDisplayWithRetry();
+
+    console.log("✅ TriviaPhone: Game reset complete - all timers cleared, leaderboard hidden, screen set to waiting");
   }
 
   private onPlayerUpdate(eventData: { playersInWorld: string[], playersAnswered: string[], answerCount: number }): void {
@@ -1493,9 +1537,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateFooterBinding.set(true);
     
     // Reset the trigger after a short delay to allow the binding to update
-    this.async.setTimeout(() => {
+    const nextQuestionTimeoutId = this.async.setTimeout(() => {
+      this.pendingTimeouts.delete(nextQuestionTimeoutId);
       this.updateFooterBinding.set(false);
     }, 100);
+    this.pendingTimeouts.add(nextQuestionTimeoutId);
   }
 
   private resetGame(): void {
@@ -2993,7 +3039,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Full-screen background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('9783264971776963'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3796,7 +3842,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1418913812533291'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3960,7 +4006,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('648661411200941'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792752243300401'))),
           style: {
             width: '100%',
             height: '100%',
@@ -4124,7 +4170,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1418913812533291'))),
           style: {
             width: '100%',
             height: '100%',
@@ -4332,7 +4378,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('648661411200941'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792752243300401'))),
           style: {
             width: '100%',
             height: '100%',

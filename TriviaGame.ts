@@ -757,10 +757,10 @@ export class TriviaGame extends ui.UIComponent {
       '1317550153280256',   // diamond
       
       // Background textures
-      '2770757216446813',   // TriviaGame configuration background
-      '1358485312536960',   // TriviaPhone question pages background
-      '1357119322709193',   // TriviaPhone pre-game background
-      '2225071587959777',   // TriviaPhone main background
+      '1142972504392965',   // TriviaGame configuration background
+      '1295411818793309',   // TriviaPhone question pages background
+      '1295411818793309',   // TriviaPhone pre-game background
+      '9783264971776963',   // TriviaPhone main background
       '3145261165647718',    // Left side icon background
       '3148012692041551',   // Center icon background
       '1320579906276560',   // Right side icon background
@@ -2023,6 +2023,12 @@ export class TriviaGame extends ui.UIComponent {
     
     // After 5 seconds, check if this is the last question
     this.async.setTimeout(() => {
+      // Check if game has ended before showing leaderboard
+      if (!this.isRunning) {
+        // Game has ended, don't show leaderboard
+        return;
+      }
+      
       // Check if this is the last question - if so, end the game instead of showing leaderboard
       // We check if currentQuestionIndex + 1 equals the total length (since we're 0-indexed)
       if (this.currentQuestionIndex + 1 >= this.triviaQuestions.length) {

@@ -1571,7 +1571,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     children: [
                       // Background image
                       ui.Image({
-                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
+                        source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1295411818793309'))),
                         style: {
                           width: '100%',
                           height: '100%',
@@ -2685,7 +2685,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1358485312536960'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1295411818793309'))),
           style: {
             width: '100%',
             height: '100%',
@@ -2965,7 +2965,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         // Full-screen background image
         ui.Image({
           source: ui.Binding.derive([this.isReadyBinding], (isReady) => 
-            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '1358485312536960')))
+            ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(isReady ? '797739146176423' : '1295411818793309')))
           ),
           style: {
             width: '100%',
@@ -3496,7 +3496,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1418913812533291'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3705,7 +3705,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('648661411200941'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792752243300401'))),
           style: {
             width: '100%',
             height: '100%',
@@ -3915,7 +3915,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('793736319770298'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1418913812533291'))),
           style: {
             width: '100%',
             height: '100%',
@@ -4175,7 +4175,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('648661411200941'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792752243300401'))),
           style: {
             width: '100%',
             height: '100%',

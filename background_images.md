@@ -3,3 +3,12 @@ Yellow Circle Screen = 1276483883806975
 Red Triangle Screen = 4164501203820285
 Green Star Scren = 1029237235836066
 Blue Square Screen = 781053527999316
+
+Main = 9783264971776963
+Green = 1418913812533291
+Blue = 1295411818793309
+Red = 792752243300401
+
+## TriviaGame
+Background Without Logo = 1142972504392965
+Background With Logo = 815090457525624
