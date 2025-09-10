@@ -2,54 +2,15 @@ import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import * as camera from 'horizon/camera';
 import { Social, AvatarImageType } from 'horizon/social';
-
-// Network events for trivia
-const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number }>('triviaQuestionShow');
-const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
-const triviaTwoOptionsEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number, totalQuestions: number }>('triviaTwoOptions');
-const triviaFourOptionsEvent = new hz.NetworkEvent<{ question: any, questionIndex: number, timeLimit: number, totalQuestions: number }>('triviaFourOptions');
-const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
-const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
-const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
-const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
-const triviaPlayerUpdateEvent = new hz.NetworkEvent<{ playersInWorld: string[], playersAnswered: string[], answerCount: number }>('triviaPlayerUpdate');
-const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, isLocked: boolean, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }>('triviaSettingsUpdate');
-const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
-const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
-const triviaAwardPointsEvent = new hz.NetworkEvent<{ playerId: string; points: number }>('triviaAwardPoints');
-const triviaPlayerLogoutEvent = new hz.NetworkEvent<{ playerId: string }>('triviaPlayerLogout');
-const triviaPlayerRejoinEvent = new hz.NetworkEvent<{ playerId: string }>('triviaPlayerRejoin');
-
-// Host view mode events
-const hostViewModeEvent = new hz.NetworkEvent<{ hostId: string, viewMode: 'pre-game' | 'game-settings' }>('hostViewMode');
-
-// Request-response events for state synchronization
-const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
-const triviaStateResponseEvent = new hz.NetworkEvent<{
-  requesterId: string,
-  gameState: 'waiting' | 'playing' | 'results' | 'leaderboard' | 'ended',
-  currentQuestion?: any,
-  questionIndex?: number,
-  timeLimit?: number,
-  showLeaderboard?: boolean,
-  leaderboardData?: Array<{name: string, score: number, playerId: string}>
-}>('triviaStateResponse');
-
-// Network event for host management
-const hostChangedEvent = new hz.NetworkEvent<{
-  newHostId: string;
-  oldHostId?: string;
-}>('hostChanged');
+import { TriviaNetworkEvents, GameSettings, LeaderboardEntry } from './TriviaNetworkEvents';
+import { TriviaAssetManager } from './TriviaAssetManager';
+import { TriviaGameStateManager } from './TriviaGameStateManager';
+import { TriviaScoreManager } from './TriviaScoreManager';
+import { TriviaTimeoutManager } from './TriviaTimeoutManager';
+import { TriviaPlayerUtils } from './TriviaPlayerUtils';
 
 // Built-in trivia questions (fallback only - TriviaGame provides the actual questions)
 const triviaQuestions: any[] = [];
-
-const answerShapes = [
-  { iconId: '2085541485520283', color: '#DC2626', shape: 'Triangle' }, // Red Triangle
-  { iconId: '1317550153280256', color: '#2563EB', shape: 'Square' },   // Blue Square
-  { iconId: '1247573280476332', color: '#EAB308', shape: 'Circle' },  // Yellow Circle
-  { iconId: '2403112933423824', color: '#16A34A', shape: 'Star' }     // Green Star
-];
 
 class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   static propsDefinition = {};
@@ -590,66 +551,66 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private setupNetworkEvents(): void {
     // Listen for trivia results events
-    this.connectNetworkBroadcastEvent(triviaResultsEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.results, (eventData) => {
       this.onTriviaResults(eventData);
     });
 
     // Listen for two-option question events
-    this.connectNetworkBroadcastEvent(triviaTwoOptionsEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.twoOptions, (eventData) => {
       this.onTriviaTwoOptions(eventData);
     });
 
     // Listen for four-option question events
-    this.connectNetworkBroadcastEvent(triviaFourOptionsEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.fourOptions, (eventData) => {
       this.onTriviaFourOptions(eventData);
     });
 
     // Listen for trivia game start events
-    this.connectNetworkBroadcastEvent(triviaGameStartEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.gameStart, (eventData) => {
       this.startGame();
     });
 
     // Listen for trivia game registration events
-    this.connectNetworkBroadcastEvent(triviaGameRegisteredEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.gameRegistered, (eventData) => {
       // Request current game state to sync with any ongoing game
-      this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+      this.sendNetworkBroadcastEvent(TriviaNetworkEvents.stateRequest, {
         requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
     });
 
     // Listen for player update events to track answer submission status
-    this.connectNetworkBroadcastEvent(triviaPlayerUpdateEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.playerUpdate, (eventData) => {
       this.onPlayerUpdate(eventData);
     });
 
     // Listen for trivia state responses
-    this.connectNetworkBroadcastEvent(triviaStateResponseEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.stateResponse, (eventData) => {
       this.onTriviaStateResponse(eventData);
     });
 
     // Listen for trivia game end events
-    this.connectNetworkBroadcastEvent(triviaGameEndEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.gameEnd, (eventData) => {
       this.onTriviaGameEnd(eventData);
     });
 
     // Listen for trivia game reset events
-    this.connectNetworkBroadcastEvent(triviaGameResetEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.gameReset, (eventData) => {
       this.onTriviaGameReset(eventData);
     });
 
     // Listen for host changed events
-    this.connectNetworkBroadcastEvent(hostChangedEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.hostChanged, (eventData) => {
       this.onHostChanged(eventData);
     });
 
-    this.connectNetworkBroadcastEvent(triviaSettingsUpdateEvent, (eventData) => {
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.settingsUpdate, (eventData) => {
       this.onSettingsUpdate(eventData);
     });
 
     // Request state immediately when component starts (for players joining mid-game)
     const stateRequestTimeoutId = this.async.setTimeout(() => {
       this.pendingTimeouts.delete(stateRequestTimeoutId);
-      this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+      this.sendNetworkBroadcastEvent(TriviaNetworkEvents.stateRequest, {
         requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
     }, 1000); // Wait 1 second for everything to initialize
@@ -1113,7 +1074,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (!localPlayer) return;
 
     // Send rejoin event to TriviaGame
-    this.sendNetworkBroadcastEvent(triviaPlayerRejoinEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.playerRejoin, {
       playerId: localPlayer.id.toString()
     });
 
@@ -1131,7 +1092,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // If a question is currently showing (game started, not showing results, and screen is two-options or four-options)
     if (gameStarted && !showResult && (currentScreenType === 'two-options' || currentScreenType === 'four-options')) {
       // Request current game state from TriviaGame to get the latest question
-      this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+      this.sendNetworkBroadcastEvent(TriviaNetworkEvents.stateRequest, {
         requesterId: localPlayer.id.toString()
       });
     } else {
@@ -1142,7 +1103,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (!this.isHost()) return;
 
     // Send network event to start the game for all players with configured settings
-    this.sendNetworkBroadcastEvent(triviaGameStartEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.gameStart, {
       hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
       config: {
         timeLimit: this.gameSettings.timeLimit,
@@ -1153,7 +1114,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     });
 
     // Also send the settings update event with modifier information
-    this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.settingsUpdate, {
       hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
       settings: {
         numberOfQuestions: this.gameSettings.numberOfQuestions,
@@ -1264,7 +1225,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // 🏆 TriviaPhone: Speed bonus calculated - Response time: ${responseTime}ms (${(responseTime/1000).toFixed(2)}s), Points: ${calculatedPoints}
       
       // Send network event to TriviaGame to award calculated points
-      this.sendNetworkBroadcastEvent(triviaAwardPointsEvent, {
+      this.sendNetworkBroadcastEvent(TriviaNetworkEvents.awardPoints, {
         playerId: this.world.getLocalPlayer()!.id.toString(),
         points: calculatedPoints
       });
@@ -1604,7 +1565,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
 
     // Send reset event to TriviaGame and all TriviaPhones
-    this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.gameReset, {
       hostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
     });
   }
@@ -1631,7 +1592,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Response time calculated: {responseTime} ms
 
     // Send network event with the answer index and calculated response time
-    this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.answerSubmitted, {
       playerId: this.assignedPlayer?.id.toString() || 'local',
       answerIndex: actualAnswerIndex,
       responseTime: responseTime
@@ -1655,7 +1616,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private nextQuestion(): void {
     // Send next question event to TriviaGame - let it handle all the logic
-    this.sendNetworkBroadcastEvent(triviaNextQuestionEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.nextQuestion, {
       playerId: this.world.getLocalPlayer()?.id.toString() || 'host'
     });
     
@@ -1694,7 +1655,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentViewMode = 'game-settings';
     this.currentViewModeBinding.set('game-settings');
     // Notify TriviaGame that host is in game settings
-    this.sendNetworkBroadcastEvent(hostViewModeEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.hostViewMode, {
       hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
       viewMode: 'game-settings'
     });
@@ -1704,7 +1665,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentViewMode = 'pre-game';
     this.currentViewModeBinding.set('pre-game');
     // Notify TriviaGame that host is in pre-game
-    this.sendNetworkBroadcastEvent(hostViewModeEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.hostViewMode, {
       hostId: this.world.getLocalPlayer()?.id.toString() || 'host',
       viewMode: 'pre-game'
     });
@@ -1782,7 +1743,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     const playerId = this.world.getLocalPlayer()?.id.toString() || 'unknown';
     
-    this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.settingsUpdate, {
       hostId: playerId, // Use actual player ID instead of always 'host'
       settings: {
         numberOfQuestions: this.gameSettings.numberOfQuestions,
@@ -3136,7 +3097,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
       
       // Send game reset event to end the game for all players
-      this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
+      this.sendNetworkBroadcastEvent(TriviaNetworkEvents.gameReset, {
         hostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
       
@@ -3166,7 +3127,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
       
       // Send logout event to TriviaGame to remove this player from active players
-      this.sendNetworkBroadcastEvent(triviaPlayerLogoutEvent, {
+      this.sendNetworkBroadcastEvent(TriviaNetworkEvents.playerLogout, {
         playerId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
       
@@ -3538,7 +3499,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private createAnswerButton(answerIndex: number): ui.UINode {
-    const shape = answerShapes[answerIndex];
+    const shape = TriviaAssetManager.ANSWER_SHAPES[answerIndex];
 
     return ui.Pressable({
       style: {
