@@ -1327,6 +1327,26 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.updateScoreDisplayWithRetry(0);
       }, 2000); // Wait 2 seconds for server processing
       this.pendingTimeouts.add(scoreUpdateTimeoutId);
+
+      // Auto-advance to next question if autoAdvance modifier is enabled
+      if (this.gameSettings.modifiers.autoAdvance && this.isHost()) {
+        // For infinite questions mode, always continue. For normal mode, check if not last question
+        const shouldContinue = this.gameSettings.modifiers.bonusRounds || 
+                              (this.currentQuestionIndex + 1) < this.gameSettings.numberOfQuestions;
+        
+        if (shouldContinue && !this.gameEnded) {
+          // Set 5-second timeout to automatically continue to next question
+          const autoAdvanceTimeoutId = this.async.setTimeout(() => {
+            this.pendingTimeouts.delete(autoAdvanceTimeoutId);
+            // Only auto-advance if game hasn't ended
+            if (!this.gameEnded) {
+              console.log('✅ Auto-advancing to next question (autoplay enabled)');
+              this.nextQuestion();
+            }
+          }, 5000); // Wait 5 seconds after leaderboard is shown
+          this.pendingTimeouts.add(autoAdvanceTimeoutId);
+        }
+      }
     }
   }
 
@@ -2472,17 +2492,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     padding: 4,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    alignSelf: 'flex-start',
-                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
-                    )
+                    alignSelf: 'flex-start'
                   },
                   children: [
                     ui.Pressable({
                       onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.toggleModifier('autoAdvance');
-                        }
+                        this.toggleModifier('autoAdvance');
                       },
                       children: [
                         ui.Image({
@@ -2500,9 +2515,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     }),
                     ui.Pressable({
                       onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.toggleModifier('powerUps');
-                        }
+                        this.toggleModifier('powerUps');
                       },
                       children: [
                         ui.Image({
@@ -2520,9 +2533,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     }),
                     ui.Pressable({
                       onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.toggleModifier('bonusRounds');
-                        }
+                        this.toggleModifier('bonusRounds');
                       },
                       children: [
                         ui.Image({
@@ -2592,13 +2603,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     alignItems: 'center',
                     alignSelf: 'flex-start',
                     opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                      (settings.category === 'Italian Brainrot Quiz' || settings.modifiers.bonusRounds) ? 0.3 : 1
                     )
                   },
                   children: [
                     ui.Pressable({
                       onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz' && !this.gameSettings.modifiers.bonusRounds) {
                           this.decrementQuestionCount();
                         }
                       },
@@ -2638,7 +2649,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     }),
                     ui.Pressable({
                       onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz' && !this.gameSettings.modifiers.bonusRounds) {
                           this.incrementQuestionCount();
                         }
                       },
@@ -3083,6 +3094,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
+                      return `Question ${index + 1}`;
+                    }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
                   }),
                   style: {
@@ -3870,6 +3885,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             if (shouldUpdate) {
               this.stableQuestionIndex = index;
             }
+            // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+            if (settings.modifiers.bonusRounds) {
+              return `Question ${this.stableQuestionIndex + 1}`;
+            }
             return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
           }),
           style: {
@@ -4168,6 +4187,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
+                      return `Question ${index + 1}`;
+                    }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
                   }),
                   style: {
@@ -4458,6 +4481,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
+                      return `Question ${index + 1}`;
+                    }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
                   }),
                   style: {
@@ -4649,6 +4676,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
+                      return `Question ${index + 1}`;
+                    }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
                   }),
                   style: {
