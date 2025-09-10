@@ -1254,27 +1254,42 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
     
     if (isCorrect && this.world.getLocalPlayer() && !eventData.showLeaderboard) {
-      // Calculate speed multiplier: faster answers get higher points
-      const basePoints = 1;
-      const maxPoints = 100000;
       const timeLimit = this.currentQuestionTimeLimit * 1000; // Convert to milliseconds using actual question time limit
       
       // Calculate response time (use the time from when question was received)
       const responseTime = Date.now() - this.questionStartTime;
       
-      // New speed multiplier formula: P = -33.3t + 1999 (where t is in seconds)
-      let calculatedPoints = basePoints;
-      if (responseTime > 0 && responseTime < timeLimit) {
-        // Convert response time to seconds for the formula
-        const responseTimeSeconds = responseTime / 1000;
-        // Apply formula: P = -33.3t + 1999, clamped to minimum 1 point
-        calculatedPoints = Math.max(1, Math.floor(-33.3 * responseTimeSeconds + 999));
-      } else if (responseTime >= timeLimit) {
-        // If answered at or after time limit, give minimum points
-        calculatedPoints = basePoints;
-      }
+      let calculatedPoints = 1; // Default points
       
-      // 🏆 TriviaPhone: Speed bonus calculated - Response time: ${responseTime}ms (${(responseTime/1000).toFixed(2)}s), Points: ${calculatedPoints}
+      // Different scoring algorithms based on timer modifier
+      if (this.gameSettings.timerType === 'slow') {
+        // No timer modifier: flat 1 point for correct answers
+        calculatedPoints = 1;
+      } else if (this.gameSettings.timerType === 'fast') {
+        // More time modifier (90 seconds): proportional scaling from 1000 to 1 points
+        if (responseTime > 0 && responseTime < timeLimit) {
+          // Convert response time to seconds
+          const responseTimeSeconds = responseTime / 1000;
+          // Scale from 1000 points (immediate) to 1 point (89 seconds)
+          // Formula: points = 1000 - (responseTime / maxTime * 999)
+          calculatedPoints = Math.max(1, Math.floor(1000 - (responseTimeSeconds / 90) * 999));
+        } else if (responseTime >= timeLimit) {
+          // If answered at or after time limit, give minimum points
+          calculatedPoints = 1;
+        }
+      } else {
+        // Normal timer (30 seconds): existing speed multiplier formula
+        const basePoints = 1;
+        if (responseTime > 0 && responseTime < timeLimit) {
+          // Convert response time to seconds for the formula
+          const responseTimeSeconds = responseTime / 1000;
+          // Apply formula: P = -33.3t + 999, clamped to minimum 1 point
+          calculatedPoints = Math.max(1, Math.floor(-33.3 * responseTimeSeconds + 999));
+        } else if (responseTime >= timeLimit) {
+          // If answered at or after time limit, give minimum points
+          calculatedPoints = basePoints;
+        }
+      }
       
       // Send network event to TriviaGame to award calculated points
       this.sendNetworkBroadcastEvent(TriviaNetworkEvents.awardPoints, {
