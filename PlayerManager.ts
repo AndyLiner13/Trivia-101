@@ -7,6 +7,7 @@ export class PlayerManager {
   private playersInWorld: Set<string> = new Set();
   private optedOutPlayers: Set<string> = new Set();
   private answeredPlayers: Set<string> = new Set();
+  private playerAnswers: Map<string, number> = new Map(); // Track which answer each player selected
   private hostPlayerId: string | null = null;
   
   /**
@@ -41,10 +42,22 @@ export class PlayerManager {
   }
   
   /**
-   * Add player to opted out list
+   * Add player to opted out list and remove their answer if they already answered
+   * Returns the answer index that was removed, or null if no answer was removed
    */
-  optOutPlayer(playerId: string): void {
+  optOutPlayer(playerId: string): number | null {
     this.optedOutPlayers.add(playerId);
+    let removedAnswerIndex: number | null = null;
+    
+    // Remove player from answered list if they had already answered (their answer no longer counts)
+    if (this.answeredPlayers.has(playerId)) {
+      this.answeredPlayers.delete(playerId);
+      removedAnswerIndex = this.playerAnswers.get(playerId) || null;
+      this.playerAnswers.delete(playerId);
+      console.log(`🗑️ PlayerManager: Removed answer ${removedAnswerIndex} from opted-out player ${playerId}`);
+    }
+    
+    return removedAnswerIndex;
   }
   
   /**
@@ -69,11 +82,14 @@ export class PlayerManager {
   }
   
   /**
-   * Add player to answered list for current question
+   * Add player to answered list for current question and track their answer
    */
-  addAnsweredPlayer(playerId: string): void {
+  addAnsweredPlayer(playerId: string, answerIndex?: number): void {
     if (!this.optedOutPlayers.has(playerId)) {
       this.answeredPlayers.add(playerId);
+      if (answerIndex !== undefined) {
+        this.playerAnswers.set(playerId, answerIndex);
+      }
     }
   }
   
@@ -89,6 +105,7 @@ export class PlayerManager {
    */
   clearAnsweredPlayers(): void {
     this.answeredPlayers.clear();
+    this.playerAnswers.clear(); // Also clear the tracked answers
   }
   
   /**

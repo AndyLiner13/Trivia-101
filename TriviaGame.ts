@@ -1869,8 +1869,8 @@ export class TriviaGame extends ui.UIComponent {
 
   private onPlayerAnswerSubmitted(eventData: { playerId: string, answerIndex: number, responseTime: number }): void {
     
-    // Track this player as having answered using PlayerManager
-    this.playerManager.addAnsweredPlayer(eventData.playerId);
+    // Track this player as having answered using PlayerManager, including their answer choice
+    this.playerManager.addAnsweredPlayer(eventData.playerId, eventData.answerIndex);
     
     // Update individual answer count for the chosen answer
     if (eventData.answerIndex >= 0 && eventData.answerIndex < 4) {
@@ -5602,8 +5602,15 @@ export class TriviaGame extends ui.UIComponent {
 
   private onPlayerLogout(eventData: { playerId: string }): void {
     
-    // Remove the player from playersInWorld set so they won't count toward answer requirements using PlayerManager
-    this.playerManager.optOutPlayer(eventData.playerId);
+    // Remove the player from playersInWorld set and get their answer if they had answered
+    const removedAnswerIndex = this.playerManager.optOutPlayer(eventData.playerId);
+    
+    // If the player had answered, subtract their answer from the counts
+    if (removedAnswerIndex !== null && this.currentAnswerCounts && removedAnswerIndex >= 0 && removedAnswerIndex < 4) {
+      this.currentAnswerCounts[removedAnswerIndex] = Math.max(0, this.currentAnswerCounts[removedAnswerIndex] - 1);
+      this.answerCountsBinding.set([...this.currentAnswerCounts]);
+      console.log(`🔄 TriviaGame: Subtracted answer ${removedAnswerIndex} from counts due to player logout`);
+    }
     
     // Update answer count binding to reflect the change using PlayerManager
     this.answerCountBinding.set(this.playerManager.getAnsweredCount().toString());
