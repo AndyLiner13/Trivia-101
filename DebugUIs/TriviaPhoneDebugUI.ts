@@ -2182,7 +2182,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer_off
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1739710850290036'))), // timer_off
                       style: {
                         width: 28,
                         height: 28,
@@ -2193,7 +2193,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }
                     }),
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1739710850290036'))), // timer
                       style: {
                         width: 28,
                         height: 28,
@@ -2204,7 +2204,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }
                     }),
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1471075670874559'))), // more_time
                       style: {
                         width: 28,
                         height: 28,
@@ -2271,7 +2271,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('773002615685804'))), // sentiment_satisfied
                       style: {
                         width: 28,
                         height: 28,
@@ -2282,7 +2282,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }
                     }),
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690'))), // sentiment_neutral
                       style: {
                         width: 28,
                         height: 28,
@@ -2293,7 +2293,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       }
                     }),
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789632350092375'))), // skull
                       style: {
                         width: 28,
                         height: 28,
@@ -2359,7 +2359,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718'))), // autoplay
                       style: {
                         width: 28,
                         height: 28,
@@ -2511,10 +2511,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
                         switch (type) {
-                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))); // none icon
-                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
-                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
-                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')));
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1929373007796069'))); // none icon
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('773002615685804'))); // sentiment_satisfied
+                          case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718'))); // autoplay
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1739710850290036')));
                         }
                       }),
                       style: {
@@ -2557,10 +2557,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
                         switch (type) {
-                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
-                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))); // sentiment_neutral
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1739710850290036'))); // timer
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690'))); // sentiment_neutral
                           case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))); // bolt
-                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405')));
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('773002615685804')));
                         }
                       }),
                       style: {
@@ -2601,10 +2601,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
                         switch (type) {
-                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))); // more_time
-                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))); // skull
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1471075670874559'))); // more_time
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789632350092375'))); // skull
                           case 'gamemode': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))); // all_inclusive
-                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265')));
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718')));
                         }
                       }),
                       style: {

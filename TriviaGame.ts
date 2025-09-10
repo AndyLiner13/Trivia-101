@@ -550,7 +550,7 @@ export class TriviaGame extends ui.UIComponent {
   // Dynamic icon source bindings for lock, timer and difficulty
   private lockIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('667887239673613')))); // Default: lock icon
   private timerIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')))); // Default: normal timer
-  private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533')))); // Default: medium difficulty
+  private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690')))); // Default: medium difficulty
   
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
@@ -736,13 +736,13 @@ export class TriviaGame extends ui.UIComponent {
       
       // Timer icons
       '2035737657163790',   // timer (normal)
-      '1466620987937637',   // timer_off
-      '1830264154592827',   // more_time
+      '1929373007796069',   // timer_off
+      '1471075670874559',   // more_time
       
       // Difficulty icons
-      '794548760190405',    // sentiment_satisfied (easy)
-      '1138269638213533',   // sentiment_neutral (medium)
-      '712075511858553',    // skull (hard)
+      '773002615685804',    // sentiment_satisfied (easy)
+      '1167500291866690',   // sentiment_neutral (medium)
+      '789632350092375',    // skull (hard)
       
       // Other icons
       '1997295517705951',   // logout
@@ -761,7 +761,7 @@ export class TriviaGame extends ui.UIComponent {
       '1358485312536960',   // TriviaPhone question pages background
       '1357119322709193',   // TriviaPhone pre-game background
       '2225071587959777',   // TriviaPhone main background
-      '789207380187265',    // Left side icon background
+      '3145261165647718',    // Left side icon background
       '3148012692041551',   // Center icon background
       '1320579906276560',   // Right side icon background
       
@@ -2206,13 +2206,13 @@ export class TriviaGame extends ui.UIComponent {
     let timerIconAsset: bigint;
     switch (this.timerType) {
       case 'slow':
-        timerIconAsset = BigInt('1466620987937637'); // timer_off
+        timerIconAsset = BigInt('1929373007796069'); // timer_off
         break;
       case 'normal':
         timerIconAsset = BigInt('2035737657163790'); // timer
         break;
       case 'fast':
-        timerIconAsset = BigInt('1830264154592827'); // more_time
+        timerIconAsset = BigInt('1471075670874559'); // more_time
         break;
       default:
         timerIconAsset = BigInt('2035737657163790'); // default to normal
@@ -2223,16 +2223,16 @@ export class TriviaGame extends ui.UIComponent {
     let difficultyIconAsset: bigint;
     switch (this.difficultyType) {
       case 'easy':
-        difficultyIconAsset = BigInt('794548760190405'); // sentiment_satisfied
+        difficultyIconAsset = BigInt('773002615685804'); // sentiment_satisfied
         break;
       case 'medium':
-        difficultyIconAsset = BigInt('1138269638213533'); // sentiment_neutral
+        difficultyIconAsset = BigInt('1167500291866690'); // sentiment_neutral
         break;
       case 'hard':
-        difficultyIconAsset = BigInt('712075511858553'); // skull
+        difficultyIconAsset = BigInt('789632350092375'); // skull
         break;
       default:
-        difficultyIconAsset = BigInt('1138269638213533'); // default to medium
+        difficultyIconAsset = BigInt('1167500291866690'); // default to medium
     }
     this.difficultyIconSourceBinding.set(ImageSource.fromTextureAsset(new hz.TextureAsset(difficultyIconAsset)));
     
@@ -2762,7 +2762,7 @@ export class TriviaGame extends ui.UIComponent {
                         style: {
                         },
                         children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718'))),
                           style: {
                             width: 32, // Scaled down from 48 by 4px
                             height: 32, // Scaled down from 48 by 4px

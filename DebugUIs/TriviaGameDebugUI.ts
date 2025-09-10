@@ -545,7 +545,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for sentiment icon container
                         },
                         children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))),
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690'))),
                           style: {
                             width: 36, // Scaled up from 32
                             height: 36 // Scaled up from 32
@@ -559,7 +559,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for timer icon container
                         },
                         children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))),
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1739710850290036'))),
                           style: {
                             width: 36, // Scaled up from 32
                             height: 36 // Scaled up from 32
@@ -592,7 +592,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                           borderColor: this.showOutlinesBinding.derive(show => show ? '#0000FF' : 'transparent') // Blue border for autoplay icon container
                         },
                         children: Image({
-                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))),
+                          source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718'))),
                           style: {
                             width: 32, // Scaled down from 48 by 4px
                             height: 32 // Scaled down from 48 by 4px
