@@ -3348,11 +3348,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 marginBottom: 4
               },
               children: [
-                // Full-width red circle button
+                // Full-width red triangle button
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#d70f33',
+                    backgroundColor: '#DC2626',
                     borderRadius: 16,
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -3367,7 +3367,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // triangle
                       style: {
                         width: 55,
                         height: 54,
@@ -3387,11 +3387,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 marginTop: 4
               },
               children: [
-                // Full-width green square button
+                // Full-width blue square button
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#2db22c',
+                    backgroundColor: '#2563EB',
                     borderRadius: 16,
                     justifyContent: 'center',
                     alignItems: 'center',

@@ -1372,11 +1372,11 @@ export class TriviaGame extends ui.UIComponent {
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
     
     if (shuffledQuestion.answers.length === 2) {
-      // For 2-answer questions, set colors for positions 2 and 3 (yellow and green)
+      // For 2-answer questions, set colors for positions 2 and 3 (red and blue)
       this.answerButtonColors[0].set('#6B7280'); // Gray for empty slot
       this.answerButtonColors[1].set('#6B7280'); // Gray for empty slot
-      this.answerButtonColors[2].set('#EAB308'); // Yellow for first answer (position 2)
-      this.answerButtonColors[3].set('#16A34A'); // Green for second answer (position 3)
+      this.answerButtonColors[2].set('#DC2626'); // Red for first answer (position 2)
+      this.answerButtonColors[3].set('#2563EB'); // Blue for second answer (position 3)
     } else {
       // For 3+ answer questions, use normal logic
       for (let i = 0; i < 4; i++) {
@@ -1817,11 +1817,11 @@ export class TriviaGame extends ui.UIComponent {
     const defaultColors = ['#DC2626', '#2563EB', '#EAB308', '#16A34A']; // Red, Blue, Yellow, Green
     
     if (answers.length === 2) {
-      // For 2-answer questions, set colors for positions 2 and 3 (yellow and green)
+      // For 2-answer questions, set colors for positions 2 and 3 (red and blue)
       this.answerButtonColors[0].set('#6B7280'); // Gray for empty slot
       this.answerButtonColors[1].set('#6B7280'); // Gray for empty slot
-      this.answerButtonColors[2].set('#EAB308'); // Yellow for first answer (position 2)
-      this.answerButtonColors[3].set('#16A34A'); // Green for second answer (position 3)
+      this.answerButtonColors[2].set('#DC2626'); // Red for first answer (position 2)
+      this.answerButtonColors[3].set('#2563EB'); // Blue for second answer (position 3)
     } else {
       // For 3+ answer questions, use normal logic
       for (let i = 0; i < 4; i++) {
@@ -3500,7 +3500,7 @@ export class TriviaGame extends ui.UIComponent {
                               )
                             }),
 
-                            // Answer 2 (Yellow/Circle) - Option 3 - show answer 0 for 2-answer questions, answer 2 for 3+ answer questions
+                            // Answer 2 (Red Triangle for 2-options, Yellow Circle for 3+) - Option 3 - show answer 0 for 2-answer questions, answer 2 for 3+ answer questions
                             View({
                               style: {
                                 width: '48%',
@@ -3510,13 +3510,13 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count === 2),
-                                // For 2-answer questions: show answer 0 in position 3
+                                // For 2-answer questions: show answer 0 in position 3 with red triangle
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  this.createAnswerButton(2, '#EAB308', '1247573280476332'),
+                                  this.createAnswerButton(2, '#DC2626', '2085541485520283'),
                                   this.createBlankButton()
                                 ),
-                                // For 3+ answer questions: show answer 2 in position 3
+                                // For 3+ answer questions: show answer 2 in position 3 with yellow circle
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
                                   this.createAnswerButton(2, '#EAB308', '1247573280476332'),
@@ -3525,7 +3525,7 @@ export class TriviaGame extends ui.UIComponent {
                               )
                             }),
 
-                            // Answer 3 (Green/Star) - Option 4 - show answer 1 for 2-answer questions, answer 3 for 3+ answer questions
+                            // Answer 3 (Blue Square for 2-options, Green Star for 3+) - Option 4 - show answer 1 for 2-answer questions, answer 3 for 3+ answer questions
                             View({
                               style: {
                                 width: '48%',
@@ -3534,13 +3534,13 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count === 2),
-                                // For 2-answer questions: show answer 1 in position 4
+                                // For 2-answer questions: show answer 1 in position 4 with blue square
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  this.createAnswerButton(3, '#16A34A', '2403112933423824'),
+                                  this.createAnswerButton(3, '#2563EB', '1317550153280256'),
                                   this.createBlankButton()
                                 ),
-                                // For 3+ answer questions: show answer 3 in position 4
+                                // For 3+ answer questions: show answer 3 in position 4 with green star
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
                                   this.createAnswerButton(3, '#16A34A', '2403112933423824'),
