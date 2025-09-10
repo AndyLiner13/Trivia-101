@@ -3049,7 +3049,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.isHostBinding], (isHost) => 
-                    isHost ? 'End Game?' : 'Are you sure?'
+                    isHost ? 'Transfer Host?' : 'Are you sure?'
                   ),
                   style: {
                     fontSize: 14,
@@ -3332,7 +3332,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 },
                 children: [
                   ui.Image({
-                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                     style: {
                       width: 24,
                       height: 24,
@@ -3683,7 +3683,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
@@ -3913,7 +3913,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4206,7 +4206,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4395,7 +4395,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4584,7 +4584,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4817,7 +4817,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
                   style: {
                     width: 24,
                     height: 24,
