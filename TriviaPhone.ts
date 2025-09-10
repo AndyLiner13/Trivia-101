@@ -86,6 +86,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Current question data from TriviaGame
   private currentQuestion: any = null;
 
+  // Question start time for speed multiplier calculation
+  private questionStartTime: number = 0;
+
+  // Current question time limit for speed multiplier calculation
+  private currentQuestionTimeLimit: number = 30;
+
   // Game settings state
   private gameSettings = {
     numberOfQuestions: 5,
@@ -1150,18 +1156,37 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.isCorrectAnswerBinding.set(isCorrect);
     
     if (isCorrect && this.world.getLocalPlayer() && !eventData.showLeaderboard) {
-      // Send network event to TriviaGame to award points using persistent storage
+      // Calculate speed multiplier: faster answers get higher points
+      const basePoints = 1;
+      const maxPoints = 100000;
+      const timeLimit = this.currentQuestionTimeLimit * 1000; // Convert to milliseconds using actual question time limit
+      
+      // Calculate response time (use the time from when question was received)
+      const responseTime = Date.now() - this.questionStartTime;
+      
+      // New speed multiplier formula: P = -33.3t + 1999 (where t is in seconds)
+      let calculatedPoints = basePoints;
+      if (responseTime > 0 && responseTime < timeLimit) {
+        // Convert response time to seconds for the formula
+        const responseTimeSeconds = responseTime / 1000;
+        // Apply formula: P = -33.3t + 1999, clamped to minimum 1 point
+        calculatedPoints = Math.max(1, Math.floor(-33.3 * responseTimeSeconds + 999));
+      } else if (responseTime >= timeLimit) {
+        // If answered at or after time limit, give minimum points
+        calculatedPoints = basePoints;
+      }
+      
+      console.log(`🏆 TriviaPhone: Speed bonus calculated - Response time: ${responseTime}ms (${(responseTime/1000).toFixed(2)}s), Points: ${calculatedPoints}`);
+      
+      // Send network event to TriviaGame to award calculated points
       this.sendNetworkBroadcastEvent(triviaAwardPointsEvent, {
         playerId: this.world.getLocalPlayer()!.id.toString(),
-        points: 1
+        points: calculatedPoints
       });
 
       // Immediate local score increment for instant feedback
-      this.score += 1;
+      this.score += calculatedPoints;
       this.scoreBinding.set(this.score);
-
-      // DON'T update from persistent storage immediately after a correct answer
-      // The local increment is the source of truth until the next game event
     }
     
     // Update leaderboard binding - but don't show leaderboard if game has ended or been reset
@@ -1202,6 +1227,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (this.currentOptedOutStatus) {
       return;
     }
+    
+    // Record question start time for speed multiplier calculation
+    this.questionStartTime = Date.now();
+    
+    // Store the actual time limit from the event for speed multiplier calculation
+    this.currentQuestionTimeLimit = eventData.timeLimit;
     
     // Reset result display
     this.showResult = false;
@@ -1254,6 +1285,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (this.currentOptedOutStatus) {
       return;
     }
+    
+    // Record question start time for speed multiplier calculation
+    this.questionStartTime = Date.now();
     
     // Reset result display
     this.showResult = false;
@@ -1504,11 +1538,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswer = actualAnswerIndex;
     this.selectedAnswerBinding.set(actualAnswerIndex);
 
-    // Send network event with the answer index
+    // Calculate response time in milliseconds
+    const responseTime = Date.now() - this.questionStartTime;
+    console.log('⏱️ TriviaPhone: Response time calculated:', responseTime, 'ms');
+
+    // Send network event with the answer index and calculated response time
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
       playerId: this.assignedPlayer?.id.toString() || 'local',
       answerIndex: actualAnswerIndex,
-      responseTime: 0
+      responseTime: responseTime
     });
 
     // Check if this answer will complete all answers (local calculation to avoid timing issues)

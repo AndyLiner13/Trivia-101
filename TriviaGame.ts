@@ -471,27 +471,30 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
-  private addCorrectAnswerToLeaderboard(player: hz.Player): void {
+  private addCorrectAnswerToLeaderboard(player: hz.Player, points: number = 1): void {
     try {
       const playerId = player.id.toString();
       const currentCorrectAnswers = this.persistentLeaderboardScores.get(playerId) || 0;
-      this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + 1);
+      this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + points);
       
       // Update local score for current game leaderboard
       const currentLocalScore = this.localPlayerScores.get(playerId) || 0;
-      this.localPlayerScores.set(playerId, currentLocalScore + 1);
+      this.localPlayerScores.set(playerId, currentLocalScore + points);
       
       // Update native leaderboard with total correct answers
       const leaderboardName = "Trivia";
-      this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + 1, true);
+      this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + points, true);
       
       // Send network event to update leaderboard.ts
       this.sendNetworkBroadcastEvent(leaderboardScoreUpdateEvent, {
         playerId: playerId,
-        score: currentCorrectAnswers + 1,
+        score: currentCorrectAnswers + points,
         leaderboardName: leaderboardName
       });
+      
+      console.log(`🏆 TriviaGame: Added ${points} points to leaderboard for player ${playerId}`);
     } catch (error) {
+      console.error('❌ TriviaGame: Error adding points to leaderboard:', error);
     }
   }
 
@@ -5408,28 +5411,31 @@ export class TriviaGame extends ui.UIComponent {
       // Find the player by ID
       const player = this.world.getPlayers().find(p => p.id.toString() === event.playerId);
       
-      // Update persistent leaderboard directly with player ID
+      // Update persistent leaderboard directly with player ID using variable points
       const playerId = event.playerId;
       const currentCorrectAnswers = this.persistentLeaderboardScores.get(playerId) || 0;
-      this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + 1);
+      this.persistentLeaderboardScores.set(playerId, currentCorrectAnswers + event.points);
       
       const leaderboardName = "Trivia";
       if (player) {
-        // Update native leaderboard with player object
-        this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + 1, true);
+        // Update native leaderboard with player object using variable points
+        this.world.leaderboards.setScoreForPlayer(leaderboardName, player, currentCorrectAnswers + event.points, true);
       }
       
-      // Send network event to update leaderboard.ts
+      // Send network event to update leaderboard.ts using variable points
       this.sendNetworkBroadcastEvent(leaderboardScoreUpdateEvent, {
         playerId: playerId,
-        score: currentCorrectAnswers + 1,
+        score: currentCorrectAnswers + event.points,
         leaderboardName: leaderboardName
       });
       
-      // Update local game score cache
+      // Update local game score cache using variable points
       const currentGamePoints = this.localPlayerScores.get(event.playerId) || 0;
       this.localPlayerScores.set(event.playerId, currentGamePoints + event.points);
+      
+      console.log(`🏆 TriviaGame: Awarded ${event.points} points to player ${event.playerId}`);
     } catch (error) {
+      console.error('❌ TriviaGame: Error awarding points:', error);
     }
   }
 
