@@ -1222,12 +1222,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     leaderboardData?: Array<{name: string, score: number, playerId: string}>
   }): void {
     // 📊 TriviaPhone: Results received - resetting answerSubmitted and setting showResult = true
-    this.showResult = true;
-    this.showResultBinding.set(true);
     
-    // Reset answer submitted state since results are now showing
+    // Reset answer submitted state BEFORE setting showResult to prevent flicker
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
+    
+    this.showResult = true;
+    this.showResultBinding.set(true);
     
     // Set screen type to results
     this.currentScreenType = 'results';
@@ -1480,12 +1481,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }
         break;
       case 'results':
-        this.showResult = true;
-        this.showResultBinding.set(true);
-        
-        // Reset answer submitted state since results are now showing
+        // Reset answer submitted state BEFORE setting showResult to prevent flicker
         this.answerSubmitted = false;
         this.answerSubmittedBinding.set(false);
+        
+        this.showResult = true;
+        this.showResultBinding.set(true);
         
         this.currentScreenType = 'results';
         this.screenTypeBinding.set('results');
@@ -1675,14 +1676,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const answersAfterThis = this.playersAnswered.length + 1; // Add 1 for this player's answer
     const willCompleteAllAnswers = answersAfterThis >= this.playersInWorld.length && this.playersInWorld.length > 0;
     
-    // Only show answerSubmitted screen if this answer won't complete all answers
-    if (!willCompleteAllAnswers) {
-      this.answerSubmitted = true;
-      this.answerSubmittedBinding.set(true);
-      console.log(`✅ Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex} (${answersAfterThis}/${this.playersInWorld.length} answers)`);
-    } else {
-      console.log(`✅ Answer submitted for answer ${actualAnswerIndex} - skipping answerSubmitted screen (completes all ${answersAfterThis}/${this.playersInWorld.length} answers)`);
-    }
+    // Always show answerSubmitted screen
+    this.answerSubmitted = true;
+    this.answerSubmittedBinding.set(true);
+    console.log(`✅ Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex} (${answersAfterThis}/${this.playersInWorld.length} answers)`);
   }
 
   private nextQuestion(): void {
