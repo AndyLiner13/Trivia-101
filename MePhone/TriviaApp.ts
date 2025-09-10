@@ -12,6 +12,7 @@ const triviaQuestionShowEvent = new hz.NetworkEvent<{ question: any, questionInd
 const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerIndex: number, answerCounts: number[], scores: { [key: string]: number }, showLeaderboard?: boolean, leaderboardData?: Array<{name: string, score: number, playerId: string}> }>('triviaResults');
 const triviaGameCompleteEvent = new hz.NetworkEvent<{ finalScores: Array<{ playerId: string, score: number }>, totalQuestions: number }>('triviaGameComplete');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
+const triviaPlayerUpdateEvent = new hz.NetworkEvent<{ playersInWorld: string[], playersAnswered: string[], answerCount: number }>('triviaPlayerUpdate');
 
 // Network event for starting the game
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
@@ -86,6 +87,11 @@ export class TriviaApp {
   // Questions array - can be updated externally
   private questions: Question[] = [];
   private useExternalQuestions = false;
+
+  // Player tracking for conditional waiting screen
+  private playersInWorld: string[] = [];
+  private playersAnswered: string[] = [];
+  private allPlayersAnswered = false;
 
   // Asset for loading questions
   private questionsAsset: hz.Asset | null = null;
@@ -219,6 +225,13 @@ export class TriviaApp {
   public onTriviaGameRegistered(event: { isRunning: boolean, hasQuestions: boolean }): void {
     // Try to sync with the newly registered TriviaGame
     this.forceSyncWithTriviaGame();
+  }
+
+  public onPlayerUpdate(eventData: { playersInWorld: string[], playersAnswered: string[], answerCount: number }): void {
+    // Update tracking data
+    this.playersInWorld = eventData.playersInWorld;
+    this.playersAnswered = eventData.playersAnswered;
+    this.allPlayersAnswered = eventData.playersAnswered.length >= eventData.playersInWorld.length && eventData.playersInWorld.length > 0;
   }
 
   // Handle TriviaGame state response - set the app to the correct state immediately
@@ -569,6 +582,9 @@ export class TriviaApp {
       // Reset tracking variables too
       this.lastAnswerTimestamp = 0;
       this.answerSelectionCount = 0;
+      
+      // Reset player tracking for new question
+      this.allPlayersAnswered = false;
 
       // Clear any running timers when new question starts
       this.clearAutoProgressTimer();
@@ -1030,8 +1046,8 @@ export class TriviaApp {
     // Update the selected answer binding immediately
     this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
     
-    // Only show waiting screen if there are multiple players
-    if (playerCount > 1) {
+    // Only show waiting screen if there are multiple players AND not all players have already answered
+    if (playerCount > 1 && !this.allPlayersAnswered) {
       // Multiple players - show waiting screen
       this.gameState = 'waiting';
       const waitingMessage = "Waiting...";

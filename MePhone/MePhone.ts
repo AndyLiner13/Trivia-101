@@ -9,6 +9,7 @@ const triviaResultsEvent = new hz.NetworkEvent<{ question: any, correctAnswerInd
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
+const triviaPlayerUpdateEvent = new hz.NetworkEvent<{ playersInWorld: string[], playersAnswered: string[], answerCount: number }>('triviaPlayerUpdate');
 
 // Request-response events for state synchronization
 const triviaStateRequestEvent = new hz.NetworkEvent<{ requesterId: string }>('triviaStateRequest');
@@ -229,6 +230,11 @@ class MePhone extends ui.UIComponent<typeof MePhone> {
     // Listen for trivia game registration events
     this.connectNetworkBroadcastEvent(triviaGameRegisteredEvent, (eventData) => {
       this.ensureTriviaApp().onTriviaGameRegistered(eventData);
+    });
+
+    // Listen for trivia player update events
+    this.connectNetworkBroadcastEvent(triviaPlayerUpdateEvent, (eventData) => {
+      this.ensureTriviaApp().onPlayerUpdate(eventData);
     });
 
     // Listen for trivia state responses

@@ -12,6 +12,7 @@ const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { tim
 const triviaNextQuestionEvent = new hz.NetworkEvent<{ playerId: string }>('triviaNextQuestion');
 const triviaGameRegisteredEvent = new hz.NetworkEvent<{ isRunning: boolean, hasQuestions: boolean }>('triviaGameRegistered');
 const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{ playerId: string, answerIndex: number, responseTime: number }>('triviaAnswerSubmitted');
+const triviaPlayerUpdateEvent = new hz.NetworkEvent<{ playersInWorld: string[], playersAnswered: string[], answerCount: number }>('triviaPlayerUpdate');
 const triviaSettingsUpdateEvent = new hz.NetworkEvent<{ hostId: string, settings: { numberOfQuestions: number, category: string, difficulty: string, timeLimit: number, timerType: string, difficultyType: string, isLocked: boolean, modifiers: { autoAdvance: boolean, powerUps: boolean, bonusRounds: boolean } } }>('triviaSettingsUpdate');
 const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboard?: Array<{name: string, score: number, playerId: string}> }>('triviaGameEnd');
 const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
@@ -124,6 +125,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private correctAnswerIndexBinding = new ui.Binding<number | null>(null);
   private showLeaderboardBinding = new ui.Binding(false);
   private answerSubmittedBinding = new ui.Binding(false);
+
+  // Player tracking for conditional answer submission screen
+  private playersInWorld: string[] = [];
+  private playersAnswered: string[] = [];
+  private allPlayersAnswered = false;
 
   // Leaderboard data for results screen
   private leaderboardDataBinding = new ui.Binding<Array<{name: string, score: number, playerId: string}>>([]);
@@ -557,6 +563,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
         requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
+    });
+
+    // Listen for player update events to track answer submission status
+    this.connectNetworkBroadcastEvent(triviaPlayerUpdateEvent, (eventData) => {
+      this.onPlayerUpdate(eventData);
     });
 
     // Listen for trivia state responses
@@ -1202,6 +1213,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
     
+    // Reset player tracking for new question
+    this.allPlayersAnswered = false;
+    
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
     this.currentQuestionIndexBinding.set(eventData.questionIndex);
@@ -1254,6 +1268,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset answer submitted state for new question
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
+    
+    // Reset player tracking for new question
+    this.allPlayersAnswered = false;
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1398,6 +1415,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateScoreDisplayWithRetry();
   }
 
+  private onPlayerUpdate(eventData: { playersInWorld: string[], playersAnswered: string[], answerCount: number }): void {
+    // Update tracking data
+    this.playersInWorld = eventData.playersInWorld;
+    this.playersAnswered = eventData.playersAnswered;
+    this.allPlayersAnswered = eventData.playersAnswered.length >= eventData.playersInWorld.length && eventData.playersInWorld.length > 0;
+  }
+
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
     
     // Update host status based on centralized host management
@@ -1463,8 +1487,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     this.selectedAnswer = actualAnswerIndex;
     this.selectedAnswerBinding.set(actualAnswerIndex);
-    this.answerSubmitted = true;
-    this.answerSubmittedBinding.set(true);
 
     // Send network event with the answer index
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
@@ -1473,7 +1495,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       responseTime: 0
     });
 
-    console.log(`✅ TriviaPhone: Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex}`);
+    // Only show answerSubmitted screen if not all players have already answered
+    if (!this.allPlayersAnswered) {
+      this.answerSubmitted = true;
+      this.answerSubmittedBinding.set(true);
+      console.log(`✅ TriviaPhone: Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex}`);
+    } else {
+      console.log(`✅ TriviaPhone: Answer submitted for answer ${actualAnswerIndex} - skipping answerSubmitted screen (all players already answered)`);
+    }
   }
 
   private nextQuestion(): void {
