@@ -1099,6 +1099,27 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
   }
 
+  private requestPlayerUpdate(): void {
+    // Send state request to get updated player counts immediately
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.stateRequest, {
+      requesterId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+    });
+  }
+
+  private checkAnswerCompletion(): void {
+    // Only check if we're in an active question state (game started, not showing results) and have active players
+    if (!this.gameStarted || this.showResult || this.playersInWorld.length === 0) {
+      return;
+    }
+    
+    const allAnswersSubmitted = this.playersAnswered.length >= this.playersInWorld.length;
+    
+    if (allAnswersSubmitted) {
+      console.log('✅ All remaining players have answered after player update');
+      // The TriviaGame will handle advancing to the next question
+    }
+  }
+
   private handleRejoinGame(): void {
     const localPlayer = this.world.getLocalPlayer();
     if (!localPlayer) return;
@@ -1330,9 +1351,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswer = null;
     this.selectedAnswerBinding.set(null);
     
-    // Reset answer submitted state for new question
+    // Always reset answer submitted state for new question (player needs to answer the new question)
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
+    console.log(`🔄 Two-options question received - reset answerSubmitted=false for new question`);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1385,9 +1407,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswer = null;
     this.selectedAnswerBinding.set(null);
     
-    // Reset answer submitted state for new question
+    // Always reset answer submitted state for new question (player needs to answer the new question)
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
+    console.log(`🔄 Four-options question received - reset answerSubmitted=false for new question`);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1575,6 +1598,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.playersInWorldBinding.set(playersWithIds);
     }
     
+    // Check if all remaining active players have answered and game should advance
+    this.checkAnswerCompletion();
+    
     // 📡 TriviaPhone: Player update received - playersAnswered: ${eventData.playersAnswered.length}, playersInWorld: ${eventData.playersInWorld.length}
   }
 
@@ -1649,19 +1675,17 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       responseTime: responseTime
     });
 
-    // Check if this answer will complete all answers (local calculation to avoid timing issues)
+    // Check if this answer will complete all answers (local prediction for UI only)
     const answersAfterThis = this.playersAnswered.length + 1; // Add 1 for this player's answer
     const willCompleteAllAnswers = answersAfterThis >= this.playersInWorld.length && this.playersInWorld.length > 0;
-    
-    // Players answered: {this.playersAnswered.length}, players in world: {this.playersInWorld.length}, answers after this: {answersAfterThis}, will complete all answers: {willCompleteAllAnswers}
     
     // Only show answerSubmitted screen if this answer won't complete all answers
     if (!willCompleteAllAnswers) {
       this.answerSubmitted = true;
       this.answerSubmittedBinding.set(true);
-      // Answer submitted - showing answerSubmitted screen for answer {actualAnswerIndex}
+      console.log(`✅ Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex} (${answersAfterThis}/${this.playersInWorld.length} answers)`);
     } else {
-      // Answer submitted for answer {actualAnswerIndex} - skipping answerSubmitted screen (this completes all answers)
+      console.log(`✅ Answer submitted for answer ${actualAnswerIndex} - skipping answerSubmitted screen (completes all ${answersAfterThis}/${this.playersInWorld.length} answers)`);
     }
   }
 
@@ -1918,7 +1942,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => {
                     const shouldShow = mode === 'pre-game' && started && answerSubmitted && !showResult;
-                    // Answer submitted screen condition MET - showing screen
+                    console.log(`📱 Answer submitted screen check: mode=${mode}, started=${started}, answerSubmitted=${answerSubmitted}, showResult=${showResult}, shouldShow=${shouldShow}`);
                     return shouldShow;
                   }),
                   this.renderAnswerSubmittedScreen()
@@ -3185,6 +3209,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.sendNetworkBroadcastEvent(TriviaNetworkEvents.playerLogout, {
         playerId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
+      
+      // Request immediate player count update to check if game should advance
+      this.requestPlayerUpdate();
       
       // Immediately set opted-out status to show opted-out screen
       this.isOptedOutBinding.set(true);

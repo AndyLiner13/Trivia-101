@@ -5614,6 +5614,12 @@ export class TriviaGame extends ui.UIComponent {
       playersAnswered: this.playerManager.getAnsweredPlayers(),
       answerCount: this.playerManager.getAnsweredCount()
     });
+    
+    // Check if all remaining active players have answered after this logout
+    if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && this.playerManager.getActivePlayerCount() > 0) {
+      console.log('✅ All remaining players have answered after player logout - advancing to results');
+      this.showCorrectAnswersAndLeaderboard();
+    }
   }
 
   private onPlayerRejoin(eventData: { playerId: string }): void {
