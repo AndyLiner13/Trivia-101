@@ -5383,7 +5383,17 @@ export class TriviaGame extends ui.UIComponent {
     
     // Reset the game to pre-game configuration screen
     this.isRunning = false;
+    
+    // Clear ALL timers to prevent interference with new games
     this.stopTimer();
+    if (this.roundTimeoutId) {
+      this.async.clearTimeout(this.roundTimeoutId);
+      this.roundTimeoutId = null;
+    }
+    if (this.gameLoopTimeoutId) {
+      this.async.clearTimeout(this.gameLoopTimeoutId);
+      this.gameLoopTimeoutId = null;
+    }
     
     // Reset all game state
     this.currentQuestionIndex = 0;
@@ -5428,6 +5438,7 @@ export class TriviaGame extends ui.UIComponent {
     this.playerScores.clear();
     this.localPlayerScores.clear();
     
+    // Note: optedOutPlayers and game modifiers are NOT cleared - they persist across games
     // Note: persistentLeaderboardScores are NOT cleared - they persist across games
   }
 

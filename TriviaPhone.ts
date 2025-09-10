@@ -129,7 +129,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Player tracking for conditional answer submission screen
   private playersInWorld: string[] = [];
   private playersAnswered: string[] = [];
-  private allPlayersAnswered = false;
 
   // Leaderboard data for results screen
   private leaderboardDataBinding = new ui.Binding<Array<{name: string, score: number, playerId: string}>>([]);
@@ -238,13 +237,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       
       // Timer icons
       '2035737657163790',   // timer (normal)
-      '1929373007796069',   // timer_off
-      '1471075670874559',   // more_time
+      '1466620987937637',   // timer_off
+      '1830264154592827',   // more_time
       
       // Difficulty icons
-      '773002615685804',    // sentiment_satisfied (easy)
-      '1167500291866690',   // sentiment_neutral (medium)
-      '789632350092375',    // skull (hard)
+      '794548760190405',    // sentiment_satisfied (easy)
+      '1138269638213533',   // sentiment_neutral (medium)
+      '712075511858553',    // skull (hard)
       
       // UI icons
       '24898127093144614',  // info_i
@@ -262,7 +261,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       '1317550153280256',   // diamond
       
       // Modifier background icons
-      '3145261165647718',    // Left side icon background
+      '789207380187265',    // Left side icon background
       '3148012692041551',   // Center icon background
       '1320579906276560'    // Right side icon background
     ];
@@ -1100,8 +1099,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     showLeaderboard?: boolean,
     leaderboardData?: Array<{name: string, score: number, playerId: string}>
   }): void {
+    console.log(`📊 TriviaPhone: Results received - resetting answerSubmitted and setting showResult = true`);
+    
     this.showResult = true;
     this.showResultBinding.set(true);
+    
+    // Reset answer submitted state since results are now showing
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
     
     // Set screen type to results
     this.currentScreenType = 'results';
@@ -1192,9 +1197,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
     
-    // Reset player tracking for new question
-    this.allPlayersAnswered = false;
-    
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
     this.currentQuestionIndexBinding.set(eventData.questionIndex);
@@ -1244,9 +1246,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset answer submitted state for new question
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
-    
-    // Reset player tracking for new question
-    this.allPlayersAnswered = false;
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1320,6 +1319,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       case 'results':
         this.showResult = true;
         this.showResultBinding.set(true);
+        
+        // Reset answer submitted state since results are now showing
+        this.answerSubmitted = false;
+        this.answerSubmittedBinding.set(false);
+        
         this.currentScreenType = 'results';
         this.screenTypeBinding.set('results');
         break;
@@ -1392,7 +1396,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Update tracking data
     this.playersInWorld = eventData.playersInWorld;
     this.playersAnswered = eventData.playersAnswered;
-    this.allPlayersAnswered = eventData.playersAnswered.length >= eventData.playersInWorld.length && eventData.playersInWorld.length > 0;
+    
+    console.log(`📡 TriviaPhone: Player update received - playersAnswered: ${eventData.playersAnswered.length}, playersInWorld: ${eventData.playersInWorld.length}`);
   }
 
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
@@ -1439,6 +1444,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleAnswerSelect(answerIndex: number): void {
+    console.log('✅ TriviaPhone: User selected answer', answerIndex);
     if (this.showResult) return;
 
     // For 2-answer questions, map button indices 2 and 3 to answer indices 0 and 1
@@ -1461,10 +1467,19 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       responseTime: 0
     });
 
-    // Only show answerSubmitted screen if not all players have already answered
-    if (!this.allPlayersAnswered) {
+    // Check if this answer will complete all answers (local calculation to avoid timing issues)
+    const answersAfterThis = this.playersAnswered.length + 1; // Add 1 for this player's answer
+    const willCompleteAllAnswers = answersAfterThis >= this.playersInWorld.length && this.playersInWorld.length > 0;
+    
+    console.log(`🔍 TriviaPhone: playersAnswered: ${this.playersAnswered.length}, playersInWorld: ${this.playersInWorld.length}, answersAfterThis: ${answersAfterThis}, willCompleteAllAnswers: ${willCompleteAllAnswers}`);
+    
+    // Only show answerSubmitted screen if this answer won't complete all answers
+    if (!willCompleteAllAnswers) {
       this.answerSubmitted = true;
       this.answerSubmittedBinding.set(true);
+      console.log(`✅ TriviaPhone: Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex}`);
+    } else {
+      console.log(`✅ TriviaPhone: Answer submitted for answer ${actualAnswerIndex} - skipping answerSubmitted screen (this completes all answers)`);
     }
   }
 
@@ -1611,6 +1626,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   render(): ui.UINode {
+    console.log('🎨 TriviaPhone: render() called - current state:', {
+      currentViewMode: this.currentViewMode,
+      gameStarted: this.gameStarted,
+      gameEnded: this.gameEnded,
+      showResult: this.showResult,
+      answerSubmitted: this.answerSubmitted,
+      screenType: this.currentScreenType,
+      isHost: this.isHost(),
+      isOptedOut: this.currentOptedOutStatus
+    });
     return ui.View({
       style: {
         width: '100%',
@@ -1696,25 +1721,37 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
                 // Participant correct results screen
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => 
-                    mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && isCorrect
-                  ),
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => {
+                    const shouldShow = mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && isCorrect;
+                    if (shouldShow) {
+                      console.log('🎯 TriviaPhone: Participant correct results condition MET - showing screen');
+                    }
+                    return shouldShow;
+                  }),
                   this.renderParticipantCorrectResults()
                 ),
 
                 // Participant wrong results screen
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => 
-                    mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && !isCorrect
-                  ),
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => {
+                    const shouldShow = mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && !isCorrect;
+                    if (shouldShow) {
+                      console.log('❌ TriviaPhone: Participant wrong results condition MET - showing screen');
+                    }
+                    return shouldShow;
+                  }),
                   this.renderParticipantWrongResults()
                 ),
                 
                 // Answer submitted screen - shows when answer is submitted but results not yet shown
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => 
-                    mode === 'pre-game' && started && answerSubmitted && !showResult
-                  ),
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => {
+                    const shouldShow = mode === 'pre-game' && started && answerSubmitted && !showResult;
+                    if (shouldShow) {
+                      console.log('📱 TriviaPhone: Answer submitted screen condition MET - showing screen');
+                    }
+                    return shouldShow;
+                  }),
                   this.renderAnswerSubmittedScreen()
                 ),
                 
@@ -1995,7 +2032,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.setTimerType('slow'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1929373007796069'))), // timer_off
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))), // timer_off
                           style: {
                             width: 28,
                             height: 28,
@@ -2027,7 +2064,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.setTimerType('fast'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1471075670874559'))), // more_time
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
                           style: {
                             width: 28,
                             height: 28,
@@ -2098,7 +2135,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.setDifficultyType('easy'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('773002615685804'))), // sentiment_satisfied
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
                           style: {
                             width: 28,
                             height: 28,
@@ -2114,7 +2151,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.setDifficultyType('medium'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690'))), // sentiment_neutral
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
                           style: {
                             width: 28,
                             height: 28,
@@ -2130,7 +2167,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.setDifficultyType('hard'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789632350092375'))), // skull
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
                           style: {
                             width: 28,
                             height: 28,
@@ -2201,7 +2238,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       onPress: () => this.toggleModifier('autoAdvance'),
                       children: [
                         ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718'))), // autoplay
+                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
                           style: {
                             width: 28,
                             height: 28,
@@ -2373,9 +2410,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
                         switch (type) {
-                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1929373007796069'))); // none icon
-                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('773002615685804'))); // sentiment_satisfied
-                          case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718'))); // autoplay
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))); // none icon
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))); // sentiment_satisfied
+                          case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))); // autoplay
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')));
                         }
                       }),
@@ -2420,9 +2457,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
                         switch (type) {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))); // timer
-                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690'))); // sentiment_neutral
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))); // sentiment_neutral
                           case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))); // bolt
-                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('773002615685804')));
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405')));
                         }
                       }),
                       style: {
@@ -2463,10 +2500,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Image({
                       source: ui.Binding.derive([this.infoPopupTypeBinding], (type) => {
                         switch (type) {
-                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1471075670874559'))); // more_time
-                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789632350092375'))); // skull
+                          case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))); // more_time
+                          case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))); // skull
                           case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))); // all_inclusive
-                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3145261165647718')));
+                          default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265')));
                         }
                       }),
                       style: {
@@ -2536,6 +2573,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderAnswerSubmittedScreen(): ui.UINode {
+    console.log('✅ TriviaPhone: Answer submitted screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -2829,6 +2867,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.answerSubmitted = false;
       this.answerSubmittedBinding.set(false);
       
+      console.log('✅ TriviaPhone: Host logout completed - game ended for all players');
     } else {
 
       
@@ -3294,6 +3333,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -3746,6 +3786,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
 
   private renderParticipantCorrectResults(): ui.UINode {
+    console.log('✅ TriviaPhone: Participant correct results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -3909,6 +3950,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderParticipantWrongResults(): ui.UINode {
+    console.log('❌ TriviaPhone: Participant wrong results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -4072,6 +4114,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderHostCorrectResults(): ui.UINode {
+    console.log('✅ TriviaPhone: Host correct results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -4279,6 +4322,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderHostWrongResults(): ui.UINode {
+    console.log('❌ TriviaPhone: Host wrong results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -4616,6 +4660,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset stable question index
     this.stableQuestionIndex = 0;
     this.updateFooterBinding.set(false);
+    
+    console.log('✅ TriviaPhone: Preview mode transition cleanup completed successfully');
   }
 }
 
