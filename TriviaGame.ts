@@ -1925,12 +1925,27 @@ export class TriviaGame extends ui.UIComponent {
     
     // Check if all active (non-opted-out) players have answered
     if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && this.playerManager.getActivePlayerCount() > 0) {
-      this.showCorrectAnswersAndLeaderboard();
+      // Add a small delay to allow any concurrent logout events to be processed first
+      this.async.setTimeout(() => {
+        // Recheck the counts after the delay to ensure accuracy
+        if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && 
+            this.playerManager.getActivePlayerCount() > 0 && 
+            !this.isShowingResults) {
+          console.log(`✅ All ${this.playerManager.getActivePlayerCount()} active players have answered (${this.playerManager.getAnsweredCount()} answers) - advancing to results`);
+          this.showCorrectAnswersAndLeaderboard();
+        }
+      }, 100); // 100ms delay to allow logout events to process
     }
   }
 
   private showCorrectAnswersAndLeaderboard(): void {
     if (!this.currentQuestion) return;
+    
+    // Prevent multiple concurrent calls to avoid premature round advancement
+    if (this.isShowingResults) {
+      console.log('⚠️ TriviaGame: Already showing results, ignoring duplicate call');
+      return;
+    }
     
     // Stop timer and hide waiting screen
     this.stopTimer();
@@ -5761,8 +5776,10 @@ export class TriviaGame extends ui.UIComponent {
     });
     
     // Check if all remaining active players have answered after this logout
-    if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && this.playerManager.getActivePlayerCount() > 0) {
-      console.log('✅ All remaining players have answered after player logout - advancing to results');
+    if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && 
+        this.playerManager.getActivePlayerCount() > 0 && 
+        !this.isShowingResults) {
+      console.log(`✅ All ${this.playerManager.getActivePlayerCount()} remaining players have answered after player logout (${this.playerManager.getAnsweredCount()} answers) - advancing to results`);
       this.showCorrectAnswersAndLeaderboard();
     }
     
