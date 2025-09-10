@@ -925,16 +925,33 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     console.log('📱 TriviaPhone: Phone status - isPlayerFocusedOnUI:', this.isPlayerFocusedOnUI, 'isPhoneVisibleToPlayer:', isPhoneVisibleToPlayer, 'distance:', phonePosition.distance(playerPosition).toFixed(2));
 
+    // For mobile users: toggle behavior (open if closed, close if open)
+    if (isMobileUser) {
+      if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
+        // Phone is open, close it (same as E key behavior for mobile)
+        console.log('📱 TriviaPhone: Mobile user - phone is open, closing it');
+        this.handleEKeyTrigger(player);
+        return;
+      } else {
+        // Phone is closed, open it
+        console.log('📱 TriviaPhone: Mobile user - phone is closed, opening it');
+        this.teleportToPlayer(player);
+        this.openAndFocusUIForPlayer(player);
+        return;
+      }
+    }
+
+    // For desktop and web users: original behavior (open only, skip if already open)
     if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
       // UI is already open, do nothing
-      console.log('📱 TriviaPhone: UI already open, skipping focus');
+      console.log('📱 TriviaPhone: Desktop/Web user - UI already open, skipping focus');
       return;
     }
 
     // Asset Pool Gizmo handles ownership assignment automatically
 
-    // Show the TriviaPhone and focus the UI for non-VR users
-    console.log('📱 TriviaPhone: Opening and focusing UI for user');
+    // Show the TriviaPhone and focus the UI for desktop and web users
+    console.log('📱 TriviaPhone: Desktop/Web user - opening and focusing UI');
     this.teleportToPlayer(player);
     this.openAndFocusUIForPlayer(player);
   }
