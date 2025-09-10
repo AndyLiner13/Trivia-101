@@ -1196,6 +1196,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.isCorrectAnswerBinding.set(false);
     this.correctAnswerIndexBinding.set(null);
     this.answerSubmittedBinding.set(false);
+    this.lastRoundPointsBinding.set(0);
     
     // Reset layout type to default (four-options)
     this.layoutTypeBinding.set('four-options');
@@ -1246,8 +1247,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isCorrect = playerDidNotAnswer ? false : this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
-    // Reset last round points
-    this.lastRoundPointsBinding.set(0);
+    // Only reset last round points when NOT showing leaderboard (i.e., during initial results display)
+    // This allows the "+X points!" text to persist during the leaderboard transition
+    if (!eventData.showLeaderboard) {
+      this.lastRoundPointsBinding.set(0);
+    }
     
     if (isCorrect && this.world.getLocalPlayer() && !eventData.showLeaderboard) {
       // Calculate speed multiplier: faster answers get higher points
@@ -1335,6 +1339,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.showResult = false;
     this.showResultBinding.set(false);
     
+    // Reset last round points for new question
+    this.lastRoundPointsBinding.set(0);
+    
     // Set screen type to two-options
     this.currentScreenType = 'two-options';
     this.lastQuestionType = 'two-options';
@@ -1390,6 +1397,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset result display
     this.showResult = false;
     this.showResultBinding.set(false);
+    
+    // Reset last round points for new question
+    this.lastRoundPointsBinding.set(0);
     
     // Set screen type to four-options
     this.currentScreenType = 'four-options';
@@ -1548,6 +1558,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.showResultBinding.set(false);
     this.showLeaderboardBinding.set(false);
     this.answerSubmittedBinding.set(false);
+    this.lastRoundPointsBinding.set(0);
     
     // Reset layout type to default
     this.layoutTypeBinding.set('four-options');
