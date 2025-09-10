@@ -4529,7 +4529,6 @@ export class TriviaGame extends ui.UIComponent {
                       top: 20,
                       left: 20,
                       right: 20,
-                      backgroundColor: 'rgba(220, 38, 38, 0.95)',
                       borderRadius: 8,
                       padding: 12,
                       alignItems: 'center',
@@ -4542,49 +4541,30 @@ export class TriviaGame extends ui.UIComponent {
                       zIndex: 1000
                     },
                     children: [
+                      // Background image
+                      Image({
+                        source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(815090457525624))),
+                        style: {
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: '100%',
+                          height: '100%',
+                          resizeMode: 'cover',
+                          zIndex: -1
+                        }
+                      }),
                       View({
                         style: {
-                          backgroundColor: 'white',
+                          backgroundColor: 'transparent',
                           borderRadius: 6,
                           padding: 12,
                           alignItems: 'center',
-                          maxWidth: '80%',
-                          shadowColor: 'black',
-                          shadowOpacity: 0.2,
-                          shadowRadius: 4,
-                          shadowOffset: [0, 2]
+                          maxWidth: '80%'
                         },
                         children: [
-                          // Error icon
-                          ui.Text({
-                            text: '⚠️',
-                            style: {
-                              fontSize: 20,
-                              marginBottom: 6
-                            }
-                          }),
-                          // Error title
-                          ui.Text({
-                            text: 'No Questions Available',
-                            style: {
-                              fontSize: 14,
-                              fontWeight: 'bold',
-                              color: '#DC2626',
-                              marginBottom: 4,
-                              textAlign: 'center'
-                            }
-                          }),
-                          // Error message
-                          ui.Text({
-                            text: this.errorMessageBinding,
-                            style: {
-                              fontSize: 12,
-                              color: '#6B7280',
-                              textAlign: 'center',
-                              lineHeight: 1.3,
-                              marginBottom: 8
-                            }
-                          }),
                           // Dismiss button (smaller and less prominent)
                           ui.Pressable({
                             style: {

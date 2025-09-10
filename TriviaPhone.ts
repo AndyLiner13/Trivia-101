@@ -1884,53 +1884,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             flexDirection: 'column'
           },
           children: [
-            // Top row - Settings icon
-            ui.View({
-              style: {
-                width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
-                flexDirection: 'row',
-                justifyContent: 'flex-end',
-                alignItems: 'center'
-              },
-              children: [
-                // Lock toggle button (interactive) - only show for hosts
-                ui.UINode.if(
-                  this.isHostBinding,
-                  ui.Pressable({
-                    style: {
-                      backgroundColor: '#191919',
-                      borderRadius: 8,
-                      padding: 1,
-                      width: 32,
-                      height: 32,
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    },
-                    onPress: () => this.toggleLock(),
-                    children: [
-                      ui.Image({
-                        source: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
-                          ui.ImageSource.fromTextureAsset(new hz.TextureAsset(
-                            settings.isLocked ? BigInt('667887239673613') : BigInt('1667289068007821') // lock vs lock_open_right
-                          ))
-                        ),
-                        style: {
-                          width: 26,
-                          height: 26,
-                          tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                            settings.isLocked ? '#FF4444' : '#44FF44' // Red when locked, green when unlocked
-                          )
-                        }
-                      })
-                    ]
-                  })
-                )
-              ]
-            }),
-
             // Category selection - General Trivia
             ui.View({
               style: {
@@ -3050,6 +3003,53 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
         }),
 
+        // Top navigation bar - only show for hosts
+        ui.UINode.if(
+          this.isHostBinding,
+          ui.View({
+            style: {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              paddingLeft: 8,
+              paddingRight: 8,
+              paddingTop: 8,
+              zIndex: 12
+            },
+            children: [
+              // Settings icon container
+              ui.Pressable({
+                style: {
+                  backgroundColor: '#191919',
+                  borderRadius: 8,
+                  padding: 1,
+                  width: 32,
+                  height: 32,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                },
+                onPress: () => {
+                  this.showLogoutPopupBinding.set(true);
+                },
+                children: [
+                  ui.Image({
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                    style: {
+                      width: 24,
+                      height: 24,
+                      tintColor: '#FFFFFF'
+                    }
+                  })
+                ]
+              })
+            ]
+          })
+        ),
+
         // Header anchored to top - now fills full viewport height
         ui.View({
           style: {
@@ -3159,11 +3159,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ]
               })
             ),
-            // Game Settings button - only show for participants when lock is NOT enabled
+            // Game Settings button - always show for both hosts and participants
             ui.UINode.if(
-              ui.Binding.derive([this.isHostBinding, this.gameSettingsBinding], (isHost, settings) =>
-                isHost || !settings.isLocked
-              ),
+              true,
               ui.Pressable({
                 style: {
                   width: '100%',
@@ -3189,7 +3187,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               })
             )
           ]
-        })
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
       ]
     });
   }
