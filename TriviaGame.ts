@@ -3687,7 +3687,7 @@ export class TriviaGame extends ui.UIComponent {
                                 this.leaderboardDataBinding.derive(players => players.length > 0),
                                 View({
                                   style: {
-                                    backgroundColor: 'white',
+                                    backgroundColor: '#191919',
                                     height: 56,
                                     borderRadius: 10,
                                     paddingHorizontal: 13,
@@ -3719,7 +3719,7 @@ export class TriviaGame extends ui.UIComponent {
                                             style: {
                                               fontSize: 22,
                                               fontWeight: 'bold',
-                                              color: 'black'
+                                              color: '#ffffff'
                                             }
                                           })
                                         }),
@@ -3762,7 +3762,7 @@ export class TriviaGame extends ui.UIComponent {
                                                 style: {
                                                   fontSize: 13,
                                                   fontWeight: 'bold',
-                                                  color: 'black'
+                                                  color: '#ffffff'
                                                 }
                                               })
                                             )
@@ -3782,7 +3782,7 @@ export class TriviaGame extends ui.UIComponent {
                                             style: {
                                               fontSize: 17,
                                               fontWeight: 'bold',
-                                              color: 'black',
+                                              color: '#ffffff',
                                               textAlign: 'left'
                                             }
                                           })
@@ -3797,7 +3797,7 @@ export class TriviaGame extends ui.UIComponent {
                                       style: {
                                         fontSize: 17,
                                         fontWeight: 'bold',
-                                        color: 'black',
+                                        color: '#ffffff',
                                         marginRight: 8
                                       }
                                     })
@@ -4131,7 +4131,7 @@ export class TriviaGame extends ui.UIComponent {
                                 this.leaderboardDataBinding.derive(players => players.length > 0),
                                 View({
                                   style: {
-                                    backgroundColor: 'white',
+                                    backgroundColor: '#191919',
                                     height: 56,
                                     borderRadius: 10,
                                     paddingHorizontal: 13,
@@ -4163,7 +4163,7 @@ export class TriviaGame extends ui.UIComponent {
                                             style: {
                                               fontSize: 22,
                                               fontWeight: 'bold',
-                                              color: 'black'
+                                              color: '#ffffff'
                                             }
                                           })
                                         }),
@@ -4206,7 +4206,7 @@ export class TriviaGame extends ui.UIComponent {
                                                 style: {
                                                   fontSize: 13,
                                                   fontWeight: 'bold',
-                                                  color: 'black'
+                                                  color: '#ffffff'
                                                 }
                                               })
                                             )
@@ -4226,7 +4226,7 @@ export class TriviaGame extends ui.UIComponent {
                                             style: {
                                               fontSize: 17,
                                               fontWeight: 'bold',
-                                              color: 'black',
+                                              color: '#ffffff',
                                               textAlign: 'left'
                                             }
                                           })
@@ -4241,7 +4241,7 @@ export class TriviaGame extends ui.UIComponent {
                                       style: {
                                         fontSize: 17,
                                         fontWeight: 'bold',
-                                        color: 'black',
+                                        color: '#ffffff',
                                         marginRight: 8
                                       }
                                     })
