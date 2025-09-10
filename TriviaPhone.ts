@@ -44,10 +44,10 @@ const hostChangedEvent = new hz.NetworkEvent<{
 const triviaQuestions: any[] = [];
 
 const answerShapes = [
-  { iconId: '1290982519195562', color: '#DC2626', shape: 'Triangle' },
-  { iconId: '764343253011569', color: '#2563EB', shape: 'Square' },
-  { iconId: '797899126007085', color: '#EAB308', shape: 'Circle' },
-  { iconId: '1286736292915198', color: '#16A34A', shape: 'Diamond', rotation: 45 }
+  { iconId: '2085541485520283', color: '#DC2626', shape: 'Triangle' }, // Red Triangle
+  { iconId: '1317550153280256', color: '#2563EB', shape: 'Square' },   // Blue Square
+  { iconId: '1247573280476332', color: '#EAB308', shape: 'Circle' },  // Yellow Circle
+  { iconId: '2403112933423824', color: '#16A34A', shape: 'Star' }     // Green Star
 ];
 
 class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
@@ -244,10 +244,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       '1806442143313699',   // arrow_forward
       
       // Shape/answer icons
-      '1290982519195562',   // triangle
-      '764343253011569',    // square  
-      '797899126007085',    // circle
-      '1286736292915198',   // diamond
+      '2085541485520283',   // triangle
+      '1317550153280256',   // square  
+      '1247573280476332',    // circle
+      '2403112933423824',   // star
+      '1317550153280256',   // diamond
       
       // Modifier background icons
       '789207380187265',    // Left side icon background
@@ -1191,6 +1192,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswer = null;
     this.selectedAnswerBinding.set(null);
     
+    // Reset answer submitted state for new question
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
+    
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
     this.currentQuestionIndexBinding.set(eventData.questionIndex);
@@ -1239,6 +1244,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Reset selected answer
     this.selectedAnswer = null;
     this.selectedAnswerBinding.set(null);
+    
+    // Reset answer submitted state for new question
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1457,6 +1466,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       answerIndex: actualAnswerIndex,
       responseTime: 0
     });
+
+    console.log(`✅ TriviaPhone: Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex}`);
   }
 
   private nextQuestion(): void {
@@ -1658,16 +1669,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
                 // Two-option trivia screen - shows only when event received and game is started
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding], (mode, screenType, started, showResult) => 
-                    mode === 'pre-game' && started && screenType === 'two-options' && !showResult
+                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding, this.answerSubmittedBinding], (mode, screenType, started, showResult, answerSubmitted) => 
+                    mode === 'pre-game' && started && screenType === 'two-options' && !showResult && !answerSubmitted
                   ),
                   this.renderTwoOptionsPage()
                 ),
                 
                 // Four-option trivia screen - shows only when event received and game is started
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding], (mode, screenType, started, showResult) => 
-                    mode === 'pre-game' && started && screenType === 'four-options' && !showResult
+                  ui.Binding.derive([this.currentViewModeBinding, this.screenTypeBinding, this.gameStartedBinding, this.showResultBinding, this.answerSubmittedBinding], (mode, screenType, started, showResult, answerSubmitted) => 
+                    mode === 'pre-game' && started && screenType === 'four-options' && !showResult && !answerSubmitted
                   ),
                   this.renderFourOptionsPage()
                 ),
@@ -1702,6 +1713,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && !isCorrect
                   ),
                   this.renderParticipantWrongResults()
+                ),
+                
+                // Answer submitted screen - shows when answer is submitted but results not yet shown
+                ui.UINode.if(
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => 
+                    mode === 'pre-game' && started && answerSubmitted && !showResult
+                  ),
+                  this.renderAnswerSubmittedScreen()
                 ),
                 
                 ui.UINode.if(
@@ -2521,7 +2540,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     });
   }
 
-  private renderOptedOutScreen(): ui.UINode {
+  private renderAnswerSubmittedScreen(): ui.UINode {
     return ui.View({
       style: {
         width: '100%',
@@ -2529,9 +2548,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         position: 'relative'
       },
       children: [
-        // Background image
+        // Background image based on selected answer
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('9783264971776963'))),
+          source: ui.Binding.derive([this.selectedAnswerBinding], (selectedAnswer) => {
+            // Map answer index to background image
+            const backgroundImages = [
+              '4164501203820285', // Red Triangle Screen
+              '781053527999316',  // Blue Square Screen
+              '1276483883806975', // Yellow Circle Screen
+              '2403112933423824'  // Green Star Screen
+            ];
+            const answerIndex = selectedAnswer !== null ? selectedAnswer : 0;
+            const imageId = backgroundImages[answerIndex] || backgroundImages[0];
+            return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(imageId)));
+          }),
           style: {
             width: '100%',
             height: '100%',
@@ -2542,36 +2572,112 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
         }),
 
-        // Join Game button at bottom - always show when opted out
+        // Top navigation bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
+          },
+          children: [
+            // Points display container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.Pressable({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Logout icon pressed from answerSubmitted screen');
+                this.showLogoutPopupBinding.set(true);
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        ),
+
+        // Bottom status bar
         ui.View({
           style: {
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
+            height: 58,
             paddingLeft: 8,
             paddingRight: 8,
-            paddingTop: 8,
+            paddingTop: 0,
             paddingBottom: 8
           },
           children: [
             ui.Pressable({
               style: {
                 width: '100%',
-                height: 42,
+                height: '100%',
+                backgroundColor: '#FFFFFF',
                 borderRadius: 8,
                 justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#16A34A'
+                alignItems: 'center'
               },
-              onPress: () => this.handleRejoinGame(),
+              onPress: () => {}, // No action for status bar
               children: [
                 ui.Text({
-                  text: 'Join Game',
+                  text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+                    return `Question ${index + 1} of ${settings.numberOfQuestions}`;
+                  }),
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#FFFFFF',
+                    color: '#111111',
                     textAlign: 'center'
                   }
                 })
@@ -3117,8 +3223,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             width: 50,
             height: 50,
-            tintColor: '#FFFFFF',
-            ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
+            tintColor: '#FFFFFF'
           }
         })
       ]
@@ -3469,11 +3574,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 marginBottom: 4
               },
               children: [
-                // Top-left button (Red Circle)
+                // Top-left button (Red Triangle - Option 1)
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#d70f33',
+                    backgroundColor: '#DC2626',
                     borderRadius: 16,
                     marginRight: 4,
                     justifyContent: 'center',
@@ -3489,7 +3594,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // triangle
                       style: {
                         width: 55,
                         height: 54,
@@ -3499,11 +3604,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Top-right button (Green Square)
+                // Top-right button (Blue Square - Option 2)
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#2db22c',
+                    backgroundColor: '#2563EB',
                     borderRadius: 16,
                     marginLeft: 4,
                     justifyContent: 'center',
@@ -3539,11 +3644,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 marginTop: 4
               },
               children: [
-                // Bottom-left button (Yellow Triangle)
+                // Bottom-left button (Yellow Circle - Option 3)
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#f7ce23',
+                    backgroundColor: '#EAB308',
                     borderRadius: 16,
                     marginRight: 4,
                     justifyContent: 'center',
@@ -3559,7 +3664,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // triangle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
                       style: {
                         width: 55,
                         height: 54,
@@ -3569,11 +3674,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 }),
 
-                // Bottom-right button (Blue Star)
+                // Bottom-right button (Green Star - Option 4)
                 ui.Pressable({
                   style: {
                     flex: 1,
-                    backgroundColor: '#2773ea',
+                    backgroundColor: '#16A34A',
                     borderRadius: 16,
                     marginLeft: 4,
                     justifyContent: 'center',
@@ -4391,6 +4496,200 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ]
               })
             )
+          ]
+        }),
+
+        // Logout pop-up
+        ui.UINode.if(
+          this.showLogoutPopupBinding,
+          this.renderLogoutPopup()
+        )
+      ]
+    });
+  }
+
+  private renderOptedOutScreen(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      },
+      children: [
+        // Background image - using a neutral gray background
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1357119322709193'))),
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Top navigation bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
+          },
+          children: [
+            // Points display container
+            ui.View({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 7,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Settings icon container
+            ui.Pressable({
+              style: {
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 1,
+                width: 32,
+                height: 32,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {
+                console.log('🚪 TriviaPhone: Settings icon pressed from opted-out screen');
+                this.showLogoutPopupBinding.set(true);
+              },
+              children: [
+                ui.Image({
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
+                  style: {
+                    width: 24,
+                    height: 24,
+                    tintColor: '#FFFFFF'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Main content - centered message and button
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: -80, // Center the content vertically
+            paddingLeft: 8,
+            paddingRight: 8,
+            alignItems: 'center'
+          },
+          children: [
+            // "You have opted out" message
+            ui.Text({
+              text: 'You have opted out',
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginBottom: 16
+              }
+            }),
+
+            // Join Game button
+            ui.Pressable({
+              style: {
+                width: '80%',
+                height: 50,
+                backgroundColor: '#22C55E', // Green color for rejoin
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowOffset: [0, 0],
+                shadowRadius: 6,
+                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                shadowOpacity: 1
+              },
+              onPress: () => {
+                console.log('✅ TriviaPhone: Join Game pressed from opted-out screen');
+                this.handleRejoinGame();
+              },
+              children: [
+                ui.Text({
+                  text: 'Join Game',
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+
+        // Bottom status bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 58,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 0,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
+              },
+              onPress: () => {}, // No action for status bar
+              children: [
+                ui.Text({
+                  text: 'Waiting for game to resume...',
+                  style: {
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#6B7280',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
           ]
         }),
 

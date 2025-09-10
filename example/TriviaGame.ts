@@ -2721,7 +2721,7 @@ export class TriviaGame extends ui.UIComponent {
                                         height: 42,
                                         marginRight: 6
                                       },
-                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                                      children: this.createAnswerButton(2, '#EAB308', '1247573280476332')
                                     })
                                   ),
                                   // Answer 3 (Green/Square) - shows as Option 4 in bottom row
@@ -2732,7 +2732,7 @@ export class TriviaGame extends ui.UIComponent {
                                         width: '48%',
                                         height: 42
                                       },
-                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                      children: this.createAnswerButton(3, '#16A34A', '2403112933423824')
                                     })
                                   )
                                 ]
@@ -2762,7 +2762,7 @@ export class TriviaGame extends ui.UIComponent {
                                         marginRight: this.answerTexts[1].derive(text => text !== '') ? 6 : 0,
                                         marginBottom: 6
                                       },
-                                      children: this.createAnswerButton(0, '#DC2626', '1290982519195562')
+                                      children: this.createAnswerButton(0, '#DC2626', '2085541485520283')
                                     })
                                   ),
 
@@ -2775,7 +2775,7 @@ export class TriviaGame extends ui.UIComponent {
                                         height: 42,
                                         marginBottom: 6
                                       },
-                                      children: this.createAnswerButton(1, '#2563EB', '764343253011569')
+                                      children: this.createAnswerButton(1, '#2563EB', '1317550153280256')
                                     })
                                   ),
 
@@ -2789,11 +2789,11 @@ export class TriviaGame extends ui.UIComponent {
                                         marginRight: 6,
                                         marginBottom: 6
                                       },
-                                      children: this.createAnswerButton(2, '#EAB308', '797899126007085')
+                                      children: this.createAnswerButton(2, '#EAB308', '1247573280476332')
                                     })
                                   ),
 
-                                  // Answer 3 (Green/Square) - Option 4
+                                  // Answer 3 (Green/Star) - Option 4
                                   UINode.if(
                                     this.answerTexts[3].derive(text => text !== ''),
                                     View({
@@ -2802,7 +2802,7 @@ export class TriviaGame extends ui.UIComponent {
                                         height: 42,
                                         marginBottom: 6
                                       },
-                                      children: this.createAnswerButton(3, '#16A34A', '1286736292915198')
+                                      children: this.createAnswerButton(3, '#16A34A', '2403112933423824')
                                     })
                                   )
                                 ]

@@ -61,7 +61,7 @@ function Frame120() {
 
 function Frame83() {
   return (
-    <div className="[grid-area:1_/_1] bg-[#d70f33] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
+    <div className="[grid-area:1_/_1] bg-[#DC2626] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
       <div className="flex flex-col items-center justify-center relative size-full">
         <div className="box-border content-stretch flex flex-col items-center justify-center px-[19px] py-0 relative size-full">
           <div className="bg-center bg-cover bg-no-repeat h-[54px] shrink-0 w-[55px]" data-name="image 14" style={{ backgroundImage: `url('${imgImage14}')` }} />
@@ -85,7 +85,7 @@ function Circle() {
 
 function Frame86() {
   return (
-    <div className="[grid-area:2_/_1] bg-[#f7ce23] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
+    <div className="[grid-area:2_/_1] bg-[#EAB308] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
       <div className="flex flex-col items-center justify-center relative size-full">
         <div className="box-border content-stretch flex flex-col items-center justify-center px-[19px] py-0 relative size-full">
           <Circle />
@@ -97,7 +97,7 @@ function Frame86() {
 
 function Frame87() {
   return (
-    <div className="[grid-area:2_/_2] bg-[#2db22c] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
+    <div className="[grid-area:2_/_2] bg-[#16A34A] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
       <div className="flex flex-col items-center justify-center relative size-full">
         <div className="box-border content-stretch flex flex-col items-center justify-center px-[19px] py-0 relative size-full">
           <div className="bg-center bg-cover bg-no-repeat h-[54px] shrink-0 w-[55px]" data-name="image 16" style={{ backgroundImage: `url('${imgImage16}')` }} />
@@ -109,7 +109,7 @@ function Frame87() {
 
 function Frame84() {
   return (
-    <div className="[grid-area:1_/_2] bg-[#2773ea] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
+    <div className="[grid-area:1_/_2] bg-[#2563EB] relative rounded-[16px] shadow-[0px_0px_9.6px_0px_rgba(0,0,0,0.21)] shrink-0">
       <div className="flex flex-col items-center justify-center relative size-full">
         <div className="box-border content-stretch flex flex-col items-center justify-center px-[22px] py-0 relative size-full">
           <div className="bg-center bg-cover bg-no-repeat shrink-0 size-[50px]" data-name="image 15" style={{ backgroundImage: `url('${imgImage15}')` }} />

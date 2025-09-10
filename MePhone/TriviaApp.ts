@@ -36,10 +36,10 @@ interface TriviaQuestionsData {
 }
 
 const answerShapes = [
-  { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
-  { iconId: '1286736292915198', color: '#3B82F6', shape: 'Square' },
-  { iconId: '1290982519195562', color: '#EAB308', shape: 'Triangle' },
-  { iconId: '1286736292915198', color: '#22C55E', shape: 'Diamond', rotation: 45 }
+  { iconId: '2085541485520283', color: '#DC2626', shape: 'Triangle' }, // Red Triangle
+  { iconId: '1317550153280256', color: '#2563EB', shape: 'Square' },   // Blue Square
+  { iconId: '1247573280476332', color: '#EAB308', shape: 'Circle' },  // Yellow Circle
+  { iconId: '2403112933423824', color: '#16A34A', shape: 'Star' }     // Green Star
 ];
 
 const quirkyWaitingMessages = [
@@ -2090,8 +2090,7 @@ export class TriviaApp {
           style: {
             width: 32,
             height: 32,
-            tintColor: '#FFFFFF',
-            ...(shape.rotation ? { transform: [{ rotate: `${shape.rotation}deg` }] } : {})
+            tintColor: '#FFFFFF'
           }
         })
       ]

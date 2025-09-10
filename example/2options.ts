@@ -11,8 +11,8 @@ const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGame
 const triviaGameStartEvent = new hz.NetworkEvent<{ hostId: string, config: { timeLimit: number, category: string, difficulty: string, numQuestions: number } }>('triviaGameStart');
 
 const answerShapes = [
-  { iconId: '797899126007085', color: '#EF4444', shape: 'Circle' },
-  { iconId: '1286736292915198', color: '#3B82F6', shape: 'Square' },
+  { iconId: '1290982519195562', color: '#DC2626', shape: 'Triangle' },
+  { iconId: '1286736292915198', color: '#2563EB', shape: 'Square' },
   { iconId: '1290982519195562', color: '#EAB308', shape: 'Triangle' },
   { iconId: '797899126007085', color: '#22C55E', shape: 'Diamond', rotation: 45 }
 ];

@@ -755,10 +755,10 @@ export class TriviaGame extends ui.UIComponent {
       '1325134306066406',   // crown (host indicator)
       
       // Shape icons (answer buttons)
-      '1290982519195562',   // triangle
-      '764343253011569',    // square
-      '797899126007085',    // circle
-      '1286736292915198',   // diamond
+      '2085541485520283',   // triangle
+      '1317550153280256',   // square
+      '1247573280476332',    // circle
+      '1317550153280256',   // diamond
       
       // Background textures
       '2770757216446813',   // TriviaGame configuration background
@@ -3481,7 +3481,7 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 2),
-                                this.createAnswerButton(0, '#DC2626', '1290982519195562'),
+                                this.createAnswerButton(0, '#DC2626', '2085541485520283'),
                                 this.createBlankButton()
                               )
                             }),
@@ -3495,7 +3495,7 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 3),
-                                this.createAnswerButton(1, '#2563EB', '764343253011569'),
+                                this.createAnswerButton(1, '#2563EB', '1317550153280256'),
                                 this.createBlankButton()
                               )
                             }),
@@ -3513,19 +3513,19 @@ export class TriviaGame extends ui.UIComponent {
                                 // For 2-answer questions: show answer 0 in position 3
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  this.createAnswerButton(2, '#EAB308', '797899126007085'),
+                                  this.createAnswerButton(2, '#EAB308', '1247573280476332'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 2 in position 3
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  this.createAnswerButton(2, '#EAB308', '797899126007085'),
+                                  this.createAnswerButton(2, '#EAB308', '1247573280476332'),
                                   this.createBlankButton()
                                 )
                               )
                             }),
 
-                            // Answer 3 (Green/Square) - Option 4 - show answer 1 for 2-answer questions, answer 3 for 3+ answer questions
+                            // Answer 3 (Green/Star) - Option 4 - show answer 1 for 2-answer questions, answer 3 for 3+ answer questions
                             View({
                               style: {
                                 width: '48%',
@@ -3537,13 +3537,13 @@ export class TriviaGame extends ui.UIComponent {
                                 // For 2-answer questions: show answer 1 in position 4
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  this.createAnswerButton(3, '#16A34A', '1286736292915198'),
+                                  this.createAnswerButton(3, '#16A34A', '2403112933423824'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 3 in position 4
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  this.createAnswerButton(3, '#16A34A', '1286736292915198'),
+                                  this.createAnswerButton(3, '#16A34A', '2403112933423824'),
                                   this.createBlankButton()
                                 )
                               )
