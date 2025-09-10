@@ -4610,7 +4610,11 @@ export class TriviaGame extends ui.UIComponent {
         UINode.if(
           this.playersUpdateTrigger.derive(() => {
             const currentPlayers = this.world.getPlayers();
-            const hasPlayerAtIndex = i < currentPlayers.length;
+            // Filter out opted-out players from display
+            const activePlayers = currentPlayers.filter(player => 
+              !this.playerManager.isPlayerOptedOut(player.id.toString())
+            );
+            const hasPlayerAtIndex = i < activePlayers.length;
             return hasPlayerAtIndex;
           }),
           View({
@@ -4639,8 +4643,12 @@ export class TriviaGame extends ui.UIComponent {
                   UINode.if(
                     this.playersUpdateTrigger.derive(() => {
                       const currentPlayers = this.world.getPlayers();
-                      if (i < currentPlayers.length) {
-                        const player = currentPlayers[i];
+                      // Filter out opted-out players from display
+                      const activePlayers = currentPlayers.filter(player => 
+                        !this.playerManager.isPlayerOptedOut(player.id.toString())
+                      );
+                      if (i < activePlayers.length) {
+                        const player = activePlayers[i];
                         const playerId = player.id.toString();
                         const hasHeadshot = this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
                         return hasHeadshot;
@@ -4650,8 +4658,12 @@ export class TriviaGame extends ui.UIComponent {
                     Image({
                       source: this.playersUpdateTrigger.derive(() => {
                         const currentPlayers = this.world.getPlayers();
-                        if (i < currentPlayers.length) {
-                          const player = currentPlayers[i];
+                        // Filter out opted-out players from display
+                        const activePlayers = currentPlayers.filter(player => 
+                          !this.playerManager.isPlayerOptedOut(player.id.toString())
+                        );
+                        if (i < activePlayers.length) {
+                          const player = activePlayers[i];
                           const playerId = player.id.toString();
                           const headshot = this.playerHeadshots.get(playerId);
                           return headshot || ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(0)));
@@ -4670,8 +4682,12 @@ export class TriviaGame extends ui.UIComponent {
                   UINode.if(
                     Binding.derive([this.playersUpdateTrigger, this.hostPlayerIdBinding], (playersCount, hostId) => {
                       const currentPlayers = this.world.getPlayers();
-                      if (i < currentPlayers.length) {
-                        const player = currentPlayers[i];
+                      // Filter out opted-out players from display
+                      const activePlayers = currentPlayers.filter(player => 
+                        !this.playerManager.isPlayerOptedOut(player.id.toString())
+                      );
+                      if (i < activePlayers.length) {
+                        const player = activePlayers[i];
                         const playerId = player.id.toString();
                         const hasHeadshot = this.playerHeadshots.has(playerId) && this.playerHeadshots.get(playerId) !== null;
                         const isHost = playerId === hostId;
@@ -4682,8 +4698,12 @@ export class TriviaGame extends ui.UIComponent {
                     Text({
                       text: this.playersUpdateTrigger.derive(() => {
                         const currentPlayers = this.world.getPlayers();
-                        if (i < currentPlayers.length) {
-                          const player = currentPlayers[i];
+                        // Filter out opted-out players from display
+                        const activePlayers = currentPlayers.filter(player => 
+                          !this.playerManager.isPlayerOptedOut(player.id.toString())
+                        );
+                        if (i < activePlayers.length) {
+                          const player = activePlayers[i];
                           return player.name.get().charAt(0).toUpperCase();
                         }
                         return "";
@@ -4699,8 +4719,12 @@ export class TriviaGame extends ui.UIComponent {
                   UINode.if(
                     Binding.derive([this.playersUpdateTrigger, this.hostPlayerIdBinding], (playersCount, hostId) => {
                       const currentPlayers = this.world.getPlayers();
-                      if (i < currentPlayers.length && hostId) {
-                        const player = currentPlayers[i];
+                      // Filter out opted-out players from display
+                      const activePlayers = currentPlayers.filter(player => 
+                        !this.playerManager.isPlayerOptedOut(player.id.toString())
+                      );
+                      if (i < activePlayers.length && hostId) {
+                        const player = activePlayers[i];
                         const playerId = player.id.toString();
                         return playerId === hostId;
                       }
@@ -4726,8 +4750,12 @@ export class TriviaGame extends ui.UIComponent {
               Text({
                 text: this.playersUpdateTrigger.derive(() => {
                   const currentPlayers = this.world.getPlayers();
-                  if (i < currentPlayers.length) {
-                    const player = currentPlayers[i];
+                  // Filter out opted-out players from display
+                  const activePlayers = currentPlayers.filter(player => 
+                    !this.playerManager.isPlayerOptedOut(player.id.toString())
+                  );
+                  if (i < activePlayers.length) {
+                    const player = activePlayers[i];
                     return player.name.get();
                   }
                   return "";
@@ -4746,12 +4774,16 @@ export class TriviaGame extends ui.UIComponent {
       );
     }
     
-    // Add empty state when no players
+    // Add empty state when no active players (all opted out)
     components.push(
       UINode.if(
         this.playersUpdateTrigger.derive(() => {
           const currentPlayers = this.world.getPlayers();
-          const isEmpty = currentPlayers.length === 0;
+          // Filter out opted-out players
+          const activePlayers = currentPlayers.filter(player => 
+            !this.playerManager.isPlayerOptedOut(player.id.toString())
+          );
+          const isEmpty = activePlayers.length === 0;
           return isEmpty;
         }),
         View({
@@ -4762,7 +4794,7 @@ export class TriviaGame extends ui.UIComponent {
             width: '100%'
           },
           children: Text({
-            text: 'No players yet...',
+            text: 'No active players yet...',
             style: {
               fontSize: 14,
               color: 'black',
@@ -5627,6 +5659,10 @@ export class TriviaGame extends ui.UIComponent {
       console.log('✅ All remaining players have answered after player logout - advancing to results');
       this.showCorrectAnswersAndLeaderboard();
     }
+    
+    // Trigger UI update for pre-game screen to hide opted-out player
+    this.updateTriggerCounter++;
+    this.playersUpdateTrigger.set(this.updateTriggerCounter);
   }
 
   private onPlayerRejoin(eventData: { playerId: string }): void {
