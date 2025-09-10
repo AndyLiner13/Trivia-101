@@ -2073,7 +2073,15 @@ export class TriviaGame extends ui.UIComponent {
       if (this.currentQuestionIndex + 1 >= this.triviaQuestions.length) {
         this.endGame();
       } else {
-        this.showLeaderboard();
+        // Check if skip leaderboard modifier is enabled
+        if (this.modifiers.powerUps) {
+          console.log('✅ Skip leaderboard modifier active - processing leaderboard data but skipping display');
+          // Process leaderboard data gracefully but skip showing it
+          this.processLeaderboardWithoutDisplay();
+        } else {
+          // Show leaderboard as normal
+          this.showLeaderboard();
+        }
       }
     }, 5000);
   }
@@ -2168,6 +2176,52 @@ export class TriviaGame extends ui.UIComponent {
 
     // Sort by score descending
     return leaderboard.sort((a, b) => b.score - a.score);
+  }
+
+  private async processLeaderboardWithoutDisplay(): Promise<void> {
+    // Process leaderboard data gracefully but don't show leaderboard UI
+    // This ensures all the backend processes (scoring, data generation) still occur
+    
+    // For Italian Brainrot quiz, clean up previous question image
+    this.cleanupPreviousItalianBrainrotImage();
+    
+    // Generate leaderboard data for scoring purposes (even though we won't show it)
+    const realLeaderboard = await this.generateRealLeaderboard();
+    this.leaderboardDataBinding.set(realLeaderboard);
+    
+    // Send results event with showLeaderboard: true to trigger TriviaPhone auto-advance logic
+    if (!this.currentQuestion) {
+      return;
+    }
+    
+    const serializableQuestion: SerializableQuestion = {
+      id: this.currentQuestion.id,
+      question: this.currentQuestion.question,
+      category: this.currentQuestion.category || 'General',
+      difficulty: this.currentQuestion.difficulty || 'easy',
+      image: this.currentQuestion.image,
+      answers: this.currentQuestion.answers
+    };
+    
+    // Prepare leaderboard data for network event
+    const networkLeaderboardData = realLeaderboard.map(player => ({
+      name: player.name,
+      score: player.score,
+      playerId: player.playerId
+    }));
+    
+    // Send the results event that will trigger TriviaPhone's skip leaderboard logic
+    this.sendNetworkBroadcastEvent(triviaResultsEvent, {
+      question: serializableQuestion,
+      correctAnswerIndex: this.currentQuestion.answers.findIndex((a: any) => a.correct),
+      answerCounts: [],
+      scores: {},
+      showLeaderboard: true, // This triggers the auto-advance logic in TriviaPhone
+      leaderboardData: networkLeaderboardData
+    });
+    
+    // Don't set leaderboard UI bindings or broadcast leaderboard UI state
+    // The TriviaPhone will handle skipping the leaderboard display and auto-advancing
   }
 
   private advanceToNextQuestion(): void {

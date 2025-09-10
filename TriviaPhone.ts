@@ -1977,6 +1977,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Toggle the modifier value
     this.gameSettings.modifiers[modifier] = !this.gameSettings.modifiers[modifier];
     
+    // When skip leaderboard (powerUps) is enabled, automatically enable autoplay
+    if (modifier === 'powerUps' && this.gameSettings.modifiers[modifier]) {
+      console.log('✅ Skip leaderboard enabled - automatically enabling autoplay');
+      this.gameSettings.modifiers.autoAdvance = true;
+    }
+    
     // Force a deep copy of the entire gameSettings object to ensure binding updates
     this.gameSettingsBinding.set({
       ...this.gameSettings,
