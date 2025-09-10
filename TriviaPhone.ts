@@ -680,12 +680,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         return;
       }
 
-      // Set up E key input for hiding TriviaPhone when focused - ENABLED for non-VR users only
+      // Set up E key input for hiding TriviaPhone when focused - ENABLED for desktop and web users only
       if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
-        // Check if the local player is NOT a VR user
+        // Check if the local player is NOT a VR user and NOT a mobile user
         const isVRUser = localPlayer.deviceType.get() === hz.PlayerDeviceType.VR;
+        const isMobileUser = localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile;
 
-        if (!isVRUser) {
+        if (!isVRUser && !isMobileUser) {
           this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
             hz.PlayerInputAction.RightGrip,
             hz.ButtonIcon.None,
@@ -695,7 +696,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
           this.eKeyInputConnection.registerCallback((action, pressed) => {
             if (pressed) {
-              // Handle E key trigger - hide TriviaPhone for non-VR users
+              // Handle E key trigger - hide TriviaPhone for desktop and web users
               this.handleEKeyTrigger(localPlayer);
             }
           });
