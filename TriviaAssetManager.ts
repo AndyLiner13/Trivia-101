@@ -58,59 +58,6 @@ export class TriviaAssetManager {
     MODIFIER_RIGHT: '1320579906276560'
   };
 
-  // Question image mapping
-  static readonly QUESTION_IMAGES: { [key: string]: string } = {
-    "question_1": "1288240819609445",
-    "question_2": "4044904872392022",
-    "question_3": "1079109144384248",
-    "question_4": "1938735963635235",
-    "question_5": "2003463393758622",
-    "question_6": "1752745952035062",
-    "question_7": "1475346350459077",
-    "question_8": "1326047915821520",
-    "question_9": "3683839291925288",
-    "question_10": "1196531019167806",
-    "question_11": "706209595799642",
-    "question_12": "1410039643419415",
-    "question_13": "780941904872970",
-    "question_14": "1118817693525283",
-    "question_15": "733906099468866",
-    "question_16": "1807349089859596",
-    "question_17": "794724089702968",
-    "question_18": "764689873142192",
-    "question_19": "1142213797826617",
-    "question_20": "1825083965112873",
-    "question_21": "1518489952663744",
-    "question_22": "3567219543420158",
-    "question_23": "2242739949472621",
-    "question_24": "757964650190705",
-    "question_25": "1063919718873051",
-    "question_26": "1861463731067102",
-    "question_27": "1120356200069522",
-    "question_28": "761075996785743",
-    "question_29": "799049209398883",
-    "question_30": "1268024794620567",
-    "question_31": "1156729086299686",
-    "question_32": "724986150558004",
-    "question_33": "2242739949472621",
-    "question_34": "764254719694219",
-    "question_35": "1696089904438279",
-    "question_36": "1438253267399666",
-    "question_37": "3139059593060314",
-    "question_38": "1516371323068225",
-    "question_39": "637378339431139",
-    "question_40": "774931355028832",
-    "question_41": "2031929627613049",
-    "question_42": "2031929627613049",
-    "question_43": "1319399849969407",
-    "question_44": "1121153766023567",
-    "question_45": "25519518710969579",
-    "question_46": "758425783750920",
-    "question_47": "783521360835887",
-    "question_48": "1872767513454306",
-    "question_49": "1422789575447123"
-  };
-
   // Answer shape configurations
   static readonly ANSWER_SHAPES = [
     { iconId: '2085541485520283', color: '#DC2626', shape: 'Triangle' },
@@ -193,13 +140,6 @@ export class TriviaAssetManager {
   async preloadCommonAssets(): Promise<void> {
     const commonAssets = Object.values(TriviaAssetManager.TEXTURE_IDS);
     await this.preloadAssets(commonAssets);
-  }
-
-  /**
-   * Get question image texture ID
-   */
-  getQuestionImageId(questionId: string): string | null {
-    return TriviaAssetManager.QUESTION_IMAGES[questionId] || null;
   }
 
   /**

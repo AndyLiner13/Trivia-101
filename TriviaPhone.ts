@@ -241,11 +241,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       '9783264971776963',   // Pre-game background
       '1358485312536960',   // Question pages background
       
-      // AnswerSubmitted screen backgrounds
-      '4164501203820285',   // Red Triangle Screen
-      '781053527999316',    // Blue Square Screen
-      '1276483883806975',   // Yellow Circle Screen
-      '1029237235836066',   // Green Star Screen
+      // AnswerSubmitted screen backgrounds (now using dynamic images from JSON)
       
       // Lock icons
       '667887239673613',    // lock
