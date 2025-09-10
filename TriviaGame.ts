@@ -643,12 +643,10 @@ export class TriviaGame extends ui.UIComponent {
   private isCurrentlyItalianBrainrot: boolean = false;
 
   async start() {
-    console.log('🚀 TriviaGame starting up');
     
     // Check if this is a preview mode transition by looking for existing state
     const hasExistingState = (this.world as any).triviaGameState !== undefined;
     if (hasExistingState) {
-      console.log('🔄 Detected preview mode transition - cleaning up previous state');
       this.handlePreviewModeTransition();
     }
     
@@ -726,11 +724,9 @@ export class TriviaGame extends ui.UIComponent {
     // Initialize category display with default category
     this.updateCategoryDisplay(this.gameConfig.category);
     
-    console.log('✅ TriviaGame startup completed successfully');
   }
 
   private async preloadGameAssets(): Promise<void> {
-    console.log('⏳ Preloading game assets (icons, backgrounds, question images)...');
     
     // List of all texture IDs used in the game
     const assetTextureIds = [
@@ -783,7 +779,6 @@ export class TriviaGame extends ui.UIComponent {
         this.assetCache.set(textureId, imageSource);
         return imageSource;
       } catch (error) {
-        console.log(`❌ Failed to preload asset texture ${textureId}: ${error}`);
         return null;
       }
     });
@@ -795,11 +790,6 @@ export class TriviaGame extends ui.UIComponent {
     const backgroundCount = 7; // Next 7 are backgrounds
     const questionImageCount = Object.values(imageTextureMap).length;
     
-    console.log(`✅ Successfully preloaded and cached ${successCount}/${assetTextureIds.length} game assets:`);
-    console.log(`   - Icons (including shapes): ~${Math.min(successCount, iconCount)} cached in memory`);
-    console.log(`   - Backgrounds: ~${Math.min(Math.max(successCount - iconCount, 0), backgroundCount)} cached in memory`);
-    console.log(`   - Question Images: ~${Math.max(successCount - iconCount - backgroundCount, 0)}/${questionImageCount} cached in memory`);
-    console.log('📦 TriviaGame: All assets remain in memory for instant rendering');
   }
 
   // Helper method to get cached asset or create new one
@@ -828,16 +818,14 @@ export class TriviaGame extends ui.UIComponent {
       
       // Don't reload if already cached
       if (this.italianBrainrotImageCache.has(imageId)) {
-        console.log(`📦 Italian Brainrot: Next image (${imageId}) already cached`);
         return;
       }
       
       try {
         const imageSource = ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(imageId)));
         this.italianBrainrotImageCache.set(imageId, imageSource);
-        console.log(`✅ Italian Brainrot: Preloaded next question image (${imageId})`);
       } catch (error) {
-        console.log(`❌ Italian Brainrot: Failed to preload next image (${imageId}):`, error);
+        return;
       }
     }
   }
@@ -848,7 +836,6 @@ export class TriviaGame extends ui.UIComponent {
     
     if (this.currentItalianBrainrotImageId) {
       this.italianBrainrotImageCache.delete(this.currentItalianBrainrotImageId);
-      console.log(`🗑️ Italian Brainrot: Discarded previous image (${this.currentItalianBrainrotImageId})`);
       this.currentItalianBrainrotImageId = null;
     }
   }
@@ -2212,7 +2199,6 @@ export class TriviaGame extends ui.UIComponent {
     
     // Update the category name binding
     this.categoryNameBinding.set(displayName);
-    console.log(`🏷️ Category display updated to: "${displayName}"`);
   }
 
   private updateIconVisibility(): void {
@@ -2328,7 +2314,6 @@ export class TriviaGame extends ui.UIComponent {
     // This forces the crown icon to update and show for the host
     this.updateTriggerCounter++;
     this.playersUpdateTrigger.set(this.updateTriggerCounter);
-    console.log('✅ TriviaGame: Forced UI refresh to update host crown icon');
   }
 
   private detectHostPlayer(): void {
@@ -5097,7 +5082,6 @@ export class TriviaGame extends ui.UIComponent {
 
   // Enhanced method to handle preview mode transitions
   private handlePreviewModeTransition(): void {
-    console.log('🔄 Preview mode transition detected - performing comprehensive cleanup');
     
     // Stop all running operations
     this.isRunning = false;
@@ -5202,7 +5186,6 @@ export class TriviaGame extends ui.UIComponent {
       hostId: this.hostPlayerId || 'unknown'
     });
     
-    console.log('✅ Preview mode transition cleanup completed successfully');
   }
 
   // Handle state requests from TriviaPhone
@@ -5263,11 +5246,8 @@ export class TriviaGame extends ui.UIComponent {
     
     // Check if player has opted out - if so, don't sync them to game state
     if (this.optedOutPlayers.has(playerId)) {
-      console.log(`🚫 Skipping game state sync for opted-out player ${player.name.get()} (${playerId})`);
       return;
     }
-    
-    console.log(`🔄 Syncing new player ${player.name.get()} to current game state`);
     
     // Give the TriviaPhone a moment to initialize after phone assignment
     this.async.setTimeout(async () => {
@@ -5300,7 +5280,6 @@ export class TriviaGame extends ui.UIComponent {
         // Track this player as someone who joined during interlude
         this.playersJoinedDuringInterlude.add(playerId);
         
-        console.log(`📱 Player joined during results/leaderboard - sending pre-game state and tracking for next question`);
       } else if (this.currentQuestion) {
         // Game is active with a current question - sync to question screen
         gameState = 'playing';
@@ -5319,7 +5298,6 @@ export class TriviaGame extends ui.UIComponent {
         responseData.currentQuestion = serializableQuestion;
         responseData.questionIndex = this.currentQuestionIndex;
         responseData.timeLimit = this.props.questionTimeLimit;
-        console.log(`📱 Player joined mid-question - syncing to current question ${this.currentQuestionIndex + 1}`);
         
         // Also send the appropriate question type event to ensure proper UI display
         const answerCount = this.currentQuestion.answers ? this.currentQuestion.answers.length : 4;
@@ -5343,7 +5321,6 @@ export class TriviaGame extends ui.UIComponent {
         
         // If timer is active, sync the new player to current timer state
         if (this.timerInterval && this.timeRemaining > 0) {
-          console.log(`⏰ Syncing timer state: ${this.timeRemaining}s remaining`);
           this.sendNetworkBroadcastEvent(triviaTimerUpdateEvent, {
             timeRemaining: this.timeRemaining,
             questionIndex: this.currentQuestionIndex
@@ -5353,12 +5330,10 @@ export class TriviaGame extends ui.UIComponent {
         // Game is running but no current question - show pre-game screen
         gameState = 'waiting';
         responseData.gameState = gameState;
-        console.log(`📱 Player joined between questions - sending pre-game state`);
       }
     } else {
       gameState = 'waiting';
       responseData.gameState = gameState;
-      console.log(`📱 Player joined while game not running - sending pre-game state`);
     }
     
     // Send the targeted state response directly to the new player
@@ -5373,11 +5348,8 @@ export class TriviaGame extends ui.UIComponent {
       return;
     }
 
-    console.log(`🔄 Syncing ${this.playersJoinedDuringInterlude.size} players who joined during interlude to current question`);
-
     // Send explicit state update to each player who joined during interlude
     this.playersJoinedDuringInterlude.forEach(playerId => {
-      console.log(`📱 Syncing player ${playerId} from waiting state to question state`);
       
       // Send explicit state response to transition from waiting to playing
       this.sendNetworkBroadcastEvent(triviaStateResponseEvent, {
@@ -5405,7 +5377,6 @@ export class TriviaGame extends ui.UIComponent {
 
     // Clear the set since we've now synced these players
     this.playersJoinedDuringInterlude.clear();
-    console.log(`✅ All players synced to current question, cleared interlude tracking`);
   }
 
   private onGameReset(event: { hostId: string }): void {
@@ -5492,7 +5463,6 @@ export class TriviaGame extends ui.UIComponent {
 
   // Phone management methods
   private async initializePhoneManager(): Promise<void> {
-    console.log('📱 Initializing PhoneManager...');
     
     // Create PhoneManager instance
     this.phoneManager = new PhoneManager();
@@ -5500,7 +5470,6 @@ export class TriviaGame extends ui.UIComponent {
     // Initialize the phone manager
     await this.phoneManager.start();
     
-    console.log('✅ PhoneManager initialized successfully');
   }
 
   private setupPlayerEvents(): void {
@@ -5531,13 +5500,11 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onPlayerEnter(player: hz.Player): void {
-    console.log(`👥 Player joined: ${player.name.get()}`);
     
     const playerId = player.id.toString();
     
     // Check if player has opted out - if so, don't add them to the game
     if (this.optedOutPlayers.has(playerId)) {
-      console.log(`🚫 Player ${player.name.get()} (${playerId}) is opted out and will not be added to the game`);
       return;
     }
     
@@ -5579,7 +5546,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onPlayerExit(player: hz.Player): void {
-    console.log(`👋 Player left: ${player.name.get()}`);
     
     // PhoneManager will automatically handle phone release via its own event handlers
     
@@ -5664,7 +5630,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onPlayerLogout(eventData: { playerId: string }): void {
-    console.log(`🚪 TriviaGame: Player ${eventData.playerId} logged out and will be excluded from answer counts`);
     
     // Remove the player from playersInWorld set so they won't count toward answer requirements
     this.playersInWorld.delete(eventData.playerId);
@@ -5687,7 +5652,6 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onPlayerRejoin(eventData: { playerId: string }): void {
-    console.log(`🔄 TriviaGame: Player ${eventData.playerId} is rejoining the game`);
     
     // Call the rejoinPlayer method to handle the rejoin logic
     this.rejoinPlayer(eventData.playerId);
@@ -5749,8 +5713,6 @@ export class TriviaGame extends ui.UIComponent {
     // Delegate to PhoneManager
     if (this.phoneManager) {
       this.phoneManager.assignPhoneToPlayer(player);
-    } else {
-      console.log('❌ PhoneManager not initialized');
     }
   }
 
@@ -5758,8 +5720,6 @@ export class TriviaGame extends ui.UIComponent {
     // Delegate to PhoneManager
     if (this.phoneManager) {
       this.phoneManager.releasePlayerPhone(player);
-    } else {
-      console.log('❌ PhoneManager not initialized');
     }
   }
 
@@ -5774,7 +5734,6 @@ export class TriviaGame extends ui.UIComponent {
     if (this.phoneManager) {
       return this.phoneManager.getPlayerPhone(player);
     }
-    console.log('❌ PhoneManager not initialized');
     return null;
   }
 
@@ -5783,7 +5742,6 @@ export class TriviaGame extends ui.UIComponent {
     if (this.phoneManager) {
       return this.phoneManager.getPhoneAssignments();
     }
-    console.log('❌ PhoneManager not initialized');
     return [];
   }
 
@@ -5791,9 +5749,7 @@ export class TriviaGame extends ui.UIComponent {
   public notifyPhoneAvailable(phoneEntity: hz.Entity): void {
     // With PhoneManager, this is automatically handled
     if (this.phoneManager) {
-      console.log('📱 Phone availability handled by PhoneManager');
     } else {
-      console.log('❌ PhoneManager not initialized');
     }
   }
 
@@ -5801,8 +5757,6 @@ export class TriviaGame extends ui.UIComponent {
   public debugPhoneAssignments(): void {
     if (this.phoneManager) {
       this.phoneManager.debugPhoneAssignments();
-    } else {
-      console.log('❌ PhoneManager not initialized');
     }
   }
 
@@ -5810,8 +5764,6 @@ export class TriviaGame extends ui.UIComponent {
   public refreshPhoneAssignments(): void {
     if (this.phoneManager) {
       this.phoneManager.refreshAllAssignments();
-    } else {
-      console.log('❌ PhoneManager not initialized');
     }
   }
 
@@ -5819,7 +5771,6 @@ export class TriviaGame extends ui.UIComponent {
   public rejoinPlayer(playerId: string): void {
     if (this.optedOutPlayers.has(playerId)) {
       this.optedOutPlayers.delete(playerId);
-      console.log(`✅ Player ${playerId} has rejoined the game`);
       
       // Find the player object and add them to the game
       const player = this.world.getPlayers().find(p => p.id.toString() === playerId);

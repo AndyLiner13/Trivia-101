@@ -218,7 +218,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private assetCache = new Map<string, ui.ImageSource>();
 
   private async preloadTriviaPhoneAssets(): Promise<void> {
-    console.log('⏳ TriviaPhone: Preloading all assets for fast rendering...');
     
     // Define all texture IDs used in TriviaPhone
     const assetTextureIds = [
@@ -278,13 +277,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         this.assetCache.set(textureId, imageSource);
         successCount++;
       } catch (error) {
-        console.log(`❌ TriviaPhone: Failed to preload asset ${textureId}:`, error);
       }
     }
     
     const loadTime = Date.now() - startTime;
-    console.log(`✅ TriviaPhone: Successfully preloaded ${successCount}/${assetTextureIds.length} assets in ${loadTime}ms`);
-    console.log('📦 TriviaPhone: All assets cached in memory for instant loading');
   }
 
   // Helper method to get cached asset or create new one
@@ -731,12 +727,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     try {
       // Mark that the player is now focused on the UI
       this.isPlayerFocusedOnUI = true;
-      console.log('✅ TriviaPhone: Player focused on UI');
 
       // Show the TriviaPhone when focused - make it visible to all players
       this.entity.visible.set(true);
     } catch (error) {
-      console.log('❌ TriviaPhone: Error in onFocus:', error);
       this.isPlayerFocusedOnUI = false;
     }
   }
@@ -745,12 +739,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     try {
       // Mark that the player is no longer focused on the UI
       this.isPlayerFocusedOnUI = false;
-      console.log('✅ TriviaPhone: Player unfocused from UI');
 
       // Hide the TriviaPhone when unfocused - make it invisible to all players
       this.hideTriviaPhone();
     } catch (error) {
-      console.log('❌ TriviaPhone: Error in onUnfocus:', error);
+
     }
   }
 
@@ -812,7 +805,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.cameraRotationAtHKeyPress = camera.default.rotation.get().clone();
         }
       } catch (error) {
-        console.log('❌ TriviaPhone: Could not capture camera position:', error);
+        // Could not capture camera position
       }
 
       // If phone is not assigned to anyone, assign it to this player
@@ -893,7 +886,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // For VR users, we skip the focusUI call to prevent the player invisibility bug
 
     } catch (error) {
-      console.log('❌ TriviaPhone: Error in openAndFocusUIForPlayer:', error);
       // If something goes wrong, reset the focus state
       this.isPlayerFocusedOnUI = false;
     }
@@ -907,9 +899,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       player.focusUI(this.entity, { duration: 0.1 });
       // Only set focus state after successful focus operation
       this.isPlayerFocusedOnUI = true;
-      console.log('✅ TriviaPhone: Focus operation successful');
     } catch (focusError) {
-      console.log(`❌ TriviaPhone: Focus operation failed (attempt ${attemptCount + 1}/${maxRetries}):`, focusError);
+      // Focus operation failed
 
       if (attemptCount < maxRetries - 1) {
         // Try again after delay
@@ -918,7 +909,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }, retryDelay);
       } else {
         // All retries exhausted, reset focus state
-        console.log('❌ TriviaPhone: All focus retry attempts exhausted');
         this.isPlayerFocusedOnUI = false;
       }
     }
@@ -1007,8 +997,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleRejoinGame(): void {
-    console.log('🔄 TriviaPhone: Player attempting to rejoin game');
-
     const localPlayer = this.world.getLocalPlayer();
     if (!localPlayer) return;
 
@@ -1030,14 +1018,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // If a question is currently showing (game started, not showing results, and screen is two-options or four-options)
     if (gameStarted && !showResult && (currentScreenType === 'two-options' || currentScreenType === 'four-options')) {
-      console.log('✅ TriviaPhone: Question is showing - instantly showing answer options page');
-
       // Request current game state from TriviaGame to get the latest question
       this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
         requesterId: localPlayer.id.toString()
       });
     } else {
-      console.log('✅ TriviaPhone: On results/leaderboard/game over screen - rejoining completed');
       // For results/leaderboard/game over screens, the rejoin is complete
       // The opted-out screen is already hidden above
     }
@@ -1115,7 +1100,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     showLeaderboard?: boolean,
     leaderboardData?: Array<{name: string, score: number, playerId: string}>
   }): void {
-    console.log("✅ TriviaPhone: Transitioning to RESULTS screen");
     this.showResult = true;
     this.showResultBinding.set(true);
     
@@ -1155,13 +1139,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Log when leaderboard is shown
     if (eventData.showLeaderboard && !this.gameEnded) {
-      console.log("✅ TriviaPhone: Showing LEADERBOARD screen");
-      
       // Check if end game button should be visible
       const isLastQuestion = (this.currentQuestionIndex + 1) >= this.gameSettings.numberOfQuestions;
       const isHost = this.isHost();
       if (isHost && isLastQuestion) {
-        console.log("✅ TriviaPhone: END GAME button is now visible (last question + host)");
+        // END GAME button is now visible (last question + host)
       }
     }
 
@@ -1181,14 +1163,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     timeLimit: number,
     totalQuestions: number 
   }): void {
-    console.log("✅ TriviaPhone: Transitioning to TWO-OPTIONS screen");
-    
     // Check opted-out status before processing question event
     this.checkOptedOutStatus();
     
     // If player is opted out, don't process question events
     if (this.currentOptedOutStatus) {
-      console.log('🚪 TriviaPhone: Opted-out player ignoring two-options question event');
       return;
     }
     
@@ -1237,14 +1216,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     timeLimit: number,
     totalQuestions: number 
   }): void {
-    console.log("✅ TriviaPhone: Transitioning to FOUR-OPTIONS screen");
-    
     // Check opted-out status before processing question event
     this.checkOptedOutStatus();
     
     // If player is opted out, don't process question events
     if (this.currentOptedOutStatus) {
-      console.log('🚪 TriviaPhone: Opted-out player ignoring four-options question event');
       return;
     }
     
@@ -1308,7 +1284,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // If player is opted out, don't process game state updates
     // Use the current opted-out status that was just updated
     if (this.currentOptedOutStatus) {
-      console.log('🚪 TriviaPhone: Opted-out player ignoring game state update');
       return;
     }
 
@@ -1364,8 +1339,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     hostId: string, 
     finalLeaderboard?: Array<{name: string, score: number, playerId: string}> 
   }): void {
-    console.log("✅ TriviaPhone: Game ended - staying on current screen");
-
     // Mark game as ended but don't change screens - just stay on the current feedback screen
     this.gameStarted = false;
     this.gameStartedBinding.set(false);
@@ -1452,16 +1425,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       modifiers: eventData.settings.modifiers
     };
     this.gameSettingsBinding.set(this.gameSettings);
-    
-    console.log(`📡 TriviaPhone: Received settings update from player ${eventData.hostId}:`);
-    console.log(`   - Category: ${eventData.settings.category}`);
-    console.log(`   - Difficulty: ${eventData.settings.difficulty}`);
-    console.log(`   - Timer: ${eventData.settings.timerType} (${eventData.settings.timeLimit}s)`);
-    console.log(`   - Lock status: ${eventData.settings.isLocked ? 'Locked' : 'Unlocked'}`);
   }
 
   private endGame(): void {
-    console.log("✅ TriviaPhone: END GAME button pressed by host");
     if (!this.isHost()) {
       return;
     }
@@ -1499,9 +1465,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (!this.allPlayersAnswered) {
       this.answerSubmitted = true;
       this.answerSubmittedBinding.set(true);
-      console.log(`✅ TriviaPhone: Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex}`);
-    } else {
-      console.log(`✅ TriviaPhone: Answer submitted for answer ${actualAnswerIndex} - skipping answerSubmitted screen (all players already answered)`);
     }
   }
 
@@ -1603,7 +1566,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private toggleLock(): void {
     this.gameSettings.isLocked = !this.gameSettings.isLocked;
     this.gameSettingsBinding.set({ ...this.gameSettings });
-    console.log(`🔐 Host toggled lock to: ${this.gameSettings.isLocked ? 'LOCKED' : 'UNLOCKED'} - Broadcasting to participants`);
     this.sendSettingsUpdate();
   }
 
@@ -1628,12 +1590,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const canMakeChanges = isHost || !this.gameSettings.isLocked;
     
     if (!canMakeChanges) {
-      console.log(`⚠️ Settings update blocked - Player is not host and game is locked`);
       return;
     }
     
     const playerId = this.world.getLocalPlayer()?.id.toString() || 'unknown';
-    console.log(`📡 Broadcasting settings update from ${isHost ? 'HOST' : 'PARTICIPANT'} (${playerId})`);
     
     this.sendNetworkBroadcastEvent(triviaSettingsUpdateEvent, {
       hostId: playerId, // Use actual player ID instead of always 'host'
@@ -2595,7 +2555,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ];
             const answerIndex = selectedAnswer !== null ? selectedAnswer : 0;
             const imageId = backgroundImages[answerIndex] || backgroundImages[0];
-            console.log(`✅ AnswerSubmitted: Selected answer ${answerIndex} -> Texture ID ${imageId}`);
             return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(imageId)));
           }),
           style: {
@@ -2658,7 +2617,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed from answerSubmitted screen');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -2843,7 +2801,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isHost = this.isHost();
     
     if (isHost) {
-      console.log('🚪 TriviaPhone: Host confirmed logout - ending game for everyone');
+
       
       // Send game reset event to end the game for all players
       this.sendNetworkBroadcastEvent(triviaGameResetEvent, {
@@ -2873,7 +2831,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       
       console.log('✅ TriviaPhone: Host logout completed - game ended for all players');
     } else {
-      console.log('🚪 TriviaPhone: Participant confirmed logout');
+
       
       // Send logout event to TriviaGame to remove this player from active players
       this.sendNetworkBroadcastEvent(triviaPlayerLogoutEvent, {
@@ -2905,7 +2863,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.answerSubmitted = false;
       this.answerSubmittedBinding.set(false);
       
-      console.log('✅ TriviaPhone: Participant logout completed - showing opted-out screen');
+
     }
   }
 
@@ -3391,7 +3349,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     shadowOpacity: 1
                   },
                   onPress: () => {
-                    console.log('✅ Answer button 0 pressed');
                     this.handleAnswerSelect(0);
                   },
                   children: [
@@ -3430,7 +3387,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     shadowOpacity: 1
                   },
                   onPress: () => {
-                    console.log('✅ Answer button 1 pressed');
                     this.handleAnswerSelect(1);
                   },
                   children: [
@@ -3570,7 +3526,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -3625,7 +3580,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     shadowOpacity: 1
                   },
                   onPress: () => {
-                    console.log('✅ Answer button 0 pressed');
                     this.handleAnswerSelect(0);
                   },
                   children: [
@@ -3655,7 +3609,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     shadowOpacity: 1
                   },
                   onPress: () => {
-                    console.log('✅ Answer button 1 pressed');
                     this.handleAnswerSelect(1);
                   },
                   children: [
@@ -3695,7 +3648,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     shadowOpacity: 1
                   },
                   onPress: () => {
-                    console.log('✅ Answer button 2 pressed');
                     this.handleAnswerSelect(2);
                   },
                   children: [
@@ -3725,7 +3677,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     shadowOpacity: 1
                   },
                   onPress: () => {
-                    console.log('✅ Answer button 3 pressed');
                     this.handleAnswerSelect(3);
                   },
                   children: [
@@ -3867,7 +3818,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -4031,7 +3981,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -4195,7 +4144,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -4268,7 +4216,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 },
                 onPress: () => {
                   // Handle next question logic
-                  console.log('✅ Next Question pressed');
                   this.nextQuestion();
                 },
                 children: [
@@ -4404,7 +4351,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed');
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -4479,7 +4425,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 },
                 onPress: () => {
                   // Handle next question logic
-                  console.log('✅ Next Question pressed');
                   this.nextQuestion();
                 },
                 children: [
@@ -4593,7 +4538,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('✅ TriviaPhone: Join Game pressed from opted-out screen');
                 this.handleRejoinGame();
               },
               children: [
@@ -4627,7 +4571,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Enhanced method to handle preview mode transitions
   private handlePreviewModeTransition(): void {
-    console.log('🔄 TriviaPhone: Preview mode transition detected - performing comprehensive cleanup');
     
     // Reset all game state to initial values
     this.gameStarted = false;
