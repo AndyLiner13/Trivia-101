@@ -4536,130 +4536,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
         }),
 
-        // Top navigation bar
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 8
-          },
-          children: [
-            // Points display container
-            ui.View({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 7,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              children: [
-                ui.Text({
-                  text: ui.Binding.derive([this.scoreBinding], (score) => `${score} points`),
-                  style: {
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
 
-            // Settings icon container
-            ui.Pressable({
-              style: {
-                backgroundColor: '#191919',
-                borderRadius: 8,
-                padding: 1,
-                width: 32,
-                height: 32,
-                justifyContent: 'center',
-                alignItems: 'center'
-              },
-              onPress: () => {
-                console.log('🚪 TriviaPhone: Settings icon pressed from opted-out screen');
-                this.showLogoutPopupBinding.set(true);
-              },
-              children: [
-                ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // settings icon
-                  style: {
-                    width: 24,
-                    height: 24,
-                    tintColor: '#FFFFFF'
-                  }
-                })
-              ]
-            })
-          ]
-        }),
 
-        // Main content - centered message and button
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            right: 0,
-            marginTop: -80, // Center the content vertically
-            paddingLeft: 8,
-            paddingRight: 8,
-            alignItems: 'center'
-          },
-          children: [
-            // "You have opted out" message
-            ui.Text({
-              text: 'You have opted out',
-              style: {
-                fontSize: 24,
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center',
-                marginBottom: 16
-              }
-            }),
 
-            // Join Game button
-            ui.Pressable({
-              style: {
-                width: '80%',
-                height: 50,
-                backgroundColor: '#22C55E', // Green color for rejoin
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowOffset: [0, 0],
-                shadowRadius: 6,
-                shadowColor: 'rgba(0, 0, 0, 0.3)',
-                shadowOpacity: 1
-              },
-              onPress: () => {
-                console.log('✅ TriviaPhone: Join Game pressed from opted-out screen');
-                this.handleRejoinGame();
-              },
-              children: [
-                ui.Text({
-                  text: 'Join Game',
-                  style: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            })
-          ]
-        }),
 
         // Bottom status bar
         ui.View({
@@ -4679,19 +4558,22 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#22C55E', // Green color for Join Game button
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
               },
-              onPress: () => {}, // No action for status bar
+              onPress: () => {
+                console.log('✅ TriviaPhone: Join Game pressed from opted-out screen');
+                this.handleRejoinGame();
+              },
               children: [
                 ui.Text({
-                  text: 'Waiting for game to resume...',
+                  text: 'Join Game',
                   style: {
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: '600',
-                    color: '#6B7280',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
