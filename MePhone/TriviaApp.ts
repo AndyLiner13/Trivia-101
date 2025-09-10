@@ -91,7 +91,6 @@ export class TriviaApp {
   // Player tracking for conditional waiting screen
   private playersInWorld: string[] = [];
   private playersAnswered: string[] = [];
-  private allPlayersAnswered = false;
 
   // Asset for loading questions
   private questionsAsset: hz.Asset | null = null;
@@ -231,7 +230,6 @@ export class TriviaApp {
     // Update tracking data
     this.playersInWorld = eventData.playersInWorld;
     this.playersAnswered = eventData.playersAnswered;
-    this.allPlayersAnswered = eventData.playersAnswered.length >= eventData.playersInWorld.length && eventData.playersInWorld.length > 0;
   }
 
   // Handle TriviaGame state response - set the app to the correct state immediately
@@ -582,9 +580,6 @@ export class TriviaApp {
       // Reset tracking variables too
       this.lastAnswerTimestamp = 0;
       this.answerSelectionCount = 0;
-      
-      // Reset player tracking for new question
-      this.allPlayersAnswered = false;
 
       // Clear any running timers when new question starts
       this.clearAutoProgressTimer();
@@ -1046,8 +1041,12 @@ export class TriviaApp {
     // Update the selected answer binding immediately
     this.selectedAnswerBinding.set(answerIndex, assignedPlayer ? [assignedPlayer] : undefined);
     
-    // Only show waiting screen if there are multiple players AND not all players have already answered
-    if (playerCount > 1 && !this.allPlayersAnswered) {
+    // Check if this answer will complete all answers (local calculation to avoid timing issues)
+    const answersAfterThis = this.playersAnswered.length + 1; // Add 1 for this player's answer
+    const willCompleteAllAnswers = answersAfterThis >= this.playersInWorld.length && this.playersInWorld.length > 0;
+    
+    // Only show waiting screen if there are multiple players AND this answer won't complete all answers
+    if (playerCount > 1 && !willCompleteAllAnswers) {
       // Multiple players - show waiting screen
       this.gameState = 'waiting';
       const waitingMessage = "Waiting...";
