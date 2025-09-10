@@ -260,6 +260,11 @@ const triviaPlayerLogoutEvent = new hz.NetworkEvent<{
   playerId: string;
 }>('triviaPlayerLogout');
 
+// Rejoin event for when opted-out players want to rejoin the game
+const triviaPlayerRejoinEvent = new hz.NetworkEvent<{
+  playerId: string;
+}>('triviaPlayerRejoin');
+
 // Default trivia questions for continuous gameplay
 const defaultTriviaQuestions: TriviaQuestion[] = [
   {
@@ -608,6 +613,9 @@ export class TriviaGame extends ui.UIComponent {
   private playersInWorld: Set<string> = new Set();
   private playersAnswered: Set<string> = new Set();
   private hasLocalPlayerAnswered: boolean = false;
+
+  // Track players who have opted out (logged out) to prevent re-syncing
+  private optedOutPlayers: Set<string> = new Set();
 
   // Current players list for UI (not a binding to avoid circular reference issues)
   private currentPlayers: Array<{id: string, name: string}> = [];
@@ -1145,6 +1153,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Listen for player logout events
     this.connectNetworkBroadcastEvent(triviaPlayerLogoutEvent, this.onPlayerLogout.bind(this));
+    
+    // Listen for player rejoin events
+    this.connectNetworkBroadcastEvent(triviaPlayerRejoinEvent, this.onPlayerRejoin.bind(this));
   }
 
   private resetGameState(): void {
@@ -5250,6 +5261,12 @@ export class TriviaGame extends ui.UIComponent {
   private async syncNewPlayerToGameState(player: hz.Player): Promise<void> {
     const playerId = player.id.toString();
     
+    // Check if player has opted out - if so, don't sync them to game state
+    if (this.optedOutPlayers.has(playerId)) {
+      console.log(`🚫 Skipping game state sync for opted-out player ${player.name.get()} (${playerId})`);
+      return;
+    }
+    
     console.log(`🔄 Syncing new player ${player.name.get()} to current game state`);
     
     // Give the TriviaPhone a moment to initialize after phone assignment
@@ -5516,6 +5533,14 @@ export class TriviaGame extends ui.UIComponent {
   private onPlayerEnter(player: hz.Player): void {
     console.log(`👥 Player joined: ${player.name.get()}`);
     
+    const playerId = player.id.toString();
+    
+    // Check if player has opted out - if so, don't add them to the game
+    if (this.optedOutPlayers.has(playerId)) {
+      console.log(`🚫 Player ${player.name.get()} (${playerId}) is opted out and will not be added to the game`);
+      return;
+    }
+    
     // PhoneManager will automatically handle phone assignment via its own event handlers
     // We just need to handle TriviaGame-specific logic here
     
@@ -5533,7 +5558,7 @@ export class TriviaGame extends ui.UIComponent {
     this.playersListBinding.set([...this.currentPlayers]);
     
     // Update playersInWorld Set for dynamic answer counting during active questions
-    this.playersInWorld.add(player.id.toString());
+    this.playersInWorld.add(playerId);
     
     // Broadcast updated player tracking to all clients
     this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
@@ -5647,6 +5672,9 @@ export class TriviaGame extends ui.UIComponent {
     // Also remove from playersAnswered if they had answered the current question
     this.playersAnswered.delete(eventData.playerId);
     
+    // Add player to opted-out set to prevent re-syncing when they re-enter
+    this.optedOutPlayers.add(eventData.playerId);
+    
     // Update answer count binding to reflect the change
     this.answerCountBinding.set(this.playersAnswered.size.toString());
     
@@ -5656,6 +5684,13 @@ export class TriviaGame extends ui.UIComponent {
       playersAnswered: Array.from(this.playersAnswered),
       answerCount: this.playersAnswered.size
     });
+  }
+
+  private onPlayerRejoin(eventData: { playerId: string }): void {
+    console.log(`🔄 TriviaGame: Player ${eventData.playerId} is rejoining the game`);
+    
+    // Call the rejoinPlayer method to handle the rejoin logic
+    this.rejoinPlayer(eventData.playerId);
   }
 
   private onUIStateUpdate(eventData: { showConfig: boolean, showResults: boolean, showWaiting: boolean, showLeaderboard: boolean, showError: boolean, errorMessage?: string }): void {
@@ -5778,6 +5813,25 @@ export class TriviaGame extends ui.UIComponent {
     } else {
       console.log('❌ PhoneManager not initialized');
     }
+  }
+
+  // Method to allow opted-out players to rejoin the game
+  public rejoinPlayer(playerId: string): void {
+    if (this.optedOutPlayers.has(playerId)) {
+      this.optedOutPlayers.delete(playerId);
+      console.log(`✅ Player ${playerId} has rejoined the game`);
+      
+      // Find the player object and add them to the game
+      const player = this.world.getPlayers().find(p => p.id.toString() === playerId);
+      if (player) {
+        this.onPlayerEnter(player);
+      }
+    }
+  }
+
+  // Method to check if a player is opted out
+  public isPlayerOptedOut(playerId: string): boolean {
+    return this.optedOutPlayers.has(playerId);
   }
 }
 

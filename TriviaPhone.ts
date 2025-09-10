@@ -17,6 +17,7 @@ const triviaGameEndEvent = new hz.NetworkEvent<{ hostId: string, finalLeaderboar
 const triviaGameResetEvent = new hz.NetworkEvent<{ hostId: string }>('triviaGameReset');
 const triviaAwardPointsEvent = new hz.NetworkEvent<{ playerId: string; points: number }>('triviaAwardPoints');
 const triviaPlayerLogoutEvent = new hz.NetworkEvent<{ playerId: string }>('triviaPlayerLogout');
+const triviaPlayerRejoinEvent = new hz.NetworkEvent<{ playerId: string }>('triviaPlayerRejoin');
 
 // Host view mode events
 const hostViewModeEvent = new hz.NetworkEvent<{ hostId: string, viewMode: 'pre-game' | 'game-settings' }>('hostViewMode');
@@ -147,6 +148,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Host status binding
   private isHostBinding = new ui.Binding(false);
   private currentHostStatus = false;
+
+  // Opted-out status binding
+  private isOptedOutBinding = new ui.Binding(false);
+  private currentOptedOutStatus = false;
 
   // Info popup bindings
   private showInfoPopupBinding = new ui.Binding(false);
@@ -305,6 +310,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Initialize host status binding
     this.currentHostStatus = this.isHost();
     this.isHostBinding.set(this.currentHostStatus);
+
+    // Initialize opted-out status
+    this.checkOptedOutStatus();
 
     // Update score display
     this.waitForPersistentStorageAndUpdateScore();
@@ -966,7 +974,56 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     return this.currentHostStatus;
   }
 
-  private handleStartGame(): void {
+  private checkOptedOutStatus(): void {
+    // Check if this player is opted out by querying TriviaGame
+    const localPlayer = this.world.getLocalPlayer();
+    if (localPlayer) {
+      // Find TriviaGame instance to check opted-out status
+      const triviaGame = (this.world as any).triviaGame;
+      if (triviaGame && typeof triviaGame.isPlayerOptedOut === 'function') {
+        const isOptedOut = triviaGame.isPlayerOptedOut(localPlayer.id.toString());
+        this.isOptedOutBinding.set(isOptedOut);
+        this.currentOptedOutStatus = isOptedOut; // Mirror the binding value
+      }
+    }
+  }
+
+  private handleRejoinGame(): void {
+    console.log('🔄 TriviaPhone: Player attempting to rejoin game');
+
+    const localPlayer = this.world.getLocalPlayer();
+    if (!localPlayer) return;
+
+    // Send rejoin event to TriviaGame
+    this.sendNetworkBroadcastEvent(triviaPlayerRejoinEvent, {
+      playerId: localPlayer.id.toString()
+    });
+
+    // Immediately update local opted-out status to hide opted-out screen
+    this.isOptedOutBinding.set(false);
+    this.currentOptedOutStatus = false;
+
+    // Check current game state to determine immediate action
+    // Use instance variables for gameStarted and showResult
+    // For showLeaderboard, we'll check the current screen type instead
+    const gameStarted = this.gameStarted;
+    const showResult = this.showResult;
+    const currentScreenType = this.currentScreenType;
+
+    // If a question is currently showing (game started, not showing results, and screen is two-options or four-options)
+    if (gameStarted && !showResult && (currentScreenType === 'two-options' || currentScreenType === 'four-options')) {
+      console.log('✅ TriviaPhone: Question is showing - instantly showing answer options page');
+
+      // Request current game state from TriviaGame to get the latest question
+      this.sendNetworkBroadcastEvent(triviaStateRequestEvent, {
+        requesterId: localPlayer.id.toString()
+      });
+    } else {
+      console.log('✅ TriviaPhone: On results/leaderboard/game over screen - rejoining completed');
+      // For results/leaderboard/game over screens, the rejoin is complete
+      // The opted-out screen is already hidden above
+    }
+  }  private handleStartGame(): void {
     if (!this.isHost()) return;
 
     // Send network event to start the game for all players with configured settings
@@ -1108,6 +1165,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }): void {
     console.log("✅ TriviaPhone: Transitioning to TWO-OPTIONS screen");
     
+    // Check opted-out status before processing question event
+    this.checkOptedOutStatus();
+    
+    // If player is opted out, don't process question events
+    if (this.currentOptedOutStatus) {
+      console.log('🚪 TriviaPhone: Opted-out player ignoring two-options question event');
+      return;
+    }
+    
     // Reset result display
     this.showResult = false;
     this.showResultBinding.set(false);
@@ -1147,6 +1213,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     totalQuestions: number 
   }): void {
     console.log("✅ TriviaPhone: Transitioning to FOUR-OPTIONS screen");
+    
+    // Check opted-out status before processing question event
+    this.checkOptedOutStatus();
+    
+    // If player is opted out, don't process question events
+    if (this.currentOptedOutStatus) {
+      console.log('🚪 TriviaPhone: Opted-out player ignoring four-options question event');
+      return;
+    }
     
     // Reset result display
     this.showResult = false;
@@ -1192,6 +1267,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Only process responses meant for this player
     const localPlayer = this.world.getLocalPlayer();
     if (!localPlayer || event.requesterId !== localPlayer.id.toString()) {
+      return;
+    }
+
+    // Check opted-out status after receiving state response
+    this.checkOptedOutStatus();
+
+    // If player is opted out, don't process game state updates
+    // Use the current opted-out status that was just updated
+    if (this.currentOptedOutStatus) {
+      console.log('🚪 TriviaPhone: Opted-out player ignoring game state update');
       return;
     }
 
@@ -1290,6 +1375,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Navigate back to pre-game screen
     this.currentViewMode = 'pre-game';
     this.currentViewModeBinding.set('pre-game');
+
+    // Refresh opted-out status when game resets
+    this.checkOptedOutStatus();
 
     // Update score display from persistent storage after reset with robust retry
     this.updateScoreDisplayWithRetry();
@@ -1554,10 +1642,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 overflow: 'hidden'
               },
               children: [
-                // Pre-game screen - shows when game hasn't started
+                // Opted-out screen - shows when player has opted out
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.gameEndedBinding, this.showResultBinding], (mode, started, gameEnded, showResult) => 
-                    mode === 'pre-game' && !started && (!gameEnded || !showResult)
+                  this.isOptedOutBinding,
+                  this.renderOptedOutScreen()
+                ),
+
+                // Pre-game screen - shows when game hasn't started and player is not opted out
+                ui.UINode.if(
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.gameEndedBinding, this.showResultBinding, this.isOptedOutBinding], (mode, started, gameEnded, showResult, isOptedOut) => 
+                    mode === 'pre-game' && !started && (!gameEnded || !showResult) && !isOptedOut
                   ),
                   this.renderPreGameScreen()
                 ),
@@ -2427,6 +2521,68 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     });
   }
 
+  private renderOptedOutScreen(): ui.UINode {
+    return ui.View({
+      style: {
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      },
+      children: [
+        // Background image
+        ui.Image({
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('9783264971776963'))),
+          style: {
+            width: '100%',
+            height: '100%',
+            resizeMode: 'cover',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }
+        }),
+
+        // Join Game button at bottom - always show when opted out
+        ui.View({
+          style: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8,
+            paddingBottom: 8
+          },
+          children: [
+            ui.Pressable({
+              style: {
+                width: '100%',
+                height: 42,
+                borderRadius: 8,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#16A34A'
+              },
+              onPress: () => this.handleRejoinGame(),
+              children: [
+                ui.Text({
+                  text: 'Join Game',
+                  style: {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+
   private renderLogoutPopup(): ui.UINode {
     return ui.View({
       style: {
@@ -2582,8 +2738,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         playerId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
       });
       
-      // Navigate to pre-game screen
-      this.currentViewMode = 'pre-game';
+      // Immediately set opted-out status to show opted-out screen
+      this.isOptedOutBinding.set(true);
+      this.currentOptedOutStatus = true;
+      
+      // Navigate to opted-out screen instead of pre-game
+      this.currentViewMode = 'pre-game'; // Keep view mode as pre-game for other logic
       this.currentViewModeBinding.set('pre-game');
       
       // Close the popup
@@ -2603,7 +2763,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.answerSubmitted = false;
       this.answerSubmittedBinding.set(false);
       
-      console.log('✅ TriviaPhone: Participant logout completed - returned to pre-game screen');
+      console.log('✅ TriviaPhone: Participant logout completed - showing opted-out screen');
     }
   }
 
