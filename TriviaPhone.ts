@@ -2851,7 +2851,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           case 'timer': return '30 Seconds';
                           case 'difficulty': return 'Medium';
                           case 'modifiers': return 'Questions Only';
-                          case 'questions': return 'Remove Question';
+                          case 'questions': return 'Remove';
                           default: return 'Difficulty Levels';
                         }
                       }),
