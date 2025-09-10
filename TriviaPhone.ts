@@ -516,6 +516,38 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           this.entity.rotation.set(rotation);
         }
 
+        // Keep mobile phone positioned and rotated 90 degrees for landscape view
+        if (localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile && isVisible) {
+          console.log('📱 TriviaPhone: Mobile user detected, applying rotation logic');
+          // Check if phone is currently "hidden" at y=-1000 (don't reposition if hidden)
+          const currentPosition = this.entity.position.get();
+          if (currentPosition.y === -1000) {
+            console.log('📱 TriviaPhone: Phone is hidden (y=-1000), skipping mobile positioning');
+            return; // Don't reposition if hidden
+          }
+
+          console.log('📱 TriviaPhone: Applying mobile positioning and rotation');
+          // Disable physics/simulation
+          this.entity.simulated.set(false);
+          this.entity.collidable.set(false);
+
+          // Position the phone in front of the player (similar to desktop positioning)
+          const playerPosition = localPlayer.position.get();
+          const playerForward = localPlayer.forward.get();
+          const desiredPosition = playerPosition.add(playerForward.mul(1.5));
+          desiredPosition.y += 0.3; // Slightly above ground level
+          this.entity.position.set(desiredPosition);
+
+          // Apply 90-degree rotation around Y-axis for mobile landscape view
+          const mobileRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), Math.PI / 2);
+          this.entity.rotation.set(mobileRotation);
+          console.log('📱 TriviaPhone: Mobile rotation applied successfully');
+        } else if (localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile && !isVisible) {
+          console.log('📱 TriviaPhone: Mobile user detected but phone is not visible, skipping rotation');
+        } else {
+          console.log('📱 TriviaPhone: Non-mobile user or phone not visible, device type:', localPlayer.deviceType.get(), 'isVisible:', isVisible);
+        }
+
       } catch (error) {
       }
     }
@@ -751,25 +783,41 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   onFocus(player: hz.Player): void {
     try {
+      console.log('🎯 TriviaPhone: onFocus called for player device type:', player.deviceType.get());
       // Mark that the player is now focused on the UI
       this.isPlayerFocusedOnUI = true;
 
       // Show the TriviaPhone when focused - make it visible to all players
       this.entity.visible.set(true);
+      console.log('✅ TriviaPhone: Phone made visible in onFocus');
     } catch (error) {
+      console.log('❌ TriviaPhone: Error in onFocus:', error);
       this.isPlayerFocusedOnUI = false;
     }
   }
 
   onUnfocus(player: hz.Player): void {
     try {
+      // Check if this is a mobile user
+      const isMobileUser = player.deviceType.get() === hz.PlayerDeviceType.Mobile;
+
+      console.log('📱 TriviaPhone: onUnfocus called - Device type:', player.deviceType.get(), 'isMobile:', isMobileUser);
+
       // Mark that the player is no longer focused on the UI
       this.isPlayerFocusedOnUI = false;
 
-      // Hide the TriviaPhone when unfocused - make it invisible to all players
-      this.hideTriviaPhone();
+      // For mobile users, don't immediately hide the phone on unfocus
+      // as touch interactions may trigger unfocus events unintentionally
+      if (!isMobileUser) {
+        console.log('📱 TriviaPhone: Non-mobile user unfocused, hiding phone');
+        // Hide the TriviaPhone when unfocused for non-mobile users
+        this.hideTriviaPhone();
+      } else {
+        console.log('📱 TriviaPhone: Mobile user unfocused, keeping phone visible to prevent touch interaction issues');
+      }
+      // For mobile users, we keep the phone visible to prevent touch interaction issues
     } catch (error) {
-
+      console.log('❌ TriviaPhone: Error in onUnfocus:', error);
     }
   }
 
@@ -866,20 +914,26 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private handleLeftTertiaryTrigger(player: hz.Player): void {
     // This method is only called for non-VR users (desktop, web, mobile) since we only register the input for them
+    const isMobileUser = player.deviceType.get() === hz.PlayerDeviceType.Mobile;
+    console.log('📱 TriviaPhone: handleLeftTertiaryTrigger called - Device type:', player.deviceType.get(), 'isMobile:', isMobileUser);
 
     // Check if the CustomUI is already open by checking if phone is close to player and not hidden
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
     const isPhoneVisibleToPlayer = phonePosition.distance(playerPosition) < 5 && phonePosition.y > -500;
 
+    console.log('📱 TriviaPhone: Phone status - isPlayerFocusedOnUI:', this.isPlayerFocusedOnUI, 'isPhoneVisibleToPlayer:', isPhoneVisibleToPlayer, 'distance:', phonePosition.distance(playerPosition).toFixed(2));
+
     if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
       // UI is already open, do nothing
+      console.log('📱 TriviaPhone: UI already open, skipping focus');
       return;
     }
 
     // Asset Pool Gizmo handles ownership assignment automatically
 
     // Show the TriviaPhone and focus the UI for non-VR users
+    console.log('📱 TriviaPhone: Opening and focusing UI for user');
     this.teleportToPlayer(player);
     this.openAndFocusUIForPlayer(player);
   }
@@ -900,7 +954,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
       // For VR users, skip focusUI to avoid hiding other players
       const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+      const isMobileUser = player.deviceType.get() === hz.PlayerDeviceType.Mobile;
+
+      console.log('🎯 TriviaPhone: openAndFocusUIForPlayer called - Device type:', player.deviceType.get(), 'isVR:', isVRUser, 'isMobile:', isMobileUser);
+
       if (!isVRUser) {
+        // For both desktop and mobile users, attempt to focus UI
+        console.log('🎯 TriviaPhone: Non-VR user detected, attempting to focus UI');
         // Wait 25ms for position change to take effect, then focus the UI with retry logic
         const focusTimeoutId = this.async.setTimeout(() => {
           this.pendingTimeouts.delete(focusTimeoutId);
@@ -908,12 +968,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }, 25);
         this.pendingTimeouts.add(focusTimeoutId);
       } else {
+        console.log('🎯 TriviaPhone: VR user detected, skipping focusUI call');
         // For VR users, set focus state immediately since we skip focusUI
         this.isPlayerFocusedOnUI = true;
       }
-      // For VR users, we skip the focusUI call to prevent the player invisibility bug
+      // We now allow mobile users to focus, but prevent unfocus from touch events in the onUnfocus method
 
     } catch (error) {
+      console.log('❌ TriviaPhone: Error in openAndFocusUIForPlayer:', error);
       // If something goes wrong, reset the focus state
       this.isPlayerFocusedOnUI = false;
     }
