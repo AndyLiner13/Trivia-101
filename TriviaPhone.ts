@@ -2040,11 +2040,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     padding: 4,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    alignSelf: 'flex-start'
+                    alignSelf: 'flex-start',
+                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                    )
                   },
                   children: [
                     ui.Pressable({
-                      onPress: () => this.setTimerType('slow'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.setTimerType('slow');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))), // timer_off
@@ -2060,7 +2067,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.setTimerType('normal'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.setTimerType('normal');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
@@ -2076,7 +2087,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.setTimerType('fast'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.setTimerType('fast');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
@@ -2143,11 +2158,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     padding: 4,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    alignSelf: 'flex-start'
+                    alignSelf: 'flex-start',
+                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                    )
                   },
                   children: [
                     ui.Pressable({
-                      onPress: () => this.setDifficultyType('easy'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.setDifficultyType('easy');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
@@ -2163,7 +2185,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.setDifficultyType('medium'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.setDifficultyType('medium');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
@@ -2179,7 +2205,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.setDifficultyType('hard'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.setDifficultyType('hard');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
@@ -2246,11 +2276,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     padding: 4,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    alignSelf: 'flex-start'
+                    alignSelf: 'flex-start',
+                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                    )
                   },
                   children: [
                     ui.Pressable({
-                      onPress: () => this.toggleModifier('autoAdvance'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.toggleModifier('autoAdvance');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
@@ -2266,7 +2303,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.toggleModifier('powerUps'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.toggleModifier('powerUps');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))), // bolt
@@ -2282,7 +2323,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.toggleModifier('bonusRounds'),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.toggleModifier('bonusRounds');
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))), // all_inclusive
@@ -2349,11 +2394,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     padding: 4,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    alignSelf: 'flex-start'
+                    alignSelf: 'flex-start',
+                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                    )
                   },
                   children: [
                     ui.Pressable({
-                      onPress: () => this.decrementQuestionCount(),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.decrementQuestionCount();
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('642575278900917'))), // remove
@@ -2389,7 +2441,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       ]
                     }),
                     ui.Pressable({
-                      onPress: () => this.incrementQuestionCount(),
+                      onPress: () => {
+                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                          this.incrementQuestionCount();
+                        }
+                      },
                       children: [
                         ui.Image({
                           source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1125453972243822'))), // add
