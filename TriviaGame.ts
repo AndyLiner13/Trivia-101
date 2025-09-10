@@ -2740,19 +2740,6 @@ export class TriviaGame extends ui.UIComponent {
                           }
                         })
                       }),
-                      // Difficulty icon (dynamic based on selected difficulty)
-                      View({
-                        style: {
-                        },
-                        children: Image({
-                          source: this.difficultyIconSourceBinding,
-                          style: {
-                            width: 36, // Scaled up from 32
-                            height: 36, // Scaled up from 32
-                            opacity: this.leftIconOpacity[1]
-                          }
-                        })
-                      }),
                       // Timer icon (dynamic based on selected timer type)
                       View({
                         style: {
@@ -2763,6 +2750,19 @@ export class TriviaGame extends ui.UIComponent {
                             width: 36, // Scaled up from 32
                             height: 36, // Scaled up from 32
                             opacity: this.leftIconOpacity[2]
+                          }
+                        })
+                      }),
+                      // Difficulty icon (dynamic based on selected difficulty)
+                      View({
+                        style: {
+                        },
+                        children: Image({
+                          source: this.difficultyIconSourceBinding,
+                          style: {
+                            width: 36, // Scaled up from 32
+                            height: 36, // Scaled up from 32
+                            opacity: this.leftIconOpacity[1]
                           }
                         })
                       })
