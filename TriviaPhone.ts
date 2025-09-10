@@ -221,6 +221,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       '1357119322709193',   // Pre-game background
       '1358485312536960',   // Question pages background
       
+      // AnswerSubmitted screen backgrounds
+      '4164501203820285',   // Red Triangle Screen
+      '781053527999316',    // Blue Square Screen
+      '1276483883806975',   // Yellow Circle Screen
+      '1029237235836066',   // Green Star Screen
+      
       // Lock icons
       '667887239673613',    // lock
       '1667289068007821',   // lock_open_right
@@ -2553,13 +2559,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           source: ui.Binding.derive([this.selectedAnswerBinding], (selectedAnswer) => {
             // Map answer index to background image
             const backgroundImages = [
-              '4164501203820285', // Red Triangle Screen
-              '781053527999316',  // Blue Square Screen
-              '1276483883806975', // Yellow Circle Screen
-              '2403112933423824'  // Green Star Screen
+              '4164501203820285', // Red Triangle Screen (button index 0)
+              '781053527999316',  // Blue Square Screen (button index 1)
+              '1276483883806975', // Yellow Circle Screen (button index 2)
+              '1029237235836066'  // Green Star Screen (button index 3)
             ];
             const answerIndex = selectedAnswer !== null ? selectedAnswer : 0;
             const imageId = backgroundImages[answerIndex] || backgroundImages[0];
+            console.log(`✅ AnswerSubmitted: Selected answer ${answerIndex} -> Texture ID ${imageId}`);
             return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(imageId)));
           }),
           style: {
