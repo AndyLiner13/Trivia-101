@@ -4213,7 +4213,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // logout icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4506,7 +4506,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // logout icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4695,7 +4695,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // logout icon
                   style: {
                     width: 24,
                     height: 24,
@@ -4884,7 +4884,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // logout icon
                   style: {
                     width: 24,
                     height: 24,
@@ -5117,7 +5117,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // logout icon
                   style: {
                     width: 24,
                     height: 24,
