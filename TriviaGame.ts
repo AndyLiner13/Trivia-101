@@ -4082,7 +4082,7 @@ export class TriviaGame extends ui.UIComponent {
                           // Header - "Leaderboard" or "Game Over!"
                           View({
                             style: {
-                              backgroundColor: 'white',
+                              backgroundColor: '#191919',
                               borderRadius: 8,
                               paddingHorizontal: 9,
                               paddingVertical: 9,
@@ -4095,7 +4095,7 @@ export class TriviaGame extends ui.UIComponent {
                               style: {
                                 fontSize: 21,
                                 fontWeight: 'bold',
-                                color: 'black',
+                                color: '#ffffff',
                                 textAlign: 'center'
                               }
                             })
