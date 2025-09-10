@@ -1814,16 +1814,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private incrementQuestionCount(): void {
-    const currentCount = this.gameSettings.numberOfQuestions || 10;
-    const newCount = Math.min(currentCount + 5, 100); // Max 50 questions
-    
+    const currentCount = this.gameSettings.numberOfQuestions || 5;
+    const newCount = Math.min(currentCount + 5, 95); // Max 50 questions
+
     this.updateGameSetting('numberOfQuestions', newCount);
     console.log('➕ TriviaPhone: Incremented question count to', newCount);
   }
 
   private decrementQuestionCount(): void {
-    const currentCount = this.gameSettings.numberOfQuestions || 10;
-    const newCount = Math.max(currentCount - 5, 1); // Min 1 question
+    const currentCount = this.gameSettings.numberOfQuestions || 5;
+    const newCount = Math.max(currentCount - 5, 5); // Min 5 questions
     
     this.updateGameSetting('numberOfQuestions', newCount);
     console.log('➖ TriviaPhone: Decremented question count to', newCount);
@@ -2429,7 +2429,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       children: [
                         ui.Text({
                           text: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
-                            settings.numberOfQuestions?.toString() || '10'
+                            settings.numberOfQuestions?.toString() || '5'
                           ),
                           style: {
                             fontSize: 16,
@@ -2931,7 +2931,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // Title
             ui.View({
               style: {
-                paddingTop: 2,
+                paddingTop: 0,
                 paddingBottom: 8,
                 alignItems: 'center'
               },
