@@ -537,6 +537,9 @@ export class TriviaGame extends ui.UIComponent {
     new Binding('#EAB308'), // Default yellow
     new Binding('#16A34A')  // Default green
   ];
+
+  // Binding to control timer visibility
+  private showTimerBinding = new Binding(true);
   
   // Icon opacity bindings for configuration screen (always rendered, but opacity changes)
   private leftIconOpacity = [
@@ -596,6 +599,25 @@ export class TriviaGame extends ui.UIComponent {
   private isShowingResults: boolean = false;
   private lastCorrectAnswerIndex: number = -1;
   private lastAnswerCounts: number[] = [];
+
+  // Helper method to get the correct time limit based on timerType
+  private getTimeLimitForCurrentModifier(): number {
+    switch (this.timerType) {
+      case 'slow': // No timer modifier - no time limit (return very large number)
+        return 999999; 
+      case 'normal': // Normal timer - 30 seconds
+        return 30;
+      case 'fast': // Add time modifier - 90 seconds
+        return 90;
+      default:
+        return 30; // Default to normal timer
+    }
+  }
+
+  // Helper method to check if timer should be shown in UI
+  private shouldShowTimer(): boolean {
+    return this.timerType !== 'slow'; // Hide timer for "no timer" modifier
+  }
 
   // Lazy loading cache - track which categories have been loaded
   private loadedCategories: Set<string> = new Set();
@@ -704,6 +726,7 @@ export class TriviaGame extends ui.UIComponent {
     // Initialize icon visibility with default state
     this.updateIconVisibility();
     this.updateLockIcon('host-pregame'); // Initialize with host pre-game state (lock icon)
+    this.showTimerBinding.set(this.shouldShowTimer()); // Initialize timer visibility
     
     // Initialize the UI (shows config screen by default)
     this.resetGameState();
@@ -1161,7 +1184,7 @@ export class TriviaGame extends ui.UIComponent {
     // Reset all game state variables
     this.currentQuestionIndex = 0;
     this.currentQuestion = null;
-    this.timeRemaining = this.props.questionTimeLimit;
+    this.timeRemaining = this.getTimeLimitForCurrentModifier();
     this.totalAnswers = 0;
     this.isRunning = false;
 
@@ -1223,7 +1246,7 @@ export class TriviaGame extends ui.UIComponent {
     // Reset all game state variables but preserve isRunning
     this.currentQuestionIndex = 0;
     this.currentQuestion = null;
-    this.timeRemaining = this.props.questionTimeLimit;
+    this.timeRemaining = this.getTimeLimitForCurrentModifier();
     this.totalAnswers = 0;
     // DON'T reset isRunning here
 
@@ -1321,7 +1344,7 @@ export class TriviaGame extends ui.UIComponent {
     // Create a copy of the question with shuffled answers
     const shuffledQuestion = this.shuffleQuestionAnswers(question);
     this.currentQuestion = shuffledQuestion;
-    this.timeRemaining = this.props.questionTimeLimit;
+    this.timeRemaining = this.getTimeLimitForCurrentModifier();
     this.totalAnswers = 0;
 
     // Update UI bindings
@@ -1333,6 +1356,13 @@ export class TriviaGame extends ui.UIComponent {
     
     // Set layout mode - center question if no image
     this.centerQuestionBinding.set(!imageValue || imageValue.trim() === "");
+    
+    // Update timer display based on timer modifier
+    if (this.shouldShowTimer()) {
+      this.timerBinding.set(this.timeRemaining.toString());
+    } else {
+      this.timerBinding.set(""); // Show no text for no timer modifier
+    }
     
     // For Italian Brainrot quiz, track current image and preload next image
     if (this.isItalianBrainrotQuiz()) {
@@ -1402,7 +1432,7 @@ export class TriviaGame extends ui.UIComponent {
     const questionData = {
       question: serializableQuestion,
       questionIndex: this.currentQuestionIndex,
-      timeLimit: this.props.questionTimeLimit,
+      timeLimit: this.getTimeLimitForCurrentModifier(),
       totalQuestions: this.triviaQuestions.length
     };
 
@@ -1735,7 +1765,7 @@ export class TriviaGame extends ui.UIComponent {
     }
 
     // Schedule next question after question time + results time
-    const totalTime = this.props.questionTimeLimit * 1000 + this.props.autoAdvanceTime * 1000;
+    const totalTime = this.getTimeLimitForCurrentModifier() * 1000 + this.props.autoAdvanceTime * 1000;
     this.gameLoopTimeoutId = this.async.setTimeout(() => {
       this.currentQuestionIndex++;
       this.showNextQuestion();
@@ -2181,6 +2211,9 @@ export class TriviaGame extends ui.UIComponent {
     this.isLocked = eventData.settings.isLocked;
     this.modifiers = eventData.settings.modifiers;
     
+    // Update timer visibility based on timer type
+    this.showTimerBinding.set(this.shouldShowTimer());
+    
     // Update the binding to reflect changes in the UI
     this.gameConfigBinding.set(this.gameConfig);
     this.updateIconVisibility();
@@ -2546,6 +2579,12 @@ export class TriviaGame extends ui.UIComponent {
   private startTimer(): void {
     this.stopTimer(); // Clear any existing timer
 
+    // Only start the actual countdown timer if timer is enabled
+    if (!this.shouldShowTimer()) {
+      // For no timer modifier, don't start countdown and don't update timer text
+      return;
+    }
+
     // All clients should run the timer locally for immediate updates
     this.timerInterval = this.async.setInterval(() => {
       this.timeRemaining--;
@@ -2870,7 +2909,7 @@ export class TriviaGame extends ui.UIComponent {
                               justifyContent: 'center',
                             },
                                 children: [
-                                  // Timer with alarm icon
+                                  // Timer with alarm icon - always show icon, conditionally show text
                                   View({
                                     style: {
                                       position: 'relative',
@@ -2878,7 +2917,7 @@ export class TriviaGame extends ui.UIComponent {
                                       justifyContent: 'center',
                                     },
                                     children: [
-                                      // Alarm icon background
+                                      // Alarm icon background - always visible
                                       Image({
                                         source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
                                         style: {
@@ -2888,22 +2927,25 @@ export class TriviaGame extends ui.UIComponent {
                                           marginTop: -3
                                         }
                                       }),
-                                      // Timer text overlaid in center
-                                      View({
-                                        style: {
-                                          position: 'absolute',
-                                          alignItems: 'center',
-                                          justifyContent: 'center'
-                                        },
-                                        children: Text({
-                                          text: this.timerBinding,
+                                      // Timer text overlaid in center - only show when timer is enabled
+                                      UINode.if(
+                                        this.showTimerBinding,
+                                        View({
                                           style: {
-                                            fontSize: 14,
-                                            fontWeight: 'bold',
-                                            color: '#000000'
-                                          }
+                                            position: 'absolute',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                          },
+                                          children: Text({
+                                            text: this.timerBinding,
+                                            style: {
+                                              fontSize: 14,
+                                              fontWeight: 'bold',
+                                              color: '#000000'
+                                            }
+                                          })
                                         })
-                                      })
+                                      )
                                     ]
                                   })
                                 ]
@@ -3004,7 +3046,7 @@ export class TriviaGame extends ui.UIComponent {
                               justifyContent: 'center',
                             },
                                 children: [
-                                  // Timer with alarm icon
+                                  // Timer with alarm icon - always show icon, conditionally show text
                                   View({
                                     style: {
                                       position: 'relative',
@@ -3012,7 +3054,7 @@ export class TriviaGame extends ui.UIComponent {
                                       justifyContent: 'center',
                                     },
                                     children: [
-                                      // Alarm icon background
+                                      // Alarm icon background - always visible
                                       Image({
                                         source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
                                         style: {
@@ -3022,22 +3064,25 @@ export class TriviaGame extends ui.UIComponent {
                                           marginTop: -3
                                         }
                                       }),
-                                      // Timer text overlaid in center
-                                      View({
-                                        style: {
-                                          position: 'absolute',
-                                          alignItems: 'center',
-                                          justifyContent: 'center'
-                                        },
-                                        children: Text({
-                                          text: this.timerBinding,
+                                      // Timer text overlaid in center - only show when timer is enabled
+                                      UINode.if(
+                                        this.showTimerBinding,
+                                        View({
                                           style: {
-                                            fontSize: 14,
-                                            fontWeight: 'bold',
-                                            color: '#000000'
-                                          }
+                                            position: 'absolute',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                          },
+                                          children: Text({
+                                            text: this.timerBinding,
+                                            style: {
+                                              fontSize: 14,
+                                              fontWeight: 'bold',
+                                              color: '#000000'
+                                            }
+                                          })
                                         })
-                                      })
+                                      )
                                     ]
                                   })
                                 ]
@@ -3142,7 +3187,7 @@ export class TriviaGame extends ui.UIComponent {
                               justifyContent: 'center',
                             },
                                 children: [
-                                  // Timer with alarm icon
+                                  // Timer with alarm icon - always show icon, conditionally show text
                                   View({
                                     style: {
                                       position: 'relative',
@@ -3150,7 +3195,7 @@ export class TriviaGame extends ui.UIComponent {
                                       justifyContent: 'center',
                                     },
                                     children: [
-                                      // Alarm icon background
+                                      // Alarm icon background - always visible
                                       Image({
                                         source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
                                         style: {
@@ -3160,22 +3205,25 @@ export class TriviaGame extends ui.UIComponent {
                                           marginTop: -3
                                         }
                                       }),
-                                      // Timer text overlaid in center
-                                      View({
-                                        style: {
-                                          position: 'absolute',
-                                          alignItems: 'center',
-                                          justifyContent: 'center'
-                                        },
-                                        children: Text({
-                                          text: this.timerBinding,
+                                      // Timer text overlaid in center - only show when timer is enabled
+                                      UINode.if(
+                                        this.showTimerBinding,
+                                        View({
                                           style: {
-                                            fontSize: 14,
-                                            fontWeight: 'bold',
-                                            color: '#000000'
-                                          }
+                                            position: 'absolute',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                          },
+                                          children: Text({
+                                            text: this.timerBinding,
+                                            style: {
+                                              fontSize: 14,
+                                              fontWeight: 'bold',
+                                              color: '#000000'
+                                            }
+                                          })
                                         })
-                                      })
+                                      )
                                     ]
                                   })
                                 ]
@@ -3344,6 +3392,7 @@ export class TriviaGame extends ui.UIComponent {
                                 justifyContent: 'center',
                               },
                               children: [
+                                // Timer with alarm icon - always show icon, conditionally show text
                                 View({
                                   style: {
                                     position: 'relative',
@@ -3351,7 +3400,7 @@ export class TriviaGame extends ui.UIComponent {
                                     justifyContent: 'center',
                                   },
                                   children: [
-                                    // Alarm icon background
+                                    // Alarm icon background - always visible
                                     Image({
                                       source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1209829437577245'))), // alarm icon
                                       style: {
@@ -3361,22 +3410,25 @@ export class TriviaGame extends ui.UIComponent {
                                         marginTop: -3
                                       }
                                     }),
-                                    // Timer text overlaid in center
-                                    View({
-                                      style: {
-                                        position: 'absolute',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                      },
-                                      children: Text({
-                                        text: this.timerBinding,
+                                    // Timer text overlaid in center - only show when timer is enabled
+                                    UINode.if(
+                                      this.showTimerBinding,
+                                      View({
                                         style: {
-                                          fontSize: 14,
-                                          fontWeight: 'bold',
-                                          color: '#000000'
-                                        }
+                                          position: 'absolute',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        },
+                                        children: Text({
+                                          text: this.timerBinding,
+                                          style: {
+                                            fontSize: 14,
+                                            fontWeight: 'bold',
+                                            color: '#000000'
+                                          }
+                                        })
                                       })
-                                    })
+                                    )
                                   ]
                                 })
                               ]
@@ -5219,7 +5271,7 @@ export class TriviaGame extends ui.UIComponent {
         responseData.gameState = gameState;
         responseData.currentQuestion = this.currentQuestion;
         responseData.questionIndex = this.currentQuestionIndex;
-        responseData.timeLimit = this.props.questionTimeLimit;
+        responseData.timeLimit = this.getTimeLimitForCurrentModifier();
       } else {
         // Game is running but no current question - could be between questions
         gameState = 'playing';
@@ -5290,7 +5342,7 @@ export class TriviaGame extends ui.UIComponent {
         
         responseData.currentQuestion = serializableQuestion;
         responseData.questionIndex = this.currentQuestionIndex;
-        responseData.timeLimit = this.props.questionTimeLimit;
+        responseData.timeLimit = this.getTimeLimitForCurrentModifier();
         
         // Also send the appropriate question type event to ensure proper UI display
         const answerCount = this.currentQuestion.answers ? this.currentQuestion.answers.length : 4;
@@ -5299,7 +5351,7 @@ export class TriviaGame extends ui.UIComponent {
           this.sendNetworkBroadcastEvent(triviaTwoOptionsEvent, {
             question: serializableQuestion,
             questionIndex: this.currentQuestionIndex,
-            timeLimit: this.props.questionTimeLimit,
+            timeLimit: this.getTimeLimitForCurrentModifier(),
             totalQuestions: this.triviaQuestions.length
           });
         } else {
@@ -5307,7 +5359,7 @@ export class TriviaGame extends ui.UIComponent {
           this.sendNetworkBroadcastEvent(triviaFourOptionsEvent, {
             question: serializableQuestion,
             questionIndex: this.currentQuestionIndex,
-            timeLimit: this.props.questionTimeLimit,
+            timeLimit: this.getTimeLimitForCurrentModifier(),
             totalQuestions: this.triviaQuestions.length
           });
         }
@@ -5350,14 +5402,14 @@ export class TriviaGame extends ui.UIComponent {
         gameState: 'playing',
         currentQuestion: serializableQuestion,
         questionIndex: this.currentQuestionIndex,
-        timeLimit: this.props.questionTimeLimit
+        timeLimit: this.getTimeLimitForCurrentModifier()
       });
 
       // Also send the appropriate question type event specifically to this player
       const questionData = {
         question: serializableQuestion,
         questionIndex: this.currentQuestionIndex,
-        timeLimit: this.props.questionTimeLimit,
+        timeLimit: this.getTimeLimitForCurrentModifier(),
         totalQuestions: this.triviaQuestions.length
       };
 

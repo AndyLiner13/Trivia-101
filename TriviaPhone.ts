@@ -2865,7 +2865,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                           case 'timer': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))); // more_time
                           case 'difficulty': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))); // skull
                           case 'modifiers': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))); // all_inclusive
-                          case 'questions': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('823218936808494'))); // info icon
+                          case 'questions': return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1545558833553342'))); // info icon
                           default: return ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265')));
                         }
                       }),
