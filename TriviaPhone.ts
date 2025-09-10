@@ -4616,8 +4616,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
-                    // Show just "Question #" for infinite questions mode or Italian Brainrot Quiz, otherwise "Question # of #"
-                    if (settings.modifiers.bonusRounds || settings.category === 'Italian Brainrot Quiz') {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
                       return `Question ${index + 1}`;
                     }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
@@ -4811,8 +4811,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
-                    // Show just "Question #" for infinite questions mode or Italian Brainrot Quiz, otherwise "Question # of #"
-                    if (settings.modifiers.bonusRounds || settings.category === 'Italian Brainrot Quiz') {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
                       return `Question ${index + 1}`;
                     }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
@@ -5005,8 +5005,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               children: [
                 ui.Text({
                   text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
-                    // Show just "Question #" for infinite questions mode or Italian Brainrot Quiz, otherwise "Question # of #"
-                    if (settings.modifiers.bonusRounds || settings.category === 'Italian Brainrot Quiz') {
+                    // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
+                    if (settings.modifiers.bonusRounds) {
                       return `Question ${index + 1}`;
                     }
                     return `Question ${index + 1} of ${settings.numberOfQuestions}`;
