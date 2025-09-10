@@ -143,6 +143,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Transfer host popup binding
   private showTransferHostPopupBinding = new ui.Binding(false);
+  
+  // Players list binding for transfer host popup
+  private playersInWorldBinding = new ui.Binding<{id: string, name: string}[]>([]);
+  private selectedPlayerForTransferBinding = new ui.Binding<string | null>(null);
+  private selectedPlayerForTransfer: string | null = null;
 
   // Debug outline toggle binding
   private showOutlinesBinding = new ui.Binding(false);
@@ -150,6 +155,28 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   constructor() {
     super();
+    
+    // Initialize players binding with current world players
+    this.initializePlayersBinding();
+  }
+  
+  private initializePlayersBinding(): void {
+    try {
+      const currentPlayers = this.world.getPlayers();
+      const playerIds = currentPlayers.map(player => player.id.toString());
+      const playersWithNames = currentPlayers.map(player => ({
+        id: player.id.toString(),
+        name: player.name.get() || `Player ${player.id.toString()}`
+      }));
+      
+      this.playersInWorld = playerIds;
+      this.playersInWorldBinding.set(playersWithNames);
+      console.log(`✅ Initialized players binding with ${playersWithNames.length} players:`, playersWithNames);
+    } catch (error) {
+      console.log('❌ Error initializing players binding:', error);
+      // Fallback to empty array
+      this.playersInWorldBinding.set([]);
+    }
   }
 
   // Clear all pending timeouts to prevent interference between games
@@ -1526,6 +1553,27 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Update tracking data
     this.playersInWorld = eventData.playersInWorld;
     this.playersAnswered = eventData.playersAnswered;
+    
+    // Convert player IDs to player objects with names for the binding
+    try {
+      const currentPlayers = this.world.getPlayers();
+      const playersWithNames = eventData.playersInWorld.map(playerId => {
+        const player = currentPlayers.find(p => p.id.toString() === playerId);
+        return {
+          id: playerId,
+          name: player?.name.get() || `Player ${playerId}`
+        };
+      });
+      this.playersInWorldBinding.set(playersWithNames);
+    } catch (error) {
+      console.log('❌ Error converting player IDs to names:', error);
+      // Fallback: just use player IDs as names
+      const playersWithIds = eventData.playersInWorld.map(playerId => ({
+        id: playerId,
+        name: `Player ${playerId}`
+      }));
+      this.playersInWorldBinding.set(playersWithIds);
+    }
     
     // 📡 TriviaPhone: Player update received - playersAnswered: ${eventData.playersAnswered.length}, playersInWorld: ${eventData.playersInWorld.length}
   }
@@ -3168,26 +3216,30 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleTransferHostConfirm(): void {
-    // Send game reset event to end the game for all players (same as host logout)
-    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.gameReset, {
-      hostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+    // Check if a player is selected
+    if (!this.selectedPlayerForTransfer) {
+      console.log('❌ No player selected for transfer');
+      return;
+    }
+    
+    console.log(`👑 Transferring host to player: ${this.selectedPlayerForTransfer}`);
+    
+    // Send host changed event to notify all players of the new host
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.hostChanged, {
+      newHostId: this.selectedPlayerForTransfer,
+      oldHostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
     });
     
-    // Navigate to pre-game screen
-    this.currentViewMode = 'pre-game';
-    this.currentViewModeBinding.set('pre-game');
-    
-    // Close the popup
+    // Close the popup and clear selection
     this.showTransferHostPopupBinding.set(false);
+    this.selectedPlayerForTransferBinding.set(null);
+    this.selectedPlayerForTransfer = null;
     
-    // Reset game state for this player
-    this.gameStarted = false;
-    this.gameStartedBinding.set(false);
-    this.currentQuestionIndex = 0;
-    this.currentQuestionIndexBinding.set(0);
-    this.score = 0;
-    this.scoreBinding.set(0);
-    this.selectedAnswer = null;
+    // Update local host status (this player is no longer host)
+    this.currentHostStatus = false;
+    this.isHostBinding.set(false);
+    
+    console.log('✅ Host transfer initiated');
     this.selectedAnswerBinding.set(null);
     this.showResult = false;
     this.showResultBinding.set(false);
@@ -3326,6 +3378,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   alignItems: 'center'
                 },
                 onPress: () => {
+                  // Refresh players list before showing popup
+                  this.initializePlayersBinding();
                   this.showTransferHostPopupBinding.set(true);
                 },
                 children: [
@@ -3515,24 +3569,24 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             backgroundColor: '#191919',
             borderRadius: 8,
-            padding: 8,
-            minWidth: 140,
-            maxWidth: 140,
-            marginHorizontal: 4
+            padding: 16,
+            minWidth: 200,
+            maxWidth: 280,
+            maxHeight: '80%',
+            marginHorizontal: 8
           },
           children: [
             // Title
             ui.View({
               style: {
-                paddingTop: 0,
-                paddingBottom: 8,
+                paddingBottom: 12,
                 alignItems: 'center'
               },
               children: [
                 ui.Text({
-                  text: 'Transfer Host?',
+                  text: 'Transfer Host',
                   style: {
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: '700',
                     color: '#ffffff',
                     textAlign: 'center'
@@ -3541,61 +3595,124 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Yes button (green)
+            // Subtitle
             ui.View({
               style: {
-                paddingBottom: 8,
+                paddingBottom: 16,
                 alignItems: 'center'
               },
               children: [
+                ui.Text({
+                  text: 'Select a player to transfer host privileges to:',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: '400',
+                    color: '#cccccc',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Scrollable Players List
+            ui.ScrollView({
+              style: {
+                maxHeight: 200,
+                borderRadius: 4,
+                backgroundColor: '#2a2a2a',
+                marginBottom: 16
+              },
+              children: [
+                // Show "No other players available" message when needed
+                ui.UINode.if(
+                  this.playersInWorldBinding.derive((players) => {
+                    const currentPlayer = this.world.getLocalPlayer()?.id.toString();
+                    const otherPlayers = players.filter(player => player.id !== currentPlayer);
+                    return otherPlayers.length === 0;
+                  }),
+                  ui.View({
+                    style: {
+                      padding: 16,
+                      alignItems: 'center'
+                    },
+                    children: [
+                      ui.Text({
+                        text: 'No other players available',
+                        style: {
+                          fontSize: 14,
+                          fontWeight: '400',
+                          color: '#888888',
+                          textAlign: 'center'
+                        }
+                      })
+                    ]
+                  })
+                ),
+                
+                // Create static slots for up to 10 players
+                ...this.createTransferHostPlayerSlots()
+              ]
+            }),
+
+            // Action buttons
+            ui.View({
+              style: {
+                flexDirection: 'row',
+                justifyContent: 'space-between'
+              },
+              children: [
+                // Cancel button
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#16A34A',
+                    backgroundColor: '#6B7280',
                     borderRadius: 4,
-                    paddingVertical: 8,
+                    paddingVertical: 10,
                     paddingHorizontal: 16,
-                    minWidth: 120,
-                    alignItems: 'center'
+                    flex: 1,
+                    alignItems: 'center',
+                    marginRight: 4
                   },
-                  onPress: () => this.handleTransferHostConfirm(),
+                  onPress: () => {
+                    this.showTransferHostPopupBinding.set(false);
+                    this.selectedPlayerForTransferBinding.set(null);
+                    this.selectedPlayerForTransfer = null;
+                  },
                   children: [
                     ui.Text({
-                      text: 'Yes',
+                      text: 'Cancel',
                       style: {
                         fontSize: 14,
-                        fontWeight: '700',
+                        fontWeight: '600',
                         color: '#ffffff',
                         textAlign: 'center'
                       }
                     })
                   ]
-                })
-              ]
-            }),
+                }),
 
-            // No button (red)
-            ui.View({
-              style: {
-                alignItems: 'center'
-              },
-              children: [
+                // Transfer button
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#DC2626',
+                    backgroundColor: this.selectedPlayerForTransferBinding.derive(selected => 
+                      selected ? '#DC2626' : '#555555'
+                    ),
                     borderRadius: 4,
-                    paddingVertical: 8,
+                    paddingVertical: 10,
                     paddingHorizontal: 16,
-                    minWidth: 120,
-                    alignItems: 'center'
+                    flex: 1,
+                    alignItems: 'center',
+                    marginLeft: 4
                   },
-                  onPress: () => this.showTransferHostPopupBinding.set(false),
+                  onPress: () => this.handleTransferHostConfirm(),
                   children: [
                     ui.Text({
-                      text: 'No',
+                      text: 'Transfer',
                       style: {
                         fontSize: 14,
-                        fontWeight: '700',
-                        color: '#ffffff',
+                        fontWeight: '600',
+                        color: this.selectedPlayerForTransferBinding.derive(selected => 
+                          selected ? '#ffffff' : '#888888'
+                        ),
                         textAlign: 'center'
                       }
                     })
@@ -3607,6 +3724,71 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         })
       ]
     });
+  }
+
+  private createTransferHostPlayerSlots(): ui.UINode[] {
+    // Create static slots for up to 10 players that will reactively show/hide based on current players
+    const maxSlots = 10;
+    const components: ui.UINode[] = [];
+    
+    for (let i = 0; i < maxSlots; i++) {
+      const slotIndex = i; // Capture the index for the closure
+      components.push(
+        ui.UINode.if(
+          this.playersInWorldBinding.derive((players) => {
+            const currentPlayer = this.world.getLocalPlayer()?.id.toString();
+            const otherPlayers = players.filter(player => player.id !== currentPlayer);
+            return slotIndex < otherPlayers.length;
+          }),
+          ui.Pressable({
+            style: {
+              padding: 12,
+              backgroundColor: this.selectedPlayerForTransferBinding.derive((selected) => {
+                // Use the original playersInWorld array to match against selection
+                const currentPlayer = this.world.getLocalPlayer()?.id.toString();
+                const otherPlayers = this.playersInWorld.filter(playerId => playerId !== currentPlayer);
+                if (slotIndex < otherPlayers.length) {
+                  const playerId = otherPlayers[slotIndex];
+                  return selected === playerId ? '#3B82F6' : 'transparent';
+                }
+                return 'transparent';
+              }),
+              marginBottom: 1
+            },
+            onPress: () => {
+              // Use the original playersInWorld array to get player IDs
+              const currentPlayer = this.world.getLocalPlayer()?.id.toString();
+              const otherPlayers = this.playersInWorld.filter(playerId => playerId !== currentPlayer);
+              if (slotIndex < otherPlayers.length) {
+                const playerId = otherPlayers[slotIndex];
+                this.selectedPlayerForTransferBinding.set(playerId);
+                this.selectedPlayerForTransfer = playerId;
+              }
+            },
+            children: [
+              ui.Text({
+                text: this.playersInWorldBinding.derive((players) => {
+                  const currentPlayer = this.world.getLocalPlayer()?.id.toString();
+                  const otherPlayers = players.filter(player => player.id !== currentPlayer);
+                  if (slotIndex < otherPlayers.length) {
+                    return otherPlayers[slotIndex].name;
+                  }
+                  return '';
+                }),
+                style: {
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: '#ffffff',
+                  textAlign: 'left'
+                }
+              })
+            ]
+          })
+        )
+      );
+    }
+    
+    return components;
   }
 
   private renderStatusBar(): ui.UINode {
