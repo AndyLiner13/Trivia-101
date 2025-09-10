@@ -3667,7 +3667,7 @@ export class TriviaGame extends ui.UIComponent {
                               marginBottom: 12
                             },
                             children: Text({
-                              text: this.showGameOverBinding.derive(isGameOver => isGameOver ? 'Game Over!' : 'Leaderboard'),
+                              text: this.showGameOverBinding.derive(isGameOver => isGameOver ? 'Game Complete!' : 'Leaderboard'),
                               style: {
                                 fontSize: 21,
                                 fontWeight: 'bold',
@@ -4111,7 +4111,7 @@ export class TriviaGame extends ui.UIComponent {
                               marginBottom: 12
                             },
                             children: Text({
-                              text: this.showGameOverBinding.derive(isGameOver => isGameOver ? 'Game Over!' : 'Leaderboard'),
+                              text: this.showGameOverBinding.derive(isGameOver => isGameOver ? 'Game Complete!' : 'Leaderboard'),
                               style: {
                                 fontSize: 21,
                                 fontWeight: 'bold',
