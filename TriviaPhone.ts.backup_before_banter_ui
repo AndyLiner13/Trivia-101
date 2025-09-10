@@ -212,7 +212,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private currentBanterIndex: number = 0;
   
   // Binding for the current banter message
-  private currentBanterBinding = new ui.Binding("Keep your head up!");
+  private currentBanterBinding = new ui.Binding("");
 
   constructor() {
     super();
@@ -263,21 +263,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
     
     this.currentBanterIndex = 0;
-    console.log(`✓ Banter shuffled for new question! Next wrong answer will show: "${this.shuffledBanter[0]}"`);
   }
   
   // Get next banter message (called for each wrong answer)
   private getNextBanterMessage(): string {
     if (this.currentBanterIndex >= this.shuffledBanter.length) {
       // Reshuffle when we've used all messages
-      console.log(`🔄 All banter messages used, reshuffling...`);
       this.shuffleBanter();
     }
     
     const message = this.shuffledBanter[this.currentBanterIndex];
     this.currentBanterIndex++;
     this.currentBanterBinding.set(message);
-    console.log(`📝 Setting banter message: "${message}" (index: ${this.currentBanterIndex - 1})`);
     return message;
   }
 
@@ -1341,12 +1338,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isCorrect = playerDidNotAnswer ? false : this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
-    // Set banter message for wrong answers when results are received
-    if (!isCorrect && !eventData.showLeaderboard) {
-      const banterMessage = this.getNextBanterMessage();
-      console.log(`✗ Wrong answer! Showing banter: "${banterMessage}"`);
-    }
-    
     // Only reset last round points when NOT showing leaderboard (i.e., during initial results display)
     // This allows the "+X points!" text to persist during the leaderboard transition
     if (!eventData.showLeaderboard) {
@@ -1475,9 +1466,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     timeLimit: number,
     totalQuestions: number 
   }): void {
-    // Shuffle banter messages for new question
-    this.shuffleBanter();
-    
     // Check opted-out status before processing question event
     this.checkOptedOutStatus();
     
@@ -1540,9 +1528,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     timeLimit: number,
     totalQuestions: number 
   }): void {
-    // Shuffle banter messages for new question
-    this.shuffleBanter();
-    
     // Check opted-out status before processing question event
     this.checkOptedOutStatus();
     
@@ -1854,6 +1839,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private nextQuestion(): void {
+    // Shuffle banter messages for the new question
+    this.shuffleBanter();
+    
     // Send next question event to TriviaGame - let it handle all the logic
     this.sendNetworkBroadcastEvent(TriviaNetworkEvents.nextQuestion, {
       playerId: this.world.getLocalPlayer()?.id.toString() || 'host'
@@ -4829,6 +4817,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderParticipantWrongResults(): ui.UINode {
+    // Get next banter message when showing wrong result
+    this.getNextBanterMessage();
+    
     // Participant wrong results screen displayed
     return ui.View({
       style: {
@@ -4949,14 +4940,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 35, // Position closer to the close icon container (moved up from 68)
+            marginTop: 68, // Position below the close icon container
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
           },
           children: [
             ui.Text({
-              text: this.currentBanterBinding,
+              text: ui.Binding.derive([this.lastRoundPointsBinding], (points) => `+${points} points!`),
               style: {
                 fontSize: 24,
                 fontWeight: '700',
@@ -5375,14 +5366,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 35, // Position closer to the close icon container (moved up from 68)
+            marginTop: 68, // Position below the close icon container
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
           },
           children: [
             ui.Text({
-              text: this.currentBanterBinding,
+              text: ui.Binding.derive([this.lastRoundPointsBinding], (points) => `+${points} points!`),
               style: {
                 fontSize: 24,
                 fontWeight: '700',
