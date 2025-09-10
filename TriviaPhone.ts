@@ -1650,10 +1650,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: '100%',
                 height: '100%',
                 backgroundColor: ui.Binding.derive([this.screenTypeBinding, this.currentViewModeBinding, this.gameStartedBinding], (screenType, mode, started) => {
-                  if (mode === 'game-settings') return '#6366F1';
-                  if (started && (screenType === 'two-options' || screenType === 'four-options')) return '#6366F1';
-                  if (started && screenType === 'results') return '#FFFFFF'; // Will be overridden by feedback screen
-                  return '#FFFFFF';
+                  if (mode === 'game-settings') return '#191919';
+                  if (started && (screenType === 'two-options' || screenType === 'four-options')) return '#191919';
+                  if (started && screenType === 'results') return '#191919'; // Dark background for feedback screen
+                  return '#191919';
                 }),
                 borderRadius: 14,
                 overflow: 'hidden'
