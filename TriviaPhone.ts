@@ -132,6 +132,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showLeaderboardBinding = new ui.Binding(false);
   private answerSubmittedBinding = new ui.Binding(false);
 
+  // Last round points binding for displaying points earned
+  private lastRoundPointsBinding = new ui.Binding(0);
+
   // Player tracking for conditional answer submission screen
   private playersInWorld: string[] = [];
   private playersAnswered: string[] = [];
@@ -1155,6 +1158,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isCorrect = playerDidNotAnswer ? false : this.selectedAnswer === eventData.correctAnswerIndex;
     this.isCorrectAnswerBinding.set(isCorrect);
     
+    // Reset last round points
+    this.lastRoundPointsBinding.set(0);
+    
     if (isCorrect && this.world.getLocalPlayer() && !eventData.showLeaderboard) {
       // Calculate speed multiplier: faster answers get higher points
       const basePoints = 1;
@@ -1183,6 +1189,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         playerId: this.world.getLocalPlayer()!.id.toString(),
         points: calculatedPoints
       });
+
+      // Set last round points for display
+      this.lastRoundPointsBinding.set(calculatedPoints);
 
       // Immediate local score increment for instant feedback
       this.score += calculatedPoints;
@@ -4171,6 +4180,31 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
+        // Text message between checkmark and bottom bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 68, // Position below the checkmark container
+            paddingHorizontal: 16,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: ui.Binding.derive([this.lastRoundPointsBinding], (points) => `+${points} points!`),
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
+              }
+            })
+          ]
+        }),
+
         // Bottom status bar (like 4A page with question info)
         ui.View({
           style: {
@@ -4335,6 +4369,31 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
+        // Text message between close icon and bottom bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 68, // Position below the close icon container
+            paddingHorizontal: 16,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: ui.Binding.derive([this.lastRoundPointsBinding], (points) => `+${points} points!`),
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
+              }
+            })
+          ]
+        }),
+
         // Bottom status bar (like 4A page with question info)
         ui.View({
           style: {
@@ -4494,6 +4553,31 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: 120,
                 height: 120,
                 tintColor: '#FFFFFF'
+              }
+            })
+          ]
+        }),
+
+        // Text message between checkmark and bottom bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 68, // Position below the checkmark container
+            paddingHorizontal: 16,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: ui.Binding.derive([this.lastRoundPointsBinding], (points) => `+${points} points!`),
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
               }
             })
           ]
@@ -4702,6 +4786,31 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 width: 120,
                 height: 120,
                 tintColor: '#FFFFFF'
+              }
+            })
+          ]
+        }),
+
+        // Text message between close icon and bottom bar
+        ui.View({
+          style: {
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            marginTop: 68, // Position below the close icon container
+            paddingHorizontal: 16,
+            justifyContent: 'center',
+            alignItems: 'center'
+          },
+          children: [
+            ui.Text({
+              text: ui.Binding.derive([this.lastRoundPointsBinding], (points) => `+${points} points!`),
+              style: {
+                fontSize: 24,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textAlign: 'center'
               }
             })
           ]
