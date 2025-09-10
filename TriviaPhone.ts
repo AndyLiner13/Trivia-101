@@ -3384,11 +3384,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 },
                 children: [
                   ui.Image({
-                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))), // crown icon for transfer host
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon for transfer host
                     style: {
                       width: 24,
                       height: 24,
-                      tintColor: '#F7CE23' // Golden color for crown
+                      tintColor: '#FFFFFF' // White color
                     }
                   })
                 ]
@@ -3569,9 +3569,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           style: {
             backgroundColor: '#191919',
             borderRadius: 8,
-            padding: 16,
-            minWidth: 200,
-            maxWidth: 280,
+            padding: 12,
+            minWidth: 160,
+            maxWidth: 200,
             maxHeight: '80%',
             marginHorizontal: 8
           },
@@ -3589,25 +3589,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     fontSize: 16,
                     fontWeight: '700',
                     color: '#ffffff',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
-
-            // Subtitle
-            ui.View({
-              style: {
-                paddingBottom: 16,
-                alignItems: 'center'
-              },
-              children: [
-                ui.Text({
-                  text: 'Select a player to transfer host privileges to:',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: '400',
-                    color: '#cccccc',
                     textAlign: 'center'
                   }
                 })
@@ -3666,8 +3647,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     backgroundColor: '#6B7280',
                     borderRadius: 4,
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
                     flex: 1,
                     alignItems: 'center',
                     marginRight: 4
@@ -3681,7 +3662,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Text({
                       text: 'Cancel',
                       style: {
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: '#ffffff',
                         textAlign: 'center'
@@ -3697,8 +3678,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       selected ? '#DC2626' : '#555555'
                     ),
                     borderRadius: 4,
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
                     flex: 1,
                     alignItems: 'center',
                     marginLeft: 4
@@ -3708,7 +3689,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     ui.Text({
                       text: 'Transfer',
                       style: {
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: '600',
                         color: this.selectedPlayerForTransferBinding.derive(selected => 
                           selected ? '#ffffff' : '#888888'
