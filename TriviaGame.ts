@@ -2639,7 +2639,7 @@ export class TriviaGame extends ui.UIComponent {
                       justifyContent: 'center'
                     },
                     children: Image({
-                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2175357112951726'))),
+                      source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1142972504392965'))),
                       style: {
                         width: '100%',
                         height: '100%',
