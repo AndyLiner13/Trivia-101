@@ -552,6 +552,9 @@ export class TriviaGame extends ui.UIComponent {
   private timerIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790')))); // Default: normal timer
   private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690')))); // Default: medium difficulty
   
+  // Binding for displaying the number of questions in pre-game UI
+  private questionCountBinding = new Binding("5");
+  
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
   private isLocalPlayerHost: boolean = false;
@@ -723,6 +726,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Initialize category display with default category
     this.updateCategoryDisplay(this.gameConfig.category);
+    
+    // Initialize question count binding with default value
+    this.questionCountBinding.set(this.gameConfig.numQuestions.toString());
     
   }
 
@@ -2163,6 +2169,9 @@ export class TriviaGame extends ui.UIComponent {
       difficulty: eventData.settings.difficulty
     };
     
+    // Update the question count binding for the pre-game UI
+    this.questionCountBinding.set(this.gameConfig.numQuestions.toString());
+    
     // Store modifier settings for icon visibility
     this.timerType = eventData.settings.timerType;
     this.difficultyType = eventData.settings.difficultyType;
@@ -2433,6 +2442,9 @@ export class TriviaGame extends ui.UIComponent {
     // Update configuration
     this.gameConfig = data.config;
     this.gameConfigBinding.set(this.gameConfig);
+    
+    // Update the question count binding for the pre-game UI
+    this.questionCountBinding.set(this.gameConfig.numQuestions.toString());
 
     // Use questions from TriviaPhone if provided, otherwise update questions based on the new configuration
     if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
@@ -2481,6 +2493,9 @@ export class TriviaGame extends ui.UIComponent {
     
     this.gameConfig = { ...this.gameConfig, ...newConfig };
     this.gameConfigBinding.set(this.gameConfig);
+    
+    // Update the question count binding for the pre-game UI
+    this.questionCountBinding.set(this.gameConfig.numQuestions.toString());
   }
 
   private handleCategoryChange(category: string): void {
@@ -2711,12 +2726,13 @@ export class TriviaGame extends ui.UIComponent {
                       View({
                         style: {
                         },
-                        children: Image({
-                          source: this.lockIconSourceBinding,
+                        children: Text({
+                          text: this.questionCountBinding,
                           style: {
-                            width: 36, // Scaled up from 32
-                            height: 36, // Scaled up from 32
-                            opacity: this.leftIconOpacity[0]
+                            fontSize: 24,
+                            fontWeight: 'bold',
+                            color: 'white',
+                            textAlign: 'center'
                           }
                         })
                       }),

@@ -1815,7 +1815,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private incrementQuestionCount(): void {
     const currentCount = this.gameSettings.numberOfQuestions || 5;
-    const newCount = Math.min(currentCount + 5, 100); // Max 50 questions
+    const newCount = Math.min(currentCount + 5, 95); // Max 95 questions
     
     this.updateGameSetting('numberOfQuestions', newCount);
     console.log('➕ TriviaPhone: Incremented question count to', newCount);
