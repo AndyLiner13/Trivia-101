@@ -4749,14 +4749,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Text message between checkmark and bottom bar
+        // Text message container - fills space between checkmark and bottom bar
         ui.View({
           style: {
             position: 'absolute',
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 68, // Position below the checkmark container
+            marginTop: 40, // Start closer to the checkmark (matching wrong results positioning)
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
@@ -4942,14 +4942,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Text message between close icon and bottom bar
+        // Text message container - fills space between close icon and bottom bar
         ui.View({
           style: {
             position: 'absolute',
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 35, // Position closer to the close icon container (moved up from 68)
+            marginTop: 40, // Start closer to the close icon (moved up from 54)
+            bottom: 64, // End before the bottom bar (bottom bar height)
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
@@ -5135,14 +5136,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Text message between checkmark and bottom bar
+        // Text message container - fills space between checkmark and bottom bar
         ui.View({
           style: {
             position: 'absolute',
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 68, // Position below the checkmark container
+            bottom: 64,
+            marginTop: 32, // Start closer to the checkmark (matching wrong results positioning)
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
@@ -5368,14 +5370,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Text message between close icon and bottom bar
+        // Text message container - fills space between close icon and bottom bar
         ui.View({
           style: {
             position: 'absolute',
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 35, // Position closer to the close icon container (moved up from 68)
+            marginTop: 40, // Start closer to the close icon (moved up from 68)
+            bottom: 64, // End before the bottom bar (bottom bar height)
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
