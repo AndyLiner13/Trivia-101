@@ -492,7 +492,7 @@ export class TriviaGame extends ui.UIComponent {
         leaderboardName: leaderboardName
       });
       
-      console.log(`🏆 TriviaGame: Added ${points} points to leaderboard for player ${playerId}`);
+      // Added ${points} points to leaderboard for player ${playerId}
     } catch (error) {
       console.error('❌ TriviaGame: Error adding points to leaderboard:', error);
     }
@@ -5434,7 +5434,7 @@ export class TriviaGame extends ui.UIComponent {
       const currentGamePoints = this.localPlayerScores.get(event.playerId) || 0;
       this.localPlayerScores.set(event.playerId, currentGamePoints + event.points);
       
-      console.log(`🏆 TriviaGame: Awarded ${event.points} points to player ${event.playerId}`);
+      // Awarded ${event.points} points to player ${event.playerId}
     } catch (error) {
       console.error('❌ TriviaGame: Error awarding points:', error);
     }

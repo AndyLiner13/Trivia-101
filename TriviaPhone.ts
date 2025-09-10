@@ -518,15 +518,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
         // Keep mobile phone positioned and rotated 90 degrees for landscape view
         if (localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile && isVisible) {
-          console.log('📱 TriviaPhone: Mobile user detected, applying rotation logic');
+          // Mobile user detected, applying rotation logic
           // Check if phone is currently "hidden" at y=-1000 (don't reposition if hidden)
           const currentPosition = this.entity.position.get();
           if (currentPosition.y === -1000) {
-            console.log('📱 TriviaPhone: Phone is hidden (y=-1000), skipping mobile positioning');
+            // Phone is hidden (y=-1000), skipping mobile positioning
             return; // Don't reposition if hidden
           }
 
-          console.log('📱 TriviaPhone: Applying mobile positioning and rotation');
+          // Applying mobile positioning and rotation
           // Disable physics/simulation
           this.entity.simulated.set(false);
           this.entity.collidable.set(false);
@@ -541,11 +541,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           // Apply 90-degree rotation around Y-axis for mobile landscape view
           const mobileRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(0, 1, 0), Math.PI / 2);
           this.entity.rotation.set(mobileRotation);
-          console.log('📱 TriviaPhone: Mobile rotation applied successfully');
+          // Mobile rotation applied successfully
         } else if (localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile && !isVisible) {
-          console.log('📱 TriviaPhone: Mobile user detected but phone is not visible, skipping rotation');
+          // Mobile user detected but phone is not visible, skipping rotation
         } else {
-          console.log('📱 TriviaPhone: Non-mobile user or phone not visible, device type:', localPlayer.deviceType.get(), 'isVisible:', isVisible);
+          // Non-mobile user or phone not visible, device type: localPlayer.deviceType.get(), isVisible: isVisible
         }
 
       } catch (error) {
@@ -784,15 +784,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   onFocus(player: hz.Player): void {
     try {
-      console.log('🎯 TriviaPhone: onFocus called for player device type:', player.deviceType.get());
+      // onFocus called for player device type: player.deviceType.get()
       // Mark that the player is now focused on the UI
       this.isPlayerFocusedOnUI = true;
 
       // Show the TriviaPhone when focused - make it visible to all players
       this.entity.visible.set(true);
-      console.log('✅ TriviaPhone: Phone made visible in onFocus');
+      // Phone made visible in onFocus
     } catch (error) {
-      console.log('❌ TriviaPhone: Error in onFocus:', error);
+      // Error in onFocus: error
       this.isPlayerFocusedOnUI = false;
     }
   }
@@ -802,7 +802,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // Check if this is a mobile user
       const isMobileUser = player.deviceType.get() === hz.PlayerDeviceType.Mobile;
 
-      console.log('📱 TriviaPhone: onUnfocus called - Device type:', player.deviceType.get(), 'isMobile:', isMobileUser);
+      // onUnfocus called - Device type: player.deviceType.get(), isMobile: isMobileUser
 
       // Mark that the player is no longer focused on the UI
       this.isPlayerFocusedOnUI = false;
@@ -810,15 +810,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       // For mobile users, don't immediately hide the phone on unfocus
       // as touch interactions may trigger unfocus events unintentionally
       if (!isMobileUser) {
-        console.log('📱 TriviaPhone: Non-mobile user unfocused, hiding phone');
+        // Non-mobile user unfocused, hiding phone
         // Hide the TriviaPhone when unfocused for non-mobile users
         this.hideTriviaPhone();
       } else {
-        console.log('📱 TriviaPhone: Mobile user unfocused, keeping phone visible to prevent touch interaction issues');
+        // Mobile user unfocused, keeping phone visible to prevent touch interaction issues
       }
       // For mobile users, we keep the phone visible to prevent touch interaction issues
     } catch (error) {
-      console.log('❌ TriviaPhone: Error in onUnfocus:', error);
+      // Error in onUnfocus: error
     }
   }
 
@@ -916,25 +916,25 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleLeftTertiaryTrigger(player: hz.Player): void {
     // This method is only called for non-VR users (desktop, web, mobile) since we only register the input for them
     const isMobileUser = player.deviceType.get() === hz.PlayerDeviceType.Mobile;
-    console.log('📱 TriviaPhone: handleLeftTertiaryTrigger called - Device type:', player.deviceType.get(), 'isMobile:', isMobileUser);
+    // handleLeftTertiaryTrigger called - Device type: player.deviceType.get(), isMobile: isMobileUser
 
     // Check if the CustomUI is already open by checking if phone is close to player and not hidden
     const phonePosition = this.entity.position.get();
     const playerPosition = player.position.get();
     const isPhoneVisibleToPlayer = phonePosition.distance(playerPosition) < 5 && phonePosition.y > -500;
 
-    console.log('📱 TriviaPhone: Phone status - isPlayerFocusedOnUI:', this.isPlayerFocusedOnUI, 'isPhoneVisibleToPlayer:', isPhoneVisibleToPlayer, 'distance:', phonePosition.distance(playerPosition).toFixed(2));
+    // Phone status - isPlayerFocusedOnUI: this.isPlayerFocusedOnUI, isPhoneVisibleToPlayer: isPhoneVisibleToPlayer, distance: phonePosition.distance(playerPosition).toFixed(2)
 
     // For mobile users: toggle behavior (open if closed, close if open)
     if (isMobileUser) {
       if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
         // Phone is open, close it (same as E key behavior for mobile)
-        console.log('📱 TriviaPhone: Mobile user - phone is open, closing it');
+        // Mobile user - phone is open, closing it
         this.handleEKeyTrigger(player);
         return;
       } else {
         // Phone is closed, open it
-        console.log('📱 TriviaPhone: Mobile user - phone is closed, opening it');
+        // Mobile user - phone is closed, opening it
         this.teleportToPlayer(player);
         this.openAndFocusUIForPlayer(player);
         return;
@@ -944,14 +944,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // For desktop and web users: original behavior (open only, skip if already open)
     if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
       // UI is already open, do nothing
-      console.log('📱 TriviaPhone: Desktop/Web user - UI already open, skipping focus');
+      // Desktop/Web user - UI already open, skipping focus
       return;
     }
 
     // Asset Pool Gizmo handles ownership assignment automatically
 
     // Show the TriviaPhone and focus the UI for desktop and web users
-    console.log('📱 TriviaPhone: Desktop/Web user - opening and focusing UI');
+    // Desktop/Web user - opening and focusing UI
     this.teleportToPlayer(player);
     this.openAndFocusUIForPlayer(player);
   }
@@ -974,11 +974,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
       const isMobileUser = player.deviceType.get() === hz.PlayerDeviceType.Mobile;
 
-      console.log('🎯 TriviaPhone: openAndFocusUIForPlayer called - Device type:', player.deviceType.get(), 'isVR:', isVRUser, 'isMobile:', isMobileUser);
+      // openAndFocusUIForPlayer called - Device type: player.deviceType.get(), isVR: isVRUser, isMobile: isMobileUser
 
       if (!isVRUser) {
         // For both desktop and mobile users, attempt to focus UI
-        console.log('🎯 TriviaPhone: Non-VR user detected, attempting to focus UI');
+        // Non-VR user detected, attempting to focus UI
         // Wait 25ms for position change to take effect, then focus the UI with retry logic
         const focusTimeoutId = this.async.setTimeout(() => {
           this.pendingTimeouts.delete(focusTimeoutId);
@@ -986,14 +986,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         }, 25);
         this.pendingTimeouts.add(focusTimeoutId);
       } else {
-        console.log('🎯 TriviaPhone: VR user detected, skipping focusUI call');
+        // VR user detected, skipping focusUI call
         // For VR users, set focus state immediately since we skip focusUI
         this.isPlayerFocusedOnUI = true;
       }
       // We now allow mobile users to focus, but prevent unfocus from touch events in the onUnfocus method
 
     } catch (error) {
-      console.log('❌ TriviaPhone: Error in openAndFocusUIForPlayer:', error);
+      // ❌ TriviaPhone: Error in openAndFocusUIForPlayer - focus operation failed
       // If something goes wrong, reset the focus state
       this.isPlayerFocusedOnUI = false;
     }
@@ -1213,8 +1213,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     showLeaderboard?: boolean,
     leaderboardData?: Array<{name: string, score: number, playerId: string}>
   }): void {
-    console.log(`📊 TriviaPhone: Results received - resetting answerSubmitted and setting showResult = true`);
-    
+    // 📊 TriviaPhone: Results received - resetting answerSubmitted and setting showResult = true
     this.showResult = true;
     this.showResultBinding.set(true);
     
@@ -1262,7 +1261,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         calculatedPoints = basePoints;
       }
       
-      console.log(`🏆 TriviaPhone: Speed bonus calculated - Response time: ${responseTime}ms (${(responseTime/1000).toFixed(2)}s), Points: ${calculatedPoints}`);
+      // 🏆 TriviaPhone: Speed bonus calculated - Response time: ${responseTime}ms (${(responseTime/1000).toFixed(2)}s), Points: ${calculatedPoints}
       
       // Send network event to TriviaGame to award calculated points
       this.sendNetworkBroadcastEvent(triviaAwardPointsEvent, {
@@ -1556,7 +1555,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Update score display from persistent storage after reset with robust retry
     this.updateScoreDisplayWithRetry();
 
-    console.log("✅ TriviaPhone: Game reset complete - all timers cleared, leaderboard hidden, screen set to waiting");
+    // ✅ TriviaPhone: Game reset complete - all timers cleared, leaderboard hidden, screen set to waiting
   }
 
   private onPlayerUpdate(eventData: { playersInWorld: string[], playersAnswered: string[], answerCount: number }): void {
@@ -1564,7 +1563,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.playersInWorld = eventData.playersInWorld;
     this.playersAnswered = eventData.playersAnswered;
     
-    console.log(`📡 TriviaPhone: Player update received - playersAnswered: ${eventData.playersAnswered.length}, playersInWorld: ${eventData.playersInWorld.length}`);
+    // 📡 TriviaPhone: Player update received - playersAnswered: ${eventData.playersAnswered.length}, playersInWorld: ${eventData.playersInWorld.length}
   }
 
   private onHostChanged(eventData: { newHostId: string; oldHostId?: string }): void {
@@ -1611,7 +1610,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleAnswerSelect(answerIndex: number): void {
-    console.log('✅ TriviaPhone: User selected answer', answerIndex);
+    // User selected answer with index: {answerIndex}
     if (this.showResult) return;
 
     // For 2-answer questions, map button indices 2 and 3 to answer indices 0 and 1
@@ -1629,7 +1628,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Calculate response time in milliseconds
     const responseTime = Date.now() - this.questionStartTime;
-    console.log('⏱️ TriviaPhone: Response time calculated:', responseTime, 'ms');
+    // Response time calculated: {responseTime} ms
 
     // Send network event with the answer index and calculated response time
     this.sendNetworkBroadcastEvent(triviaAnswerSubmittedEvent, {
@@ -1642,15 +1641,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const answersAfterThis = this.playersAnswered.length + 1; // Add 1 for this player's answer
     const willCompleteAllAnswers = answersAfterThis >= this.playersInWorld.length && this.playersInWorld.length > 0;
     
-    console.log(`🔍 TriviaPhone: playersAnswered: ${this.playersAnswered.length}, playersInWorld: ${this.playersInWorld.length}, answersAfterThis: ${answersAfterThis}, willCompleteAllAnswers: ${willCompleteAllAnswers}`);
+    // Players answered: {this.playersAnswered.length}, players in world: {this.playersInWorld.length}, answers after this: {answersAfterThis}, will complete all answers: {willCompleteAllAnswers}
     
     // Only show answerSubmitted screen if this answer won't complete all answers
     if (!willCompleteAllAnswers) {
       this.answerSubmitted = true;
       this.answerSubmittedBinding.set(true);
-      console.log(`✅ TriviaPhone: Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex}`);
+      // Answer submitted - showing answerSubmitted screen for answer {actualAnswerIndex}
     } else {
-      console.log(`✅ TriviaPhone: Answer submitted for answer ${actualAnswerIndex} - skipping answerSubmitted screen (this completes all answers)`);
+      // Answer submitted for answer {actualAnswerIndex} - skipping answerSubmitted screen (this completes all answers)
     }
   }
 
@@ -1799,16 +1798,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   render(): ui.UINode {
-    console.log('🎨 TriviaPhone: render() called - current state:', {
-      currentViewMode: this.currentViewMode,
-      gameStarted: this.gameStarted,
-      gameEnded: this.gameEnded,
-      showResult: this.showResult,
-      answerSubmitted: this.answerSubmitted,
-      screenType: this.currentScreenType,
-      isHost: this.isHost(),
-      isOptedOut: this.currentOptedOutStatus
-    });
+    // Render called with current state: {currentViewMode}, gameStarted: {gameStarted}, gameEnded: {gameEnded}, showResult: {showResult}, answerSubmitted: {answerSubmitted}, screenType: {currentScreenType}, isHost: {isHost()}, isOptedOut: {currentOptedOutStatus}
     return ui.View({
       style: {
         width: '100%',
@@ -1896,9 +1886,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => {
                     const shouldShow = mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && isCorrect;
-                    if (shouldShow) {
-                      console.log('🎯 TriviaPhone: Participant correct results condition MET - showing screen');
-                    }
+                    // Participant correct results condition MET - showing screen
                     return shouldShow;
                   }),
                   this.renderParticipantCorrectResults()
@@ -1908,9 +1896,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => {
                     const shouldShow = mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && !isCorrect;
-                    if (shouldShow) {
-                      console.log('❌ TriviaPhone: Participant wrong results condition MET - showing screen');
-                    }
+                    // Participant wrong results condition MET - showing screen
                     return shouldShow;
                   }),
                   this.renderParticipantWrongResults()
@@ -1920,9 +1906,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => {
                     const shouldShow = mode === 'pre-game' && started && answerSubmitted && !showResult;
-                    if (shouldShow) {
-                      console.log('📱 TriviaPhone: Answer submitted screen condition MET - showing screen');
-                    }
+                    // Answer submitted screen condition MET - showing screen
                     return shouldShow;
                   }),
                   this.renderAnswerSubmittedScreen()
@@ -1945,7 +1929,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const newCount = Math.min(currentCount + 5, 95); // Max 95 questions
     
     this.updateGameSetting('numberOfQuestions', newCount);
-    console.log('➕ TriviaPhone: Incremented question count to', newCount);
+    // Incremented question count to {newCount}
   }
 
   private decrementQuestionCount(): void {
@@ -1953,7 +1937,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const newCount = Math.max(currentCount - 5, 5); // Min 5 questions
     
     this.updateGameSetting('numberOfQuestions', newCount);
-    console.log('➖ TriviaPhone: Decremented question count to', newCount);
+    // Decremented question count to {newCount}
   }
 
   private renderGameSettings(): ui.UINode {
@@ -2883,7 +2867,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderAnswerSubmittedScreen(): ui.UINode {
-    console.log('✅ TriviaPhone: Answer submitted screen displayed');
+    // Answer submitted screen displayed
     return ui.View({
       style: {
         width: '100%',
@@ -3177,7 +3161,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.answerSubmitted = false;
       this.answerSubmittedBinding.set(false);
       
-      console.log('✅ TriviaPhone: Host logout completed - game ended for all players');
+      // Host logout completed - game ended for all players
     } else {
 
       
@@ -3694,7 +3678,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 alignItems: 'center'
               },
               onPress: () => {
-                console.log('🚪 TriviaPhone: Logout icon pressed');
+                // Logout icon pressed
                 this.showLogoutPopupBinding.set(true);
               },
               children: [
@@ -4147,7 +4131,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
 
   private renderParticipantCorrectResults(): ui.UINode {
-    console.log('✅ TriviaPhone: Participant correct results screen displayed');
+    // Participant correct results screen displayed
     return ui.View({
       style: {
         width: '100%',
@@ -4336,7 +4320,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderParticipantWrongResults(): ui.UINode {
-    console.log('❌ TriviaPhone: Participant wrong results screen displayed');
+    // Participant wrong results screen displayed
     return ui.View({
       style: {
         width: '100%',
@@ -4525,7 +4509,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderHostCorrectResults(): ui.UINode {
-    console.log('✅ TriviaPhone: Host correct results screen displayed');
+    // Host correct results screen displayed
     return ui.View({
       style: {
         width: '100%',
@@ -4758,7 +4742,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderHostWrongResults(): ui.UINode {
-    console.log('❌ TriviaPhone: Host wrong results screen displayed');
+    // Host wrong results screen displayed
     return ui.View({
       style: {
         width: '100%',
@@ -5122,7 +5106,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.stableQuestionIndex = 0;
     this.updateFooterBinding.set(false);
     
-    console.log('✅ TriviaPhone: Preview mode transition cleanup completed successfully');
+    // Preview mode transition cleanup completed successfully
   }
 }
 
