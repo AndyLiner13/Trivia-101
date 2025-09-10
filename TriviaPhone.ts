@@ -1852,7 +1852,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -1864,7 +1864,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
@@ -2741,7 +2741,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -2755,7 +2755,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
@@ -3143,7 +3143,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: '#FFFFFF'
+                  backgroundColor: '#191919'
                 },
                 onPress: () => this.handleStartGame(),
                 children: [
@@ -3152,7 +3152,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       fontSize: 18,
                       fontWeight: '600',
-                      color: '#111111',
+                      color: '#FFFFFF',
                       textAlign: 'center'
                     }
                   })
@@ -3171,7 +3171,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#191919',
                   marginTop: 8
                 },
                 onPress: () => this.currentViewModeBinding.set('game-settings'),
@@ -3181,7 +3181,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       fontSize: 18,
                       fontWeight: '600',
-                      color: '#111111',
+                      color: '#FFFFFF',
                       textAlign: 'center'
                     }
                   })
@@ -3507,7 +3507,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -3521,7 +3521,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
@@ -3797,7 +3797,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -3811,7 +3811,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
@@ -3963,7 +3963,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -3977,7 +3977,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
@@ -4127,7 +4127,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#191919',
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -4141,7 +4141,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     fontSize: 18,
                     fontWeight: '600',
-                    color: '#111111',
+                    color: '#FFFFFF',
                     textAlign: 'center'
                   }
                 })
@@ -4294,7 +4294,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 style: {
                   width: '100%',
                   height: '100%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#191919',
                   borderRadius: 8,
                   flexDirection: 'row',
                   justifyContent: 'space-between',
@@ -4311,7 +4311,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       fontSize: 16,
                       fontWeight: '700',
-                      color: '#000000',
+                      color: '#FFFFFF',
                       textAlign: 'center',
                       flex: 1
                     }
@@ -4321,7 +4321,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       width: 24,
                       height: 24,
-                      tintColor: '#000000'
+                      tintColor: '#FFFFFF'
                     }
                   })
                 ]
@@ -4334,7 +4334,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 style: {
                   width: '100%',
                   height: '100%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#191919',
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center'
@@ -4348,7 +4348,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       fontSize: 18,
                       fontWeight: '600',
-                      color: '#111111',
+                      color: '#FFFFFF',
                       textAlign: 'center'
                     }
                   })
@@ -4504,7 +4504,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 style: {
                   width: '100%',
                   height: '100%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#191919',
                   borderRadius: 8,
                   flexDirection: 'row',
                   justifyContent: 'space-between',
@@ -4521,7 +4521,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       fontSize: 16,
                       fontWeight: '700',
-                      color: '#000000',
+                      color: '#FFFFFF',
                       textAlign: 'center',
                       flex: 1
                     }
@@ -4531,7 +4531,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       width: 24,
                       height: 24,
-                      tintColor: '#000000'
+                      tintColor: '#FFFFFF'
                     }
                   })
                 ]
@@ -4544,7 +4544,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 style: {
                   width: '100%',
                   height: '100%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#191919',
                   borderRadius: 8,
                   justifyContent: 'center',
                   alignItems: 'center'
@@ -4558,7 +4558,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     style: {
                       fontSize: 18,
                       fontWeight: '600',
-                      color: '#111111',
+                      color: '#FFFFFF',
                       textAlign: 'center'
                     }
                   })
