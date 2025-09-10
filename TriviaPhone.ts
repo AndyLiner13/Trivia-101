@@ -1439,6 +1439,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private handleAnswerSelect(answerIndex: number): void {
+    console.log('✅ TriviaPhone: User selected answer', answerIndex);
     if (this.showResult) return;
 
     // For 2-answer questions, map button indices 2 and 3 to answer indices 0 and 1
@@ -1611,6 +1612,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   render(): ui.UINode {
+    console.log('🎨 TriviaPhone: render() called - current state:', {
+      currentViewMode: this.currentViewMode,
+      gameStarted: this.gameStarted,
+      gameEnded: this.gameEnded,
+      showResult: this.showResult,
+      answerSubmitted: this.answerSubmitted,
+      screenType: this.currentScreenType,
+      isHost: this.isHost(),
+      isOptedOut: this.currentOptedOutStatus
+    });
     return ui.View({
       style: {
         width: '100%',
@@ -1696,25 +1707,37 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
                 // Participant correct results screen
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => 
-                    mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && isCorrect
-                  ),
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => {
+                    const shouldShow = mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && isCorrect;
+                    if (shouldShow) {
+                      console.log('🎯 TriviaPhone: Participant correct results condition MET - showing screen');
+                    }
+                    return shouldShow;
+                  }),
                   this.renderParticipantCorrectResults()
                 ),
 
                 // Participant wrong results screen
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => 
-                    mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && !isCorrect
-                  ),
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.showResultBinding, this.gameEndedBinding, this.isHostBinding, this.isCorrectAnswerBinding], (mode, started, showResult, gameEnded, isHost, isCorrect) => {
+                    const shouldShow = mode === 'pre-game' && (started || gameEnded) && showResult && !isHost && !isCorrect;
+                    if (shouldShow) {
+                      console.log('❌ TriviaPhone: Participant wrong results condition MET - showing screen');
+                    }
+                    return shouldShow;
+                  }),
                   this.renderParticipantWrongResults()
                 ),
                 
                 // Answer submitted screen - shows when answer is submitted but results not yet shown
                 ui.UINode.if(
-                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => 
-                    mode === 'pre-game' && started && answerSubmitted && !showResult
-                  ),
+                  ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => {
+                    const shouldShow = mode === 'pre-game' && started && answerSubmitted && !showResult;
+                    if (shouldShow) {
+                      console.log('📱 TriviaPhone: Answer submitted screen condition MET - showing screen');
+                    }
+                    return shouldShow;
+                  }),
                   this.renderAnswerSubmittedScreen()
                 ),
                 
@@ -2536,6 +2559,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderAnswerSubmittedScreen(): ui.UINode {
+    console.log('✅ TriviaPhone: Answer submitted screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -3748,6 +3772,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
 
   private renderParticipantCorrectResults(): ui.UINode {
+    console.log('✅ TriviaPhone: Participant correct results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -3911,6 +3936,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderParticipantWrongResults(): ui.UINode {
+    console.log('❌ TriviaPhone: Participant wrong results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -4074,6 +4100,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderHostCorrectResults(): ui.UINode {
+    console.log('✅ TriviaPhone: Host correct results screen displayed');
     return ui.View({
       style: {
         width: '100%',
@@ -4281,6 +4308,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private renderHostWrongResults(): ui.UINode {
+    console.log('❌ TriviaPhone: Host wrong results screen displayed');
     return ui.View({
       style: {
         width: '100%',
