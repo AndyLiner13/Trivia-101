@@ -2705,7 +2705,8 @@ export class TriviaGame extends ui.UIComponent {
                       flexDirection: 'row',
                       flexWrap: 'wrap',
                       justifyContent: 'center',
-                      alignItems: 'center',
+                      alignItems: 'flex-start',
+                      alignContent: 'center', // Center the wrapped lines vertically
                       paddingHorizontal: 10,
                     },
                     children: this.createStaticPlayersComponents()
