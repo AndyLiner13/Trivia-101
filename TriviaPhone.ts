@@ -141,6 +141,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   // Logout popup binding
   private showLogoutPopupBinding = new ui.Binding(false);
 
+  // Transfer host popup binding
+  private showTransferHostPopupBinding = new ui.Binding(false);
+
   // Debug outline toggle binding
   private showOutlinesBinding = new ui.Binding(false);
   private showOutlines: boolean = false;
@@ -3009,9 +3012,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Text({
-                  text: ui.Binding.derive([this.isHostBinding], (isHost) => 
-                    isHost ? 'Transfer Host?' : 'Are you sure?'
-                  ),
+                  text: ui.Binding.derive([this.isHostBinding, this.gameStartedBinding], (isHost, gameStarted) => {
+                    if (isHost && gameStarted) {
+                      return 'End game?';
+                    } else {
+                      return 'Are you sure?';
+                    }
+                  }),
                   style: {
                     fontSize: 14,
                     fontWeight: '700',
@@ -3160,6 +3167,36 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
   }
 
+  private handleTransferHostConfirm(): void {
+    // Send game reset event to end the game for all players (same as host logout)
+    this.sendNetworkBroadcastEvent(TriviaNetworkEvents.gameReset, {
+      hostId: this.world.getLocalPlayer()?.id.toString() || 'unknown'
+    });
+    
+    // Navigate to pre-game screen
+    this.currentViewMode = 'pre-game';
+    this.currentViewModeBinding.set('pre-game');
+    
+    // Close the popup
+    this.showTransferHostPopupBinding.set(false);
+    
+    // Reset game state for this player
+    this.gameStarted = false;
+    this.gameStartedBinding.set(false);
+    this.currentQuestionIndex = 0;
+    this.currentQuestionIndexBinding.set(0);
+    this.score = 0;
+    this.scoreBinding.set(0);
+    this.selectedAnswer = null;
+    this.selectedAnswerBinding.set(null);
+    this.showResult = false;
+    this.showResultBinding.set(false);
+    this.answerSubmitted = false;
+    this.answerSubmittedBinding.set(false);
+    
+    // Transfer host completed - game ended for all players
+  }
+
   private renderTriviaGameWithTwoOptions(): ui.UINode {
     return ui.View({
       style: {
@@ -3259,9 +3296,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           }
         }),
 
-        // Top navigation bar - only show for hosts
+        // Top navigation bar - only show logout for hosts
         ui.UINode.if(
-          this.isHostBinding,
+          this.isHostBinding.derive(isHost => isHost),
           ui.View({
             style: {
               position: 'absolute',
@@ -3277,7 +3314,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               zIndex: 12
             },
             children: [
-              // Settings icon container
+              // Transfer Host icon container
               ui.Pressable({
                 style: {
                   backgroundColor: '#191919',
@@ -3289,15 +3326,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   alignItems: 'center'
                 },
                 onPress: () => {
-                  this.showLogoutPopupBinding.set(true);
+                  this.showTransferHostPopupBinding.set(true);
                 },
                 children: [
                   ui.Image({
-                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                    source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1325134306066406'))), // crown icon for transfer host
                     style: {
                       width: 24,
                       height: 24,
-                      tintColor: '#FFFFFF'
+                      tintColor: '#F7CE23' // Golden color for crown
                     }
                   })
                 ]
@@ -3415,9 +3452,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ]
               })
             ),
-            // Game Settings button - always show for both hosts and participants
+            // Game Settings button - only show for hosts
             ui.UINode.if(
-              true,
+              this.isHostBinding.derive(isHost => isHost),
               ui.Pressable({
                 style: {
                   width: '100%',
@@ -3449,7 +3486,125 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.UINode.if(
           this.showLogoutPopupBinding,
           this.renderLogoutPopup()
+        ),
+
+        // Transfer Host pop-up
+        ui.UINode.if(
+          this.showTransferHostPopupBinding,
+          this.renderTransferHostPopup()
         )
+      ]
+    });
+  }
+
+  private renderTransferHostPopup(): ui.UINode {
+    return ui.View({
+      style: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000
+      },
+      children: [
+        ui.View({
+          style: {
+            backgroundColor: '#191919',
+            borderRadius: 8,
+            padding: 8,
+            minWidth: 140,
+            maxWidth: 140,
+            marginHorizontal: 4
+          },
+          children: [
+            // Title
+            ui.View({
+              style: {
+                paddingTop: 0,
+                paddingBottom: 8,
+                alignItems: 'center'
+              },
+              children: [
+                ui.Text({
+                  text: 'Transfer Host?',
+                  style: {
+                    fontSize: 14,
+                    fontWeight: '700',
+                    color: '#ffffff',
+                    textAlign: 'center'
+                  }
+                })
+              ]
+            }),
+
+            // Yes button (green)
+            ui.View({
+              style: {
+                paddingBottom: 8,
+                alignItems: 'center'
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#16A34A',
+                    borderRadius: 4,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    minWidth: 120,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.handleTransferHostConfirm(),
+                  children: [
+                    ui.Text({
+                      text: 'Yes',
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '700',
+                        color: '#ffffff',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // No button (red)
+            ui.View({
+              style: {
+                alignItems: 'center'
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    backgroundColor: '#DC2626',
+                    borderRadius: 4,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    minWidth: 120,
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.showTransferHostPopupBinding.set(false),
+                  children: [
+                    ui.Text({
+                      text: 'No',
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '700',
+                        color: '#ffffff',
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
       ]
     });
   }
@@ -3644,7 +3799,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               children: [
                 ui.Image({
-                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('804799288656881'))), // settings icon
+                  source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1997295517705951'))), // logout icon
                   style: {
                     width: 24,
                     height: 24,
