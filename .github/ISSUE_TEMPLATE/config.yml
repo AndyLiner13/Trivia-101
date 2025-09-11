@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 💬 Community Discussion
-    url: https://github.com/AndyLiner13/MePhone/discussions
-    about: Ask questions and discuss with the community
-  - name: 📖 Documentation
-    url: https://github.com/AndyLiner13/MePhone/tree/main/docs
-    about: Check our documentation for setup and usage guides

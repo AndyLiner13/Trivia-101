@@ -83,3 +83,5 @@ temp_*.ts
 test_*.js
 debug_*.js
 scratch.*
+copilot.instructions.modules
+.vscode/

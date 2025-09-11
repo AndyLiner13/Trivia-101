@@ -1,9 +1,4 @@
-# 📱 Horizon Worlds Trivia Game
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.7.4-blue.svg)](https://www.typescriptlang.org/)
-[![Horizon Worlds](https://img.shields.io/badge/Platform-Horizon%20Worlds-purple.svg)](https://horizonworlds.com/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+# 📱 MePhone - Horizon Worlds Trivia Game
 
 A feature-rich **multiplayer trivia game** built for Meta's Horizon Worlds platform, featuring a phone-style UI interface and comprehensive game management system.
 
@@ -66,15 +61,13 @@ scripts/
 
 ## 🚀 Quick Start
 
-**New to the project?** Check out our **[📖 Getting Started Guide](GETTING_STARTED.md)** for a detailed walkthrough!
-
 ### Prerequisites
 
 - Meta Horizon Worlds Creator Access
 - TypeScript 4.7.4+ (for development)
 - Basic understanding of Horizon Worlds scripting
 
-### 5-Minute Setup
+### Setup
 
 1. **Get the code**:
    ```bash
@@ -86,16 +79,9 @@ scripts/
    - Copy `TriviaPhone.ts` → Create CustomUI script → Attach to CustomUI Gizmo
    - Test in Preview Mode!
 
-3. **Full setup**: Follow the **[Complete Installation Guide](GETTING_STARTED.md)** for customization and advanced features.
-
 ### 📖 Documentation
 
-| Guide | Description |
-|-------|-------------|
-| **[🚀 Getting Started](GETTING_STARTED.md)** | Complete setup walkthrough for new users |
-| **[🏗️ Architecture](docs/ARCHITECTURE.md)** | System design and component overview |
-| **[📚 API Reference](docs/API.md)** | Technical documentation for developers |
-| **[🤝 Contributing](CONTRIBUTING.md)** | How to contribute to the project |
+Technical documentation for Horizon Worlds APIs can be found in the `documentation/` folder.
 
 ## 🎯 Usage
 
@@ -150,14 +136,6 @@ The project includes comprehensive Horizon Worlds API documentation in the `docu
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-### Contribution Guidelines
-
-- Follow TypeScript best practices
-- Adhere to Horizon Worlds API conventions
-- Include appropriate error handling
-- Test thoroughly with multiple players
-- Update documentation for new features
 
 ## 🐛 Known Issues
 
