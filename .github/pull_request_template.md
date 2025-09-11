@@ -1,8 +1,9 @@
 ## Description
+<!-- Briefly describe the changes in this PR and provide context -->
 
-Please include a summary of the changes and which issue is fixed. Please also include relevant motivation and context.
-
-Fixes # (issue)
+## Related Issues
+<!-- Link to the issue(s) this PR addresses -->
+Closes # <!-- issue number -->
 
 ## Type of change
 

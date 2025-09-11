@@ -1,0 +1,96 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with the Horizon Worlds Trivia Game
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened!
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: game-component
+    attributes:
+      label: Game Component
+      description: Which part of the game is affected?
+      options:
+        - Phone UI Interface
+        - Game Logic/Questions
+        - Multiplayer/Networking
+        - Scoring System
+        - Asset Loading
+        - Host Controls
+        - Player Management
+        - Timer System
+        - Other/Unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: player-count
+    attributes:
+      label: Player Count
+      description: How many players were in the game when the bug occurred?
+      options:
+        - "1 (Solo testing)"
+        - "2-5 players"
+        - "6-10 players"
+        - "11-20 players"
+        - "20+ players"
+        - "Unknown"
+    validations:
+      required: false
+
+  - type: input
+    id: horizon-world-id
+    attributes:
+      label: Horizon World ID (if applicable)
+      description: The World ID where you encountered the bug
+      placeholder: e.g., 1976511553160027
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (screenshots, logs, etc.)
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

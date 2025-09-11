@@ -1281,7 +1281,6 @@ export class TriviaGame extends ui.UIComponent {
       this.currentQuestionIndex = 0;
 
     } catch (error) {
-      console.log(`❌ Error loading questions for category '${category}':`, error);
       this.triviaQuestions = [];
     } finally {
       this.isLoadingCategory = false;
@@ -1761,19 +1760,16 @@ export class TriviaGame extends ui.UIComponent {
     
     // Only log if there might be a variety issue
     if (totalQuestions < 100 || questionsToShow > totalQuestions * 0.8) {
-      console.log(`⚠️  Question variety warning: Using ${questionsToShow}/${totalQuestions} questions (${((questionsToShow / totalQuestions) * 100).toFixed(1)}%). Consider more questions in pool for better randomization.`);
+      // Note: Using ${questionsToShow}/${totalQuestions} questions - consider more questions in pool for better randomization
     }
   }
 
   // ✅ Public method to test the host-seeded randomization system (for debugging)
   public testRandomizationSystem(): void {
     if (this.triviaQuestions.length < 10) {
-      console.log(`❌ Need at least 10 questions to test randomization. Current count: ${this.triviaQuestions.length}`);
       return;
     }
 
-    console.log(`✅ Testing host-seeded randomization with ${this.triviaQuestions.length} questions:`);
-    
     // Test multiple shuffles at different times to show variety
     const originalOrder = this.triviaQuestions.map(q => q.id);
     const testResults: number[][] = [];
@@ -1785,13 +1781,10 @@ export class TriviaGame extends ui.UIComponent {
         const shuffledOrder = this.triviaQuestions.map(q => q.id);
         testResults.push(shuffledOrder.slice(0, 5)); // First 5 questions
         
-        console.log(`   Test ${test + 1}: [${shuffledOrder.slice(0, 5).join(', ')}...]`);
-        
         if (test === 2) {
-          // Calculate uniqueness
+          // Calculate uniqueness for validation
           const allFirstQuestions = testResults.map(result => result[0]);
           const uniqueFirstQuestions = new Set(allFirstQuestions);
-          console.log(`   ✅ Uniqueness: ${uniqueFirstQuestions.size}/3 different first questions across tests`);
         }
       }, test * 100);
     }

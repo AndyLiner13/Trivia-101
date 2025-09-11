@@ -1,6 +1,13 @@
 # 📱 Horizon Worlds Trivia Game
 
-A feature-rich multiplayer trivia game built for Meta's Horizon Worlds platform, featuring a phone-style UI interface and comprehensive game management system.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.7.4-blue.svg)](https://www.typescriptlang.org/)
+[![Horizon Worlds](https://img.shields.io/badge/Platform-Horizon%20Worlds-purple.svg)](https://horizonworlds.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+
+A feature-rich **multiplayer trivia game** built for Meta's Horizon Worlds platform, featuring a phone-style UI interface and comprehensive game management system.
+
+> 🎮 **Over 15,000+ questions** across multiple categories | 📱 **Phone-inspired UI** | 🏆 **Real-time multiplayer** | 🔧 **Fully customizable**
 
 ## 🎮 Features
 
@@ -57,38 +64,38 @@ scripts/
     └── types/                    # TypeScript definitions for Horizon APIs
 ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start
+
+**New to the project?** Check out our **[📖 Getting Started Guide](GETTING_STARTED.md)** for a detailed walkthrough!
 
 ### Prerequisites
 
 - Meta Horizon Worlds Creator Access
-- TypeScript 4.7.4+
+- TypeScript 4.7.4+ (for development)
 - Basic understanding of Horizon Worlds scripting
 
-### Installation
+### 5-Minute Setup
 
-1. **Clone the repository**:
+1. **Get the code**:
    ```bash
    git clone https://github.com/AndyLiner13/MePhone.git
-   cd MePhone
    ```
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+2. **Upload to your Horizon World**:
+   - Copy `TriviaGame.ts` → Create CustomUI script → Attach to CustomUI Gizmo
+   - Copy `TriviaPhone.ts` → Create CustomUI script → Attach to CustomUI Gizmo
+   - Test in Preview Mode!
 
-3. **Import to Horizon Worlds**:
-   - Upload the script files to your Horizon World
-   - Attach `TriviaGame.ts` to a CustomUI Gizmo for the main game interface
-   - Attach `TriviaPhone.ts` to a CustomUI Gizmo for the phone interface
-   - Configure asset IDs in the `Asset IDs/` folder
+3. **Full setup**: Follow the **[Complete Installation Guide](GETTING_STARTED.md)** for customization and advanced features.
 
-### Configuration
+### 📖 Documentation
 
-1. **Update Asset IDs**: Modify files in `Asset IDs/` folder with your world's specific asset references
-2. **Question Categories**: Add or modify trivia questions in the `TriviaQuestions/` folder
-3. **Game Settings**: Adjust default settings in the respective manager files
+| Guide | Description |
+|-------|-------------|
+| **[🚀 Getting Started](GETTING_STARTED.md)** | Complete setup walkthrough for new users |
+| **[🏗️ Architecture](docs/ARCHITECTURE.md)** | System design and component overview |
+| **[📚 API Reference](docs/API.md)** | Technical documentation for developers |
+| **[🤝 Contributing](CONTRIBUTING.md)** | How to contribute to the project |
 
 ## 🎯 Usage
 

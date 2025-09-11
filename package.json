@@ -6,7 +6,12 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist build *.tsbuildinfo",
+    "lint": "echo 'Linting TypeScript files...' && tsc --noEmit",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "validate": "npm run type-check && echo 'Validation complete!'",
+    "prepare": "npm run type-check"
   },
   "repository": {
     "type": "git",
