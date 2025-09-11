@@ -76,7 +76,7 @@ scripts/
 
 2. **Upload to your Horizon World**:
    - Copy `TriviaGame.ts` → Create CustomUI script → Attach to CustomUI Gizmo
-   - Copy `TriviaPhone.ts` → Create CustomUI script → Attach to CustomUI Gizmo
+   - Copy `TriviaPhone.ts` → Create CustomUI script → Attach to CustomUI Gizmo and set it to Local mode
    - Test in Preview Mode!
 
 ### 📖 Documentation
