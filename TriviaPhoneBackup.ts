@@ -235,7 +235,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       
       this.playersInWorld = playerIds;
       this.playersInWorldBinding.set(playersWithNames);
+      console.log(`✅ Initialized players binding with ${playersWithNames.length} players:`, playersWithNames);
     } catch (error) {
+      console.log('❌ Error initializing players binding:', error);
       // Fallback to empty array
       this.playersInWorldBinding.set([]);
     }
@@ -261,18 +263,21 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
     
     this.currentBanterIndex = 0;
+    console.log(`✓ Banter shuffled for new question! Next wrong answer will show: "${this.shuffledBanter[0]}"`);
   }
   
   // Get next banter message (called for each wrong answer)
   private getNextBanterMessage(): string {
     if (this.currentBanterIndex >= this.shuffledBanter.length) {
       // Reshuffle when we've used all messages
+      console.log(`🔄 All banter messages used, reshuffling...`);
       this.shuffleBanter();
     }
     
     const message = this.shuffledBanter[this.currentBanterIndex];
     this.currentBanterIndex++;
     this.currentBanterBinding.set(message);
+    console.log(`📝 Setting banter message: "${message}" (index: ${this.currentBanterIndex - 1})`);
     return message;
   }
 
@@ -318,8 +323,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateScoreDisplay();
   }
 
-  // Centralized asset manager for improved caching
-  private assetManager = TriviaAssetManager.getInstance();
+  // Asset cache to keep images in memory permanently
+  private assetCache = new Map<string, ui.ImageSource>();
 
   private async preloadTriviaPhoneAssets(): Promise<void> {
     
@@ -374,31 +379,29 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     let successCount = 0;
     const startTime = Date.now();
     
-    // Use centralized asset manager for preloading
-    try {
-      await this.assetManager.preloadAssets(assetTextureIds, this.assetManager['ASSET_PRIORITIES'].HIGH);
-      successCount = assetTextureIds.length;
-    } catch (error) {
+    // Preload all assets and cache them
+    for (const textureId of assetTextureIds) {
+      try {
+        const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
+        this.assetCache.set(textureId, imageSource);
+        successCount++;
+      } catch (error) {
+      }
     }
     
     const loadTime = Date.now() - startTime;
   }
 
-  // Helper method to get cached asset via centralized asset manager
+  // Helper method to get cached asset or create new one
   private getCachedImageSource(textureId: string): ui.ImageSource {
-    // Try to get from cache first (synchronous)
-    const cached = this.assetManager.getCachedImageSource(textureId);
+    const cached = this.assetCache.get(textureId);
     if (cached) {
       return cached;
     }
     
-    // If not cached, create directly (fallback for immediate use)
-    // Note: This should ideally be avoided - prefer preloading assets
+    // If not cached, create and cache it
     const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-    
-    // Async cache it for future use (fire-and-forget)
-    this.assetManager.getImageSource(textureId, this.assetManager['ASSET_PRIORITIES'].HIGH).catch(error => {});
-    
+    this.assetCache.set(textureId, imageSource);
     return imageSource;
   }
 
@@ -1206,6 +1209,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const allAnswersSubmitted = this.playersAnswered.length >= this.playersInWorld.length;
     
     if (allAnswersSubmitted) {
+      console.log('✅ All remaining players have answered after player update');
       // The TriviaGame will handle advancing to the next question
     }
   }
@@ -1344,6 +1348,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Set banter message for wrong answers when results are received
     if (!isCorrect && !eventData.showLeaderboard) {
       const banterMessage = this.getNextBanterMessage();
+      console.log(`✗ Wrong answer! Showing banter: "${banterMessage}"`);
     }
     
     // Only reset last round points when NOT showing leaderboard (i.e., during initial results display)
@@ -1439,6 +1444,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         if (shouldContinue && !this.gameEnded) {
           // If Questions Only modifier is active (skip leaderboard), advance immediately
           if (this.gameSettings.modifiers.powerUps) {
+            console.log('✅ Skip leaderboard modifier active - advancing immediately to next question');
             this.nextQuestion();
             return;
           }
@@ -1457,6 +1463,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             this.pendingTimeouts.delete(autoAdvanceTimeoutId);
             // Only auto-advance if game hasn't ended
             if (!this.gameEnded) {
+              console.log('✅ Auto-advancing to next question (autoplay enabled)');
               this.nextQuestion();
             }
           }, advanceDelay);
@@ -1512,6 +1519,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Always reset answer submitted state for new question (player needs to answer the new question)
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
+    console.log(`🔄 Two-options question received - reset answerSubmitted=false for new question`);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1573,6 +1581,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Always reset answer submitted state for new question (player needs to answer the new question)
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
+    console.log(`🔄 Four-options question received - reset answerSubmitted=false for new question`);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1752,6 +1761,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       });
       this.playersInWorldBinding.set(playersWithNames);
     } catch (error) {
+      console.log('❌ Error converting player IDs to names:', error);
       // Fallback: just use player IDs as names
       const playersWithIds = eventData.playersInWorld.map(playerId => ({
         id: playerId,
@@ -1844,6 +1854,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Always show answerSubmitted screen
     this.answerSubmitted = true;
     this.answerSubmittedBinding.set(true);
+    console.log(`✅ Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex} (${answersAfterThis}/${this.playersInWorld.length} answers)`);
   }
 
   private nextQuestion(): void {
@@ -1972,6 +1983,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // When skip leaderboard (powerUps) is enabled, automatically enable autoplay
     if (modifier === 'powerUps' && this.gameSettings.modifiers[modifier]) {
+      console.log('✅ Skip leaderboard enabled - automatically enabling autoplay');
       this.gameSettings.modifiers.autoAdvance = true;
     }
     
@@ -2120,6 +2132,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => {
                     const shouldShow = mode === 'pre-game' && started && answerSubmitted && !showResult;
+                    console.log(`📱 Answer submitted screen check: mode=${mode}, started=${started}, answerSubmitted=${answerSubmitted}, showResult=${showResult}, shouldShow=${shouldShow}`);
                     return shouldShow;
                   }),
                   this.renderAnswerSubmittedScreen()
@@ -2227,27 +2240,147 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Settings content - Scrollable view
-        ui.ScrollView({
+        // Settings content
+        ui.View({
           style: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 58,
-            paddingLeft: 8,
-            paddingRight: 8,
-            paddingTop: 8
+            flexDirection: 'column'
           },
           children: [
+            // Category selection - General Trivia
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'General' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'General'),
+                  children: [
+                    ui.Text({
+                      text: 'General Trivia',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'General' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Category selection - Another Category
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Another Category' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Another Category'),
+                  children: [
+                    ui.Text({
+                      text: 'Another Category',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Another Category' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // Category selection - Italian Brainrot
+            ui.View({
+              style: {
+                width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Italian Brainrot Quiz'),
+                  children: [
+                    ui.Text({
+                      text: 'Italian Brainrot',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Italian Brainrot Quiz' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+
             // Timer settings row
             ui.View({
               style: {
                 width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 8
+                alignItems: 'center'
               },
               children: [
                 // Timer options container
@@ -2360,10 +2493,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 8
+                alignItems: 'center'
               },
               children: [
                 // Difficulty options container
@@ -2476,10 +2611,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 8,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 8
+                alignItems: 'center'
               },
               children: [
                 // Modifiers options container
@@ -2583,10 +2720,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
+                paddingLeft: 8,
+                paddingRight: 8,
+                paddingTop: 6,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 8
+                alignItems: 'center'
               },
               children: [
                 // Add/Remove container
@@ -2686,367 +2825,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         width: 28,
                         height: 28,
                         tintColor: '#000000'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-
-            // Category selection section title
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 12
-              },
-              children: [
-                ui.Text({
-                  text: 'Category',
-                  style: {
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
-
-            // Category selection - Italian Brainrot
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Italian Brainrot Quiz' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Italian Brainrot Quiz'),
-                  children: [
-                    ui.Text({
-                      text: 'Italian Brainrot',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Italian Brainrot Quiz' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - General
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'General' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'General'),
-                  children: [
-                    ui.Text({
-                      text: 'General',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'General' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - Geography
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Geography' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Geography'),
-                  children: [
-                    ui.Text({
-                      text: 'Geography',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Geography' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - History
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'History' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'History'),
-                  children: [
-                    ui.Text({
-                      text: 'History',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'History' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - Science
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Science' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Science'),
-                  children: [
-                    ui.Text({
-                      text: 'Science',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Science' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - Film
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Film' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Film'),
-                  children: [
-                    ui.Text({
-                      text: 'Film',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Film' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - Music
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Music' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Music'),
-                  children: [
-                    ui.Text({
-                      text: 'Music',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Music' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - Television
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Television' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Television'),
-                  children: [
-                    ui.Text({
-                      text: 'Television',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Television' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
-            // Category selection - Video Games
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Video Games' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Video Games'),
-                  children: [
-                    ui.Text({
-                      text: 'Video Games',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Video Games' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
                       }
                     })
                   ]
@@ -3666,8 +3444,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleTransferHostConfirm(): void {
     // Check if a player is selected
     if (!this.selectedPlayerForTransfer) {
+      console.log('❌ No player selected for transfer');
       return;
     }
+    
+    console.log(`👑 Transferring host to player: ${this.selectedPlayerForTransfer}`);
     
     // Send host changed event to notify all players of the new host
     this.sendNetworkBroadcastEvent(TriviaNetworkEvents.hostChanged, {
@@ -3684,6 +3465,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentHostStatus = false;
     this.isHostBinding.set(false);
     
+    console.log('✅ Host transfer initiated');
     this.selectedAnswerBinding.set(null);
     this.showResult = false;
     this.showResultBinding.set(false);
