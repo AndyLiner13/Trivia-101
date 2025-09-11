@@ -815,10 +815,7 @@ export class TriviaGame extends ui.UIComponent {
       if (questionImageIds.length > 0) {
         await this.assetManager.preloadAssets(questionImageIds, this.assetManager['ASSET_PRIORITIES'].MEDIUM);
       }
-      
-      console.log(`✅ TriviaGame: Successfully preloaded ${assetTextureIds.length} assets via TriviaAssetManager`);
     } catch (error) {
-      console.log(`❌ TriviaGame: Failed to preload some assets:`, error);
     }
   }
 
@@ -835,9 +832,7 @@ export class TriviaGame extends ui.UIComponent {
     const imageSource = ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
     
     // Async cache it for future use (fire-and-forget)
-    this.assetManager.getImageSource(textureId).catch(error => 
-      console.log(`⚠️ TriviaGame: Failed to cache asset ${textureId}:`, error)
-    );
+    this.assetManager.getImageSource(textureId);
     
     return imageSource;
   }
@@ -859,9 +854,7 @@ export class TriviaGame extends ui.UIComponent {
       }
       
       // Preload asynchronously with high priority for next question
-      this.assetManager.preloadQuestionImage(imageId).catch(error => {
-        console.log(`⚠️ TriviaGame: Failed to preload next Italian Brainrot image ${imageId}:`, error);
-      });
+      this.assetManager.preloadQuestionImage(imageId);
     }
   }
 
@@ -1940,7 +1933,6 @@ export class TriviaGame extends ui.UIComponent {
         if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && 
             this.playerManager.getActivePlayerCount() > 0 && 
             !this.isShowingResults) {
-          console.log(`✅ All ${this.playerManager.getActivePlayerCount()} active players have answered (${this.playerManager.getAnsweredCount()} answers) - advancing to results`);
           this.showCorrectAnswersAndLeaderboard();
         }
       }, 100); // 100ms delay to allow logout events to process
@@ -1952,7 +1944,6 @@ export class TriviaGame extends ui.UIComponent {
     
     // Prevent multiple concurrent calls to avoid premature round advancement
     if (this.isShowingResults) {
-      console.log('⚠️ TriviaGame: Already showing results, ignoring duplicate call');
       return;
     }
     
@@ -2099,7 +2090,6 @@ export class TriviaGame extends ui.UIComponent {
       } else {
         // Check if skip leaderboard modifier is enabled
         if (this.modifiers.powerUps) {
-          console.log('✅ Skip leaderboard modifier active - processing leaderboard data but skipping display');
           // Process leaderboard data gracefully but skip showing it
           this.processLeaderboardWithoutDisplay();
         } else {
@@ -5770,7 +5760,6 @@ export class TriviaGame extends ui.UIComponent {
     if (removedAnswerIndex !== null && this.currentAnswerCounts && removedAnswerIndex >= 0 && removedAnswerIndex < 4) {
       this.currentAnswerCounts[removedAnswerIndex] = Math.max(0, this.currentAnswerCounts[removedAnswerIndex] - 1);
       this.answerCountsBinding.set([...this.currentAnswerCounts]);
-      console.log(`🔄 TriviaGame: Subtracted answer ${removedAnswerIndex} from counts due to player logout`);
     }
     
     // Update answer count binding to reflect the change using PlayerManager
@@ -5787,7 +5776,6 @@ export class TriviaGame extends ui.UIComponent {
     if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && 
         this.playerManager.getActivePlayerCount() > 0 && 
         !this.isShowingResults) {
-      console.log(`✅ All ${this.playerManager.getActivePlayerCount()} remaining players have answered after player logout (${this.playerManager.getAnsweredCount()} answers) - advancing to results`);
       this.showCorrectAnswersAndLeaderboard();
     }
     

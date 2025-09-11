@@ -54,7 +54,6 @@ export class PlayerManager {
       this.answeredPlayers.delete(playerId);
       removedAnswerIndex = this.playerAnswers.get(playerId) || null;
       this.playerAnswers.delete(playerId);
-      console.log(`🗑️ PlayerManager: Removed answer ${removedAnswerIndex} from opted-out player ${playerId}`);
     }
     
     return removedAnswerIndex;

@@ -192,7 +192,6 @@ export class TriviaAssetManager {
       );
       return imageSource;
     } catch (error) {
-      console.log(`❌ Failed to load asset ${textureId}:`, error);
       throw error;
     }
   }
@@ -253,7 +252,6 @@ export class TriviaAssetManager {
         this.assetCache.delete(textureId);
         this.assetPriorities.delete(textureId);
         this.updateMemoryEstimate(textureId, false);
-        console.log(`🧹 TriviaAssetManager: Evicted asset ${textureId} (priority: ${priority})`);
       }
     }
   }
@@ -272,10 +270,8 @@ export class TriviaAssetManager {
    * Preload multiple assets at once with priority
    */
   async preloadAssets(textureIds: string[], priority: number = this.ASSET_PRIORITIES.MEDIUM): Promise<void> {
-    console.log(`🔄 TriviaAssetManager: Preloading ${textureIds.length} assets with priority ${priority}`);
     const promises = textureIds.map(id => this.getImageSource(id, priority));
     await Promise.all(promises);
-    console.log(`✅ TriviaAssetManager: Successfully preloaded ${textureIds.length} assets`);
   }
 
   /**
@@ -356,8 +352,6 @@ export class TriviaAssetManager {
         this.assetCache.delete(textureId);
         this.assetPriorities.delete(textureId);
       }
-      
-      console.log(`🧹 TriviaAssetManager: Cleared ${toDelete.length} non-critical assets, retained ${this.assetCache.size} critical assets`);
     }
     
     this.loadingPromises.clear();
@@ -418,7 +412,6 @@ export class TriviaAssetManager {
    */
   async forceCleanup(): Promise<void> {
     await this.performLRUCleanup();
-    console.log(`🧹 TriviaAssetManager: Force cleanup completed. Cache size: ${this.getCacheSize()}`);
   }
 
   /**
@@ -426,23 +419,15 @@ export class TriviaAssetManager {
    */
   logCacheStats(): void {
     const stats = this.getCacheStats();
-    console.log(`📊 TriviaAssetManager Cache Stats:
-    - Total Assets: ${stats.totalAssets}/${this.MAX_CACHE_SIZE}
-    - Memory Usage: ~${stats.memoryUsageEstimate}MB/${this.MEMORY_LIMIT_MB}MB
-    - Hit Rate: ${stats.hitRate}% (${stats.cacheHits}/${stats.totalRequests})
-    - Age Range: ${new Date(stats.oldestEntry).toLocaleTimeString()} - ${new Date(stats.newestEntry).toLocaleTimeString()}`);
   }
 
   /**
    * Initialize asset manager with optimal settings
    */
   async initializeForTrivia(): Promise<void> {
-    console.log(`🚀 TriviaAssetManager: Initializing with cache limit ${this.MAX_CACHE_SIZE} assets (~${this.MEMORY_LIMIT_MB}MB)`);
-    
     // Preload all common assets
     await this.preloadCommonAssets();
     
-    console.log(`✅ TriviaAssetManager: Initialization complete`);
     this.logCacheStats();
   }
 
@@ -450,8 +435,6 @@ export class TriviaAssetManager {
    * Prepare for Italian Brainrot Quiz by preloading specific assets
    */
   async prepareForItalianBrainrotQuiz(questionImages: string[]): Promise<void> {
-    console.log(`🇮🇹 TriviaAssetManager: Preparing for Italian Brainrot Quiz with ${questionImages.length} images`);
-    
     // Preload first few question images with high priority
     const immediateImages = questionImages.slice(0, 5);
     await this.preloadAssets(immediateImages, this.ASSET_PRIORITIES.HIGH);
@@ -460,10 +443,7 @@ export class TriviaAssetManager {
     if (questionImages.length > 5) {
       const remainingImages = questionImages.slice(5);
       this.preloadAssets(remainingImages, this.ASSET_PRIORITIES.MEDIUM).catch(error => {
-        console.log(`⚠️ TriviaAssetManager: Some background image preloading failed:`, error);
       });
     }
-    
-    console.log(`✅ TriviaAssetManager: Italian Brainrot preparation complete`);
   }
 }

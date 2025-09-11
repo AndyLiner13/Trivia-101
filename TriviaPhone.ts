@@ -235,9 +235,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       
       this.playersInWorld = playerIds;
       this.playersInWorldBinding.set(playersWithNames);
-      console.log(`✅ Initialized players binding with ${playersWithNames.length} players:`, playersWithNames);
     } catch (error) {
-      console.log('❌ Error initializing players binding:', error);
       // Fallback to empty array
       this.playersInWorldBinding.set([]);
     }
@@ -263,21 +261,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
     
     this.currentBanterIndex = 0;
-    console.log(`✓ Banter shuffled for new question! Next wrong answer will show: "${this.shuffledBanter[0]}"`);
   }
   
   // Get next banter message (called for each wrong answer)
   private getNextBanterMessage(): string {
     if (this.currentBanterIndex >= this.shuffledBanter.length) {
       // Reshuffle when we've used all messages
-      console.log(`🔄 All banter messages used, reshuffling...`);
       this.shuffleBanter();
     }
     
     const message = this.shuffledBanter[this.currentBanterIndex];
     this.currentBanterIndex++;
     this.currentBanterBinding.set(message);
-    console.log(`📝 Setting banter message: "${message}" (index: ${this.currentBanterIndex - 1})`);
     return message;
   }
 
@@ -383,9 +378,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     try {
       await this.assetManager.preloadAssets(assetTextureIds, this.assetManager['ASSET_PRIORITIES'].HIGH);
       successCount = assetTextureIds.length;
-      console.log(`✅ TriviaPhone: Successfully preloaded ${successCount} assets via TriviaAssetManager`);
     } catch (error) {
-      console.log(`❌ TriviaPhone: Failed to preload some assets:`, error);
     }
     
     const loadTime = Date.now() - startTime;
@@ -404,9 +397,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
     
     // Async cache it for future use (fire-and-forget)
-    this.assetManager.getImageSource(textureId, this.assetManager['ASSET_PRIORITIES'].HIGH).catch(error => 
-      console.log(`⚠️ TriviaPhone: Failed to cache asset ${textureId}:`, error)
-    );
+    this.assetManager.getImageSource(textureId, this.assetManager['ASSET_PRIORITIES'].HIGH).catch(error => {});
     
     return imageSource;
   }
@@ -1215,7 +1206,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const allAnswersSubmitted = this.playersAnswered.length >= this.playersInWorld.length;
     
     if (allAnswersSubmitted) {
-      console.log('✅ All remaining players have answered after player update');
       // The TriviaGame will handle advancing to the next question
     }
   }
@@ -1354,7 +1344,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Set banter message for wrong answers when results are received
     if (!isCorrect && !eventData.showLeaderboard) {
       const banterMessage = this.getNextBanterMessage();
-      console.log(`✗ Wrong answer! Showing banter: "${banterMessage}"`);
     }
     
     // Only reset last round points when NOT showing leaderboard (i.e., during initial results display)
@@ -1450,7 +1439,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         if (shouldContinue && !this.gameEnded) {
           // If Questions Only modifier is active (skip leaderboard), advance immediately
           if (this.gameSettings.modifiers.powerUps) {
-            console.log('✅ Skip leaderboard modifier active - advancing immediately to next question');
             this.nextQuestion();
             return;
           }
@@ -1469,7 +1457,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             this.pendingTimeouts.delete(autoAdvanceTimeoutId);
             // Only auto-advance if game hasn't ended
             if (!this.gameEnded) {
-              console.log('✅ Auto-advancing to next question (autoplay enabled)');
               this.nextQuestion();
             }
           }, advanceDelay);
@@ -1525,7 +1512,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Always reset answer submitted state for new question (player needs to answer the new question)
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
-    console.log(`🔄 Two-options question received - reset answerSubmitted=false for new question`);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1587,7 +1573,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Always reset answer submitted state for new question (player needs to answer the new question)
     this.answerSubmitted = false;
     this.answerSubmittedBinding.set(false);
-    console.log(`🔄 Four-options question received - reset answerSubmitted=false for new question`);
     
     // Store question index and update the current question index binding
     this.currentQuestionIndex = eventData.questionIndex;
@@ -1767,7 +1752,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       });
       this.playersInWorldBinding.set(playersWithNames);
     } catch (error) {
-      console.log('❌ Error converting player IDs to names:', error);
       // Fallback: just use player IDs as names
       const playersWithIds = eventData.playersInWorld.map(playerId => ({
         id: playerId,
@@ -1860,7 +1844,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Always show answerSubmitted screen
     this.answerSubmitted = true;
     this.answerSubmittedBinding.set(true);
-    console.log(`✅ Answer submitted - showing answerSubmitted screen for answer ${actualAnswerIndex} (${answersAfterThis}/${this.playersInWorld.length} answers)`);
   }
 
   private nextQuestion(): void {
@@ -1989,7 +1972,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // When skip leaderboard (powerUps) is enabled, automatically enable autoplay
     if (modifier === 'powerUps' && this.gameSettings.modifiers[modifier]) {
-      console.log('✅ Skip leaderboard enabled - automatically enabling autoplay');
       this.gameSettings.modifiers.autoAdvance = true;
     }
     
@@ -2138,7 +2120,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.UINode.if(
                   ui.Binding.derive([this.currentViewModeBinding, this.gameStartedBinding, this.answerSubmittedBinding, this.showResultBinding], (mode, started, answerSubmitted, showResult) => {
                     const shouldShow = mode === 'pre-game' && started && answerSubmitted && !showResult;
-                    console.log(`📱 Answer submitted screen check: mode=${mode}, started=${started}, answerSubmitted=${answerSubmitted}, showResult=${showResult}, shouldShow=${shouldShow}`);
                     return shouldShow;
                   }),
                   this.renderAnswerSubmittedScreen()
@@ -3450,11 +3431,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleTransferHostConfirm(): void {
     // Check if a player is selected
     if (!this.selectedPlayerForTransfer) {
-      console.log('❌ No player selected for transfer');
       return;
     }
-    
-    console.log(`👑 Transferring host to player: ${this.selectedPlayerForTransfer}`);
     
     // Send host changed event to notify all players of the new host
     this.sendNetworkBroadcastEvent(TriviaNetworkEvents.hostChanged, {
@@ -3471,7 +3449,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentHostStatus = false;
     this.isHostBinding.set(false);
     
-    console.log('✅ Host transfer initiated');
     this.selectedAnswerBinding.set(null);
     this.showResult = false;
     this.showResultBinding.set(false);

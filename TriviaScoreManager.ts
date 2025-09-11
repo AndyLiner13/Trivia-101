@@ -28,7 +28,7 @@ export class TriviaScoreManager {
       const playerId = player.id.toString();
       this.localPlayerScores.set(playerId, score);
     } catch (error) {
-      console.log('❌ Failed to set player score:', error);
+      // Error setting player score
     }
   }
   
@@ -67,7 +67,7 @@ export class TriviaScoreManager {
           playerId: playerId
         });
       } catch (error) {
-        console.log('❌ Failed to add player to leaderboard:', error);
+        // Failed to add player to leaderboard
       }
     }
     
@@ -123,7 +123,7 @@ export class TriviaScoreManager {
       // Note: In a real implementation, you might want to use hz.Leaderboards
       // or another persistent storage mechanism here
     } catch (error) {
-      console.log('❌ Failed to update persistent score:', error);
+      // Failed to update persistent score
     }
   }
 }

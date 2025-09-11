@@ -12,7 +12,6 @@ export class TriviaPlayerUtils {
     try {
       return world.getPlayers();
     } catch (error) {
-      console.log('❌ Failed to get world players:', error);
       return [];
     }
   }
@@ -25,7 +24,6 @@ export class TriviaPlayerUtils {
       try {
         return player.id.toString();
       } catch (error) {
-        console.log('❌ Failed to get player ID:', error);
         return '';
       }
     }).filter(id => id !== '');
@@ -51,7 +49,6 @@ export class TriviaPlayerUtils {
     try {
       return player.name.get();
     } catch (error) {
-      console.log('❌ Failed to get player name:', error);
       return 'Unknown Player';
     }
   }
@@ -118,7 +115,6 @@ export class TriviaPlayerUtils {
     try {
       return world.getPlayers().length;
     } catch (error) {
-      console.log('❌ Failed to get player count:', error);
       return 0;
     }
   }
@@ -134,7 +130,6 @@ export class TriviaPlayerUtils {
       const firstPlayer = allPlayers[0];
       return player.id.toString() === firstPlayer.id.toString();
     } catch (error) {
-      console.log('❌ Failed to check if first player:', error);
       return false;
     }
   }
@@ -154,7 +149,6 @@ export class TriviaPlayerUtils {
         }
       });
     } catch (error) {
-      console.log('❌ Failed to get players excluding specific player:', error);
       return [];
     }
   }
