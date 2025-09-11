@@ -2693,25 +2693,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Category selection section title
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 12
-              },
-              children: [
-                ui.Text({
-                  text: 'Category',
-                  style: {
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    textAlign: 'center'
-                  }
-                })
-              ]
-            }),
-
             // Category selection - Italian Brainrot
             ui.View({
               style: {
