@@ -1159,7 +1159,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 2 && this.currentQuestionAnswers.length > 0),
-                                this.createAnswerButton(0, '#DC2626', '2085541485520283'),
+                                this.createAnswerButton(0, '#DC2626', '777770328233650'),
                                 this.createBlankButton()
                               )
                             }),
@@ -1175,7 +1175,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 3 && this.currentQuestionAnswers.length > 1),
-                                this.createAnswerButton(1, '#2563EB', '1317550153280256'),
+                                this.createAnswerButton(1, '#2563EB', '4072239619587060'),
                                 this.createBlankButton()
                               )
                             }),
@@ -1195,13 +1195,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 // For 2-answer questions: show answer 0 in position 3
                                 UINode.if(
                                   this.answerTexts[0].derive(text => text !== ''),
-                                  this.createAnswerButton(0, '#DC2626', '2085541485520283'),
+                                  this.createAnswerButton(0, '#DC2626', '777770328233650'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 2 in position 3
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  this.createAnswerButton(2, '#EAB308', '1247573280476332'),
+                                  this.createAnswerButton(2, '#EAB308', '792009873430619'),
                                   this.createBlankButton()
                                 )
                               )
@@ -1221,13 +1221,13 @@ export class TriviaGameDebugUI extends ui.UIComponent {
                                 // For 2-answer questions: show answer 1 in position 4
                                 UINode.if(
                                   this.answerTexts[1].derive(text => text !== ''),
-                                  this.createAnswerButton(1, '#2563EB', '1317550153280256'),
+                                  this.createAnswerButton(1, '#2563EB', '4072239619587060'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 3 in position 4
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  this.createAnswerButton(3, '#16A34A', '2403112933423824'),
+                                  this.createAnswerButton(3, '#16A34A', '1468497750967905'),
                                   this.createBlankButton()
                                 )
                               )
@@ -2900,7 +2900,7 @@ export class TriviaGameDebugUI extends ui.UIComponent {
 
     // Determine icon size based on texture ID
     // Star stays at 18px, others get bigger at 20px
-    const iconSize = iconTextureId === '2403112933423824' ? 18 : 20; // Star = 18px, Triangle/Circle/Square = 20px
+    const iconSize = iconTextureId === '1468497750967905' ? 18 : 20; // Star = 18px, Triangle/Circle/Square = 20px
 
     return Pressable({
       style: {

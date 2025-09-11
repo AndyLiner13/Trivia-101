@@ -86,11 +86,11 @@ export class TriviaAssetManager {
     ARROW_FORWARD: '1806442143313699',
     
     // Shape/answer icons
-    TRIANGLE: '2085541485520283',
-    SQUARE: '1317550153280256',
-    CIRCLE: '1247573280476332',
-    STAR: '2403112933423824',
-    DIAMOND: '1317550153280256', // Same as square
+    TRIANGLE: '777770328233650',
+    SQUARE: '4072239619587060',
+    CIRCLE: '792009873430619',
+    STAR: '1468497750967905',
+    DIAMOND: '4072239619587060', // Same as square
     
     // Modifier backgrounds
     MODIFIER_LEFT: '789207380187265',
@@ -100,10 +100,10 @@ export class TriviaAssetManager {
 
   // Answer shape configurations
   static readonly ANSWER_SHAPES = [
-    { iconId: '2085541485520283', color: '#DC2626', shape: 'Triangle' },
-    { iconId: '1317550153280256', color: '#2563EB', shape: 'Square' },
-    { iconId: '1247573280476332', color: '#EAB308', shape: 'Circle' },
-    { iconId: '2403112933423824', color: '#16A34A', shape: 'Star' }
+    { iconId: '777770328233650', color: '#DC2626', shape: 'Triangle' },
+    { iconId: '4072239619587060', color: '#2563EB', shape: 'Square' },
+    { iconId: '792009873430619', color: '#EAB308', shape: 'Circle' },
+    { iconId: '1468497750967905', color: '#16A34A', shape: 'Star' }
   ];
 
   private constructor() {}

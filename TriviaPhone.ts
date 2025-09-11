@@ -377,11 +377,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       '1806442143313699',   // arrow_forward
       
       // Shape/answer icons
-      '2085541485520283',   // triangle
-      '1317550153280256',   // square  
-      '1247573280476332',    // circle
-      '2403112933423824',   // star
-      '1317550153280256',   // diamond
+      '777770328233650',   // triangle
+      '4072239619587060',   // square  
+      '792009873430619',    // circle
+      '1468497750967905',   // star
+      '4072239619587060',   // diamond
       
       // Modifier background icons
       '789207380187265',    // Left side icon background
@@ -4422,7 +4422,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // triangle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('777770328233650'))), // triangle
                       style: {
                         width: 55,
                         height: 54,
@@ -4460,7 +4460,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1317550153280256'))), // square
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('4072239619587060'))), // square
                       style: {
                         width: 54,
                         height: 55,
@@ -4657,7 +4657,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2085541485520283'))), // triangle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('777770328233650'))), // triangle
                       style: {
                         width: 55,
                         height: 54,
@@ -4686,7 +4686,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1317550153280256'))), // square
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('4072239619587060'))), // square
                       style: {
                         width: 54,
                         height: 55,
@@ -4725,7 +4725,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1247573280476332'))), // circle
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792009873430619'))), // circle
                       style: {
                         width: 55,
                         height: 54,
@@ -4754,7 +4754,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   },
                   children: [
                     ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2403112933423824'))), // star
+                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1468497750967905'))), // star
                       style: {
                         width: 50,
                         height: 50,

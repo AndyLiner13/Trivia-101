@@ -849,10 +849,10 @@ export class TriviaGame extends ui.UIComponent {
       '1325134306066406',   // crown (host indicator)
       
       // Shape icons (answer buttons)
-      '2085541485520283',   // triangle
-      '1317550153280256',   // square
-      '1247573280476332',    // circle
-      '1317550153280256',   // diamond
+      '777770328233650',   // triangle
+      '4072239619587060',   // square
+      '792009873430619',    // circle
+      '4072239619587060',   // diamond
       
       // Background textures
       '1142972504392965',   // TriviaGame configuration background
@@ -3861,7 +3861,7 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 2),
-                                this.createAnswerButton(0, '#DC2626', '2085541485520283'),
+                                this.createAnswerButton(0, '#DC2626', '777770328233650'),
                                 this.createBlankButton()
                               )
                             }),
@@ -3875,7 +3875,7 @@ export class TriviaGame extends ui.UIComponent {
                               },
                               children: UINode.if(
                                 this.answerCountTracking.derive(count => count > 3),
-                                this.createAnswerButton(1, '#2563EB', '1317550153280256'),
+                                this.createAnswerButton(1, '#2563EB', '4072239619587060'),
                                 this.createBlankButton()
                               )
                             }),
@@ -3893,13 +3893,13 @@ export class TriviaGame extends ui.UIComponent {
                                 // For 2-answer questions: show answer 0 in position 3 with red triangle
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  this.createAnswerButton(2, '#DC2626', '2085541485520283'),
+                                  this.createAnswerButton(2, '#DC2626', '777770328233650'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 2 in position 3 with yellow circle
                                 UINode.if(
                                   this.answerTexts[2].derive(text => text !== ''),
-                                  this.createAnswerButton(2, '#EAB308', '1247573280476332'),
+                                  this.createAnswerButton(2, '#EAB308', '792009873430619'),
                                   this.createBlankButton()
                                 )
                               )
@@ -3917,13 +3917,13 @@ export class TriviaGame extends ui.UIComponent {
                                 // For 2-answer questions: show answer 1 in position 4 with blue square
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  this.createAnswerButton(3, '#2563EB', '1317550153280256'),
+                                  this.createAnswerButton(3, '#2563EB', '4072239619587060'),
                                   this.createBlankButton()
                                 ),
                                 // For 3+ answer questions: show answer 3 in position 4 with green star
                                 UINode.if(
                                   this.answerTexts[3].derive(text => text !== ''),
-                                  this.createAnswerButton(3, '#16A34A', '2403112933423824'),
+                                  this.createAnswerButton(3, '#16A34A', '1468497750967905'),
                                   this.createBlankButton()
                                 )
                               )
