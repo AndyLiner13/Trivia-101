@@ -2227,93 +2227,359 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Settings content
-        ui.View({
+        // Settings content - Scrollable view
+        ui.ScrollView({
           style: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 58,
-            flexDirection: 'column'
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 8
           },
           children: [
-            // Category selection - General Trivia
+            // Combined Controllers Container with all 4 controllers
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8
+                backgroundColor: '#191919',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16,
+                flexDirection: 'column'
               },
               children: [
-                ui.Pressable({
+                // First row: Timer and Difficulty
+                ui.View({
                   style: {
                     width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'General' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12
+                  },
+                  children: [
+                    // Timer options container
+                    ui.View({
+                      style: {
+                        backgroundColor: '#2A2A2A',
+                        borderRadius: 6,
+                        padding: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                        )
+                      },
+                      children: [
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                              this.setTimerType('slow');
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))), // timer_off
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.timerType === 'slow' ? '#FFFFFF' : '#666666'
+                                ),
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                              this.setTimerType('normal');
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.timerType === 'normal' ? '#FFFFFF' : '#666666'
+                                ),
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                              this.setTimerType('fast');
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.timerType === 'fast' ? '#FFFFFF' : '#666666'
+                                )
+                              }
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+
+                    // Difficulty options container
+                    ui.View({
+                      style: {
+                        backgroundColor: '#2A2A2A',
+                        borderRadius: 6,
+                        padding: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
+                        )
+                      },
+                      children: [
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                              this.setDifficultyType('easy');
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.difficultyType === 'easy' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
+                                ),
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                              this.setDifficultyType('medium');
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.difficultyType === 'medium' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
+                                ),
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+                              this.setDifficultyType('hard');
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.difficultyType === 'hard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
+                                )
+                              }
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+
+                // Second row: Modifiers and Questions
+                ui.View({
+                  style: {
+                    width: '100%',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
                     alignItems: 'center'
                   },
-                  onPress: () => this.updateGameSetting('category', 'General'),
                   children: [
-                    ui.Text({
-                      text: 'General Trivia',
+                    // Modifiers options container
+                    ui.View({
                       style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'General' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
+                        backgroundColor: '#2A2A2A',
+                        borderRadius: 6,
+                        padding: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                      },
+                      children: [
+                        ui.Pressable({
+                          onPress: () => {
+                            this.toggleModifier('autoAdvance');
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.modifiers.autoAdvance ? '#FFFFFF' : '#666666'
+                                ),
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            this.toggleModifier('powerUps');
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))), // bolt
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.modifiers.powerUps ? '#FFFFFF' : '#666666'
+                                ),
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            this.toggleModifier('bonusRounds');
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))), // all_inclusive
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                                  settings.modifiers.bonusRounds ? '#FFFFFF' : '#666666'
+                                )
+                              }
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+
+                    // Questions options container
+                    ui.View({
+                      style: {
+                        backgroundColor: '#2A2A2A',
+                        borderRadius: 6,
+                        padding: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          (settings.category === 'Italian Brainrot Quiz' || settings.modifiers.bonusRounds) ? 0.3 : 1
+                        )
+                      },
+                      children: [
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz' && !this.gameSettings.modifiers.bonusRounds) {
+                              this.decrementQuestionCount();
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('642575278900917'))), // remove
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: '#FFFFFF',
+                                marginRight: 4
+                              }
+                            })
+                          ]
+                        }),
+                        // Text field showing current count
+                        ui.View({
+                          style: {
+                            width: 28,
+                            height: 28,
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                          },
+                          children: [
+                            ui.Text({
+                              text: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
+                                settings.numberOfQuestions?.toString() || '5'
+                              ),
+                              style: {
+                                fontSize: 16,
+                                fontWeight: '600',
+                                color: '#FFFFFF',
+                                textAlign: 'center'
+                              }
+                            })
+                          ]
+                        }),
+                        ui.Pressable({
+                          onPress: () => {
+                            if (this.gameSettings.category !== 'Italian Brainrot Quiz' && !this.gameSettings.modifiers.bonusRounds) {
+                              this.incrementQuestionCount();
+                            }
+                          },
+                          children: [
+                            ui.Image({
+                              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1125453972243822'))), // add
+                              style: {
+                                width: 28,
+                                height: 28,
+                                tintColor: '#FFFFFF'
+                              }
+                            })
+                          ]
+                        })
+                      ]
                     })
                   ]
                 })
               ]
             }),
 
-            // Category selection - Another Category
+            // Category selection section title
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8
+                marginBottom: 12
               },
               children: [
-                ui.Pressable({
+                ui.Text({
+                  text: 'Category',
                   style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Another Category' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Another Category'),
-                  children: [
-                    ui.Text({
-                      text: 'Another Category',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Another Category' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
+                    textAlign: 'center'
+                  }
                 })
               ]
             }),
@@ -2322,9 +2588,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8
+                marginBottom: 8
               },
               children: [
                 ui.Pressable({
@@ -2357,461 +2621,304 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 })
               ]
             }),
-
-            // Timer settings row
+            
+            // Category selection - General
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                marginBottom: 8
               },
               children: [
-                // Timer options container
-                ui.View({
-                  style: {
-                    backgroundColor: '#191919',
-                    borderRadius: 8,
-                    padding: 4,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'flex-start',
-                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
-                    )
-                  },
-                  children: [
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.setTimerType('slow');
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1466620987937637'))), // timer_off
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.timerType === 'slow' ? '#FFFFFF' : '#666666'
-                            ),
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.setTimerType('normal');
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2035737657163790'))), // timer
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.timerType === 'normal' ? '#FFFFFF' : '#666666'
-                            ),
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.setTimerType('fast');
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1830264154592827'))), // more_time
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.timerType === 'fast' ? '#FFFFFF' : '#666666'
-                            )
-                          }
-                        })
-                      ]
-                    })
-                  ]
-                }),
-
-                // Info icon container
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 5,
-                    padding: 2,
-                    width: 32,
-                    height: 32,
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'General' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
                     justifyContent: 'center',
-                    alignItems: 'center',
-                    marginLeft: 5
+                    alignItems: 'center'
                   },
-                  onPress: () => {
-                    this.infoPopupTypeBinding.set('timer');
-                    this.showInfoPopupBinding.set(true);
-                  },
+                  onPress: () => this.updateGameSetting('category', 'General'),
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                    ui.Text({
+                      text: 'General',
                       style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: '#000000'
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'General' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
                       }
                     })
                   ]
                 })
               ]
             }),
-
-            // Difficulty settings row
+            
+            // Category selection - Geography
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                marginBottom: 8
               },
               children: [
-                // Difficulty options container
-                ui.View({
-                  style: {
-                    backgroundColor: '#191919',
-                    borderRadius: 8,
-                    padding: 4,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'flex-start',
-                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Italian Brainrot Quiz' ? 0.3 : 1
-                    )
-                  },
-                  children: [
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.setDifficultyType('easy');
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('794548760190405'))), // sentiment_satisfied
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.difficultyType === 'easy' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
-                            ),
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.setDifficultyType('medium');
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1138269638213533'))), // sentiment_neutral
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.difficultyType === 'medium' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
-                            ),
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
-                          this.setDifficultyType('hard');
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('712075511858553'))), // skull
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.difficultyType === 'hard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)'
-                            )
-                          }
-                        })
-                      ]
-                    })
-                  ]
-                }),
-
-                // Info icon container
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 5,
-                    padding: 2,
-                    width: 32,
-                    height: 32,
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Geography' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
                     justifyContent: 'center',
-                    alignItems: 'center',
-                    marginLeft: 5
+                    alignItems: 'center'
                   },
-                  onPress: () => {
-                    this.infoPopupTypeBinding.set('difficulty');
-                    this.showInfoPopupBinding.set(true);
-                  },
+                  onPress: () => this.updateGameSetting('category', 'Geography'),
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                    ui.Text({
+                      text: 'Geography',
                       style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: '#000000'
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Geography' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
                       }
                     })
                   ]
                 })
               ]
             }),
-
-            // Modifiers settings row
+            
+            // Category selection - History
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                marginBottom: 8
               },
               children: [
-                // Modifiers options container
-                ui.View({
-                  style: {
-                    backgroundColor: '#191919',
-                    borderRadius: 8,
-                    padding: 4,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'flex-start'
-                  },
-                  children: [
-                    ui.Pressable({
-                      onPress: () => {
-                        this.toggleModifier('autoAdvance');
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('789207380187265'))), // autoplay
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.modifiers.autoAdvance ? '#FFFFFF' : '#666666'
-                            ),
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        this.toggleModifier('powerUps');
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1320579906276560'))), // bolt
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.modifiers.powerUps ? '#FFFFFF' : '#666666'
-                            ),
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        this.toggleModifier('bonusRounds');
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('3148012692041551'))), // all_inclusive
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                              settings.modifiers.bonusRounds ? '#FFFFFF' : '#666666'
-                            )
-                          }
-                        })
-                      ]
-                    })
-                  ]
-                }),
-
-                // Info icon container
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 5,
-                    padding: 2,
-                    width: 32,
-                    height: 32,
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'History' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
                     justifyContent: 'center',
-                    alignItems: 'center',
-                    marginLeft: 5
+                    alignItems: 'center'
                   },
-                  onPress: () => {
-                    this.infoPopupTypeBinding.set('modifiers');
-                    this.showInfoPopupBinding.set(true);
-                  },
+                  onPress: () => this.updateGameSetting('category', 'History'),
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                    ui.Text({
+                      text: 'History',
                       style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: '#000000'
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'History' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
                       }
                     })
                   ]
                 })
               ]
             }),
-
-            // Number of Questions settings row
+            
+            // Category selection - Science
             ui.View({
               style: {
                 width: '100%',
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 6,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                marginBottom: 8
               },
               children: [
-                // Add/Remove container
-                ui.View({
-                  style: {
-                    backgroundColor: '#191919',
-                    borderRadius: 8,
-                    padding: 4,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    alignSelf: 'flex-start',
-                    opacity: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      (settings.category === 'Italian Brainrot Quiz' || settings.modifiers.bonusRounds) ? 0.3 : 1
-                    )
-                  },
-                  children: [
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz' && !this.gameSettings.modifiers.bonusRounds) {
-                          this.decrementQuestionCount();
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('642575278900917'))), // remove
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: '#FFFFFF',
-                            marginRight: 2
-                          }
-                        })
-                      ]
-                    }),
-                    // Text field showing current count
-                    ui.View({
-                      style: {
-                        width: 28,
-                        height: 28,
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                      },
-                      children: [
-                        ui.Text({
-                          text: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
-                            settings.numberOfQuestions?.toString() || '5'
-                          ),
-                          style: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#FFFFFF',
-                            textAlign: 'center'
-                          }
-                        })
-                      ]
-                    }),
-                    ui.Pressable({
-                      onPress: () => {
-                        if (this.gameSettings.category !== 'Italian Brainrot Quiz' && !this.gameSettings.modifiers.bonusRounds) {
-                          this.incrementQuestionCount();
-                        }
-                      },
-                      children: [
-                        ui.Image({
-                          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1125453972243822'))), // add
-                          style: {
-                            width: 28,
-                            height: 28,
-                            tintColor: '#FFFFFF'
-                          }
-                        })
-                      ]
-                    })
-                  ]
-                }),
-
-                // Info icon container
                 ui.Pressable({
                   style: {
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 5,
-                    padding: 2,
-                    width: 32,
-                    height: 32,
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Science' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
                     justifyContent: 'center',
-                    alignItems: 'center',
-                    marginLeft: 5
+                    alignItems: 'center'
                   },
-                  onPress: () => {
-                    this.infoPopupTypeBinding.set('questions');
-                    this.showInfoPopupBinding.set(true);
-                  },
+                  onPress: () => this.updateGameSetting('category', 'Science'),
                   children: [
-                    ui.Image({
-                      source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24898127093144614'))), // info_i
+                    ui.Text({
+                      text: 'Science',
                       style: {
-                        width: 28,
-                        height: 28,
-                        tintColor: '#000000'
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Science' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+            
+            // Category selection - Film
+            ui.View({
+              style: {
+                width: '100%',
+                marginBottom: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Film' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Film'),
+                  children: [
+                    ui.Text({
+                      text: 'Film',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Film' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+            
+            // Category selection - Music
+            ui.View({
+              style: {
+                width: '100%',
+                marginBottom: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Music' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Music'),
+                  children: [
+                    ui.Text({
+                      text: 'Music',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Music' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+            
+            // Category selection - Television
+            ui.View({
+              style: {
+                width: '100%',
+                marginBottom: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Television' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Television'),
+                  children: [
+                    ui.Text({
+                      text: 'Television',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Television' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+            
+            // Category selection - Video Games
+            ui.View({
+              style: {
+                width: '100%',
+                marginBottom: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Video Games' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Video Games'),
+                  children: [
+                    ui.Text({
+                      text: 'Video Games',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Video Games' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
                       }
                     })
                   ]

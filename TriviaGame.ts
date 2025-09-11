@@ -101,8 +101,13 @@ type SerializableQuestion = {
 // Props interface for TriviaGame component
 interface TriviaGameProps {
   generalQuestionsAsset?: any;
+  geographyQuestionsAsset?: any;
   historyQuestionsAsset?: any;
   scienceQuestionsAsset?: any;
+  filmQuestionsAsset?: any;
+  musicQuestionsAsset?: any;
+  televisionQuestionsAsset?: any;
+  videoGamesQuestionsAsset?: any;
   ItalianBrainrotQuiz?: any;
   questionTimeLimit: number;
   showCorrectAnswer: boolean;
@@ -385,8 +390,13 @@ export class TriviaGame extends ui.UIComponent {
   static propsDefinition = {
     // Reference to the trivia questions JSON assets
     generalQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    geographyQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     historyQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     scienceQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    filmQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    musicQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    televisionQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
+    videoGamesQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     ItalianBrainrotQuiz: { type: hz.PropTypes.Asset, default: null },
     
     // Game configuration
@@ -587,8 +597,13 @@ export class TriviaGame extends ui.UIComponent {
 
   // Game data
   private generalQuestions: TriviaQuestion[] = [];
+  private geographyQuestions: TriviaQuestion[] = [];
   private historyQuestions: TriviaQuestion[] = [];
   private scienceQuestions: TriviaQuestion[] = [];
+  private filmQuestions: TriviaQuestion[] = [];
+  private musicQuestions: TriviaQuestion[] = [];
+  private televisionQuestions: TriviaQuestion[] = [];
+  private videoGamesQuestions: TriviaQuestion[] = [];
   private customQuizQuestions: TriviaQuestion[] = []; // Custom quiz questions with images
   private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
   private currentQuestionIndex: number = 0;
@@ -1027,10 +1042,20 @@ export class TriviaGame extends ui.UIComponent {
         // Use cached questions - but shuffle them first for variety
         if (categoryKey === "general") {
           allQuestions = [...this.generalQuestions];
+        } else if (categoryKey === "geography") {
+          allQuestions = [...this.geographyQuestions];
         } else if (categoryKey === "history") {
           allQuestions = [...this.historyQuestions];
         } else if (categoryKey === "science") {
           allQuestions = [...this.scienceQuestions];
+        } else if (categoryKey === "film") {
+          allQuestions = [...this.filmQuestions];
+        } else if (categoryKey === "music") {
+          allQuestions = [...this.musicQuestions];
+        } else if (categoryKey === "television") {
+          allQuestions = [...this.televisionQuestions];
+        } else if (categoryKey === "video games") {
+          allQuestions = [...this.videoGamesQuestions];
         } else if (categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || categoryKey.includes("italian") && categoryKey.includes("brainrot")) {
           allQuestions = [...this.customQuizQuestions];
         }
@@ -1051,6 +1076,15 @@ export class TriviaGame extends ui.UIComponent {
             this.loadedCategories.add(categoryKey);
           } else {
           }
+        } else if (categoryKey === "geography") {
+          if (this.props.geographyQuestionsAsset) {
+            const assetData = await (this.props.geographyQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.geographyQuestions = this.parseOpenTriviaFormat(jsonData, "Geography");
+            allQuestions = [...this.geographyQuestions];
+            this.loadedCategories.add(categoryKey);
+          } else {
+          }
         } else if (categoryKey === "history") {
           if (this.props.historyQuestionsAsset) {
             const assetData = await (this.props.historyQuestionsAsset as any).fetchAsData();
@@ -1066,6 +1100,42 @@ export class TriviaGame extends ui.UIComponent {
             const jsonData = assetData.asJSON();
             this.scienceQuestions = this.parseOpenTriviaFormat(jsonData, "Science");
             allQuestions = [...this.scienceQuestions];
+            this.loadedCategories.add(categoryKey);
+          } else {
+          }
+        } else if (categoryKey === "film") {
+          if (this.props.filmQuestionsAsset) {
+            const assetData = await (this.props.filmQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.filmQuestions = this.parseOpenTriviaFormat(jsonData, "Film");
+            allQuestions = [...this.filmQuestions];
+            this.loadedCategories.add(categoryKey);
+          } else {
+          }
+        } else if (categoryKey === "music") {
+          if (this.props.musicQuestionsAsset) {
+            const assetData = await (this.props.musicQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.musicQuestions = this.parseOpenTriviaFormat(jsonData, "Music");
+            allQuestions = [...this.musicQuestions];
+            this.loadedCategories.add(categoryKey);
+          } else {
+          }
+        } else if (categoryKey === "television") {
+          if (this.props.televisionQuestionsAsset) {
+            const assetData = await (this.props.televisionQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.televisionQuestions = this.parseOpenTriviaFormat(jsonData, "Television");
+            allQuestions = [...this.televisionQuestions];
+            this.loadedCategories.add(categoryKey);
+          } else {
+          }
+        } else if (categoryKey === "video games") {
+          if (this.props.videoGamesQuestionsAsset) {
+            const assetData = await (this.props.videoGamesQuestionsAsset as any).fetchAsData();
+            const jsonData = assetData.asJSON();
+            this.videoGamesQuestions = this.parseOpenTriviaFormat(jsonData, "Video Games");
+            allQuestions = [...this.videoGamesQuestions];
             this.loadedCategories.add(categoryKey);
           } else {
           }
@@ -2302,14 +2372,32 @@ export class TriviaGame extends ui.UIComponent {
     // Convert category internal name to display name for pre-game screen
     let displayName: string;
     switch (category) {
-      case 'General':
-        displayName = 'General Trivia';
-        break;
-      case 'Another Category':
-        displayName = 'Another Category';
-        break;
       case 'Italian Brainrot Quiz':
-        displayName = 'Italian Brainrot Quiz';
+        displayName = 'Italian Brainrot';
+        break;
+      case 'General':
+        displayName = 'General';
+        break;
+      case 'Geography':
+        displayName = 'Geography';
+        break;
+      case 'History':
+        displayName = 'History';
+        break;
+      case 'Science':
+        displayName = 'Science';
+        break;
+      case 'Film':
+        displayName = 'Film';
+        break;
+      case 'Music':
+        displayName = 'Music';
+        break;
+      case 'Television':
+        displayName = 'Television';
+        break;
+      case 'Video Games':
+        displayName = 'Video Games';
         break;
       default:
         displayName = category; // Fallback to original category name
