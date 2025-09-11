@@ -2995,44 +2995,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   ]
                 })
               ]
-            }),
-            
-            // Category selection - Video Games
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Video Games' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Video Games'),
-                  children: [
-                    ui.Text({
-                      text: 'Video Games',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Video Games' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
             })
           ]
         }),

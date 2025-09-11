@@ -107,7 +107,6 @@ interface TriviaGameProps {
   filmQuestionsAsset?: any;
   musicQuestionsAsset?: any;
   televisionQuestionsAsset?: any;
-  videoGamesQuestionsAsset?: any;
   ItalianBrainrotQuiz?: any;
   questionTimeLimit: number;
   showCorrectAnswer: boolean;
@@ -396,7 +395,6 @@ export class TriviaGame extends ui.UIComponent {
     filmQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     musicQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     televisionQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
-    videoGamesQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     ItalianBrainrotQuiz: { type: hz.PropTypes.Asset, default: null },
     
     // Game configuration
@@ -603,7 +601,6 @@ export class TriviaGame extends ui.UIComponent {
   private filmQuestions: TriviaQuestion[] = [];
   private musicQuestions: TriviaQuestion[] = [];
   private televisionQuestions: TriviaQuestion[] = [];
-  private videoGamesQuestions: TriviaQuestion[] = [];
   private customQuizQuestions: TriviaQuestion[] = []; // Custom quiz questions with images
   private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
   private currentQuestionIndex: number = 0;
@@ -895,13 +892,37 @@ export class TriviaGame extends ui.UIComponent {
   private parseOpenTriviaFormat(jsonData: any, expectedCategory: string): TriviaQuestion[] {
     const convertedQuestions: TriviaQuestion[] = [];
     
+
+    
+    // Check if jsonData has the expected structure
+    if (!jsonData || typeof jsonData !== 'object') {
+      return [];
+    }
+    
+    if (!jsonData.questions) {
+      return [];
+    }
+    
     // Extract questions from all difficulty levels
     const difficulties = ['easy', 'medium', 'hard'];
     
     for (const difficulty of difficulties) {
+
+      
       if (jsonData.questions[difficulty] && Array.isArray(jsonData.questions[difficulty])) {
-        for (const question of jsonData.questions[difficulty]) {
+        const questionsArray = jsonData.questions[difficulty];
+
+        
+        for (let i = 0; i < questionsArray.length; i++) {
+          const question = questionsArray[i];
           try {
+
+            
+            // Validate required fields
+            if (!question.correct_answer || !question.incorrect_answers || !question.question) {
+              continue;
+            }
+            
             // Convert Open Trivia Database format to TriviaQuestion format
             const answers = [
               { text: question.correct_answer, correct: true },
@@ -909,13 +930,13 @@ export class TriviaGame extends ui.UIComponent {
             ];
 
             // Shuffle answers for randomization
-            for (let i = answers.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [answers[i], answers[j]] = [answers[j], answers[i]];
+            for (let j = answers.length - 1; j > 0; j--) {
+              const k = Math.floor(Math.random() * (j + 1));
+              [answers[j], answers[k]] = [answers[k], answers[j]];
             }
 
             const triviaQuestion: TriviaQuestion = {
-              id: parseInt(question.id) || Math.floor(Math.random() * 1000000),
+              id: Math.floor(Math.random() * 1000000), // Generate random ID since Open Trivia DB doesn't have IDs
               question: question.question,
               category: expectedCategory,
               difficulty: difficulty,
@@ -924,13 +945,13 @@ export class TriviaGame extends ui.UIComponent {
             };
 
             convertedQuestions.push(triviaQuestion);
+
+
           } catch (error) {
-            // Skip malformed questions
             continue;
           }
         }
       } else {
-        // Skip malformed questions
         continue;
       }
     }
@@ -1054,8 +1075,6 @@ export class TriviaGame extends ui.UIComponent {
           allQuestions = [...this.musicQuestions];
         } else if (categoryKey === "television") {
           allQuestions = [...this.televisionQuestions];
-        } else if (categoryKey === "video games") {
-          allQuestions = [...this.videoGamesQuestions];
         } else if (categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || categoryKey.includes("italian") && categoryKey.includes("brainrot")) {
           allQuestions = [...this.customQuizQuestions];
         }
@@ -1130,15 +1149,6 @@ export class TriviaGame extends ui.UIComponent {
             this.loadedCategories.add(categoryKey);
           } else {
           }
-        } else if (categoryKey === "video games") {
-          if (this.props.videoGamesQuestionsAsset) {
-            const assetData = await (this.props.videoGamesQuestionsAsset as any).fetchAsData();
-            const jsonData = assetData.asJSON();
-            this.videoGamesQuestions = this.parseOpenTriviaFormat(jsonData, "Video Games");
-            allQuestions = [...this.videoGamesQuestions];
-            this.loadedCategories.add(categoryKey);
-          } else {
-          }
         } else if (categoryKey === "italian brainrot quiz" || categoryKey === "italianbrainrot quiz" || categoryKey.includes("italian") && categoryKey.includes("brainrot")) {
           // Italian Brainrot Quiz is already loaded in loadCustomQuizData
           allQuestions = [...this.customQuizQuestions];
@@ -1198,6 +1208,7 @@ export class TriviaGame extends ui.UIComponent {
       this.currentQuestionIndex = 0;
 
     } catch (error) {
+      console.log(`❌ Error loading questions for category '${category}':`, error);
       this.triviaQuestions = [];
     } finally {
       this.isLoadingCategory = false;
