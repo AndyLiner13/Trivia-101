@@ -526,7 +526,7 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfigBinding = new Binding({
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 48,
+    numQuestions: 20,
     category: "Italian Brainrot Quiz",
     difficulty: "easy"
   });
@@ -578,7 +578,7 @@ export class TriviaGame extends ui.UIComponent {
   private gameConfig = {
     timeLimit: 30,
     autoAdvance: true,
-    numQuestions: 48,
+    numQuestions: 20,
     category: "Italian Brainrot Quiz",
     difficulty: "easy"
   };
