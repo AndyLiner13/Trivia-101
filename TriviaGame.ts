@@ -4719,71 +4719,26 @@ export class TriviaGame extends ui.UIComponent {
                     ]
                   }),
 
-                  // Error Screen overlay - made less intrusive
+                  // Error Screen overlay - only background image
                   View({
                     style: {
                       position: 'absolute',
-                      top: 20,
-                      left: 20,
-                      right: 20,
-                      borderRadius: 8,
-                      padding: 12,
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
                       display: this.showErrorBinding.derive(show => show ? 'flex' : 'none'),
-                      shadowColor: 'black',
-                      shadowOpacity: 0.5,
-                      shadowRadius: 4,
-                      shadowOffset: [0, 2],
                       zIndex: 1000
                     },
                     children: [
-                      // Background image
+                      // Background image only
                       Image({
                         source: ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(815090457525624))),
                         style: {
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
                           width: '100%',
                           height: '100%',
-                          resizeMode: 'cover',
-                          zIndex: -1
+                          resizeMode: 'cover'
                         }
-                      }),
-                      View({
-                        style: {
-                          backgroundColor: 'transparent',
-                          borderRadius: 6,
-                          padding: 12,
-                          alignItems: 'center',
-                          maxWidth: '80%'
-                        },
-                        children: [
-                          // Dismiss button (smaller and less prominent)
-                          ui.Pressable({
-                            style: {
-                              backgroundColor: '#6B7280',
-                              borderRadius: 4,
-                              paddingHorizontal: 12,
-                              paddingVertical: 6,
-                              alignItems: 'center'
-                            },
-                            onPress: () => this.hideErrorScreen(),
-                            children: [
-                              ui.Text({
-                                text: 'Dismiss',
-                                style: {
-                                  fontSize: 12,
-                                  fontWeight: '500',
-                                  color: 'white'
-                                }
-                              })
-                            ]
-                          })
-                        ]
                       })
                     ]
                   })

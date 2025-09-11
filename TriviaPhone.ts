@@ -55,8 +55,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Game settings state
   private gameSettings = {
-    numberOfQuestions: 48,
-    category: 'Italian Brainrot Quiz',
+    numberOfQuestions: 20,
+    category: 'General',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     timeLimit: 30,
     // Timer options (one must be selected)
@@ -2693,44 +2693,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               ]
             }),
 
-            // Category selection - Italian Brainrot
-            ui.View({
-              style: {
-                width: '100%',
-                marginBottom: 8
-              },
-              children: [
-                ui.Pressable({
-                  style: {
-                    width: '100%',
-                    minHeight: 44,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                      settings.category === 'Italian Brainrot Quiz' ? '#FFFFFF' : '#191919'
-                    ),
-                    borderRadius: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  },
-                  onPress: () => this.updateGameSetting('category', 'Italian Brainrot Quiz'),
-                  children: [
-                    ui.Text({
-                      text: 'Italian Brainrot',
-                      style: {
-                        fontSize: 18,
-                        fontWeight: '600',
-                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
-                          settings.category === 'Italian Brainrot Quiz' ? '#000000' : '#FFFFFF'
-                        ),
-                        textAlign: 'center'
-                      }
-                    })
-                  ]
-                })
-              ]
-            }),
-            
             // Category selection - General
             ui.View({
               style: {
@@ -2988,6 +2950,44 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                         fontWeight: '600',
                         color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
                           settings.category === 'Television' ? '#000000' : '#FFFFFF'
+                        ),
+                        textAlign: 'center'
+                      }
+                    })
+                  ]
+                })
+              ]
+            }),
+            
+            // Category selection - Italian Brainrot
+            ui.View({
+              style: {
+                width: '100%',
+                marginBottom: 8
+              },
+              children: [
+                ui.Pressable({
+                  style: {
+                    width: '100%',
+                    minHeight: 44,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    backgroundColor: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                      settings.category === 'Italian Brainrot Quiz' ? '#FFFFFF' : '#191919'
+                    ),
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  },
+                  onPress: () => this.updateGameSetting('category', 'Italian Brainrot Quiz'),
+                  children: [
+                    ui.Text({
+                      text: 'Italian Brainrot',
+                      style: {
+                        fontSize: 18,
+                        fontWeight: '600',
+                        color: ui.Binding.derive([this.gameSettingsBinding], (settings) =>
+                          settings.category === 'Italian Brainrot Quiz' ? '#000000' : '#FFFFFF'
                         ),
                         textAlign: 'center'
                       }
