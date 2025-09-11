@@ -4,6 +4,7 @@ import { Social, AvatarImageType } from 'horizon/social';
 import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
 import { PhoneManager } from './PhoneManager';
 import { PlayerManager } from './PlayerManager';
+import { TriviaAssetManager } from './TriviaAssetManager';
 
 // Interface for tracking phone assignments
 interface PhoneAssignment {
@@ -660,12 +661,11 @@ export class TriviaGame extends ui.UIComponent {
 
   // Player headshot cache - maps player ID to ImageSource
   private playerHeadshots = new Map<string, ImageSource | null>();
-
-  // Asset cache to keep background images and icons in memory permanently  
-  private assetCache = new Map<string, ImageSource>();
   
-  // Italian Brainrot specific image cache for next question preloading
-  private italianBrainrotImageCache = new Map<string, ImageSource>();
+  // Centralized asset manager for improved caching
+  private assetManager = TriviaAssetManager.getInstance();
+  
+  // Italian Brainrot specific state tracking
   private currentItalianBrainrotImageId: string | null = null;
   private isCurrentlyItalianBrainrot: boolean = false;
 
@@ -747,7 +747,8 @@ export class TriviaGame extends ui.UIComponent {
       await this.loadPlayerHeadshot(player, 'INIT');
     }
     
-    // Preload all game assets (icons, backgrounds, question images) for better performance
+    // Initialize centralized asset manager and preload game assets
+    await this.assetManager.initializeForTrivia();
     await this.preloadGameAssets();
     
     // Detect host player for existing players
@@ -804,43 +805,44 @@ export class TriviaGame extends ui.UIComponent {
       ...Object.values(imageTextureMap)
     ];
     
-    // Preload all assets by creating TextureAsset instances and cache them
-    const preloadPromises = assetTextureIds.map(async (textureId) => {
-      try {
-        const textureAsset = new hz.TextureAsset(BigInt(textureId));
-        // Creating an ImageSource forces the texture to be loaded
-        const imageSource = ImageSource.fromTextureAsset(textureAsset);
-        // Cache the ImageSource for permanent memory storage
-        this.assetCache.set(textureId, imageSource);
-        return imageSource;
-      } catch (error) {
-        return null;
+    // Preload all assets using the centralized asset manager
+    try {
+      // Preload common assets with high priority
+      await this.assetManager.preloadCommonAssets();
+      
+      // Preload question images with medium priority
+      const questionImageIds = Object.values(imageTextureMap);
+      if (questionImageIds.length > 0) {
+        await this.assetManager.preloadAssets(questionImageIds, this.assetManager['ASSET_PRIORITIES'].MEDIUM);
       }
-    });
-    
-    // Wait for all assets to finish preloading
-    const results = await Promise.all(preloadPromises);
-    const successCount = results.filter(result => result !== null).length;
-    const iconCount = 17; // First 17 are icons (including 4 shape icons)
-    const backgroundCount = 7; // Next 7 are backgrounds
-    const questionImageCount = Object.values(imageTextureMap).length;
-    
+      
+      console.log(`✅ TriviaGame: Successfully preloaded ${assetTextureIds.length} assets via TriviaAssetManager`);
+    } catch (error) {
+      console.log(`❌ TriviaGame: Failed to preload some assets:`, error);
+    }
   }
 
-  // Helper method to get cached asset or create new one
+  // Helper method to get cached asset via centralized asset manager
   private getCachedImageSource(textureId: string): ImageSource {
-    const cached = this.assetCache.get(textureId);
+    // Try to get from cache first (synchronous)
+    const cached = this.assetManager.getCachedImageSource(textureId);
     if (cached) {
       return cached;
     }
     
-    // If not cached, create and cache it
+    // If not cached, create directly (fallback for immediate use)
+    // Note: This should ideally be avoided - prefer preloading assets
     const imageSource = ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-    this.assetCache.set(textureId, imageSource);
+    
+    // Async cache it for future use (fire-and-forget)
+    this.assetManager.getImageSource(textureId).catch(error => 
+      console.log(`⚠️ TriviaGame: Failed to cache asset ${textureId}:`, error)
+    );
+    
     return imageSource;
   }
 
-  // Preload next Italian Brainrot question image
+  // Preload next Italian Brainrot question image via asset manager
   private preloadNextItalianBrainrotImage(): void {
     if (!this.isItalianBrainrotQuiz()) return;
     
@@ -852,16 +854,14 @@ export class TriviaGame extends ui.UIComponent {
       const imageId = nextQuestion.image;
       
       // Don't reload if already cached
-      if (this.italianBrainrotImageCache.has(imageId)) {
+      if (this.assetManager.getCachedImageSource(imageId)) {
         return;
       }
       
-      try {
-        const imageSource = ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(imageId)));
-        this.italianBrainrotImageCache.set(imageId, imageSource);
-      } catch (error) {
-        return;
-      }
+      // Preload asynchronously with high priority for next question
+      this.assetManager.preloadQuestionImage(imageId).catch(error => {
+        console.log(`⚠️ TriviaGame: Failed to preload next Italian Brainrot image ${imageId}:`, error);
+      });
     }
   }
 
@@ -869,8 +869,8 @@ export class TriviaGame extends ui.UIComponent {
   private cleanupPreviousItalianBrainrotImage(): void {
     if (!this.isItalianBrainrotQuiz()) return;
     
+    // No longer needed - let asset manager handle cleanup with LRU strategy
     if (this.currentItalianBrainrotImageId) {
-      this.italianBrainrotImageCache.delete(this.currentItalianBrainrotImageId);
       this.currentItalianBrainrotImageId = null;
     }
   }
@@ -942,6 +942,16 @@ export class TriviaGame extends ui.UIComponent {
           this.customQuizQuestions = await this.loadCustomQuiz(quizData);
           // Mark Italian Brainrot Quiz as loaded
           this.loadedCategories.add("italian brainrot quiz");
+          
+          // Prepare asset manager for Italian Brainrot images
+          const imageIds = this.customQuizQuestions
+            .filter(q => q.image)
+            .map(q => q.image!)
+            .filter(id => id); // Remove any null/undefined values
+          
+          if (imageIds.length > 0) {
+            await this.assetManager.prepareForItalianBrainrotQuiz(imageIds);
+          }
         } else {
         }
       } else {
@@ -1705,7 +1715,6 @@ export class TriviaGame extends ui.UIComponent {
     
     // For Italian Brainrot quiz, clean up any remaining cached images
     this.cleanupPreviousItalianBrainrotImage();
-    this.italianBrainrotImageCache.clear();
     this.isCurrentlyItalianBrainrot = false;
   }
 
@@ -2482,7 +2491,6 @@ export class TriviaGame extends ui.UIComponent {
 
     // Reset Italian Brainrot caching system for the new game
     this.cleanupPreviousItalianBrainrotImage();
-    this.italianBrainrotImageCache.clear();
     this.currentItalianBrainrotImageId = null;
     this.isCurrentlyItalianBrainrot = false;
 

@@ -323,8 +323,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.updateScoreDisplay();
   }
 
-  // Asset cache to keep images in memory permanently
-  private assetCache = new Map<string, ui.ImageSource>();
+  // Centralized asset manager for improved caching
+  private assetManager = TriviaAssetManager.getInstance();
 
   private async preloadTriviaPhoneAssets(): Promise<void> {
     
@@ -379,29 +379,35 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     let successCount = 0;
     const startTime = Date.now();
     
-    // Preload all assets and cache them
-    for (const textureId of assetTextureIds) {
-      try {
-        const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-        this.assetCache.set(textureId, imageSource);
-        successCount++;
-      } catch (error) {
-      }
+    // Use centralized asset manager for preloading
+    try {
+      await this.assetManager.preloadAssets(assetTextureIds, this.assetManager['ASSET_PRIORITIES'].HIGH);
+      successCount = assetTextureIds.length;
+      console.log(`✅ TriviaPhone: Successfully preloaded ${successCount} assets via TriviaAssetManager`);
+    } catch (error) {
+      console.log(`❌ TriviaPhone: Failed to preload some assets:`, error);
     }
     
     const loadTime = Date.now() - startTime;
   }
 
-  // Helper method to get cached asset or create new one
+  // Helper method to get cached asset via centralized asset manager
   private getCachedImageSource(textureId: string): ui.ImageSource {
-    const cached = this.assetCache.get(textureId);
+    // Try to get from cache first (synchronous)
+    const cached = this.assetManager.getCachedImageSource(textureId);
     if (cached) {
       return cached;
     }
     
-    // If not cached, create and cache it
+    // If not cached, create directly (fallback for immediate use)
+    // Note: This should ideally be avoided - prefer preloading assets
     const imageSource = ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt(textureId)));
-    this.assetCache.set(textureId, imageSource);
+    
+    // Async cache it for future use (fire-and-forget)
+    this.assetManager.getImageSource(textureId, this.assetManager['ASSET_PRIORITIES'].HIGH).catch(error => 
+      console.log(`⚠️ TriviaPhone: Failed to cache asset ${textureId}:`, error)
+    );
+    
     return imageSource;
   }
 
