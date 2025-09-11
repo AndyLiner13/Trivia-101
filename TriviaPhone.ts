@@ -1,3 +1,21 @@
+/**
+ * Horizon Worlds Trivia Game - Phone Interface
+ * 
+ * This component provides a phone-style user interface for individual player interaction
+ * with the trivia game system. Features include:
+ * - Mobile-inspired UI design for familiar interaction
+ * - Player answer submission and game joining/leaving
+ * - Host controls for game configuration and management
+ * - Real-time score display and game status updates
+ * - Camera and focus management for immersive VR experience
+ * 
+ * This script should be attached to a CustomUI Gizmo for the phone interface.
+ * 
+ * @author AndyLiner13
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import * as camera from 'horizon/camera';

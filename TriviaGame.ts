@@ -1,3 +1,19 @@
+/**
+ * Horizon Worlds Trivia Game - Main Game Engine
+ * 
+ * This is the core trivia game system for Horizon Worlds that manages:
+ * - Game flow and question display
+ * - Multiplayer coordination and scoring
+ * - UI rendering and player interaction
+ * - Asset management and network synchronization
+ * 
+ * This script should be attached to a CustomUI Gizmo to render the main game interface.
+ * 
+ * @author AndyLiner13
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';

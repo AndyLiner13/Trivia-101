@@ -1,4 +1,36 @@
 {
+  "name": "horizon-worlds-trivia-game",
+  "version": "1.0.0",
+  "description": "A feature-rich multiplayer trivia game built for Meta's Horizon Worlds platform with phone-style UI interface",
+  "main": "TriviaGame.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AndyLiner13/MePhone.git"
+  },
+  "keywords": [
+    "horizon-worlds",
+    "trivia",
+    "game",
+    "multiplayer",
+    "vr",
+    "meta",
+    "typescript",
+    "custom-ui"
+  ],
+  "author": "AndyLiner13",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndyLiner13/MePhone/issues"
+  },
+  "homepage": "https://github.com/AndyLiner13/MePhone#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "devDependencies": {
     "typescript": "4.7.4"
   }

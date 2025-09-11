@@ -1,3 +1,22 @@
+/**
+ * Horizon Worlds Trivia Game - Network Events & Types
+ * 
+ * Centralized definition of all network events and data types used for
+ * real-time multiplayer communication in the trivia game system.
+ * 
+ * Includes:
+ * - Network event constants for game coordination
+ * - TypeScript interfaces for data structures
+ * - Game configuration and settings types
+ * - Player and leaderboard data definitions
+ * 
+ * This file ensures consistent communication protocols across all game components.
+ * 
+ * @author AndyLiner13
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import * as hz from 'horizon/core';
 
 // Serializable question type for network events

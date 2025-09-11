@@ -1,8 +1,21 @@
-import * as hz from 'horizon/core';
-
 /**
- * Player management utilities for tracking players and their states
+ * Horizon Worlds Trivia Game - Player Manager
+ * 
+ * Centralized player state management system that handles:
+ * - Player tracking and world population monitoring
+ * - Host assignment and permissions management
+ * - Answer submission and opt-out state tracking
+ * - Player statistics and scoring coordination
+ * 
+ * This manager is used by both TriviaGame and TriviaPhone components
+ * to maintain consistent player state across the multiplayer session.
+ * 
+ * @author AndyLiner13
+ * @version 1.0.0
+ * @license MIT
  */
+
+import * as hz from 'horizon/core';
 export class PlayerManager {
   private playersInWorld: Set<string> = new Set();
   private optedOutPlayers: Set<string> = new Set();
