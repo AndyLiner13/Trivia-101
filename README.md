@@ -1,4 +1,4 @@
-# 📱 MePhone - Horizon Worlds Trivia Game
+# 📱 Trivia 101 - Horizon Worlds Trivia Game
 
 A feature-rich **multiplayer trivia game** built for Meta's Horizon Worlds platform, featuring a phone-style UI interface and comprehensive game management system.
 
