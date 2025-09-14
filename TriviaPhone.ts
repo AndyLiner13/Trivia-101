@@ -1990,6 +1990,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.gameSettings.modifiers.autoAdvance = true;
     }
     
+    // When autoplay (autoAdvance) is disabled, automatically disable skip leaderboard
+    if (modifier === 'autoAdvance' && !this.gameSettings.modifiers[modifier]) {
+      this.gameSettings.modifiers.powerUps = false;
+    }
+    
     // Force a deep copy of the entire gameSettings object to ensure binding updates
     this.gameSettingsBinding.set({
       ...this.gameSettings,
