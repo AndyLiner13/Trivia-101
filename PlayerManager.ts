@@ -97,7 +97,8 @@ export class PlayerManager {
    * Add player to answered list for current question and track their answer
    */
   addAnsweredPlayer(playerId: string, answerIndex?: number): void {
-    if (!this.optedOutPlayers.has(playerId)) {
+    // Handle 'local' player ID from mobile users - always accept these
+    if (playerId === 'local' || !this.optedOutPlayers.has(playerId)) {
       this.answeredPlayers.add(playerId);
       if (answerIndex !== undefined) {
         this.playerAnswers.set(playerId, answerIndex);

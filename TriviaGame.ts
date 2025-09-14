@@ -21,6 +21,7 @@ import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'hori
 import { PhoneManager } from './PhoneManager';
 import { PlayerManager } from './PlayerManager';
 import { TriviaAssetManager } from './TriviaAssetManager';
+import { TriviaNetworkEvents } from './TriviaNetworkEvents';
 
 // Interface for tracking phone assignments
 interface PhoneAssignment {
@@ -161,12 +162,6 @@ const triviaFourOptionsEvent = new hz.NetworkEvent<{
   timeLimit: number;
   totalQuestions: number;
 }>('triviaFourOptions');
-
-const triviaAnswerSubmittedEvent = new hz.NetworkEvent<{
-  playerId: string;
-  answerIndex: number;
-  responseTime: number;
-}>('triviaAnswerSubmitted');
 
 const triviaGameStartEvent = new hz.NetworkEvent<{
   hostId: string;
@@ -1195,7 +1190,7 @@ export class TriviaGame extends ui.UIComponent {
     this.connectNetworkBroadcastEvent(triviaResultsEvent, this.onQuestionResults.bind(this));
     
     // Listen for answer submissions from other players
-    this.connectNetworkBroadcastEvent(triviaAnswerSubmittedEvent, this.onPlayerAnswerSubmitted.bind(this));
+    this.connectNetworkBroadcastEvent(TriviaNetworkEvents.answerSubmitted, this.onPlayerAnswerSubmitted.bind(this));
     
     // Listen for game start events from host
     this.connectNetworkBroadcastEvent(triviaGameStartEvent, this.onGameStart.bind(this));
@@ -2031,9 +2026,38 @@ export class TriviaGame extends ui.UIComponent {
   }
 
   private onPlayerAnswerSubmitted(eventData: { playerId: string, answerIndex: number, responseTime: number }): void {
+    console.log(`✅ TriviaGame: Answer received - Player: ${eventData.playerId}, Answer: ${eventData.answerIndex}`);
+    
+    let actualPlayerId = eventData.playerId;
+    
+    // For 'local' player ID (mobile users without proper assignment), generate unique ID
+    if (eventData.playerId === 'local') {
+      // Generate unique ID for each 'local' submission to handle multiple mobile users
+      actualPlayerId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log(`✅ TriviaGame: Generated unique ID for local player: ${actualPlayerId}`);
+    } else {
+      // Check if specific player has already answered to prevent duplicates
+      if (this.playerManager.hasPlayerAnswered(eventData.playerId)) {
+        console.log(`❌ TriviaGame: Player ${eventData.playerId} already answered, ignoring duplicate`);
+        return;
+      }
+      
+      // For specific player IDs, validate they are in world and not opted out
+      if (!this.playerManager.isPlayerInWorld(eventData.playerId)) {
+        console.log(`❌ TriviaGame: Player ${eventData.playerId} not in world, ignoring answer`);
+        return;
+      }
+      
+      if (this.playerManager.isPlayerOptedOut(eventData.playerId)) {
+        console.log(`❌ TriviaGame: Player ${eventData.playerId} is opted out, ignoring answer`);
+        return;
+      }
+    }
+    
+    console.log(`✅ TriviaGame: Processing answer - Current count: ${this.playerManager.getAnsweredCount()}`);
     
     // Track this player as having answered using PlayerManager, including their answer choice
-    this.playerManager.addAnsweredPlayer(eventData.playerId, eventData.answerIndex);
+    this.playerManager.addAnsweredPlayer(actualPlayerId, eventData.answerIndex);
     
     // Update individual answer count for the chosen answer
     if (eventData.answerIndex >= 0 && eventData.answerIndex < 4) {
@@ -2056,18 +2080,32 @@ export class TriviaGame extends ui.UIComponent {
       answerCount: this.playerManager.getAnsweredCount()
     });
     
-    // Check if all active (non-opted-out) players have answered
-    if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && this.playerManager.getActivePlayerCount() > 0) {
-      // Add a small delay to allow any concurrent logout events to be processed first
-      this.async.setTimeout(() => {
-        // Recheck the counts after the delay to ensure accuracy
-        if (this.playerManager.getAnsweredCount() >= this.playerManager.getActivePlayerCount() && 
-            this.playerManager.getActivePlayerCount() > 0 && 
-            !this.isShowingResults) {
-          this.showCorrectAnswersAndLeaderboard();
-        }
-      }, 100); // 100ms delay to allow logout events to process
-    }
+    console.log(`✅ TriviaGame: After processing - Answered: ${this.playerManager.getAnsweredCount()}, Active: ${this.playerManager.getActivePlayerCount()}`);
+
+  // Check if all active players have answered
+  // For mobile users sending 'local', we need to check against total players in world instead of active player count
+  const totalPlayers = this.playerManager.getPlayerCount();
+  const answeredCount = this.playerManager.getAnsweredCount();
+  
+  if ((answeredCount >= totalPlayers && totalPlayers > 0) || 
+      (answeredCount >= this.playerManager.getActivePlayerCount() && this.playerManager.getActivePlayerCount() > 0)) {
+    console.log(`✅ TriviaGame: All players answered - triggering results`);
+    // Add a small delay to allow any concurrent logout events to be processed first
+    this.async.setTimeout(() => {
+      // Recheck the counts after the delay to ensure accuracy
+      const newAnsweredCount = this.playerManager.getAnsweredCount();
+      const newTotalPlayers = this.playerManager.getPlayerCount();
+      const newActiveCount = this.playerManager.getActivePlayerCount();
+      
+      if (((newAnsweredCount >= newTotalPlayers && newTotalPlayers > 0) || 
+           (newAnsweredCount >= newActiveCount && newActiveCount > 0)) && 
+          !this.isShowingResults) {
+        this.showCorrectAnswersAndLeaderboard();
+      }
+    }, 100); // 100ms delay to allow logout events to process
+  } else {
+    console.log(`✅ TriviaGame: Waiting for more answers - ${answeredCount}/${Math.max(totalPlayers, this.playerManager.getActivePlayerCount())}`);
+  }
   }
 
   private showCorrectAnswersAndLeaderboard(): void {
@@ -5755,7 +5793,8 @@ export class TriviaGame extends ui.UIComponent {
     // Update the reactive binding for UI updates
     this.playersListBinding.set([...this.currentPlayers]);
     
-    // PlayerManager automatically handles player tracking when players enter
+    // Update PlayerManager with current player list
+    this.playerManager.updatePlayersInWorld(currentPlayers);
     
     // Broadcast updated player tracking to all clients using PlayerManager
     this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
@@ -5796,10 +5835,9 @@ export class TriviaGame extends ui.UIComponent {
     // Update the reactive binding for UI updates
     this.playersListBinding.set([...this.currentPlayers]);
     
-    // PlayerManager automatically handles player tracking when players exit
-    
-    // Remove player from all tracking using PlayerManager
+    // Remove player from PlayerManager and update with current player list
     this.playerManager.removePlayer(playerId);
+    this.playerManager.updatePlayersInWorld(currentPlayers);
     
     // Broadcast updated player tracking to all clients using PlayerManager
     this.sendNetworkBroadcastEvent(triviaPlayerUpdateEvent, {
