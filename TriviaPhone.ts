@@ -4919,7 +4919,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 40, // Start closer to the checkmark (matching wrong results positioning)
+            marginTop: 20, // Start closer to the checkmark (moved up from 40)
             bottom: 64, // End before the bottom bar (bottom bar height)
             paddingHorizontal: 16,
             justifyContent: 'center',
@@ -5255,7 +5255,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            marginTop: 40, // Start closer to the checkmark (matching wrong results positioning)
+            marginTop: 20, // Start closer to the checkmark (moved up from 40)
             bottom: 64, // End before the bottom bar (bottom bar height)
             paddingHorizontal: 16,
             justifyContent: 'center',
