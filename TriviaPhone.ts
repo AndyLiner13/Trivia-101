@@ -177,7 +177,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     "Lock in, twin.",
     "You got this!",
     "Big F but get back up.",
-    "Rizz me with a win.",
     "Next time, for sure.",
     "It's not over yet.",
     "Don't give up!",
@@ -199,7 +198,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     "LFG!",
     "You can do it!",
     "Stay hungry.",
-    "No more L's, my guy.",
     "Give me that win, fam.",
     "Let's go!",
     "Keep your vibes high.",
@@ -4837,7 +4835,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1418913812533291'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('772746795466171'))),
           style: {
             width: '100%',
             height: '100%',
@@ -4914,32 +4912,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Checkmark container - centered
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: 136,
-            height: 136,
-            marginTop: -68, // Half of height to center vertically
-            marginLeft: -68, // Half of width to center horizontally
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            // Checkmark icon (no green circle background)
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2019383778812059'))), // Using specified check icon
-              style: {
-                width: 120,
-                height: 120,
-                tintColor: '#FFFFFF'
-              }
-            })
-          ]
-        }),
-
         // Text message container - fills space between checkmark and bottom bar
         ui.View({
           style: {
@@ -4948,6 +4920,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: 0,
             right: 0,
             marginTop: 40, // Start closer to the checkmark (matching wrong results positioning)
+            bottom: 64, // End before the bottom bar (bottom bar height)
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
@@ -5030,7 +5003,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792752243300401'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1121676173257968'))),
           style: {
             width: '100%',
             height: '100%',
@@ -5103,30 +5076,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }
                 })
               ]
-            })
-          ]
-        }),
-
-        // Close icon container - flexbox centered (positioned above center)
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            // Close icon
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24587675990884692'))), // close icon
-              style: {
-                width: 120,
-                height: 120,
-                tintColor: '#FFFFFF'
-              }
             })
           ]
         }),
@@ -5222,7 +5171,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1418913812533291'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('772746795466171'))),
           style: {
             width: '100%',
             height: '100%',
@@ -5299,32 +5248,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Checkmark container - centered
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: 136,
-            height: 136,
-            marginTop: -68, // Half of height to center vertically
-            marginLeft: -68, // Half of width to center horizontally
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            // Checkmark icon (no green circle background)
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('2019383778812059'))), // Using specified check icon
-              style: {
-                width: 120,
-                height: 120,
-                tintColor: '#FFFFFF'
-              }
-            })
-          ]
-        }),
-
         // Text message container - fills space between checkmark and bottom bar
         ui.View({
           style: {
@@ -5332,8 +5255,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             top: '50%',
             left: 0,
             right: 0,
-            bottom: 64,
-            marginTop: 32, // Start closer to the checkmark (matching wrong results positioning)
+            marginTop: 40, // Start closer to the checkmark (matching wrong results positioning)
+            bottom: 64, // End before the bottom bar (bottom bar height)
             paddingHorizontal: 16,
             justifyContent: 'center',
             alignItems: 'center'
@@ -5456,7 +5379,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       children: [
         // Background image
         ui.Image({
-          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('792752243300401'))),
+          source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1121676173257968'))),
           style: {
             width: '100%',
             height: '100%',
@@ -5529,32 +5452,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   }
                 })
               ]
-            })
-          ]
-        }),
-
-        // Close icon container - centered
-        ui.View({
-          style: {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: 136,
-            height: 136,
-            marginTop: -68, // Half of height to center vertically
-            marginLeft: -68, // Half of width to center horizontally
-            justifyContent: 'center',
-            alignItems: 'center'
-          },
-          children: [
-            // Close icon
-            ui.Image({
-              source: ui.ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('24587675990884692'))), // close icon
-              style: {
-                width: 120,
-                height: 120,
-                tintColor: '#FFFFFF'
-              }
             })
           ]
         }),
