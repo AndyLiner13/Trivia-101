@@ -5111,10 +5111,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         ui.View({
           style: {
             position: 'absolute',
-            top: '15%',
+            top: 0,
             left: 0,
             right: 0,
-            bottom: '65%',
+            bottom: 0,
             justifyContent: 'center',
             alignItems: 'center'
           },
