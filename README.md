@@ -2,7 +2,7 @@
 
 A feature-rich **multiplayer trivia game** built for Meta's Horizon Worlds platform, featuring a phone-style UI interface and comprehensive game management system.
 
-> 🎮 **Over 15,000+ questions** across multiple categories | 📱 **Phone-inspired UI** | 🔧 **Fully customizable** | 👥 **15 Player Limit**
+> 🎮 **Over 15,000+ questions** | 📱 **Phone-inspired UI** | 🔧 **Fully customizable** | 👥 **15 Player Limit**
 
 ## 🎮 Features
 
