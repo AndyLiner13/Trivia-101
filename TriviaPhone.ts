@@ -1930,12 +1930,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       if (value === 'Italian Brainrot Quiz') {
         // When switching TO Italian Brainrot Quiz, always set to 48 questions
         this.gameSettings.numberOfQuestions = 48;
-      } else if (oldCategory === 'Italian Brainrot Quiz' && value !== 'Italian Brainrot Quiz') {
-        // When switching FROM Italian Brainrot Quiz to another category, round to nearest 5
-        const currentCount = this.gameSettings.numberOfQuestions || 5;
-        const roundedCount = Math.round(currentCount / 5) * 5;
-        // Ensure it stays within bounds after rounding
-        this.gameSettings.numberOfQuestions = Math.max(5, Math.min(95, roundedCount));
+      } else {
+        // When switching to any other category, default to 20 questions
+        this.gameSettings.numberOfQuestions = 20;
       }
     }
     

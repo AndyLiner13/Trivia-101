@@ -550,14 +550,14 @@ export class TriviaGame extends ui.UIComponent {
     timeLimit: 30,
     autoAdvance: true,
     numQuestions: 20,
-    category: "Italian Brainrot Quiz",
-    difficulty: "easy"
+    category: "General",
+    difficulty: "medium"
   });
   private hostPlayerIdBinding = new Binding<string | null>(null);
   private isLocalPlayerHostBinding = new Binding(false);
   
   // Category name binding for pre-game screen display
-  private categoryNameBinding = new Binding("Italian Brainrot Quiz");
+  private categoryNameBinding = new Binding("General");
   
   // Layout mode binding - determines if question should be centered (true) or at top (false)
   private centerQuestionBinding = new Binding(false);
@@ -592,7 +592,7 @@ export class TriviaGame extends ui.UIComponent {
   private difficultyIconSourceBinding = new Binding(ImageSource.fromTextureAsset(new hz.TextureAsset(BigInt('1167500291866690')))); // Default: medium difficulty
   
   // Binding for displaying the number of questions in pre-game UI
-  private questionCountBinding = new Binding("48");
+  private questionCountBinding = new Binding("20");
   
   // Internal state variables (not bound to UI)
   private hostPlayerId: string | null = null;
@@ -602,7 +602,7 @@ export class TriviaGame extends ui.UIComponent {
     timeLimit: 30,
     autoAdvance: true,
     numQuestions: 20,
-    category: "Italian Brainrot Quiz",
+    category: "General",
     difficulty: "easy"
   };
 
