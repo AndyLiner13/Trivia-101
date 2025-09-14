@@ -287,106 +287,6 @@ const triviaPlayerRejoinEvent = new hz.NetworkEvent<{
   playerId: string;
 }>('triviaPlayerRejoin');
 
-// Default trivia questions for continuous gameplay
-const defaultTriviaQuestions: TriviaQuestion[] = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    category: "Geography",
-    difficulty: "easy",
-    answers: [
-      { text: "London", correct: false },
-      { text: "Berlin", correct: false },
-      { text: "Paris", correct: true },
-      { text: "Madrid", correct: false }
-    ]
-  },
-  {
-    id: 2,
-    question: "Which planet is closest to the Sun?",
-    category: "Science",
-    difficulty: "easy",
-    answers: [
-      { text: "Venus", correct: false },
-      { text: "Mercury", correct: true },
-      { text: "Earth", correct: false },
-      { text: "Mars", correct: false }
-    ]
-  },
-  {
-    id: 3,
-    question: "What is 7 × 8?",
-    category: "Math",
-    difficulty: "easy",
-    answers: [
-      { text: "54", correct: false },
-      { text: "56", correct: true },
-      { text: "64", correct: false },
-      { text: "48", correct: false }
-    ]
-  },
-  {
-    id: 4,
-    question: "Who painted the Mona Lisa?",
-    category: "Art",
-    difficulty: "medium",
-    answers: [
-      { text: "Van Gogh", correct: false },
-      { text: "Picasso", correct: false },
-      { text: "Da Vinci", correct: true },
-      { text: "Monet", correct: false }
-    ]
-  },
-  {
-    id: 5,
-    question: "What is the largest ocean on Earth?",
-    category: "Geography",
-    difficulty: "easy",
-    answers: [
-      { text: "Atlantic", correct: false },
-      { text: "Pacific", correct: true },
-      { text: "Indian", correct: false },
-      { text: "Arctic", correct: false }
-    ]
-  },
-  {
-    id: 6,
-    question: "In which year did World War II end?",
-    category: "History",
-    difficulty: "medium",
-    answers: [
-      { text: "1944", correct: false },
-      { text: "1945", correct: true },
-      { text: "1946", correct: false },
-      { text: "1943", correct: false }
-    ]
-  },
-  {
-    id: 7,
-    question: "What is the chemical symbol for gold?",
-    category: "Science",
-    difficulty: "medium",
-    answers: [
-      { text: "Go", correct: false },
-      { text: "Gd", correct: false },
-      { text: "Au", correct: true },
-      { text: "Ag", correct: false }
-    ]
-  },
-  {
-    id: 8,
-    question: "Which country is home to Machu Picchu?",
-    category: "Geography",
-    difficulty: "medium",
-    answers: [
-      { text: "Brazil", correct: false },
-      { text: "Peru", correct: true },
-      { text: "Chile", correct: false },
-      { text: "Colombia", correct: false }
-    ]
-  }
-];
-
 /**
  * Trivia Game CustomUI Component
  * 
@@ -602,7 +502,7 @@ export class TriviaGame extends ui.UIComponent {
     timeLimit: 30,
     autoAdvance: true,
     numQuestions: 20,
-    category: "Italian Brainrot Quiz",
+    category: "General",
     difficulty: "easy"
   };
 
@@ -625,7 +525,7 @@ export class TriviaGame extends ui.UIComponent {
   private musicQuestions: TriviaQuestion[] = [];
   private televisionQuestions: TriviaQuestion[] = [];
   private customQuizQuestions: TriviaQuestion[] = []; // Custom quiz questions with images
-  private triviaQuestions: TriviaQuestion[] = [...defaultTriviaQuestions];
+  private triviaQuestions: TriviaQuestion[] = [];
   private currentQuestionIndex: number = 0;
   private currentQuestion: TriviaQuestion | null = null;
   private timeRemaining: number = 30;
