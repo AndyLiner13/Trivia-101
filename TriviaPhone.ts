@@ -5102,16 +5102,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
           ]
         }),
 
-        // Close icon container - centered
+        // Close icon container - flexbox centered (positioned above center)
         ui.View({
           style: {
             position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: 136,
-            height: 136,
-            marginTop: -68, // Half of height to center vertically
-            marginLeft: -68, // Half of width to center horizontally
+            top: '15%',
+            left: 0,
+            right: 0,
+            bottom: '65%',
             justifyContent: 'center',
             alignItems: 'center'
           },
