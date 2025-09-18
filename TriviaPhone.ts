@@ -5589,7 +5589,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               style: {
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#22C55E', // Green color for Join Game button
+                backgroundColor: '#16A34A', // Same green as the "Yes" button
                 borderRadius: 8,
                 justifyContent: 'center',
                 alignItems: 'center'
