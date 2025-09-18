@@ -98,9 +98,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private currentQuestionIndexBinding = new ui.Binding(0);
   private scoreBinding = new ui.Binding(0);
   
-  // Stable question index for footer (prevents updates during leaderboard transition)
-  private stableQuestionIndex: number = 0;
-  private updateFooterBinding = new ui.Binding(false); // New binding to trigger footer updates
   private selectedAnswerBinding = new ui.Binding<number | null>(null);
   private showResultBinding = new ui.Binding(false);
   private gameStartedBinding = new ui.Binding(false);
@@ -1536,14 +1533,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Update game settings with actual total questions from the game
     this.gameSettings.numberOfQuestions = eventData.totalQuestions;
     this.gameSettingsBinding.set({ ...this.gameSettings });
-    
-    // Update footer immediately when receiving a new question
-    this.updateFooterBinding.set(true);
-    const footerTimeoutId1 = this.async.setTimeout(() => {
-      this.pendingTimeouts.delete(footerTimeoutId1);
-      this.updateFooterBinding.set(false);
-    }, 100);
-    this.pendingTimeouts.add(footerTimeoutId1);
   }
 
   public onTriviaFourOptions(eventData: { 
@@ -1597,14 +1586,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Update game settings with actual total questions from the game
     this.gameSettings.numberOfQuestions = eventData.totalQuestions;
     this.gameSettingsBinding.set({ ...this.gameSettings });
-    
-    // Update footer immediately when receiving a new question
-    this.updateFooterBinding.set(true);
-    const footerTimeoutId2 = this.async.setTimeout(() => {
-      this.pendingTimeouts.delete(footerTimeoutId2);
-      this.updateFooterBinding.set(false);
-    }, 100);
-    this.pendingTimeouts.add(footerTimeoutId2);
   }
 
   private onTriviaStateResponse(event: {
@@ -1867,16 +1848,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.sendNetworkBroadcastEvent(TriviaNetworkEvents.nextQuestion, {
       playerId: this.world.getLocalPlayer()?.id.toString() || 'host'
     });
-    
-    // Trigger footer update immediately when next question button is clicked
-    this.updateFooterBinding.set(true);
-    
-    // Reset the trigger after a short delay to allow the binding to update
-    const nextQuestionTimeoutId = this.async.setTimeout(() => {
-      this.pendingTimeouts.delete(nextQuestionTimeoutId);
-      this.updateFooterBinding.set(false);
-    }, 100);
-    this.pendingTimeouts.add(nextQuestionTimeoutId);
   }
 
   private resetGame(): void {
@@ -3468,9 +3439,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 ui.Text({
                   text: ui.Binding.derive([this.isHostBinding, this.gameStartedBinding], (isHost, gameStarted) => {
                     if (isHost && gameStarted) {
-                      return 'End game?';
+                      return 'End the game?';
                     } else {
-                      return 'Are you sure?';
+                      return 'Leave the game?';
                     }
                   }),
                   style: {
@@ -4194,16 +4165,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       },
       children: [
         ui.Text({
-          text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding, this.updateFooterBinding], (index, settings, shouldUpdate) => {
-            // Update the question number when the next question button is clicked
-            if (shouldUpdate) {
-              this.stableQuestionIndex = index;
-            }
+          text: ui.Binding.derive([this.currentQuestionIndexBinding, this.gameSettingsBinding], (index, settings) => {
+            // Use question index directly from TriviaGame network events
             // Show just "Question #" for infinite questions mode, otherwise "Question # of #"
             if (settings.modifiers.bonusRounds) {
-              return `Question ${this.stableQuestionIndex + 1}`;
+              return `Question ${index + 1}`;
             }
-            return `Question ${this.stableQuestionIndex + 1} of ${settings.numberOfQuestions}`;
+            return `Question ${index + 1} of ${settings.numberOfQuestions}`;
           }),
           style: {
             fontSize: 12,
@@ -5703,10 +5671,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Clear leaderboard data
     this.leaderboardDataBinding.set([]);
-    
-    // Reset stable question index
-    this.stableQuestionIndex = 0;
-    this.updateFooterBinding.set(false);
     
     // Preview mode transition cleanup completed successfully
   }
