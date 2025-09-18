@@ -67,6 +67,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Question start time for speed multiplier calculation
   private questionStartTime: number = 0;
+  
+  // Store the actual response time when player answers (for accurate scoring)
+  private answerResponseTime: number = 0;
 
   // Current question time limit for speed multiplier calculation
   private currentQuestionTimeLimit: number = 30;
@@ -1291,6 +1294,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentQuestion = null;
     this.score = 0;
     this.selectedAnswer = null;
+    this.answerResponseTime = 0; // Reset stored response time
     this.showResult = false;
     this.answerSubmitted = false;
 
@@ -1368,8 +1372,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     if (isCorrect && this.world.getLocalPlayer() && !eventData.showLeaderboard) {
       const timeLimit = this.currentQuestionTimeLimit * 1000; // Convert to milliseconds using actual question time limit
       
-      // Calculate response time (use the time from when question was received)
-      const responseTime = Date.now() - this.questionStartTime;
+      // Use the stored response time from when the player actually answered
+      const responseTime = this.answerResponseTime > 0 ? this.answerResponseTime : (Date.now() - this.questionStartTime);
       
       let calculatedPoints = 1; // Default points
       
@@ -1499,6 +1503,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Record question start time for speed multiplier calculation
     this.questionStartTime = Date.now();
     
+    // Reset the answer response time for new question
+    this.answerResponseTime = 0;
+    
     // Store the actual time limit from the event for speed multiplier calculation
     this.currentQuestionTimeLimit = eventData.timeLimit;
     
@@ -1554,6 +1561,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Record question start time for speed multiplier calculation
     this.questionStartTime = Date.now();
+    
+    // Reset the answer response time for new question
+    this.answerResponseTime = 0;
     
     // Reset result display
     this.showResult = false;
@@ -1823,8 +1833,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.selectedAnswer = actualAnswerIndex;
     this.selectedAnswerBinding.set(actualAnswerIndex);
 
-    // Calculate response time in milliseconds
+    // Calculate response time in milliseconds and store it for accurate scoring
     const responseTime = Date.now() - this.questionStartTime;
+    this.answerResponseTime = responseTime; // Store the actual response time
     // Response time calculated: {responseTime} ms
 
     // Send network event with the answer index and calculated response time
