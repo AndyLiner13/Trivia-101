@@ -31,16 +31,11 @@ class SimpleVROnlyTextGizmo extends Component<typeof SimpleVROnlyTextGizmo> {
     this.textGizmo = this.entity.as(TextGizmo);
     
     if (!this.textGizmo) {
-      console.log("❌ SimpleVROnlyTextGizmo: This script must be attached to a Text Gizmo!");
       return;
     }
 
     // Set the text content
     this.textGizmo.text.set(this.props.displayText!);
-    
-    if (this.props.enableDebugLogging!) {
-      console.log("✅ SimpleVROnlyTextGizmo: Component initialized");
-    }
   }
 
   start() {
@@ -64,10 +59,6 @@ class SimpleVROnlyTextGizmo extends Component<typeof SimpleVROnlyTextGizmo> {
     const currentPlayers = this.world.getPlayers();
     
     if (currentPlayers.length !== this.lastPlayerCount) {
-      if (this.props.enableDebugLogging!) {
-        console.log(`✅ SimpleVROnlyTextGizmo: Player count changed from ${this.lastPlayerCount} to ${currentPlayers.length}`);
-      }
-      
       this.updateVisibilityForAllPlayers();
       this.lastPlayerCount = currentPlayers.length;
     }
@@ -87,10 +78,6 @@ class SimpleVROnlyTextGizmo extends Component<typeof SimpleVROnlyTextGizmo> {
     allPlayers.forEach(player => {
       const deviceType = player.deviceType.get();
       
-      if (this.props.enableDebugLogging!) {
-        console.log(`✅ SimpleVROnlyTextGizmo: Player ${player.name.get()} has device type: ${deviceType}`);
-      }
-      
       if (deviceType === PlayerDeviceType.VR) {
         vrPlayers.push(player);
       } else {
@@ -101,10 +88,6 @@ class SimpleVROnlyTextGizmo extends Component<typeof SimpleVROnlyTextGizmo> {
     // Show text to VR users only
     if (vrPlayers.length > 0) {
       this.textGizmo.setVisibilityForPlayers(vrPlayers, PlayerVisibilityMode.VisibleTo);
-      
-      if (this.props.enableDebugLogging!) {
-        console.log(`✅ SimpleVROnlyTextGizmo: Text made visible to ${vrPlayers.length} VR users`);
-      }
     }
 
     // Hide text from non-VR users
