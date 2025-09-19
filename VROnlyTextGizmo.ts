@@ -15,7 +15,7 @@ class VROnlyTextGizmo extends Component<typeof VROnlyTextGizmo> {
   
   static propsDefinition = {
     // Text content to display (only visible to VR users)
-    displayText: { type: PropTypes.String, default: "✅ VR Only Text - You're using VR!" },
+    displayText: { type: PropTypes.String, default: "Press B or Y to open & close the phone" },
     // Whether to log device types for debugging
     enableDebugLogging: { type: PropTypes.Boolean, default: false }
   };
