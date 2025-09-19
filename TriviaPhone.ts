@@ -1384,11 +1384,12 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       } else if (this.gameSettings.timerType === 'fast') {
         // More time modifier (90 seconds): proportional scaling from 1000 to 1 points
         if (responseTime > 0 && responseTime < timeLimit) {
-          // Convert response time to seconds
+          // Convert response time to seconds and get actual time limit
           const responseTimeSeconds = responseTime / 1000;
-          // Scale from 1000 points (immediate) to 1 point (89 seconds)
+          const timeLimitSeconds = this.currentQuestionTimeLimit;
+          // Scale from 1000 points (immediate) to 1 point (at time limit)
           // Formula: points = 1000 - (responseTime / maxTime * 999)
-          calculatedPoints = Math.max(1, Math.floor(1000 - (responseTimeSeconds / 90) * 999));
+          calculatedPoints = Math.max(1, Math.floor(1000 - (responseTimeSeconds / timeLimitSeconds) * 999));
         } else if (responseTime >= timeLimit) {
           // If answered at or after time limit, give minimum points
           calculatedPoints = 1;
@@ -1564,6 +1565,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     // Reset the answer response time for new question
     this.answerResponseTime = 0;
+    
+    // Store the actual time limit from the event for speed multiplier calculation
+    this.currentQuestionTimeLimit = eventData.timeLimit;
     
     // Reset result display
     this.showResult = false;
@@ -1928,16 +1932,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private setTimerType(type: 'fast' | 'normal' | 'slow'): void {
     
     this.gameSettings.timerType = type;
-    // Update actual timeLimit based on timer type
+    // Update actual timeLimit based on timer type to match TriviaGame logic
     switch (type) {
-      case 'fast':
-        this.gameSettings.timeLimit = 15;
+      case 'fast': // More time modifier - 90 seconds
+        this.gameSettings.timeLimit = 90;
         break;
-      case 'normal':
+      case 'normal': // Normal timer - 30 seconds
         this.gameSettings.timeLimit = 30;
         break;
-      case 'slow':
-        this.gameSettings.timeLimit = 60;
+      case 'slow': // No timer modifier - use large number (999999) but display as 60 for UI
+        this.gameSettings.timeLimit = 999999;
         break;
     }
     this.gameSettingsBinding.set({ ...this.gameSettings });
