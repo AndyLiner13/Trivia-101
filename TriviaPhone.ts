@@ -4035,7 +4035,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     borderRadius: 4,
                     paddingHorizontal: 8,
                     paddingVertical: 8,
-                    flex: 0.8,
+                    flex: .8,
                     alignItems: 'center',
                     marginRight: 4
                   },
@@ -4066,7 +4066,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                     borderRadius: 4,
                     paddingHorizontal: 8,
                     paddingVertical: 8,
-                    flex: 1.2,
+                    flex: 1,
                     alignItems: 'center',
                     marginLeft: 4
                   },
