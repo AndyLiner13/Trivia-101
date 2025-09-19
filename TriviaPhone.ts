@@ -3959,7 +3959,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             padding: 12,
             minWidth: 160,
             maxWidth: 200,
-            maxHeight: '80%',
             marginHorizontal: 8
           },
           children: [
@@ -3985,7 +3984,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             // Scrollable Players List
             ui.ScrollView({
               style: {
-                maxHeight: 200,
+                maxHeight: 128,
                 borderRadius: 4,
                 backgroundColor: '#2a2a2a',
                 marginBottom: 16
@@ -4065,7 +4064,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       selected ? '#DC2626' : '#555555'
                     ),
                     borderRadius: 4,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: 8,
                     paddingVertical: 8,
                     flex: 1.2,
                     alignItems: 'center',
