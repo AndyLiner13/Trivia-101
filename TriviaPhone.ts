@@ -171,6 +171,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private showOutlinesBinding = new ui.Binding(false);
   private showOutlines: boolean = false;
 
+  // Device type binding for mobile-specific UI elements
+  private isMobileDeviceBinding = new ui.Binding(false);
+  private currentMobileStatus: boolean = false;
+
   // Wrong screen banter messages
   private banterMessages: string[] = [
     "Keep your head up!",
@@ -445,6 +449,20 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // Initialize opted-out status
     this.checkOptedOutStatus();
 
+    // Initialize device type binding
+    const localPlayer = this.world.getLocalPlayer();
+    if (localPlayer) {
+      try {
+        const isMobile = localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile;
+        this.currentMobileStatus = isMobile;
+        this.isMobileDeviceBinding.set(isMobile);
+      } catch (error) {
+        // Fallback to false if device type cannot be determined
+        this.currentMobileStatus = false;
+        this.isMobileDeviceBinding.set(false);
+      }
+    }
+
     // Update score display
     this.waitForPersistentStorageAndUpdateScore();
   }
@@ -566,6 +584,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
     // Asset Pool Gizmo handles ownership, so we work with the local player
     const localPlayer = this.world.getLocalPlayer();
+    
+    // Update mobile device binding if it has changed
+    if (localPlayer) {
+      try {
+        const isMobile = localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile;
+        if (this.currentMobileStatus !== isMobile) {
+          this.currentMobileStatus = isMobile;
+          this.isMobileDeviceBinding.set(isMobile);
+        }
+      } catch (error) {
+        // If we can't determine device type, default to false (don't show mobile text)
+        if (this.currentMobileStatus !== false) {
+          this.currentMobileStatus = false;
+          this.isMobileDeviceBinding.set(false);
+        }
+      }
+    }
     if (localPlayer) {
       try {
         // Check if the TriviaPhone entity is still visible (as an indicator of UI focus)
@@ -2055,6 +2090,64 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             zIndex: 1
           },
           children: [
+            // Rotated "Click here to close" text on the left - only visible for mobile users
+            ui.UINode.if(
+              this.isMobileDeviceBinding,
+              ui.View({
+                style: {
+                  position: 'absolute',
+                  left: 10,
+                  top: '50%',
+                  transform: [{ rotate: '-90deg' }],
+                  marginTop: 0, // Moved down from -100 to center better vertically
+                  zIndex: 2
+                },
+                children: [
+                  ui.Text({
+                    text: 'Click here to close',
+                    style: {
+                      fontSize: 24,
+                      fontWeight: '600',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      textAlign: 'center',
+                      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                      textShadowOffset: [1, 1],
+                      textShadowRadius: 2
+                    }
+                  })
+                ]
+              })
+            ),
+
+            // Rotated "Click here to close" text on the right - only visible for mobile users
+            ui.UINode.if(
+              this.isMobileDeviceBinding,
+              ui.View({
+                style: {
+                  position: 'absolute',
+                  right: 10,
+                  top: '50%',
+                  transform: [{ rotate: '90deg' }],
+                  marginTop: 0, // Moved down from -100 to center better vertically
+                  zIndex: 2
+                },
+                children: [
+                  ui.Text({
+                    text: 'Click here to close',
+                    style: {
+                      fontSize: 24,
+                      fontWeight: '600',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      textAlign: 'center',
+                      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                      textShadowOffset: [1, 1],
+                      textShadowRadius: 2
+                    }
+                  })
+                ]
+              })
+            ),
+
             // Clickable transparent area that covers everywhere except the phone
             ui.Pressable({
               style: {
