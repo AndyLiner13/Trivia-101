@@ -4034,8 +4034,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                   style: {
                     backgroundColor: '#6B7280',
                     borderRadius: 4,
-                    padding: 8,
-                    flex: 1,
+                    paddingHorizontal: 8,
+                    paddingVertical: 8,
+                    flex: 0.8,
                     alignItems: 'center',
                     marginRight: 4
                   },
@@ -4064,8 +4065,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       selected ? '#DC2626' : '#555555'
                     ),
                     borderRadius: 4,
-                    padding: 8,
-                    flex: 1,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    flex: 1.2,
                     alignItems: 'center',
                     marginLeft: 4
                   },
