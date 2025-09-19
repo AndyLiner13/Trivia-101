@@ -931,10 +931,28 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private handleEKeyTrigger(player: hz.Player): void {
     // Check if the player is a VR user
     const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+    const currentPosition = this.entity.position.get();
+    
+    // Check if TriviaPhone is already in "closed" position
+    const isAlreadyClosed = isVRUser ? (currentPosition.y <= 0) : (currentPosition.y <= -1000);
+    
+    if (isAlreadyClosed) {
+      console.log("📱 TriviaPhone already closed - E key ignored");
+      return; // Don't do anything if already closed
+    }
+
+    console.log("📱 Closing TriviaPhone with E key...");
+
+    // Properly unfocus the UI first to balance the focusUI call
+    try {
+      player.unfocusUI();
+      console.log("✅ Player UI unfocused successfully");
+    } catch (unfocusError) {
+      console.log("❌ Error unfocusing UI:", unfocusError);
+    }
 
     if (isVRUser) {
       // For VR users: Rotate to face ground and set y to 0
-      const currentPosition = this.entity.position.get();
       this.entity.position.set(new hz.Vec3(currentPosition.x, 0, currentPosition.z));
 
       // Rotate to face the ground (90 degrees around X-axis)
@@ -942,7 +960,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.entity.rotation.set(groundRotation);
     } else {
       // For non-VR users: Set y to -1000 as before
-      const currentPosition = this.entity.position.get();
       this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
     }
 
@@ -2021,24 +2038,66 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       style: {
         width: '100%',
         height: '100%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20
+        position: 'relative'
       },
       children: [
-        // Phone container
+        // Transparent background that fills the entire viewport (visual only)
         ui.View({
           style: {
-            width: 200,
-            height: 400,
-            backgroundColor: '#000000', // Black phone frame
-            borderRadius: 20,
-            padding: 6,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'transparent', // Transparent background
+            flexDirection: 'row',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            padding: 20,
+            zIndex: 1
           },
           children: [
+            // Clickable transparent area that covers everywhere except the phone
+            ui.Pressable({
+              style: {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,  
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'transparent',
+                zIndex: 1 // Lower than phone
+              },
+              onPress: () => {
+                console.log("� Background area clicked (outside phone) - closing TriviaPhone!");
+                const localPlayer = this.world.getLocalPlayer();
+                if (localPlayer) {
+                  this.handleEKeyTrigger(localPlayer);
+                }
+              }
+            }),
+
+            // Phone container - higher z-index to block clicks from reaching green area
+            ui.Pressable({
+              style: {
+                width: 200,
+                height: 400,
+                backgroundColor: '#000000', // Black phone frame
+                borderRadius: 20,
+                padding: 6,
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 3 // Higher z-index than clickable green area
+              },
+              onPress: () => {
+                // Handle phone clicks without closing the UI - this prevents bubbling
+                console.log("📱 Phone container clicked - NOT closing TriviaPhone");
+              },
+              children: [
             // Phone screen content area
             ui.View({
               style: {
@@ -2137,6 +2196,8 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             })
           ]
         })
+        ]
+      })
       ]
     });
   }
