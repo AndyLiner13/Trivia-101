@@ -1453,7 +1453,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     }
     
     // DEBUG LOG: Always log which screen was requested for debugging purposes
-    console.log(`🔧 Debug Panel Navigation: Showing ${screenType} screen`);
   }
 
   private toggleOutlines(): void {
@@ -1463,13 +1462,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   render(): ui.UINode {
-    // Log screen dimensions
-    console.log('📱 Phone Screen Dimensions:');
-    console.log('   Height (top to bottom): 388 pixels');
-    console.log('   Width (left to right): 188 pixels');
-    console.log('   Total frame: 200x400 pixels (with 6px padding)');
-    console.log('   Screen area: 188x388 pixels (usable content area)');
-
     return ui.View({
       style: {
         width: '100%',
@@ -3925,8 +3917,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             left: 0
           }
         }),
-
-        // Top navigation bar with 4A-style layout
         ui.View({
           style: {
             position: 'absolute',

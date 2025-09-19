@@ -93,10 +93,6 @@ class SimpleVROnlyTextGizmo extends Component<typeof SimpleVROnlyTextGizmo> {
     // Hide text from non-VR users
     if (nonVRPlayers.length > 0) {
       this.textGizmo.setVisibilityForPlayers(nonVRPlayers, PlayerVisibilityMode.HiddenFrom);
-      
-      if (this.props.enableDebugLogging!) {
-        console.log(`✅ SimpleVROnlyTextGizmo: Text hidden from ${nonVRPlayers.length} non-VR users`);
-      }
     }
 
     this.lastPlayerCount = allPlayers.length;

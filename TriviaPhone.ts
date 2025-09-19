@@ -937,18 +937,14 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     const isAlreadyClosed = isVRUser ? (currentPosition.y <= 0) : (currentPosition.y <= -1000);
     
     if (isAlreadyClosed) {
-      console.log("📱 TriviaPhone already closed - E key ignored");
       return; // Don't do anything if already closed
     }
-
-    console.log("📱 Closing TriviaPhone with E key...");
 
     // Properly unfocus the UI first to balance the focusUI call
     try {
       player.unfocusUI();
-      console.log("✅ Player UI unfocused successfully");
     } catch (unfocusError) {
-      console.log("❌ Error unfocusing UI:", unfocusError);
+      // Error unfocusing UI
     }
 
     if (isVRUser) {
@@ -2073,7 +2069,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                 zIndex: 1 // Lower than phone
               },
               onPress: () => {
-                console.log("� Background area clicked (outside phone) - closing TriviaPhone!");
                 const localPlayer = this.world.getLocalPlayer();
                 if (localPlayer) {
                   this.handleEKeyTrigger(localPlayer);
@@ -2095,7 +2090,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
               },
               onPress: () => {
                 // Handle phone clicks without closing the UI - this prevents bubbling
-                console.log("📱 Phone container clicked - NOT closing TriviaPhone");
               },
               children: [
             // Phone screen content area
