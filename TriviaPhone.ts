@@ -1587,7 +1587,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentQuestionIndexBinding.set(eventData.questionIndex);
     
     // Update game settings with actual total questions from the game
-    this.gameSettings.numberOfQuestions = eventData.totalQuestions;
+    // For unlimited mode, totalQuestions will be 0 - don't override numberOfQuestions in that case
+    if (eventData.totalQuestions > 0) {
+      this.gameSettings.numberOfQuestions = eventData.totalQuestions;
+    }
     this.gameSettingsBinding.set({ ...this.gameSettings });
   }
 
@@ -1646,7 +1649,10 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     this.currentQuestionIndexBinding.set(eventData.questionIndex);
     
     // Update game settings with actual total questions from the game
-    this.gameSettings.numberOfQuestions = eventData.totalQuestions;
+    // For unlimited mode, totalQuestions will be 0 - don't override numberOfQuestions in that case
+    if (eventData.totalQuestions > 0) {
+      this.gameSettings.numberOfQuestions = eventData.totalQuestions;
+    }
     this.gameSettingsBinding.set({ ...this.gameSettings });
   }
 

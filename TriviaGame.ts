@@ -1385,12 +1385,24 @@ export class TriviaGame extends ui.UIComponent {
 
     // Get the next question in the shuffled order
     if (this.currentQuestionIndex >= this.triviaQuestions.length) {
-      // If we've gone through all questions, end the game
-      this.endGame();
-      return;
+      // Check if unlimited questions modifier is enabled
+      if (this.modifiers.bonusRounds) {
+        // For unlimited questions mode, don't reset currentQuestionIndex
+        // Instead, use modulo to get the question from the pool while keeping the count going up
+        // The question index continues to increment, but we select questions using modulo
+      } else {
+        // If we've gone through all questions in normal mode, end the game
+        this.endGame();
+        return;
+      }
     }
 
-    const question = this.triviaQuestions[this.currentQuestionIndex];
+    // For unlimited questions mode, use modulo to cycle through questions while keeping count going up
+    const questionPoolIndex = this.modifiers.bonusRounds ? 
+      (this.currentQuestionIndex % this.triviaQuestions.length) : 
+      this.currentQuestionIndex;
+    
+    const question = this.triviaQuestions[questionPoolIndex];
     
     // Create a copy of the question with shuffled answers
     const shuffledQuestion = this.shuffleQuestionAnswers(question);
@@ -1484,7 +1496,7 @@ export class TriviaGame extends ui.UIComponent {
       question: serializableQuestion,
       questionIndex: this.currentQuestionIndex,
       timeLimit: this.getTimeLimitForCurrentModifier(),
-      totalQuestions: this.triviaQuestions.length
+      totalQuestions: this.modifiers.bonusRounds ? 0 : this.triviaQuestions.length
     };
 
     if (answerCount === 2) {
@@ -2241,8 +2253,9 @@ export class TriviaGame extends ui.UIComponent {
       }
       
       // Check if this is the last question - if so, end the game instead of showing leaderboard
+      // BUT only in normal mode - never end automatically in unlimited questions mode
       // We check if currentQuestionIndex + 1 equals the total length (since we're 0-indexed)
-      if (this.currentQuestionIndex + 1 >= this.triviaQuestions.length) {
+      if (this.currentQuestionIndex + 1 >= this.triviaQuestions.length && !this.modifiers.bonusRounds) {
         this.endGame();
       } else {
         // Check if skip leaderboard modifier is enabled
@@ -2422,12 +2435,12 @@ export class TriviaGame extends ui.UIComponent {
     this.gameConfig = {
       timeLimit: eventData.settings.timeLimit,
       autoAdvance: eventData.settings.modifiers.autoAdvance,
-      numQuestions: eventData.settings.numberOfQuestions,
+      numQuestions: eventData.settings.modifiers.bonusRounds ? 0 : eventData.settings.numberOfQuestions,
       category: eventData.settings.category.toLowerCase(),
       difficulty: eventData.settings.difficulty
     };
     
-    // Update the question count binding for the pre-game UI
+    // Update the question count binding for the pre-game UI - show 0 for unlimited mode
     this.questionCountBinding.set(this.gameConfig.numQuestions.toString());
     
     // Store modifier settings for icon visibility
@@ -5550,7 +5563,7 @@ export class TriviaGame extends ui.UIComponent {
             question: serializableQuestion,
             questionIndex: this.currentQuestionIndex,
             timeLimit: this.getTimeLimitForCurrentModifier(),
-            totalQuestions: this.triviaQuestions.length
+            totalQuestions: this.modifiers.bonusRounds ? 0 : this.triviaQuestions.length
           });
         } else {
           // Send four-option question event
@@ -5558,7 +5571,7 @@ export class TriviaGame extends ui.UIComponent {
             question: serializableQuestion,
             questionIndex: this.currentQuestionIndex,
             timeLimit: this.getTimeLimitForCurrentModifier(),
-            totalQuestions: this.triviaQuestions.length
+            totalQuestions: this.modifiers.bonusRounds ? 0 : this.triviaQuestions.length
           });
         }
         
@@ -5608,7 +5621,7 @@ export class TriviaGame extends ui.UIComponent {
         question: serializableQuestion,
         questionIndex: this.currentQuestionIndex,
         timeLimit: this.getTimeLimitForCurrentModifier(),
-        totalQuestions: this.triviaQuestions.length
+        totalQuestions: this.modifiers.bonusRounds ? 0 : this.triviaQuestions.length
       };
 
       if (answerCount === 2) {
