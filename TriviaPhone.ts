@@ -93,6 +93,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       bonusRounds: false
     }
   };
+  
+  // Store the number of questions before unlimited mode was enabled
+  private previousNumberOfQuestions: number = 20;
 
   // View mode for navigation
   private currentViewMode: 'pre-game' | 'game-settings' = 'pre-game';
@@ -1848,6 +1851,16 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       return;
     }
     
+    // Handle bonusRounds modifier state changes from external updates
+    const wasBonusRounds = this.gameSettings.modifiers.bonusRounds;
+    const isBonusRounds = eventData.settings.modifiers.bonusRounds;
+    
+    // If unlimited mode is being enabled externally
+    if (!wasBonusRounds && isBonusRounds) {
+      // Save current number of questions before switching to unlimited
+      this.previousNumberOfQuestions = this.gameSettings.numberOfQuestions;
+    }
+    
     // Update local game settings when receiving updates from any player
     this.gameSettings = {
       ...this.gameSettings,
@@ -1968,10 +1981,23 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       if (value === 'Italian Brainrot Quiz') {
         // When switching TO Italian Brainrot Quiz, always set to 48 questions
         this.gameSettings.numberOfQuestions = 48;
+        // Update previousNumberOfQuestions if we're not in unlimited mode
+        if (!this.gameSettings.modifiers.bonusRounds) {
+          this.previousNumberOfQuestions = 48;
+        }
       } else {
         // When switching to any other category, default to 20 questions
         this.gameSettings.numberOfQuestions = 20;
+        // Update previousNumberOfQuestions if we're not in unlimited mode
+        if (!this.gameSettings.modifiers.bonusRounds) {
+          this.previousNumberOfQuestions = 20;
+        }
       }
+    }
+    
+    // Update previousNumberOfQuestions when numberOfQuestions changes and we're not in unlimited mode
+    if (key === 'numberOfQuestions' && !this.gameSettings.modifiers.bonusRounds) {
+      this.previousNumberOfQuestions = value;
     }
     
     this.gameSettingsBinding.set({ ...this.gameSettings });
@@ -2020,6 +2046,18 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   // Modifier toggle methods
   private toggleModifier(modifier: 'autoAdvance' | 'powerUps' | 'bonusRounds'): void {
+    // Handle unlimited questions (bonusRounds) modifier toggle
+    if (modifier === 'bonusRounds') {
+      if (!this.gameSettings.modifiers.bonusRounds) {
+        // Enabling unlimited mode: save current count and set to 0
+        this.previousNumberOfQuestions = this.gameSettings.numberOfQuestions;
+        this.gameSettings.numberOfQuestions = 0;
+      } else {
+        // Disabling unlimited mode: restore previous count
+        this.gameSettings.numberOfQuestions = this.previousNumberOfQuestions;
+      }
+    }
+    
     // Toggle the modifier value
     this.gameSettings.modifiers[modifier] = !this.gameSettings.modifiers[modifier];
     
@@ -2789,9 +2827,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
                       },
                       children: [
                         ui.Text({
-                          text: ui.Binding.derive([this.gameSettingsBinding], (settings) => 
-                            settings.numberOfQuestions?.toString() || '5'
-                          ),
+                          text: ui.Binding.derive([this.gameSettingsBinding], (settings) => {
+                            // Show "0" when unlimited questions modifier is enabled
+                            if (settings.modifiers.bonusRounds) {
+                              return '0';
+                            }
+                            return settings.numberOfQuestions?.toString() || '5';
+                          }),
                           style: {
                             fontSize: 16,
                             fontWeight: '600',
