@@ -3129,14 +3129,34 @@ export declare enum AvatarAnimationMask {
     UpperBody = 1
 }
 /**
+ * What animations do once they finish playing their full duration.
+ */
+export declare enum AnimationOnEndBehavior {
+    /**
+     * Finish the animation and return to playing the current non-scripted animation.
+     */
+    Finish = 0,
+    /**
+     * Animation will restart and loop until stopped or interrupted.
+     */
+    Loop = 1,
+    /**
+     * Animation will pause on the final frame until stopped or interrupted.
+     */
+    Pause = 2
+}
+/**
  * The options for the {@link Player.playAvatarAnimation} method, which triggers
- * a non-looping animation on an avatar.
+ * an animation on an avatar.
  *
  * @param playRate - A speed multiplier used to control how fast this animation
  * should play. The default value is `1.0`.
+ *
  * @param looping - True to play the animation repeatedly, false to only play it
  * once. The `fadeoutDuration` parameter has no affect if `looping` is set to
- * `true`. the default value is `false`.
+ * `true`. the default value is `false`. This has been deprecated in favor of the enum
+ * {@link PlayAnimationOptions.onEndBehavior}. For compatibility, this will override the enum only if looping is set to
+ * true and onEndBehavior is set to Finish.
  * @param fadeInDuration - The duration to use when blending in the animation.
  * The default value is to `0.0`, which snaps the animation instantly.
  * @param fadeoutDuration - The duration to use when blending out the animation
@@ -3145,14 +3165,23 @@ export declare enum AvatarAnimationMask {
  * @param mask - (AvatarAnimationMask) which part of the avatar should an animation be applied to
  * @param callback - A callback that triggers whenever a condition in the
  * {@link AnimationCallbackReason} type occurs.
+ * @param onEndBehavior - Controls what animations do once they finish playing their full
+ * duration. The `fadeoutDuration` parameter has no affect unless this is set to Finish.
+ * the default value is `Finish`.
  */
 export declare type PlayAnimationOptions = {
     playRate?: number;
+    /**
+     * @deprecated looping has been deprecated in favor of the enum {@link PlayAnimationOptions.onEndBehavior}.
+     * For compatibility, this will override the enum only if looping is set to true and onEndBehavior is
+     * set to Finish.
+     */
     looping?: boolean;
     fadeInDuration?: number;
     fadeOutDuration?: number;
     mask?: AvatarAnimationMask;
     callback?: AnimationCallback;
+    onEndBehavior?: AnimationOnEndBehavior;
 };
 /**
  * The options for the {@link Player.stopAvatarAnimation} method, which stops
@@ -5224,6 +5253,12 @@ export declare const CodeBlockEvents: {
      */
     OnPassiveInstanceCameraCreated: CodeBlockEvent<[sessionId: Player, cameraMode: string]>;
     /**
+     * The event that is triggered when a world broadcast camera joins the world. A
+     * Assign ownership of a script to this cameraPlayer, and then use the LocalCamera API
+     * to change the perspective being broadcast.
+     */
+    OnWorldBroadcastCameraJoined: CodeBlockEvent<[cameraPlayer: Player]>;
+    /**
      * The event that is triggered when a grab starts.
      */
     OnGrabStart: CodeBlockEvent<[isRightHand: boolean, player: Player]>;
@@ -6336,7 +6371,11 @@ export declare enum ButtonIcon {
     /**
      * The Push Toggle Talk icon for Responding
      */
-    PttResponding = 51
+    PttResponding = 51,
+    /**
+     * The Push Toggle Talk icon for Thinking (between listening and responding)
+     */
+    PttThinking = 52
 }
 /**
  * The available button placements.
