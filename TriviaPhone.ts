@@ -96,6 +96,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   
   // Store the number of questions before unlimited mode was enabled
   private previousNumberOfQuestions: number = 20;
+  
+  // Store the number of questions before Italian Brainrot was selected
+  private questionsBeforeItalianBrainrot: number = 20;
 
   // View mode for navigation
   private currentViewMode: 'pre-game' | 'game-settings' = 'pre-game';
@@ -1861,6 +1864,15 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.previousNumberOfQuestions = this.gameSettings.numberOfQuestions;
     }
     
+    // Handle category changes from external updates
+    const oldCategory = this.gameSettings.category;
+    const newCategory = eventData.settings.category;
+    
+    if (newCategory === 'Italian Brainrot Quiz' && oldCategory !== 'Italian Brainrot Quiz') {
+      // Someone is switching TO Italian Brainrot Quiz, save current count
+      this.questionsBeforeItalianBrainrot = this.gameSettings.numberOfQuestions;
+    }
+    
     // Update local game settings when receiving updates from any player
     this.gameSettings = {
       ...this.gameSettings,
@@ -1973,31 +1985,42 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private updateGameSetting(key: string, value: any): void {
-    const oldCategory = this.gameSettings.category;
-    (this.gameSettings as any)[key] = value;
-    
-    // Handle category changes
+    // Handle category changes BEFORE updating the setting
     if (key === 'category') {
+      const oldCategory = this.gameSettings.category;
+      
       if (value === 'Italian Brainrot Quiz') {
-        // When switching TO Italian Brainrot Quiz, always set to 48 questions
+        // When switching TO Italian Brainrot Quiz, save current count and set to 48 questions
+        if (oldCategory !== 'Italian Brainrot Quiz') {
+          // Save the current question count before switching to Italian Brainrot
+          this.questionsBeforeItalianBrainrot = this.gameSettings.numberOfQuestions;
+        }
         this.gameSettings.numberOfQuestions = 48;
         // Update previousNumberOfQuestions if we're not in unlimited mode
         if (!this.gameSettings.modifiers.bonusRounds) {
           this.previousNumberOfQuestions = 48;
         }
-      } else {
-        // When switching to any other category, default to 20 questions
-        this.gameSettings.numberOfQuestions = 20;
+      } else if (oldCategory === 'Italian Brainrot Quiz') {
+        // When switching FROM Italian Brainrot Quiz to any other category, restore previous count
+        this.gameSettings.numberOfQuestions = this.questionsBeforeItalianBrainrot;
         // Update previousNumberOfQuestions if we're not in unlimited mode
         if (!this.gameSettings.modifiers.bonusRounds) {
-          this.previousNumberOfQuestions = 20;
+          this.previousNumberOfQuestions = this.questionsBeforeItalianBrainrot;
         }
       }
+      // When switching between normal categories (not involving Italian Brainrot), don't change question count
     }
     
-    // Update previousNumberOfQuestions when numberOfQuestions changes and we're not in unlimited mode
+    // Update the setting value
+    (this.gameSettings as any)[key] = value;
+    
+    // Update saved question counts when numberOfQuestions changes and we're not in unlimited mode
     if (key === 'numberOfQuestions' && !this.gameSettings.modifiers.bonusRounds) {
       this.previousNumberOfQuestions = value;
+      // Also update questionsBeforeItalianBrainrot if we're not currently in Italian Brainrot
+      if (this.gameSettings.category !== 'Italian Brainrot Quiz') {
+        this.questionsBeforeItalianBrainrot = value;
+      }
     }
     
     this.gameSettingsBinding.set({ ...this.gameSettings });
