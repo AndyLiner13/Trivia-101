@@ -49,7 +49,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private isPlayerFocusedOnUI: boolean = false;
 
   // Keyboard input connection
-  private eKeyInputConnection: hz.PlayerInput | null = null;
   private rightSecondaryInputConnection: hz.PlayerInput | null = null;
   private leftSecondaryInputConnection: hz.PlayerInput | null = null;
   private leftTertiaryInputConnection: hz.PlayerInput | null = null;
@@ -441,6 +440,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     
     this.setupNetworkEvents();
     this.setupKeyboardInput();
+    this.setupUnfocusUIEvent();
 
     // Store the original position when the component starts
     this.originalPosition = this.entity.position.get().clone();
@@ -493,7 +493,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
       // Position the TriviaPhone in front of the camera with forward offset
       // This ensures the TriviaPhone appears in front of where the user is looking
-      const forwardOffset = 2.5; // Move 2.5 units forward from camera position (increased from 1.5)
+      const forwardOffset = 1.5; // Move 1.2 units forward from camera position (closer to user)
       const desiredPosition = cameraPosition.add(cameraForward.mul(forwardOffset));
 
       // Update the TriviaPhone's position to match the camera's position with forward offset
@@ -693,10 +693,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   stop() {
-    if (this.eKeyInputConnection) {
-      this.eKeyInputConnection.disconnect();
-      this.eKeyInputConnection = null;
-    }
     if (this.rightSecondaryInputConnection) {
       this.rightSecondaryInputConnection.disconnect();
       this.rightSecondaryInputConnection = null;
@@ -819,29 +815,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
         return;
       }
 
-      // Set up E key input for hiding TriviaPhone when focused - ENABLED for desktop and web users only
-      if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.RightGrip)) {
-        // Check if the local player is NOT a VR user and NOT a mobile user
-        const isVRUser = localPlayer.deviceType.get() === hz.PlayerDeviceType.VR;
-        const isMobileUser = localPlayer.deviceType.get() === hz.PlayerDeviceType.Mobile;
-
-        if (!isVRUser && !isMobileUser) {
-          this.eKeyInputConnection = hz.PlayerControls.connectLocalInput(
-            hz.PlayerInputAction.RightGrip,
-            hz.ButtonIcon.None,
-            this,
-            { preferredButtonPlacement: hz.ButtonPlacement.Default }
-          );
-
-          this.eKeyInputConnection.registerCallback((action, pressed) => {
-            if (pressed) {
-              // Handle E key trigger - hide TriviaPhone for desktop and web users
-              this.handleEKeyTrigger(localPlayer);
-            }
-          });
-        }
-      }
-
       // Set up H key input for opening TriviaPhone (desktop, web, and mobile users only)
       if (hz.PlayerControls.isInputActionSupported(hz.PlayerInputAction.LeftTertiary)) {
         // Check if the local player is NOT a VR user
@@ -921,6 +894,41 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   private fallbackToSeparateComponent(): void {
   }
 
+  private setupUnfocusUIEvent(): void {
+    // Listen for OnPlayerUnfocusUI event to handle closing the phone
+    this.connectCodeBlockEvent(
+      this.entity,
+      hz.CodeBlockEvents.OnPlayerUnfocusUI,
+      (player: hz.Player, unfocusedFrom: hz.Entity) => {
+        // Check if the player is a VR user
+        const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
+        const currentPosition = this.entity.position.get();
+        
+        // Check if TriviaPhone is already in "closed" position
+        const isAlreadyClosed = isVRUser ? (currentPosition.y <= 0) : (currentPosition.y <= -1000);
+        
+        if (isAlreadyClosed) {
+          return; // Don't do anything if already closed
+        }
+
+        if (isVRUser) {
+          // For VR users: Rotate to face ground and set y to 0
+          this.entity.position.set(new hz.Vec3(currentPosition.x, 0, currentPosition.z));
+
+          // Rotate to face the ground (90 degrees around X-axis)
+          const groundRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(1, 0, 0), Math.PI / 2);
+          this.entity.rotation.set(groundRotation);
+        } else {
+          // For non-VR users: Set y to -1000 as before
+          this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
+        }
+
+        // Reset focus state since player is no longer actively using the phone
+        this.isPlayerFocusedOnUI = false;
+      }
+    );
+  }
+
   onFocus(player: hz.Player): void {
     try {
       // onFocus called for player device type: player.deviceType.get()
@@ -967,41 +975,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
 
   private showTriviaPhone(): void {
     this.entity.visible.set(true);
-  }
-
-  private handleEKeyTrigger(player: hz.Player): void {
-    // Check if the player is a VR user
-    const isVRUser = player.deviceType.get() === hz.PlayerDeviceType.VR;
-    const currentPosition = this.entity.position.get();
-    
-    // Check if TriviaPhone is already in "closed" position
-    const isAlreadyClosed = isVRUser ? (currentPosition.y <= 0) : (currentPosition.y <= -1000);
-    
-    if (isAlreadyClosed) {
-      return; // Don't do anything if already closed
-    }
-
-    // Properly unfocus the UI first to balance the focusUI call
-    try {
-      player.unfocusUI();
-    } catch (unfocusError) {
-      // Error unfocusing UI
-    }
-
-    if (isVRUser) {
-      // For VR users: Rotate to face ground and set y to 0
-      this.entity.position.set(new hz.Vec3(currentPosition.x, 0, currentPosition.z));
-
-      // Rotate to face the ground (90 degrees around X-axis)
-      const groundRotation = hz.Quaternion.fromAxisAngle(new hz.Vec3(1, 0, 0), Math.PI / 2);
-      this.entity.rotation.set(groundRotation);
-    } else {
-      // For non-VR users: Set y to -1000 as before
-      this.entity.position.set(new hz.Vec3(currentPosition.x, -1000, currentPosition.z));
-    }
-
-    // Reset focus state since player is no longer actively using the phone
-    this.isPlayerFocusedOnUI = false;
   }
 
   private handleRightSecondaryTrigger(player: hz.Player): void {
@@ -1080,9 +1053,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     // For mobile users: toggle behavior (open if closed, close if open)
     if (isMobileUser) {
       if (this.isPlayerFocusedOnUI && isPhoneVisibleToPlayer) {
-        // Phone is open, close it (same as E key behavior for mobile)
+        // Phone is open, close it by unfocusing (OnPlayerUnfocusUI will handle the closing)
         // Mobile user - phone is open, closing it
-        this.handleEKeyTrigger(player);
+        try {
+          player.unfocusUI();
+        } catch (unfocusError) {
+          // Error unfocusing UI
+        }
         return;
       } else {
         // Phone is closed, open it
@@ -2158,85 +2135,6 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
             zIndex: 1
           },
           children: [
-            // Rotated "Click here to close" text on the left - only visible for mobile users
-            ui.UINode.if(
-              this.isMobileDeviceBinding,
-              ui.View({
-                style: {
-                  position: 'absolute',
-                  left: 10,
-                  top: '50%',
-                  transform: [{ rotate: '-90deg' }],
-                  marginTop: 0, // Moved down from -100 to center better vertically
-                  zIndex: 2
-                },
-                children: [
-                  ui.Text({
-                    text: 'Click here to close',
-                    style: {
-                      fontSize: 24,
-                      fontWeight: '600',
-                      color: 'rgba(255, 255, 255, 0.85)',
-                      textAlign: 'center',
-                      textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                      textShadowOffset: [1, 1],
-                      textShadowRadius: 2
-                    }
-                  })
-                ]
-              })
-            ),
-
-            // Rotated "Click here to close" text on the right - only visible for mobile users
-            ui.UINode.if(
-              this.isMobileDeviceBinding,
-              ui.View({
-                style: {
-                  position: 'absolute',
-                  right: 10,
-                  top: '50%',
-                  transform: [{ rotate: '90deg' }],
-                  marginTop: 0, // Moved down from -100 to center better vertically
-                  zIndex: 2
-                },
-                children: [
-                  ui.Text({
-                    text: 'Click here to close',
-                    style: {
-                      fontSize: 24,
-                      fontWeight: '600',
-                      color: 'rgba(255, 255, 255, 0.85)',
-                      textAlign: 'center',
-                      textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                      textShadowOffset: [1, 1],
-                      textShadowRadius: 2
-                    }
-                  })
-                ]
-              })
-            ),
-
-            // Clickable transparent area that covers everywhere except the phone
-            ui.Pressable({
-              style: {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,  
-                bottom: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'transparent',
-                zIndex: 1 // Lower than phone
-              },
-              onPress: () => {
-                const localPlayer = this.world.getLocalPlayer();
-                if (localPlayer) {
-                  this.handleEKeyTrigger(localPlayer);
-                }
-              }
-            }),
-
             // Phone container - higher z-index to block clicks from reaching green area
             ui.Pressable({
               style: {
