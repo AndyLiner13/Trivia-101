@@ -18,7 +18,6 @@ import * as hz from 'horizon/core';
 import * as ui from 'horizon/ui';
 import { Social, AvatarImageType } from 'horizon/social';
 import { View, Text, Pressable, Binding, UINode, Image, ImageSource } from 'horizon/ui';
-import { PhoneManager } from './PhoneManager';
 import { PlayerManager } from './PlayerManager';
 import { TriviaAssetManager } from './TriviaAssetManager';
 import { TriviaNetworkEvents } from './TriviaNetworkEvents';
@@ -315,6 +314,9 @@ export class TriviaGame extends ui.UIComponent {
     televisionQuestionsAsset: { type: hz.PropTypes.Asset, default: null },
     ItalianBrainrotQuiz: { type: hz.PropTypes.Asset, default: null },
     
+    // TriviaPhone asset for spawning
+    triviaPhoneAsset: { type: hz.PropTypes.Asset, default: null },
+    
     // Game configuration
     questionTimeLimit: { type: hz.PropTypes.Number, default: 30 },
     showCorrectAnswer: { type: hz.PropTypes.Boolean, default: true },
@@ -607,8 +609,9 @@ export class TriviaGame extends ui.UIComponent {
   private gameLoopTimeoutId: number | null = null;
   private timerInterval: number | null = null;
 
-  // Phone management - delegated to PhoneManager
-  private phoneManager: PhoneManager | null = null;
+  // Phone management - embedded phone spawning/despawning
+  private phoneAssignments: Map<string, hz.Entity> = new Map(); // playerId -> phone entity
+  private triviaPhoneAsset: hz.Asset | null = null;
 
   // Player management - centralized player tracking and opt-out handling
   private playerManager: PlayerManager = new PlayerManager();
@@ -634,8 +637,8 @@ export class TriviaGame extends ui.UIComponent {
       this.handlePreviewModeTransition();
     }
     
-    // Initialize phone management via PhoneManager
-    this.initializePhoneManager();
+    // Initialize phone management (embedded in TriviaGame)
+    await this.initializePhoneManagement();
     this.setupPlayerEvents();
     
     // Register this TriviaGame instance with the world for TriviaPhone access
@@ -5731,15 +5734,114 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
-  // Phone management methods
-  private async initializePhoneManager(): Promise<void> {
+  // Phone management methods - embedded directly in TriviaGame
+  private async initializePhoneManagement(): Promise<void> {
+    console.log('✅ TriviaGame: Initializing phone management');
     
-    // Create PhoneManager instance
-    this.phoneManager = new PhoneManager();
+    // Get the TriviaPhone asset from props
+    this.triviaPhoneAsset = this.props.triviaPhoneAsset;
     
-    // Initialize the phone manager
-    await this.phoneManager.start();
+    if (!this.triviaPhoneAsset) {
+      console.log('❌ TriviaGame: No TriviaPhone asset configured - phones will not spawn');
+      console.log('ℹ️  TriviaGame: Please set the triviaPhoneAsset prop on the TriviaGame component');
+      return;
+    }
     
+    console.log('✅ TriviaGame: TriviaPhone asset loaded from props');
+    
+    // Spawn phones for existing players
+    const existingPlayers = this.world.getPlayers();
+    console.log(`✅ TriviaGame: Spawning phones for ${existingPlayers.length} existing players`);
+    
+    for (const player of existingPlayers) {
+      await this.spawnPhoneForPlayer(player);
+    }
+    
+    console.log('✅ TriviaGame: Phone management initialized successfully');
+  }
+
+  /**
+   * Spawns a TriviaPhone asset for a specific player
+   */
+  private async spawnPhoneForPlayer(player: hz.Player): Promise<void> {
+    if (!this.triviaPhoneAsset) {
+      console.log('❌ TriviaGame: Cannot spawn phone - no asset configured');
+      return;
+    }
+
+    const playerId = player.id.toString();
+    
+    // Check if player already has a phone
+    if (this.phoneAssignments.has(playerId)) {
+      console.log(`ℹ️  TriviaGame: Player ${playerId} already has a phone`);
+      return;
+    }
+
+    try {
+      console.log(`✅ TriviaGame: Spawning phone for player ${playerId}`);
+      
+      // Get player position for initial spawn location
+      const playerPosition = player.position.get();
+      const spawnPosition = new hz.Vec3(playerPosition.x, playerPosition.y + 0.5, playerPosition.z);
+      
+      // Spawn the phone asset
+      const spawnedEntities = await this.world.spawnAsset(
+        this.triviaPhoneAsset,
+        spawnPosition,
+        hz.Quaternion.one,
+        hz.Vec3.one
+      );
+      
+      if (spawnedEntities.length === 0) {
+        console.log('❌ TriviaGame: Failed to spawn phone - no entities returned');
+        return;
+      }
+      
+      const phoneEntity = spawnedEntities[0];
+      
+      // Set ownership to the player
+      phoneEntity.owner.set(player);
+      
+      // Make the phone visible
+      phoneEntity.visible.set(true);
+      
+      // Track the phone assignment
+      this.phoneAssignments.set(playerId, phoneEntity);
+      
+      console.log(`✅ TriviaGame: Phone spawned successfully for player ${playerId}`);
+      
+    } catch (error) {
+      console.log(`❌ TriviaGame: Error spawning phone for player ${playerId}: ${error}`);
+    }
+  }
+
+  /**
+   * Despawns a player's phone when they leave
+   */
+  private async despawnPlayerPhone(player: hz.Player): Promise<void> {
+    const playerId = player.id.toString();
+    const phoneEntity = this.phoneAssignments.get(playerId);
+
+    if (!phoneEntity) {
+      console.log(`ℹ️  TriviaGame: No phone found for player ${playerId}`);
+      return;
+    }
+
+    console.log(`✅ TriviaGame: Despawning phone for player ${playerId}`);
+    
+    try {
+      // Delete the phone entity from the world
+      await this.world.deleteAsset(phoneEntity, true);
+      
+      // Remove from tracking
+      this.phoneAssignments.delete(playerId);
+      
+      console.log(`✅ TriviaGame: Phone despawned successfully for player ${playerId}`);
+    } catch (error) {
+      console.log(`❌ TriviaGame: Error despawning phone: ${error}`);
+      // Still remove from tracking even if despawn fails
+      this.phoneAssignments.delete(playerId);
+    }
   }
 
   private setupPlayerEvents(): void {
@@ -5765,11 +5867,9 @@ export class TriviaGame extends ui.UIComponent {
     
     // Initialize the reactive binding with current players
     this.playersListBinding.set([...this.currentPlayers]);
-    
-    // PhoneManager will automatically assign phones to existing players through its initialization
   }
 
-  private onPlayerEnter(player: hz.Player): void {
+  private async onPlayerEnter(player: hz.Player): Promise<void> {
     
     const playerId = player.id.toString();
     
@@ -5778,8 +5878,8 @@ export class TriviaGame extends ui.UIComponent {
       return;
     }
     
-    // PhoneManager will automatically handle phone assignment via its own event handlers
-    // We just need to handle TriviaGame-specific logic here
+    // Spawn a phone for the new player
+    await this.spawnPhoneForPlayer(player);
     
     // Load player headshot using Social API
     this.loadPlayerHeadshot(player, 'RUNTIME');
@@ -5986,73 +6086,58 @@ export class TriviaGame extends ui.UIComponent {
     }
   }
 
-  private assignPhoneToPlayer(player: hz.Player): void {
-    // Delegate to PhoneManager
-    if (this.phoneManager) {
-      this.phoneManager.assignPhoneToPlayer(player);
-    }
-  }
-
-  private releasePlayerPhone(player: hz.Player): void {
-    // Delegate to PhoneManager
-    if (this.phoneManager) {
-      this.phoneManager.releasePlayerPhone(player);
-    }
-  }
-
-  private createNewPhoneForPlayer(player: hz.Player): void {
-    // This is a placeholder for dynamic phone creation
-    // In Horizon Worlds, you would typically pre-place enough phone entities
-    // rather than creating them dynamically
-  }
-
   // Public method to get phone assignment for a player (for debugging)
   public getPlayerPhone(player: hz.Player): hz.Entity | null {
-    if (this.phoneManager) {
-      return this.phoneManager.getPlayerPhone(player);
-    }
-    return null;
+    const playerId = player.id.toString();
+    return this.phoneAssignments.get(playerId) || null;
   }
 
   // Public method to get all assignments (for debugging)
-  public getAssignments(): PhoneAssignment[] {
-    if (this.phoneManager) {
-      return this.phoneManager.getPhoneAssignments();
-    }
-    return [];
-  }
-
-  // Method to handle phone availability changes
-  public notifyPhoneAvailable(phoneEntity: hz.Entity): void {
-    // With PhoneManager, this is automatically handled
-    if (this.phoneManager) {
-    } else {
-    }
+  public getPhoneAssignments(): Map<string, hz.Entity> {
+    return this.phoneAssignments;
   }
 
   // Helper method for debugging phone assignments
   public debugPhoneAssignments(): void {
-    if (this.phoneManager) {
-      this.phoneManager.debugPhoneAssignments();
-    }
+    console.log(`✅ TriviaGame: Current phone assignments (${this.phoneAssignments.size} total):`);
+    this.phoneAssignments.forEach((phoneEntity, playerId) => {
+      console.log(`  - Player ${playerId}: Phone entity ${phoneEntity.id}`);
+    });
   }
 
   // Helper method to refresh phone assignments if needed
-  public refreshPhoneAssignments(): void {
-    if (this.phoneManager) {
-      this.phoneManager.refreshAllAssignments();
+  public async refreshPhoneAssignments(): Promise<void> {
+    console.log('✅ TriviaGame: Refreshing all phone assignments');
+    const currentPlayers = this.world.getPlayers();
+    
+    // First, despawn all existing phones
+    const phoneEntries = Array.from(this.phoneAssignments.entries());
+    for (const [playerId, phoneEntity] of phoneEntries) {
+      try {
+        await this.world.deleteAsset(phoneEntity, true);
+      } catch (error) {
+        console.log(`❌ TriviaGame: Error deleting phone during refresh: ${error}`);
+      }
     }
+    this.phoneAssignments.clear();
+
+    // Then spawn new phones for current players
+    for (const player of currentPlayers) {
+      await this.spawnPhoneForPlayer(player);
+    }
+    
+    console.log('✅ TriviaGame: Refresh complete');
   }
 
   // Method to allow opted-out players to rejoin the game
-  public rejoinPlayer(playerId: string): void {
+  public async rejoinPlayer(playerId: string): Promise<void> {
     // Use PlayerManager to rejoin the player
     this.playerManager.rejoinPlayer(playerId);
     
     // Find the player object and add them to the game
     const player = this.world.getPlayers().find(p => p.id.toString() === playerId);
     if (player) {
-      this.onPlayerEnter(player);
+      await this.onPlayerEnter(player);
     }
   }
 

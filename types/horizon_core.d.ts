@@ -3146,6 +3146,25 @@ export declare enum AnimationOnEndBehavior {
     Pause = 2
 }
 /**
+ * The options for the {@link Player.playAvatarAnimationLocomotion} method.
+ *
+ * @param simulatedVelocity - Animate as if moving with this vector capped at a
+ * magnitude of 1. 0 for motionless and magnitude 1 for full possible movement vector.
+ *
+ * Sprinting is possible when going forwards only.
+ * Forward walk at 0.3, jog at 0.65, run at 0.75 and sprint at 1.0
+ * In other directions, slow-walk starts at 0.05, walk at 0.45 and run at 1.0
+ *
+ * Left: -X Right: +X
+ * Forward: +Z Back: -Z
+ * Y is ignored.
+ * @param falling - When true, animate as if falling
+ */
+export declare type PlayAnimationLocomotionOptions = {
+    simulatedVelocity?: Vec3;
+    falling?: boolean;
+};
+/**
  * The options for the {@link Player.playAvatarAnimation} method, which triggers
  * an animation on an avatar.
  *
@@ -3496,6 +3515,90 @@ export declare class Player {
      */
     jumpSpeed: HorizonProperty<number>;
     /**
+     * The multiplier applied to a player's locomotion speed when they are strafing.
+     *
+     * @remarks
+     *
+     * Default value is 0.825.
+     * strafeMultiplier must be a value between 0 and 10.
+     * `strafeMultiplier.set` can be called on any player from any context, but
+     * `strafeMultiplier.get` will throw an error unless it's called from a
+     * local script attached to an object owned by the player in question.
+     *
+     * Using the Orbit, Pan, and Follow camera modes will prevent the user from backpedaling.
+     *
+     * @example
+     * This example demonstrates how to modify the player strafe multiplier while it is inside a trigger.
+     * ```
+     * import * as hz from 'horizon/core';
+     *
+     * class StrafeMultiplierExample extends hz.Component<typeof StrafeMultiplierExample> {
+     *   static propsDefinition = {
+     *     modifiedStrafeMultiplier: { type: hz.PropTypes.Number },
+     *   };
+     *
+     *   private defaultStrafeMultiplier: number = 0.825;
+     *
+     *   start() {
+     *     this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerEnterTrigger, (player) => {
+     *       var extendedPlayer = new hz.Player(player.id);
+     *       extendedPlayer.strafeMultiplier.set(this.props.modifiedStrafeMultiplier);
+     *     });
+     *
+     *     this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerExitTrigger, (player) => {
+     *       var extendedPlayer = new hz.Player(player.id);
+     *       extendedPlayer.strafeMultiplier.set(this.defaultStrafeMultiplier);
+     *     });
+     *   }
+     * }
+     *
+     * hz.Component.register(StrafeMultiplierExample);
+     * ```
+     */
+    strafeMultiplier: HorizonProperty<number>;
+    /**
+     * The multiplier applied to a player's locomotion speed when they are backpedaling.
+     *
+     * @remarks
+     *
+     * Default value is 0.825.
+     * backpedalMultiplier must be a value between 0 and 10.
+     * `backpedalMultiplier.set` can be called on any player from any context, but
+     * `backpedalMultiplier.get` will throw an error unless it's called from a
+     * local script attached to an object owned by the player in question.
+     *
+     * Using the Orbit, Pan, and Follow camera modes will prevent the user from backpedaling.
+     *
+     * @example
+     * This example demonstrates how to modify the player backpedal multiplier while it is inside a trigger.
+     * ```
+     * import * as hz from 'horizon/core';
+     *
+     * class BackpedalMultiplierExample extends hz.Component<typeof BackpedalMultiplierExample> {
+     *   static propsDefinition = {
+     *     modifiedBackpedalMultiplier: { type: hz.PropTypes.Number },
+     *   };
+     *
+     *   private defaultBackpedalMultiplier: number = 0.825;
+     *
+     *   start() {
+     *     this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerEnterTrigger, (player) => {
+     *       var extendedPlayer = new hz.Player(player.id);
+     *       extendedPlayer.backpedalMultiplier.set(this.props.modifiedBackpedalMultiplier);
+     *     });
+     *
+     *     this.connectCodeBlockEvent(this.entity, hz.CodeBlockEvents.OnPlayerExitTrigger, (player) => {
+     *       var extendedPlayer = new hz.Player(player.id);
+     *       extendedPlayer.backpedalMultiplier.set(this.defaultBackpedalMultiplier);
+     *     });
+     *   }
+     * }
+     *
+     * hz.Component.register(BackpedalMultiplierExample);
+     * ```
+     */
+    backpedalMultiplier: HorizonProperty<number>;
+    /**
      * Gets the type of device the player is using.
      *
      * @remarks New device types may be added in the future, so you should handle
@@ -3715,6 +3818,17 @@ export declare class Player {
        */
     canApplyAvatarOverride(sku: string): Promise<boolean>;
     /**
+     * Returns any available item traits associated with the player's avatar.
+     *
+     * @returns a JSON formatted-string with an array of objects for each item's traits
+     *
+     * @example
+     * ```
+     * playerA.getAvatarTraits();
+     * ```
+     */
+    getAvatarTraits(): string;
+    /**
      * Plays an animation asset on the player's avatar one time.
      *
      * @remarks
@@ -3726,6 +3840,19 @@ export declare class Player {
      * @param options - The options that control how to play the animation.
      */
     playAvatarAnimation(animation: Asset, options?: PlayAnimationOptions): void;
+    /**
+     * Plays animations on the avatar as if locomoting according to the given options.
+     *
+     * @remarks
+     * This method allows you to animate the avatar as if locomoting a certain way.
+     *
+     * @param options - The options that control how to play the animation.
+     */
+    playAvatarAnimationLocomotion(options?: PlayAnimationLocomotionOptions): void;
+    /**
+     * Stops any avatar animation locomotion overridden via the {@link Player.playAvatarAnimationLocomotion} method.
+     */
+    stopAvatarAnimationLocomotion(): void;
     /**
      * Stops any avatar animation asset that is playing.
      *
@@ -5212,6 +5339,10 @@ export declare type PropsDefinitionFromComponent<T> = T extends ComponentWithout
  * OnPlayerEnterAvatarPoseGizmo: Invoked when a player enters an Avatar Pose Gizmo.
  *
  * OnPlayerExitAvatarPoseGizmo: Invoked when a player exits an Avatar Pose Gizmo.
+ *
+ * OnPlayerFocusUI: Invoked when a player focuses on a Custom UI entity. Broadcasted from the client of the current player.
+ *
+ * OnPlayerUnfocusUI: Invoked when a player unfocuses from a Custom UI entity. Broadcasted from the client of the current player.
  */
 export declare const CodeBlockEvents: {
     /**
@@ -5404,6 +5535,9 @@ export declare const CodeBlockEvents: {
     OnPlayerEnterAvatarPoseGizmo: CodeBlockEvent<[player: Player]>;
     OnPlayerExitAvatarPoseGizmo: CodeBlockEvent<[player: Player]>;
     OnPlayerChangedTeam: CodeBlockEvent<[player: Player, teamName: string, teamGroupName: string]>;
+    OnAvatarTraitsChanged: CodeBlockEvent<[player: Player, traits: string]>;
+    OnPlayerFocusUI: CodeBlockEvent<[player: Player, focusedOn: Entity]>;
+    OnPlayerUnfocusUI: CodeBlockEvent<[player: Player, unfocusedFrom: Entity]>;
 };
 /**
  * Content of the data sent when a player purchases an item from an in-world shop

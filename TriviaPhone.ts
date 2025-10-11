@@ -33,10 +33,10 @@ const triviaQuestions: any[] = [];
 class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   static propsDefinition = {};
 
-  // Asset Pool Gizmo will handle ownership automatically
+  // Track if this phone instance has been initialized
   private isInitialized = false;
 
-  // Player assignment for ownership tracking
+  // Player assignment - now handled by PhoneManager via entity ownership
   private assignedPlayer: hz.Player | null = null;
 
   // Position tracking for teleporting to the player
@@ -588,7 +588,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
       this.isHostBinding.set(currentHostStatus);
     }
 
-    // Asset Pool Gizmo handles ownership, so we work with the local player
+    // Get the local player - phone ownership is now managed by PhoneManager
     const localPlayer = this.world.getLocalPlayer();
     
     // Update mobile device binding if it has changed
@@ -1180,10 +1180,11 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
     return this.render();
   }
 
-  // Asset Pool Gizmo handles ownership automatically - these methods are no longer needed
+  // Methods for managing phone visibility and ownership
+  // Note: Ownership is now managed by PhoneManager when the phone is spawned
 
   public unfocusAndHide(): void {
-    // Asset Pool Gizmo handles ownership, so we work with the local player
+    // Get the local player
     const localPlayer = this.world.getLocalPlayer();
     if (localPlayer) {
       // Explicitly hide the TriviaPhone after a short delay to ensure unfocus completes
@@ -1196,7 +1197,7 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   public checkAndHideIfUnfocused(): void {
-    // Asset Pool Gizmo handles ownership, so we work with the local player
+    // Get the local player
     const localPlayer = this.world.getLocalPlayer();
     if (localPlayer) {
       // For now, just hide it since we can't easily check focus state
@@ -1205,13 +1206,13 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   public isFollowing(): boolean {
-    // Asset Pool Gizmo handles ownership - always return true since it's managed externally
-    return true;
+    // Ownership is managed by PhoneManager - return true if we have an owner
+    return this.entity.owner.get() !== null;
   }
 
   public getAssignedPlayer(): hz.Player | null {
-    // Asset Pool Gizmo handles ownership - return local player
-    return this.world.getLocalPlayer();
+    // Return the entity's owner (managed by PhoneManager)
+    return this.entity.owner.get();
   }
 
   public forceHide(): void {
@@ -1236,9 +1237,9 @@ class TriviaPhone extends ui.UIComponent<typeof TriviaPhone> {
   }
 
   private canPlayerInteract(player: hz.Player): boolean {
-    // Asset Pool Gizmo handles ownership - allow interaction for the local player
-    const localPlayer = this.world.getLocalPlayer();
-    return localPlayer ? localPlayer.id === player.id : false;
+    // Ownership is managed by PhoneManager - allow interaction if player owns this phone
+    const owner = this.entity.owner.get();
+    return owner ? owner.id === player.id : false;
   }
 
   private isHost(): boolean {
