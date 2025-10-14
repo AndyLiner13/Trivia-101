@@ -1747,6 +1747,21 @@ export declare class AssetPoolGizmo extends Entity {
      * @returns A string representation of the `AssetPoolGizmo`.
      */
     toString(): string;
+    /**
+     * Get an entity from the Asset Pool. Will only return entities in Default (not Local) execution scripts.
+     *
+     * @returns A pooled entity if the pool still has one available, or undefined if not.
+     */
+    getPooledEntity(): Entity | undefined;
+    /**
+     * Put an entity back in the Asset Pool. Will fail to pool entity if the entity wasn't originally
+     * from this pool, or the entity has already been returned to the pool.
+     *
+     * @param entity - An entity that was previously retrieved from this pool.
+     *
+     * @returns True if the provided entity was able to be pooled.
+     */
+    poolEntity(entity: Entity): boolean;
     autoAssignToPlayers: HorizonProperty<boolean>;
     assetReference: HorizonProperty<string>;
 }

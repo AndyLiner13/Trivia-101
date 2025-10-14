@@ -61,6 +61,31 @@ export declare enum FollowStatus {
     MUTUAL_FOLLOWING = 3
 }
 /**
+ * Different social platforms where creators can choose accounts from and display on a page with follow buttons.
+ */
+export declare enum SocialPlatformType {
+    HORIZON = 1,
+    INSTAGRAM = 2
+}
+/**
+ * Represents a profile in one of the supported platform types that players can follow.
+ *
+ * @param platform - The platform that the profile is on.
+ * @param profileHandle - The handle of the profile on the platform. For Instagram, this is the username. For Horizon, this is the alias.
+ */
+export declare type ProfileToFollow = {
+    platform: SocialPlatformType;
+    profileHandle: string;
+};
+/**
+ * Response type for the showProfilesToFollow function.
+ *
+ * @param success - Whether the function was successful or not.
+ */
+export declare type ProfilesToFollowResult = {
+    success: boolean;
+};
+/**
  * Manages the friend system and related social functionality between players in a world.
  *
  * @remarks
@@ -190,6 +215,32 @@ export declare class Social {
      * @throws A `TypeError` exception is thrown if the input is not a valid {@link core#Player} object.
      */
     static showFollowRequestModal(requestor: Player, potentialFollow: Player): void;
+    /**
+     * Opens a page showing profiles to be followed by the player.
+     * This allows creators to promote their social media presence across different platforms.
+     *
+     * @param player - The player who will see the profiles to follow.
+     * @param accounts - The list of profiles to follow. For Instagram, this is the username. For Horizon, this is the alias.
+     * Maximum of 20 profiles and no duplicates allowed, otherwise the function will fail.
+     * Private Instagram profiles will be excluded from the list without failing the function.
+     *
+     * @example
+     * Open page with 2 profiles to follow in Instagram and Horizon.
+     * ```
+     * const profilesToFollow: Array<ProfileToFollow> = [{
+     *   profileHandle: "exampleInstagramProfile",
+     *   platform: SocialPlatformType.INSTAGRAM,
+     * },
+     * {
+     *   profileHandle: "exampleHorizonProfile",
+     *   platform: SocialPlatformType.HORIZON,
+     * }];
+     *
+     * var result = await Social.showProfilesToFollow(player, profilesToFollow);
+     * console.log(`Success: ${result.success}`);
+     * ```
+     */
+    static showProfilesToFollow(player: Player, accounts: Array<ProfileToFollow>): Promise<ProfilesToFollowResult>;
     /**
      * Shows the invite to world friends list UI.
      * @param player - A local player to show the invite to world friends list to.
