@@ -5736,36 +5736,30 @@ export class TriviaGame extends ui.UIComponent {
 
   // Phone management methods - embedded directly in TriviaGame
   private async initializePhoneManagement(): Promise<void> {
-    console.log('✅ TriviaGame: Initializing phone management');
     
     // Get the TriviaPhone asset from props
     this.triviaPhoneAsset = this.props.triviaPhoneAsset;
     
     if (!this.triviaPhoneAsset) {
-      console.log('❌ TriviaGame: No TriviaPhone asset configured - phones will not spawn');
-      console.log('ℹ️  TriviaGame: Please set the triviaPhoneAsset prop on the TriviaGame component');
+      
+      
       return;
     }
     
-    console.log('✅ TriviaGame: TriviaPhone asset loaded from props');
     
     // Spawn phones for existing players
     const existingPlayers = this.world.getPlayers();
-    console.log(`✅ TriviaGame: Spawning phones for ${existingPlayers.length} existing players`);
     
     for (const player of existingPlayers) {
       await this.spawnPhoneForPlayer(player);
     }
-    
-    console.log('✅ TriviaGame: Phone management initialized successfully');
-  }
 
-  /**
+  }  /**
    * Spawns a TriviaPhone asset for a specific player
    */
   private async spawnPhoneForPlayer(player: hz.Player): Promise<void> {
     if (!this.triviaPhoneAsset) {
-      console.log('❌ TriviaGame: Cannot spawn phone - no asset configured');
+      
       return;
     }
 
@@ -5773,12 +5767,11 @@ export class TriviaGame extends ui.UIComponent {
     
     // Check if player already has a phone
     if (this.phoneAssignments.has(playerId)) {
-      console.log(`ℹ️  TriviaGame: Player ${playerId} already has a phone`);
+      
       return;
     }
 
     try {
-      console.log(`✅ TriviaGame: Spawning phone for player ${playerId}`);
       
       // Get player position for initial spawn location
       const playerPosition = player.position.get();
@@ -5793,7 +5786,7 @@ export class TriviaGame extends ui.UIComponent {
       );
       
       if (spawnedEntities.length === 0) {
-        console.log('❌ TriviaGame: Failed to spawn phone - no entities returned');
+        
         return;
       }
       
@@ -5808,10 +5801,9 @@ export class TriviaGame extends ui.UIComponent {
       // Track the phone assignment
       this.phoneAssignments.set(playerId, phoneEntity);
       
-      console.log(`✅ TriviaGame: Phone spawned successfully for player ${playerId}`);
       
     } catch (error) {
-      console.log(`❌ TriviaGame: Error spawning phone for player ${playerId}: ${error}`);
+      
     }
   }
 
@@ -5823,11 +5815,10 @@ export class TriviaGame extends ui.UIComponent {
     const phoneEntity = this.phoneAssignments.get(playerId);
 
     if (!phoneEntity) {
-      console.log(`ℹ️  TriviaGame: No phone found for player ${playerId}`);
+      
       return;
     }
 
-    console.log(`✅ TriviaGame: Despawning phone for player ${playerId}`);
     
     try {
       // Delete the phone entity from the world
@@ -5836,9 +5827,8 @@ export class TriviaGame extends ui.UIComponent {
       // Remove from tracking
       this.phoneAssignments.delete(playerId);
       
-      console.log(`✅ TriviaGame: Phone despawned successfully for player ${playerId}`);
     } catch (error) {
-      console.log(`❌ TriviaGame: Error despawning phone: ${error}`);
+      
       // Still remove from tracking even if despawn fails
       this.phoneAssignments.delete(playerId);
     }
@@ -6099,15 +6089,12 @@ export class TriviaGame extends ui.UIComponent {
 
   // Helper method for debugging phone assignments
   public debugPhoneAssignments(): void {
-    console.log(`✅ TriviaGame: Current phone assignments (${this.phoneAssignments.size} total):`);
-    this.phoneAssignments.forEach((phoneEntity, playerId) => {
-      console.log(`  - Player ${playerId}: Phone entity ${phoneEntity.id}`);
-    });
+    
   }
 
   // Helper method to refresh phone assignments if needed
   public async refreshPhoneAssignments(): Promise<void> {
-    console.log('✅ TriviaGame: Refreshing all phone assignments');
+    
     const currentPlayers = this.world.getPlayers();
     
     // First, despawn all existing phones
@@ -6116,7 +6103,7 @@ export class TriviaGame extends ui.UIComponent {
       try {
         await this.world.deleteAsset(phoneEntity, true);
       } catch (error) {
-        console.log(`❌ TriviaGame: Error deleting phone during refresh: ${error}`);
+        
       }
     }
     this.phoneAssignments.clear();
@@ -6125,8 +6112,7 @@ export class TriviaGame extends ui.UIComponent {
     for (const player of currentPlayers) {
       await this.spawnPhoneForPlayer(player);
     }
-    
-    console.log('✅ TriviaGame: Refresh complete');
+
   }
 
   // Method to allow opted-out players to rejoin the game

@@ -85,3 +85,4 @@ debug_*.js
 scratch.*
 copilot.instructions.modules
 .vscode/
+console_logs.json

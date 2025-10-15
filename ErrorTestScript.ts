@@ -1,12 +1,6 @@
 import * as Hz from 'horizon/core';
 import { View, Text } from 'horizon/ui';
 
-// Logging utility with timestamp
-const logWithTimestamp = (message: string) => {
-  const timestamp = Date.now();
-  console.log(`🪵 | ErrorTestScript | xX_${timestamp}_Xx | ${message}`);
-};
-
 class ErrorTestScript extends Hz.Component<typeof ErrorTestScript> {
     static propsDefinition = {};
 
@@ -15,7 +9,6 @@ class ErrorTestScript extends Hz.Component<typeof ErrorTestScript> {
     }
  
     start() {
-        logWithTimestamp("❌ Creating panel with invalid children");
         
         // Create a panel that will trigger the error
         const panel = this.world.ui.createCustomUIPanel({
@@ -28,7 +21,6 @@ class ErrorTestScript extends Hz.Component<typeof ErrorTestScript> {
     }
 
     render() {
-        logWithTimestamp("❌ Rendering with invalid children prop");
         
         // This will cause: Prop 'children' of View component must be a UINode, an array of UINodes, or undefined
         // We're passing a string directly instead of wrapping it in Text

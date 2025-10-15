@@ -32,7 +32,6 @@ export class PhoneManager extends ui.UIComponent {
   }
 
   async start() {
-    console.log('✅ PhoneManager: Starting initialization');
     
     // Get the TriviaPhone asset from props (if set directly)
     this.triviaPhoneAsset = this.props.triviaPhoneAsset;
@@ -43,7 +42,6 @@ export class PhoneManager extends ui.UIComponent {
     // Set up player enter/exit event handlers
     this.setupPlayerEvents();
     
-    console.log('✅ PhoneManager: Base initialization complete, waiting for asset');
   }
 
   /**
@@ -51,25 +49,22 @@ export class PhoneManager extends ui.UIComponent {
    * This should be called by TriviaGame after start()
    */
   public async initialize(triviaPhoneAsset: hz.Asset): Promise<void> {
-    console.log('✅ PhoneManager: initialize() called with asset');
     
     this.triviaPhoneAsset = triviaPhoneAsset;
     
     if (!this.triviaPhoneAsset) {
-      console.log('❌ PhoneManager: No TriviaPhone asset provided to initialize()');
+      
       return;
     }
     
-    console.log('✅ PhoneManager: TriviaPhone asset loaded');
     
     // Spawn phones for existing players
     const existingPlayers = this.world.getPlayers();
-    console.log(`✅ PhoneManager: Spawning phones for ${existingPlayers.length} existing players`);
+    
     for (const player of existingPlayers) {
       await this.spawnPhoneForPlayer(player);
     }
 
-    console.log('✅ PhoneManager: Full initialization complete');
   }
 
   /**
@@ -77,12 +72,11 @@ export class PhoneManager extends ui.UIComponent {
    */
   private async spawnPhoneForPlayer(player: hz.Player): Promise<void> {
     if (!this.triviaPhoneAsset) {
-      console.log('❌ PhoneManager: Cannot spawn phone - no asset configured');
+      
       return;
     }
 
     try {
-      console.log(`✅ PhoneManager: Spawning phone for player ${player.id.toString()}`);
       
       // Get player position for initial spawn location
       const playerPosition = player.position.get();
@@ -97,12 +91,11 @@ export class PhoneManager extends ui.UIComponent {
       );
       
       if (spawnedEntities.length === 0) {
-        console.log('❌ PhoneManager: Failed to spawn phone - no entities returned');
+        
         return;
       }
       
       const phoneEntity = spawnedEntities[0];
-      console.log(`✅ PhoneManager: Phone spawned successfully for player ${player.id.toString()}`);
       
       // Add to phone assignments
       this.phoneAssignments.push({
@@ -115,7 +108,7 @@ export class PhoneManager extends ui.UIComponent {
       this.ensurePhoneOwnership({ phoneEntity, assignedPlayer: player, isInUse: true }, player);
       
     } catch (error) {
-      console.log(`❌ PhoneManager: Error spawning phone for player ${player.id.toString()}: ${error}`);
+      
     }
   }
 
@@ -143,7 +136,7 @@ export class PhoneManager extends ui.UIComponent {
    * Handles player entering the world - spawns a phone for them
    */
   private async onPlayerEnter(player: hz.Player): Promise<void> {
-    console.log(`✅ PhoneManager: Player ${player.id.toString()} entered world`);
+    
     await this.spawnPhoneForPlayer(player);
   }
 
@@ -151,7 +144,7 @@ export class PhoneManager extends ui.UIComponent {
    * Handles player exiting the world - despawns their phone
    */
   private async onPlayerExit(player: hz.Player): Promise<void> {
-    console.log(`✅ PhoneManager: Player ${player.id.toString()} exited world`);
+    
     await this.despawnPlayerPhone(player);
   }
 
@@ -167,14 +160,14 @@ export class PhoneManager extends ui.UIComponent {
     );
 
     if (existingAssignment) {
-      console.log(`✅ PhoneManager: Player ${playerId} already has a phone`);
+      
       // Ensure it's visible and owned by the player
       this.ensurePhoneOwnership(existingAssignment, player);
       return true;
     }
 
     // Spawn a new phone for this player
-    console.log(`✅ PhoneManager: Spawning new phone for player ${playerId}`);
+    
     await this.spawnPhoneForPlayer(player);
     return true;
   }
@@ -204,7 +197,6 @@ export class PhoneManager extends ui.UIComponent {
     );
 
     if (playerAssignment) {
-      console.log(`✅ PhoneManager: Despawning phone for player ${player.id.toString()}`);
       
       try {
         // Delete the phone entity from the world
@@ -216,9 +208,8 @@ export class PhoneManager extends ui.UIComponent {
           this.phoneAssignments.splice(index, 1);
         }
         
-        console.log(`✅ PhoneManager: Phone despawned successfully for player ${player.id.toString()}`);
       } catch (error) {
-        console.log(`❌ PhoneManager: Error despawning phone: ${error}`);
+        
         // Still remove from tracking even if despawn fails
         const index = this.phoneAssignments.indexOf(playerAssignment);
         if (index > -1) {
@@ -226,7 +217,7 @@ export class PhoneManager extends ui.UIComponent {
         }
       }
     } else {
-      console.log(`❌ PhoneManager: No phone found for player ${player.id.toString()}`);
+      
     }
   }
 
@@ -259,7 +250,7 @@ export class PhoneManager extends ui.UIComponent {
    * Forces a refresh of all phone assignments (if needed for troubleshooting)
    */
   public async refreshAllAssignments(): Promise<void> {
-    console.log('✅ PhoneManager: Refreshing all phone assignments');
+    
     const currentPlayers = this.world.getPlayers();
     
     // First, despawn all existing phones
@@ -267,7 +258,7 @@ export class PhoneManager extends ui.UIComponent {
       try {
         await this.world.deleteAsset(assignment.phoneEntity, true);
       } catch (error) {
-        console.log(`❌ PhoneManager: Error deleting phone during refresh: ${error}`);
+        
       }
     }
     this.phoneAssignments = [];
@@ -276,8 +267,7 @@ export class PhoneManager extends ui.UIComponent {
     for (const player of currentPlayers) {
       await this.spawnPhoneForPlayer(player);
     }
-    
-    console.log('✅ PhoneManager: Refresh complete');
+
   }
 
   /**
